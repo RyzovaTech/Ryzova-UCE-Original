@@ -1,5 +1,5 @@
 import { Link, useNavigate, NavLink } from 'react-router-dom';
-import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, CreditCard, Settings } from 'lucide-react';
+import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -9,7 +9,6 @@ const mobileItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/analyze', label: 'Analyze Project', icon: UploadCloud },
   { to: '/report', label: 'Reports', icon: FileBarChart },
-  { to: '/pricing', label: 'Pricing', icon: CreditCard },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
