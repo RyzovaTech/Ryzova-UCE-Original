@@ -7,7 +7,6 @@ import { LandingPage } from '@/pages/LandingPage';
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const AnalyzePage = lazy(() => import('@/pages/AnalyzePage').then(m => ({ default: m.AnalyzePage })));
 const ReportPage = lazy(() => import('@/pages/ReportPage').then(m => ({ default: m.ReportPage })));
-const PricingPage = lazy(() => import('@/pages/PricingPage').then(m => ({ default: m.PricingPage })));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function PageLoader() {
@@ -28,7 +27,6 @@ function App() {
           <Route path="/analyze" element={<Suspense fallback={<PageLoader />}><AnalyzePage /></Suspense>} />
           <Route path="/report" element={<Suspense fallback={<PageLoader />}><ReportPage /></Suspense>} />
           <Route path="/report/:id" element={<Suspense fallback={<PageLoader />}><ReportPage /></Suspense>} />
-          <Route path="/pricing" element={<Suspense fallback={<PageLoader />}><PricingPage /></Suspense>} />
           <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
