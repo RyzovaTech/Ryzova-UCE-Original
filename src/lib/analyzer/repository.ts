@@ -1,7 +1,7 @@
 export interface GitHubRepository {
   owner: string;
   repository: string;
-  archiveUrl: string;
+  metadataUrl: string;
 }
 
 /**
@@ -40,6 +40,11 @@ export function parseGitHubRepositoryUrl(value: string): GitHubRepository {
   return {
     owner,
     repository,
-    archiveUrl: `https://github.com/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}/archive/HEAD.zip`,
+    metadataUrl: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}`,
   };
+}
+
+/** Build the CORS-friendly GitHub archive endpoint for a known branch. */
+export function getGitHubArchiveUrl(repository: GitHubRepository, branch: string): string {
+  return `https://codeload.github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repository)}/zip/refs/heads/${encodeURIComponent(branch)}`;
 }
