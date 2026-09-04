@@ -15,7 +15,7 @@ import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
 
-const ANALYSIS_VERSION = 'uce-1.0.0';
+const ANALYSIS_VERSION = 'uce-1.2.2';
 
 function generateId(): string {
   return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
