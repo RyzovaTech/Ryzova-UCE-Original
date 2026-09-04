@@ -5,15 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAnalyzer } from '@/hooks/useAnalyzer';
 import { cn } from '@/lib/utils';
 import type { AnalysisStage } from '@/lib/analyzer/types';
 
 const STAGE_LABELS: Record<AnalysisStage, string> = {
-  idle: 'Waiting for upload',
-  uploading: 'Uploading archive…',
+  idle: 'Waiting for project',
+  uploading: 'Preparing project…',
   reading: 'Reading project structure…',
   detecting: 'Detecting technologies…',
   analyzing: 'Running compatibility rules…',
@@ -95,7 +94,7 @@ export function AnalyzePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analyze Project</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload your project to analyze compatibility. Everything runs locally in your browser.
+          Analyze a ZIP project or public GitHub repository. Compatibility checks run deterministically in your browser.
         </p>
       </div>
 
@@ -108,7 +107,6 @@ export function AnalyzePage() {
           <TabsTrigger value="github" className="gap-2">
             <Github className="h-4 w-4" />
             GitHub URL
-            <Badge variant="warning" className="ml-1 px-1.5 py-0 text-[10px]">Beta</Badge>
           </TabsTrigger>
         </TabsList>
 
@@ -211,11 +209,10 @@ export function AnalyzePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                Import from GitHub
-                <Badge variant="warning" className="px-1.5 py-0 text-[10px]">Beta</Badge>
+                Analyze a public GitHub repository
               </CardTitle>
               <CardDescription>
-                Paste a public repository URL. UCE fetches the default branch and analyzes it locally.
+                Paste a public repository URL. UCE downloads its default branch, then runs the compatibility checks locally in your browser.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -237,7 +234,7 @@ export function AnalyzePage() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Works with public repositories. Private repos and unsupported branches will fail with a clear error.
+                Works with public repositories only. Repository contents are fetched directly from GitHub and are not sent to a UCE server.
               </p>
             </CardContent>
           </Card>

@@ -13,7 +13,7 @@ const problems = [
 ];
 
 const features = [
-  { icon: FileSearch, title: 'Project Analysis', desc: 'Inspect manifests, configs, and structure from a ZIP upload.' },
+  { icon: FileSearch, title: 'Project & Git Analysis', desc: 'Inspect manifests, configs, and structure from ZIP uploads or public GitHub repositories.' },
   { icon: ShieldCheck, title: 'Compatibility Detection', desc: 'Deterministic rules flag runtime, dependency, and config risk.' },
   { icon: Zap, title: 'Runtime Insights', desc: 'See the detected runtime, language, and build tool at a glance.' },
   { icon: Layers, title: 'Dependency Awareness', desc: 'Spot outdated majors, missing lockfiles, and duplicate ranges.' },
@@ -22,7 +22,7 @@ const features = [
 ];
 
 const steps = [
-  { step: 1, title: 'Upload Project', desc: 'Drag a .zip of your repository into the analyzer.' },
+  { step: 1, title: 'Add a Project', desc: 'Upload a ZIP or paste a public GitHub repository URL.' },
   { step: 2, title: 'UCE Analyzes Structure', desc: 'Files are scanned and the stack is detected deterministically.' },
   { step: 3, title: 'Receive Compatibility Report', desc: 'Get a scored report with issues and recommendations.' },
 ];
@@ -46,7 +46,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
           <UceLogo size="md" />
-          <span className="font-mono text-xs text-muted-foreground">UCE · v1.2.1</span>
+          <span className="font-mono text-xs text-muted-foreground">UCE · v1.2.3</span>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
               Dashboard
@@ -74,7 +74,7 @@ export function LandingPage() {
                 Stop wasting hours fixing <span className="text-gradient">broken project setups.</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground md:text-xl">
-                UCE analyzes your software projects and helps identify compatibility issues
+                UCE analyzes software projects and public Git repositories for compatibility, dependency, runtime, and configuration issues
                 before development gets blocked.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -88,7 +88,7 @@ export function LandingPage() {
                 </Button>
               </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                Understand software compatibility before debugging. No AI. No cloud. Runs in your browser.
+                Understand software compatibility before debugging. No AI. Local-first analysis runs in your browser.
               </p>
             </div>
 
@@ -187,7 +187,7 @@ export function LandingPage() {
             <Badge variant="outline" className="mb-3 border-success/30 text-success">The Solution</Badge>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Engineering reports, not guesses</h2>
             <p className="mt-3 text-muted-foreground">
-              Upload your project and receive an engineering compatibility report.
+              Add a ZIP project or public GitHub repository and receive an engineering compatibility report.
             </p>
             <Card className="mt-6 border-primary/20 bg-primary/10">
               <CardHeader>
@@ -211,7 +211,7 @@ export function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                  Runs entirely in your browser — nothing leaves your machine
+                  Runs deterministically in your browser after a Git repository is fetched
                 </div>
               </CardContent>
             </Card>
@@ -252,7 +252,7 @@ export function LandingPage() {
       <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
         <div className="max-w-2xl">
           <Badge variant="outline" className="mb-3 border-secondary/30 text-secondary">How it works</Badge>
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Three steps from upload to report</h2>
+          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Three steps from project to report</h2>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {steps.map((s, i) => (
@@ -326,7 +326,7 @@ export function LandingPage() {
         <div className="relative mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between md:px-8">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Find compatibility issues before they become debugging nightmares.</h2>
-            <p className="mt-2 text-primary-foreground/90">Upload a project and get a deterministic report in seconds.</p>
+            <p className="mt-2 text-primary-foreground/90">Analyze a ZIP project or public GitHub repository with deterministic checks.</p>
           </div>
           <Button size="lg" variant="secondary" onClick={() => navigate('/analyze')} className="gap-2">
             <Clock className="h-4 w-4" />
@@ -340,7 +340,7 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 md:flex-row md:px-8">
           <UceLogo size="sm" />
           <p className="text-xs text-muted-foreground">
-            Built by Ryzova · Trust First philosophy · v1.2.1
+            Built by <a href="https://www.ryzova.com/" target="_blank" rel="noreferrer" className="hover:text-foreground">Ryzova</a> · Trust First philosophy · UCE · v1.2.3
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>

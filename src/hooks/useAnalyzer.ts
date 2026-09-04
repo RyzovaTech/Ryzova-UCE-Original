@@ -106,6 +106,20 @@ export function useAnalyzer() {
     [safeSetState, clearAnalysisTimeout]
   );
 
+  const readAndAnalyzeZip = useCallback(
+    async (file: File, source: 'upload' | 'github'): Promise<AnalysisResult> => {
+      const { files, name, scanStats } = await readZip(file);
+      if (files.length === 0) {
+        const message = 'The archive contains no files. Check the ZIP contents and try again.';
+        safeSetState({ stage: 'error', error: message, progress: 0 });
+        throw new Error(message);
+      }
+      if (cancelRef.current) throw new Error('Analysis cancelled.');
+      return runAnalysis(files, name, source, scanStats);
+    },
+    [runAnalysis, safeSetState]
+  );
+
   const analyzeFile = useCallback(
     async (file: File): Promise<AnalysisResult> => {
       if (runningRef.current) {
@@ -127,16 +141,7 @@ export function useAnalyzer() {
 
       safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
       try {
-        const { files, name, scanStats } = await readZip(file);
-        if (files.length === 0) {
-          runningRef.current = false;
-          clearAnalysisTimeout();
-          const msg = 'The archive contains no files. Check the ZIP contents and try again.';
-          safeSetState({ stage: 'error', error: msg, progress: 0 });
-          return Promise.reject(new Error(msg));
-        }
-        if (cancelRef.current) { runningRef.current = false; throw new Error('Analysis cancelled.'); }
-        return await runAnalysis(files, name, 'upload', scanStats);
+        return await readAndAnalyzeZip(file, 'upload');
       } catch (e) {
         clearAnalysisTimeout();
         runningRef.current = false;
@@ -148,7 +153,7 @@ export function useAnalyzer() {
         throw e;
       }
     },
-    [safeSetState, runAnalysis, clearAnalysisTimeout]
+    [safeSetState, readAndAnalyzeZip, clearAnalysisTimeout]
   );
 
   const analyzeDemo = useCallback(async (): Promise<AnalysisResult> => {
@@ -169,22 +174,37 @@ export function useAnalyzer() {
         safeSetState({ stage: 'error', error: msg, progress: 0 });
         return Promise.reject(new Error(msg));
       }
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(url.trim());
+      } catch {
+        const message = 'Enter a valid public GitHub repository URL, for example https://github.com/owner/repository.';
+        safeSetState({ stage: 'error', error: message, progress: 0 });
+        return Promise.reject(new Error(message));
+      }
+      const segments = parsedUrl.pathname.replace(/^\/+|\/+$/g, '').replace(/\.git$/i, '').split('/');
+      if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'github.com' || segments.length !== 2 || !segments.every(Boolean)) {
+        const message = 'Enter a public GitHub repository URL in the format https://github.com/owner/repository.';
+        safeSetState({ stage: 'error', error: message, progress: 0 });
+        return Promise.reject(new Error(message));
+      }
+      timeoutRef.current = setTimeout(() => {
+        safeSetState({ stage: 'error', error: 'Repository analysis timed out. Try a smaller public repository.', progress: 0 });
+        runningRef.current = false;
+      }, 60_000);
       safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
       try {
-        const repoName = url.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '') || 'github-project';
-        const branches = ['main', 'master'];
-        let res: Response | null = null;
-        let lastStatus = 0;
-        for (const branch of branches) {
-          const apiUrl = `https://api.github.com/repos/${repoName}/zipball/${branch}`;
-          const attempt = await fetch(apiUrl);
-          if (attempt.ok) { res = attempt; break; }
-          lastStatus = attempt.status;
-        }
-        if (!res || !res.ok) throw new Error(`GitHub API returned ${lastStatus}. The repository may be private or the default branch could not be found.`);
-        const blob = await res.blob();
-        const file = new File([blob], `${repoName.split('/').pop()}.zip`, { type: 'application/zip' });
-        return await analyzeFile(file);
+        const repoName = segments.join('/');
+        const metadata = await fetch(`https://api.github.com/repos/${repoName}`, { headers: { Accept: 'application/vnd.github+json' } });
+        if (!metadata.ok) throw new Error(`GitHub returned ${metadata.status}. The repository may be private or unavailable.`);
+        const { default_branch: defaultBranch } = await metadata.json() as { default_branch?: string };
+        if (!defaultBranch) throw new Error('GitHub did not provide a default branch for this repository.');
+        const archive = await fetch(`https://api.github.com/repos/${repoName}/zipball/${encodeURIComponent(defaultBranch)}`, { headers: { Accept: 'application/vnd.github+json' } });
+        if (!archive.ok) throw new Error(`GitHub returned ${archive.status} while downloading the default branch.`);
+        const blob = await archive.blob();
+        if (blob.size > 50 * 1024 * 1024) throw new Error('The repository archive exceeds the 50MB local analysis limit.');
+        const file = new File([blob], `${segments[1]}.zip`, { type: 'application/zip' });
+        return await readAndAnalyzeZip(file, 'github');
       } catch (e) {
         clearAnalysisTimeout();
         runningRef.current = false;
@@ -193,7 +213,7 @@ export function useAnalyzer() {
         throw e;
       }
     },
-    [safeSetState, analyzeFile, clearAnalysisTimeout]
+    [safeSetState, readAndAnalyzeZip, clearAnalysisTimeout]
   );
 
   const reset = useCallback(() => {

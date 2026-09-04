@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title">
+  <title id="title">UCE — Universal Compatibility Engine</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#061b49"/><stop offset="1" stop-color="#020817"/></linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#31c7ff"/><stop offset="1" stop-color="#1557ff"/></linearGradient>
+  </defs>
+  <rect width="1200" height="1200" rx="230" fill="url(#bg)"/>
+  <path d="M164 400v318c0 118 73 183 184 183s184-65 184-183V400h-66v312c0 77-42 119-118 119s-118-42-118-119V400z" fill="#fff"/>
+  <path d="M781 431c-44-26-94-40-147-40-160 0-287 126-287 288s127 288 287 288c54 0 105-15 149-42l-31-55c-35 22-75 33-118 33-122 0-220-98-220-224s98-224 220-224c41 0 80 11 114 31z" fill="url(#blue)"/>
+  <path d="m585 683 45 45 88-91" fill="none" stroke="#28bdff" stroke-width="27" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M856 400c-64 0-105 41-105 105v291c0 64 41 105 105 105h213v-66H862c-29 0-45-16-45-45v-80h225v-66H817v-73c0-29 16-45 45-45h207v-66z" fill="#fff"/>
+</svg>

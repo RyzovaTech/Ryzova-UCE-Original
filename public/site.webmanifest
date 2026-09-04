@@ -1,0 +1,12 @@
+{
+  "name": "UCE — Universal Compatibility Engine",
+  "short_name": "UCE",
+  "description": "Deterministic local-first software compatibility and Git repository analysis.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020817",
+  "theme_color": "#061b49",
+  "icons": [
+    { "src": "/uce-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
