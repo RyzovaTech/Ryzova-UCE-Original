@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Bug, CircleCheck as CheckCircle2, Clock, FileSearch, GitBranch, Layers, Package, CirclePlay as PlayCircle, ShieldCheck, Terminal, Zap } from 'lucide-react';
+import { ArrowRight, Bug, CircleCheck as CheckCircle2, Clock, FileSearch, GitBranch, Github, Layers, Package, CirclePlay as PlayCircle, ShieldCheck, Terminal, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -299,41 +299,23 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing preview */}
+      {/* Open source */}
       <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
-            <Badge variant="outline" className="mb-3 border-primary/30 text-primary">Pricing</Badge>
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Start free. Upgrade when ready.</h2>
+            <Badge variant="outline" className="mb-3 border-primary/30 text-primary">Open Source</Badge>
+            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Free. Open. Built for developers.</h2>
             <p className="mt-3 text-muted-foreground">
-              A founder lifetime deal is available for early supporters.
+              UCE is fully open source under the Apache License 2.0.
             </p>
+            <p className="mt-1 text-muted-foreground">No subscriptions. No paywalls. No proprietary lock-in.</p>
           </div>
-          <Button variant="outline" asChild>
-            <Link to="/pricing">View pricing</Link>
+          <Button variant="outline" asChild className="gap-2">
+            <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer">
+              <Github className="h-4 w-4" />
+              View on GitHub
+            </a>
           </Button>
-        </div>
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
-          {[
-            { name: 'Free', price: '$0', period: '', features: ['3 local scans', 'JSON & Markdown export', 'Local report history'] },
-            { name: 'Pro Annual', price: '$39', period: '/year', features: ['Unlimited local scans', 'PDF export', 'Commercial use license', 'Priority support'] },
-            { name: 'Founder Lifetime', price: '$49+', period: ' lifetime', features: ['Everything in Pro', 'Lifetime license', 'Only 500 ever sold', 'Founder badge'] },
-          ].map((plan) => (
-            <Card key={plan.name}>
-              <CardHeader>
-                <CardTitle>{plan.name}</CardTitle>
-                <div className="mt-2 text-3xl font-bold">{plan.price}<span className="text-sm font-normal text-muted-foreground">{plan.period}</span></div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                {plan.features.map((f) => (
-                  <div key={f} className="flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-success" />
-                    {f}
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
         </div>
       </section>
 
@@ -360,7 +342,7 @@ export function LandingPage() {
             Built by Ryzova · Trust First philosophy
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <Link to="/pricing" className="hover:text-foreground">Pricing</Link>
+            <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
             <Link to="/settings" className="hover:text-foreground">Settings</Link>
             <Link to="/dashboard" className="hover:text-foreground">Dashboard</Link>
           </div>

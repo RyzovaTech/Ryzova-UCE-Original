@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatFileSize } from '@/lib/utils';
-import { CircleAlert as AlertCircle, Boxes, CircleCheck as CheckCircle2, Clock, Download, ChartBar as FileBarChart, FileJson, FileText, FolderTree, GitBranch, HardDrive, Layers, Package, Terminal, CloudUpload as UploadCloud, Wrench, FolderArchive, Lock } from 'lucide-react';
+import { CircleAlert as AlertCircle, Boxes, CircleCheck as CheckCircle2, Clock, Download, ChartBar as FileBarChart, FileJson, FileText, FolderTree, GitBranch, HardDrive, Layers, Package, Terminal, CloudUpload as UploadCloud, Wrench, FolderArchive } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,6 @@ import { useReportEngine } from '@/hooks/useReportEngine';
 import { ScoreRing, scoreStatus, CategoryBar } from '@/components/reports/ScoreRing';
 import { SeverityBadge } from '@/components/reports/SeverityBadge';
 import { exportJson, exportMarkdown, downloadFile } from '@/lib/report/export';
-import { useLicense } from '@/lib/licensing/useLicense';
 import { sortIssues } from '@/lib/compatibility/recommendations';
 import type { AnalysisResult, Issue, Severity } from '@/lib/analyzer/types';
 
@@ -41,12 +40,10 @@ export function ReportPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { history, getById } = useReportEngine();
-  const { canUse } = useLicense();
   const [report, setReport] = useState<AnalysisResult | null>(null);
   const [filter, setFilter] = useState<'all' | Severity>('all');
   const [sortBy, setSortBy] = useState<SortBy>('severity');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
-  const canPdf = canUse('pdfExport');
 
   useEffect(() => {
     if (id) {
@@ -157,16 +154,10 @@ export function ReportPage() {
             <FileText className="h-4 w-4" />
             Markdown
           </Button>
-          <Button size="sm" onClick={() => window.print()} disabled={!canPdf} className="gap-2">
+          <Button size="sm" onClick={() => window.print()} className="gap-2">
             <Download className="h-4 w-4" />
             Print / Save as PDF
           </Button>
-          {!canPdf && (
-            <Button size="sm" variant="outline" onClick={() => navigate('/pricing')} className="gap-2">
-              <Lock className="h-4 w-4" />
-              Unlock PDF
-            </Button>
-          )}
         </div>
       </div>
 

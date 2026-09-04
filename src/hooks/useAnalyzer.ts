@@ -3,7 +3,6 @@ import { readZip } from '@/lib/analyzer/zip';
 import { analyzeProject } from '@/lib/analyzer/analyzer';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
 import { saveReportToHistory } from '@/lib/storage';
-import { incrementScanCount } from '@/lib/licensing/store';
 import type { AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
 
 export interface AnalyzerState {
@@ -92,7 +91,6 @@ export function useAnalyzer() {
         const result = analyzeProject({ files, fileName: name, source, scanStats });
         if (cancelRef.current) { runningRef.current = false; throw new Error('Analysis cancelled.'); }
         saveReportToHistory(result);
-        incrementScanCount();
         clearAnalysisTimeout();
         safeSetState({ stage: 'completed', result, error: null, progress: 100 });
         runningRef.current = false;
