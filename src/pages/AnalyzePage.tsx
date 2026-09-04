@@ -107,6 +107,9 @@ export function AnalyzePage() {
           <TabsTrigger value="github" className="gap-2">
             <Github className="h-4 w-4" />
             Git Repository
+            <span className="rounded border border-primary/30 bg-primary/10 px-1 py-px text-[8px] font-semibold leading-none tracking-[0.12em] text-primary">
+              BETA
+            </span>
           </TabsTrigger>
         </TabsList>
 
@@ -209,7 +212,10 @@ export function AnalyzePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                Analyze a Git Repository
+                Git Repository Analysis
+                <span className="rounded border border-primary/30 bg-primary/10 px-1 py-px text-[8px] font-semibold leading-none tracking-[0.12em] text-primary">
+                  BETA
+                </span>
               </CardTitle>
               <CardDescription>
                 Paste a public GitHub URL or Git remote. UCE downloads its default branch, then analyzes the repository structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
