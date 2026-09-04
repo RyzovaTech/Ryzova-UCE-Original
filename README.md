@@ -1,4 +1,4 @@
- UCE — Universal Compatibility Engine
+# UCE — Universal Compatibility Engine
 
 Universal Compatibility Engine (UCE) is an open-source tool for
 analyzing software projects and identifying compatibility issues
