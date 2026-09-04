@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { readZip } from '@/lib/analyzer/zip';
 import { analyzeProject } from '@/lib/analyzer/analyzer';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
+import { parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
 import { saveReportToHistory } from '@/lib/storage';
 import type { AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
 
@@ -30,6 +31,8 @@ const STAGE_PROGRESS: Record<AnalysisStage, number> = {
   completed: 100,
   error: 0,
 };
+
+const MAX_ARCHIVE_SIZE = 50 * 1024 * 1024;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -106,14 +109,13 @@ export function useAnalyzer() {
     [safeSetState, clearAnalysisTimeout]
   );
 
-  const analyzeFile = useCallback(
-    async (file: File): Promise<AnalysisResult> => {
+  const analyzeArchive = useCallback(
+    async (file: File, source: 'upload' | 'github'): Promise<AnalysisResult> => {
       if (runningRef.current) {
         safeSetState({ stage: 'error', error: 'An analysis is already running. Cancel it first or wait for it to complete.', progress: 0 });
         return Promise.reject(new Error('An analysis is already running.'));
       }
-      const MAX_ZIP_SIZE = 50 * 1024 * 1024;
-      if (file.size > MAX_ZIP_SIZE) {
+      if (file.size > MAX_ARCHIVE_SIZE) {
         const mb = (file.size / (1024 * 1024)).toFixed(1);
         const msg = `The uploaded file is ${mb}MB. The maximum supported size is 50MB.`;
         safeSetState({ stage: 'error', error: msg, progress: 0 });
@@ -136,7 +138,7 @@ export function useAnalyzer() {
           return Promise.reject(new Error(msg));
         }
         if (cancelRef.current) { runningRef.current = false; throw new Error('Analysis cancelled.'); }
-        return await runAnalysis(files, name, 'upload', scanStats);
+        return await runAnalysis(files, name, source, scanStats);
       } catch (e) {
         clearAnalysisTimeout();
         runningRef.current = false;
@@ -149,6 +151,11 @@ export function useAnalyzer() {
       }
     },
     [safeSetState, runAnalysis, clearAnalysisTimeout]
+  );
+
+  const analyzeFile = useCallback(
+    (file: File): Promise<AnalysisResult> => analyzeArchive(file, 'upload'),
+    [analyzeArchive]
   );
 
   const analyzeDemo = useCallback(async (): Promise<AnalysisResult> => {
@@ -169,22 +176,21 @@ export function useAnalyzer() {
         safeSetState({ stage: 'error', error: msg, progress: 0 });
         return Promise.reject(new Error(msg));
       }
-      safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
       try {
-        const repoName = url.replace(/^https?:\/\/github\.com\//, '').replace(/\.git$/, '') || 'github-project';
-        const branches = ['main', 'master'];
-        let res: Response | null = null;
-        let lastStatus = 0;
-        for (const branch of branches) {
-          const apiUrl = `https://api.github.com/repos/${repoName}/zipball/${branch}`;
-          const attempt = await fetch(apiUrl);
-          if (attempt.ok) { res = attempt; break; }
-          lastStatus = attempt.status;
+        const repository = parseGitHubRepositoryUrl(url);
+        safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
+        const res = await fetch(repository.archiveUrl, { redirect: 'follow' });
+        if (!res.ok) throw new Error(`GitHub returned ${res.status}. The repository may be private, unavailable, or empty.`);
+        const contentLength = Number(res.headers.get('content-length') ?? 0);
+        if (contentLength > MAX_ARCHIVE_SIZE) {
+          throw new Error(`The repository archive is ${(contentLength / (1024 * 1024)).toFixed(1)}MB. The maximum supported size is 50MB.`);
         }
-        if (!res || !res.ok) throw new Error(`GitHub API returned ${lastStatus}. The repository may be private or the default branch could not be found.`);
         const blob = await res.blob();
-        const file = new File([blob], `${repoName.split('/').pop()}.zip`, { type: 'application/zip' });
-        return await analyzeFile(file);
+        if (blob.size > MAX_ARCHIVE_SIZE) {
+          throw new Error(`The repository archive is ${(blob.size / (1024 * 1024)).toFixed(1)}MB. The maximum supported size is 50MB.`);
+        }
+        const file = new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
+        return await analyzeArchive(file, 'github');
       } catch (e) {
         clearAnalysisTimeout();
         runningRef.current = false;
@@ -193,7 +199,7 @@ export function useAnalyzer() {
         throw e;
       }
     },
-    [safeSetState, analyzeFile, clearAnalysisTimeout]
+    [safeSetState, analyzeArchive, clearAnalysisTimeout]
   );
 
   const reset = useCallback(() => {
