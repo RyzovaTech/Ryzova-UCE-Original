@@ -94,7 +94,7 @@ export function AnalyzePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analyze Project</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Analyze a ZIP project or public GitHub repository. Compatibility checks run deterministically in your browser.
+          Upload a ZIP project or analyze a public GitHub repository. Compatibility checks run deterministically in your browser.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export function AnalyzePage() {
             <div
               role="button"
               tabIndex={0}
-              aria-label="Upload project archive. Press Enter or Space to browse files."
+              aria-label="Upload a project ZIP archive. Press Enter or Space to browse files."
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
@@ -146,7 +146,7 @@ export function AnalyzePage() {
               </div>
               <div>
                 <p className="text-base font-medium">
-                  {dragOver ? 'Drop your project here' : 'Upload your project to analyze compatibility.'}
+                  {dragOver ? 'Drop your project ZIP here' : 'Upload a project ZIP to analyze compatibility.'}
                 </p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Drag & drop a <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">.zip</code> archive, or click to browse.
@@ -263,7 +263,7 @@ export function AnalyzePage() {
                 <div>
                   <p className="font-medium text-destructive">{state.error}</p>
                   <p className="mt-1 text-muted-foreground">
-                    Try a different archive, or run the demo to see UCE in action.
+                    Try a different ZIP or public GitHub repository, or run the demo to see UCE in action.
                   </p>
                 </div>
               </div>

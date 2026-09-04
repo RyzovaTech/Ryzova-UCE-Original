@@ -35,6 +35,23 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function getPublicGithubRepository(url: string): string[] | null {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url.trim());
+  } catch {
+    return null;
+  }
+
+  const segments = parsedUrl.pathname.replace(/^\/+|\/+$/g, '').replace(/\.git$/i, '').split('/');
+  return parsedUrl.protocol === 'https:' &&
+    parsedUrl.hostname === 'github.com' &&
+    segments.length === 2 &&
+    segments.every(Boolean)
+    ? segments
+    : null;
+}
+
 export function useAnalyzer() {
   const [state, setState] = useState<AnalyzerState>(INITIAL_STATE);
   const mountedRef = useRef(true);
@@ -174,16 +191,8 @@ export function useAnalyzer() {
         safeSetState({ stage: 'error', error: msg, progress: 0 });
         return Promise.reject(new Error(msg));
       }
-      let parsedUrl: URL;
-      try {
-        parsedUrl = new URL(url.trim());
-      } catch {
-        const message = 'Enter a valid public GitHub repository URL, for example https://github.com/owner/repository.';
-        safeSetState({ stage: 'error', error: message, progress: 0 });
-        return Promise.reject(new Error(message));
-      }
-      const segments = parsedUrl.pathname.replace(/^\/+|\/+$/g, '').replace(/\.git$/i, '').split('/');
-      if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'github.com' || segments.length !== 2 || !segments.every(Boolean)) {
+      const segments = getPublicGithubRepository(url);
+      if (!segments) {
         const message = 'Enter a public GitHub repository URL in the format https://github.com/owner/repository.';
         safeSetState({ stage: 'error', error: message, progress: 0 });
         return Promise.reject(new Error(message));

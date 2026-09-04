@@ -68,7 +68,7 @@ export function LandingPage() {
             <div>
               <Badge variant="outline" className="mb-5 border-primary/30 bg-primary/10 text-primary">
                 <span className="mr-2 inline-block h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
-                MVP · Deterministic Engine
+                UCE · v1.2.3 · Deterministic Engine
               </Badge>
               <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl lg:text-6xl">
                 Stop wasting hours fixing <span className="text-gradient">broken project setups.</span>

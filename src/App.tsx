@@ -22,7 +22,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/pricing" element={<Navigate to="/" replace />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
           <Route path="/analyze" element={<Suspense fallback={<PageLoader />}><AnalyzePage /></Suspense>} />
