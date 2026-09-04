@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { readZip } from '@/lib/analyzer/zip';
 import { analyzeProject } from '@/lib/analyzer/analyzer';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
-import { parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
+import { getGitHubArchiveUrl, parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
 import { saveReportToHistory } from '@/lib/storage';
 import type { AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
 
@@ -33,9 +33,20 @@ const STAGE_PROGRESS: Record<AnalysisStage, number> = {
 };
 
 const MAX_ARCHIVE_SIZE = 50 * 1024 * 1024;
+const REMOTE_FETCH_TIMEOUT = 30_000;
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 export function useAnalyzer() {
@@ -179,8 +190,22 @@ export function useAnalyzer() {
       try {
         const repository = parseGitHubRepositoryUrl(url);
         safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
-        const res = await fetch(repository.archiveUrl, { redirect: 'follow' });
-        if (!res.ok) throw new Error(`GitHub returned ${res.status}. The repository may be private, unavailable, or empty.`);
+        const metadata = await fetchWithTimeout(repository.metadataUrl, {
+          headers: { Accept: 'application/vnd.github+json' },
+        });
+        if (!metadata.ok) throw new Error(`GitHub returned ${metadata.status}. The repository may be private, unavailable, or does not exist.`);
+        const details: unknown = await metadata.json();
+        const defaultBranch = typeof (details as { default_branch?: unknown }).default_branch === 'string'
+          ? (details as { default_branch: string }).default_branch
+          : null;
+        if (!defaultBranch) throw new Error('GitHub did not provide a default branch for this repository.');
+
+        const res = await fetchWithTimeout(getGitHubArchiveUrl(repository, defaultBranch));
+        if (!res.ok) throw new Error(`GitHub returned ${res.status} while downloading the default branch.`);
+        const contentType = res.headers.get('content-type') ?? '';
+        if (contentType && !/application\/(zip|octet-stream)|application\/x-zip-compressed/i.test(contentType)) {
+          throw new Error('GitHub returned an unexpected response instead of a ZIP archive.');
+        }
         const contentLength = Number(res.headers.get('content-length') ?? 0);
         if (contentLength > MAX_ARCHIVE_SIZE) {
           throw new Error(`The repository archive is ${(contentLength / (1024 * 1024)).toFixed(1)}MB. The maximum supported size is 50MB.`);
@@ -194,7 +219,11 @@ export function useAnalyzer() {
       } catch (e) {
         clearAnalysisTimeout();
         runningRef.current = false;
-        const message = e instanceof Error ? e.message : 'Failed to fetch GitHub repository.';
+        const message = e instanceof DOMException && e.name === 'AbortError'
+          ? 'GitHub did not respond within 30 seconds. Check your connection and try again.'
+          : e instanceof TypeError && /failed to fetch/i.test(e.message)
+            ? 'Could not connect to GitHub. Your browser, network, or content-security policy may be blocking GitHub downloads.'
+            : e instanceof Error ? e.message : 'Failed to fetch GitHub repository.';
         safeSetState({ stage: 'error', error: message, progress: 0 });
         throw e;
       }
