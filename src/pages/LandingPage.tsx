@@ -46,7 +46,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
           <UceLogo size="md" />
-          <span className="font-mono text-xs text-muted-foreground">UCE · v1.2.1</span>
+          <span className="font-mono text-xs text-muted-foreground">UCE · v1.2.2</span>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
               Dashboard
@@ -340,7 +340,7 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 md:flex-row md:px-8">
           <UceLogo size="sm" />
           <p className="text-xs text-muted-foreground">
-            Built by Ryzova · Trust First philosophy · v1.2.1
+            Built by Ryzova · Trust First philosophy · v1.2.2
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>

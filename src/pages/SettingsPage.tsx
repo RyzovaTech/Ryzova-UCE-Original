@@ -100,7 +100,7 @@ export function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">About</CardTitle>
-          <CardDescription>Universal Compatibility Engine v1.0.0</CardDescription>
+          <CardDescription>Universal Compatibility Engine v1.2.2</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>UCE performs deterministic, local-first compatibility analysis of software projects.</p>
