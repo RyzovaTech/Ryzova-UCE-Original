@@ -13,7 +13,7 @@ const problems = [
 ];
 
 const features = [
-  { icon: GitBranch, title: 'Git Repository Analysis', desc: 'Analyze a public GitHub repository or ZIP archive without changing your workflow.' },
+  { icon: GitBranch, title: 'Git Repository Analysis', desc: 'Analyze a public GitHub repository or ZIP archive without changing your workflow.', beta: true },
   { icon: ShieldCheck, title: 'Compatibility Detection', desc: 'Deterministic rules flag runtime, dependency, and config risk.' },
   { icon: Zap, title: 'Runtime Insights', desc: 'See the detected runtime, language, and build tool at a glance.' },
   { icon: Layers, title: 'Dependency Awareness', desc: 'Spot outdated majors, missing lockfiles, and duplicate ranges.' },
@@ -238,7 +238,14 @@ export function LandingPage() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                       <Icon className="h-4 w-4" />
                     </div>
-                    <CardTitle className="text-base">{f.title}</CardTitle>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      {f.title}
+                      {f.beta && (
+                        <span className="rounded border border-primary/30 bg-primary/10 px-1 py-px text-[8px] font-semibold leading-none tracking-[0.12em] text-primary">
+                          BETA
+                        </span>
+                      )}
+                    </CardTitle>
                     <CardDescription>{f.desc}</CardDescription>
                   </CardHeader>
                 </Card>
