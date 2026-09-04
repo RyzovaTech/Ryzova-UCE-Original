@@ -1,23 +1,67 @@
 # UCE — Universal Compatibility Engine
 
-Universal Compatibility Engine (UCE) is an open-source tool for
-analyzing software projects and identifying compatibility issues
+**Universal Compatibility Engine (UCE)** is an open-source developer tool
+for analyzing software projects and identifying compatibility issues
 before deployment.
+
+UCE helps developers understand project dependencies, framework versions,
+runtime requirements, and potential compatibility conflicts.
 
 ## Features
 
 - Project compatibility analysis
 - Dependency analysis
-- Framework/version detection
+- Framework and version detection
 - Runtime compatibility checks
-- Local-first analysis
+- Compatibility issue detection
 - Detailed compatibility reports
+- Local-first project analysis
 
-## License
+## Why UCE?
 
-UCE is licensed under the Apache License 2.0.
+Modern software projects depend on many frameworks, packages, runtimes,
+and configuration layers.
+
+A small version mismatch can cause build failures, runtime errors,
+or deployment problems.
+
+UCE is designed to help developers identify these compatibility risks
+before they become deployment problems.
+
+## Open Source
+
+UCE is fully open source and licensed under the
+[Apache License 2.0](LICENSE).
+
+Contributions, improvements, bug reports, and ideas are welcome.
 
 ## Contributing
 
-Contributions are welcome.
-Please read CONTRIBUTING.md before submitting changes.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes.
+
+## Security
+
+If you discover a security vulnerability, please read
+[SECURITY.md](SECURITY.md).
+
+## Ryzova
+
+UCE is developed as part of the **Ryzova** software ecosystem.
+
+Learn more about Ryzova:
+
+**[Ryzova — Software & Technology](https://www.ryzova.com/)**
+
+**[UCE Product Page](https://www.ryzova.com/uce)**
+
+## Project
+
+UCE GitHub Repository:
+
+https://github.com/ryzovauce-ryzova/Ryzova-UCE
+
+---
+
+**UCE — Universal Compatibility Engine**
+
+Built with a focus on open source, developer freedom, and reliable software compatibility.
