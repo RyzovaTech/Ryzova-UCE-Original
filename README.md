@@ -54,12 +54,6 @@ Learn more about Ryzova:
 
 **[UCE Product Page](https://www.ryzova.com/uce)**
 
-## Project
-
-UCE GitHub Repository:
-
-https://github.com/ryzovauce-ryzova/Ryzova-UCE
-
 ---
 
 **UCE — Universal Compatibility Engine**
