@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Bug, CircleCheck as CheckCircle2, Clock, FileSearch, GitBranch, Github, Layers, Package, CirclePlay as PlayCircle, ShieldCheck, Terminal, Zap } from 'lucide-react';
+import { ArrowRight, Bug, CircleCheck as CheckCircle2, Clock, GitBranch, Github, Layers, Package, CirclePlay as PlayCircle, ShieldCheck, Terminal, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +13,7 @@ const problems = [
 ];
 
 const features = [
-  { icon: FileSearch, title: 'Project Analysis', desc: 'Inspect manifests, configs, and structure from a ZIP upload.' },
+  { icon: GitBranch, title: 'Git Repository Analysis', desc: 'Analyze a public GitHub repository or ZIP archive without changing your workflow.' },
   { icon: ShieldCheck, title: 'Compatibility Detection', desc: 'Deterministic rules flag runtime, dependency, and config risk.' },
   { icon: Zap, title: 'Runtime Insights', desc: 'See the detected runtime, language, and build tool at a glance.' },
   { icon: Layers, title: 'Dependency Awareness', desc: 'Spot outdated majors, missing lockfiles, and duplicate ranges.' },
@@ -22,7 +22,7 @@ const features = [
 ];
 
 const steps = [
-  { step: 1, title: 'Upload Project', desc: 'Drag a .zip of your repository into the analyzer.' },
+  { step: 1, title: 'Choose a Project', desc: 'Upload a ZIP archive or paste a public GitHub repository URL.' },
   { step: 2, title: 'UCE Analyzes Structure', desc: 'Files are scanned and the stack is detected deterministically.' },
   { step: 3, title: 'Receive Compatibility Report', desc: 'Get a scored report with issues and recommendations.' },
 ];
@@ -68,7 +68,7 @@ export function LandingPage() {
             <div>
               <Badge variant="outline" className="mb-5 border-primary/30 bg-primary/10 text-primary">
                 <span className="mr-2 inline-block h-1.5 w-1.5 animate-pulse-soft rounded-full bg-primary" />
-                MVP · Deterministic Engine
+                Open Source · Deterministic Engine
               </Badge>
               <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl lg:text-6xl">
                 Stop wasting hours fixing <span className="text-gradient">broken project setups.</span>
@@ -88,7 +88,7 @@ export function LandingPage() {
                 </Button>
               </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                Understand software compatibility before debugging. No AI. No cloud. Runs in your browser.
+                Understand software compatibility before debugging. No AI. Local-first analysis runs in your browser.
               </p>
             </div>
 
@@ -187,7 +187,7 @@ export function LandingPage() {
             <Badge variant="outline" className="mb-3 border-success/30 text-success">The Solution</Badge>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Engineering reports, not guesses</h2>
             <p className="mt-3 text-muted-foreground">
-              Upload your project and receive an engineering compatibility report.
+              Analyze a ZIP archive or Git repository and receive an engineering compatibility report.
             </p>
             <Card className="mt-6 border-primary/20 bg-primary/10">
               <CardHeader>
@@ -252,7 +252,7 @@ export function LandingPage() {
       <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
         <div className="max-w-2xl">
           <Badge variant="outline" className="mb-3 border-secondary/30 text-secondary">How it works</Badge>
-          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Three steps from upload to report</h2>
+          <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Three steps from project to report</h2>
         </div>
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {steps.map((s, i) => (
@@ -326,7 +326,7 @@ export function LandingPage() {
         <div className="relative mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-14 md:flex-row md:items-center md:justify-between md:px-8">
           <div>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Find compatibility issues before they become debugging nightmares.</h2>
-            <p className="mt-2 text-primary-foreground/90">Upload a project and get a deterministic report in seconds.</p>
+            <p className="mt-2 text-primary-foreground/90">Analyze a ZIP archive or Git repository and get a deterministic report in seconds.</p>
           </div>
           <Button size="lg" variant="secondary" onClick={() => navigate('/analyze')} className="gap-2">
             <Clock className="h-4 w-4" />

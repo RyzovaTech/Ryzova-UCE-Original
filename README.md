@@ -10,12 +10,13 @@ runtime requirements, and potential compatibility conflicts.
 ## Features
 
 - Project compatibility analysis
+- Git repository analysis for public GitHub repositories and Git remotes
 - Dependency analysis
 - Framework and version detection
 - Runtime compatibility checks
 - Compatibility issue detection
 - Detailed compatibility reports
-- Local-first project analysis
+- Local-first project analysis: ZIP archives stay in your browser; public GitHub repositories are downloaded only when you explicitly provide a remote, then analyzed in-browser
 
 ## Why UCE?
 

@@ -5,15 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAnalyzer } from '@/hooks/useAnalyzer';
 import { cn } from '@/lib/utils';
 import type { AnalysisStage } from '@/lib/analyzer/types';
 
 const STAGE_LABELS: Record<AnalysisStage, string> = {
-  idle: 'Waiting for upload',
-  uploading: 'Uploading archive…',
+  idle: 'Waiting for a project',
+  uploading: 'Preparing project archive…',
   reading: 'Reading project structure…',
   detecting: 'Detecting technologies…',
   analyzing: 'Running compatibility rules…',
@@ -95,7 +94,7 @@ export function AnalyzePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analyze Project</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Upload your project to analyze compatibility. Everything runs locally in your browser.
+          Analyze a ZIP archive or a public GitHub repository with deterministic, browser-based checks.
         </p>
       </div>
 
@@ -107,8 +106,7 @@ export function AnalyzePage() {
           </TabsTrigger>
           <TabsTrigger value="github" className="gap-2">
             <Github className="h-4 w-4" />
-            GitHub URL
-            <Badge variant="warning" className="ml-1 px-1.5 py-0 text-[10px]">Beta</Badge>
+            Git Repository
           </TabsTrigger>
         </TabsList>
 
@@ -211,17 +209,16 @@ export function AnalyzePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                Import from GitHub
-                <Badge variant="warning" className="px-1.5 py-0 text-[10px]">Beta</Badge>
+                Analyze a Git Repository
               </CardTitle>
               <CardDescription>
-                Paste a public repository URL. UCE fetches the default branch and analyzes it locally.
+                Paste a public GitHub URL or Git remote. UCE downloads its default branch, then analyzes the repository structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
-                  placeholder="https://github.com/owner/repo"
+                  placeholder="https://github.com/owner/repository or git@github.com:owner/repository.git"
                   value={githubUrl}
                   onChange={(e) => setGithubUrl(e.target.value)}
                   disabled={busy}
@@ -237,7 +234,7 @@ export function AnalyzePage() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Works with public repositories. Private repos and unsupported branches will fail with a clear error.
+                Remote retrieval is limited to public GitHub repositories. Repository contents are processed locally after download; ZIP uploads never leave your browser.
               </p>
             </CardContent>
           </Card>
