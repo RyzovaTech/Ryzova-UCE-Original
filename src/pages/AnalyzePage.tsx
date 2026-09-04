@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle, Lock, Sparkles } from 'lucide-react';
+import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useAnalyzer } from '@/hooks/useAnalyzer';
-import { useLicense } from '@/lib/licensing/useLicense';
 import { cn } from '@/lib/utils';
 import type { AnalysisStage } from '@/lib/analyzer/types';
 
@@ -44,7 +43,6 @@ export function AnalyzePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, isRunning } = useAnalyzer();
-  const { scanAccess, isPro, freeScanLimit } = useLicense();
   const [dragOver, setDragOver] = useState(false);
   const [githubUrl, setGithubUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -91,7 +89,6 @@ export function AnalyzePage() {
   };
 
   const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
-  const scanBlocked = !scanAccess.allowed && !isPro;
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -102,39 +99,6 @@ export function AnalyzePage() {
         </p>
       </div>
 
-      {!isPro && (
-        <div className="flex items-center justify-between rounded-md border bg-muted/50 px-4 py-2 text-sm">
-          <span className="text-muted-foreground">
-            Free scans: <span className="font-semibold text-foreground">{scanAccess.remaining}</span> / {freeScanLimit} remaining
-          </span>
-          {scanAccess.remaining === 0 && (
-            <Button size="sm" variant="default" onClick={() => navigate('/pricing')} className="gap-2">
-              <Sparkles className="h-3.5 w-3.5" />
-              Upgrade to Pro
-            </Button>
-          )}
-        </div>
-      )}
-
-      {scanBlocked ? (
-        <Card className="border-destructive/30 bg-destructive/5">
-          <CardContent className="flex flex-col items-center justify-center gap-4 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/10">
-              <Lock className="h-7 w-7 text-destructive" />
-            </div>
-            <div>
-              <p className="text-base font-medium">Free scan limit reached</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                You've used all {freeScanLimit} free scans. Upgrade to Pro for unlimited scans, PDF export, and more.
-              </p>
-            </div>
-            <Button onClick={() => navigate('/pricing')} className="gap-2">
-              <Sparkles className="h-4 w-4" />
-              View Pricing
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
       <Tabs defaultValue="upload">
         <TabsList>
           <TabsTrigger value="upload" className="gap-2">
@@ -279,7 +243,6 @@ export function AnalyzePage() {
           </Card>
         </TabsContent>
       </Tabs>
-      )}
 
       {/* Progress / states */}
       {(busy || state.stage === 'completed' || state.stage === 'error') && (
