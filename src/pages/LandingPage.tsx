@@ -46,6 +46,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
           <UceLogo size="md" />
+          <span className="font-mono text-xs text-muted-foreground">UCE · v1.2.1</span>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
               Dashboard
@@ -299,16 +300,16 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Open source */}
+      {/* Open Source */}
       <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <Badge variant="outline" className="mb-3 border-primary/30 text-primary">Open Source</Badge>
-            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Free. Open. Built for developers.</h2>
+            <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Open Source</h2>
             <p className="mt-3 text-muted-foreground">
-              UCE is fully open source under the Apache License 2.0.
+              UCE is free and open source, built for developers and teams.
             </p>
-            <p className="mt-1 text-muted-foreground">No subscriptions. No paywalls. No proprietary lock-in.</p>
+            <p className="mt-1 text-muted-foreground">Licensed under Apache License 2.0.</p>
           </div>
           <Button variant="outline" asChild className="gap-2">
             <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer">
@@ -339,7 +340,7 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 md:flex-row md:px-8">
           <UceLogo size="sm" />
           <p className="text-xs text-muted-foreground">
-            Built by Ryzova · Trust First philosophy
+            Built by Ryzova · Trust First philosophy · v1.2.1
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
