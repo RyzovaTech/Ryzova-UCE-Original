@@ -1,11 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
   <title id="title">UCE logo</title>
   <desc id="desc">Universal Compatibility Engine</desc>
-  <defs>
-    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0b1d42"/><stop offset="1" stop-color="#020718"/></linearGradient>
-    <linearGradient id="blue" x1="0" y1="0" x2="0.8" y2="1"><stop stop-color="#35c8f3"/><stop offset="1" stop-color="#1461f2"/></linearGradient>
-  </defs>
-  <rect width="1200" height="1200" rx="230" fill="url(#background)"/>
+  <defs><linearGradient id="blue" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#35c8f3"/><stop offset="1" stop-color="#1461f2"/></linearGradient></defs>
   <path fill="#fff" d="M158 410h66v230c0 88 39 133 111 133s111-45 111-133V410h66v236c0 127-69 194-177 194S158 773 158 646V410Z"/>
   <path fill="url(#blue)" d="M716 469c-33-20-70-30-110-30-119 0-202 85-202 204s83 204 202 204c41 0 78-10 111-30l29 57c-41 28-87 42-140 42-159 0-275-114-275-273s116-273 275-273c53 0 99 14 140 42l-30 57Z"/>
   <path fill="url(#blue)" d="m599 642 34 34 76-77 21 21-97 98-55-55 21-21Z"/>

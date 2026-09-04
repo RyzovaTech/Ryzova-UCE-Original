@@ -1,0 +1,12 @@
+{
+  "name": "UCE — Universal Compatibility Engine",
+  "short_name": "UCE",
+  "description": "A local-first software compatibility checker for Git repositories and project archives.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#020718",
+  "theme_color": "#020718",
+  "icons": [
+    { "src": "/uce-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
