@@ -16,10 +16,15 @@ export function ReportWithLanguageBreakdownPage() {
     setReport(id ? getById(id) : history[0]?.result ?? null);
   }, [history, getById]);
 
-  const languages = report?.stack.languages ?? [];
-  const primaryLanguage = report?.stack.primaryLanguage ?? report?.stack.language;
-  const frameworks = report?.stack.frameworks ?? (report?.stack.framework !== 'Unknown' ? [report.stack.framework] : []);
-  const runtimes = report?.stack.runtimes ?? (report?.stack.runtime !== 'Unknown' ? [report.stack.runtime] : []);
+  const stack = report?.stack;
+  const languages = stack?.languages ?? [];
+  const primaryLanguage = stack?.primaryLanguage ?? stack?.language;
+  const frameworks = stack
+    ? (stack.frameworks ?? (stack.framework !== 'Unknown' ? [stack.framework] : []))
+    : [];
+  const runtimes = stack
+    ? (stack.runtimes ?? (stack.runtime !== 'Unknown' ? [stack.runtime] : []))
+    : [];
 
   return (
     <>
@@ -36,7 +41,7 @@ export function ReportWithLanguageBreakdownPage() {
                   {languages.length} language{languages.length !== 1 ? 's' : ''} detected by source-file size.
                 </CardDescription>
               </div>
-              {report.stack.mixedLanguage && (
+              {stack?.mixedLanguage && (
                 <Badge variant="secondary" className="shrink-0 text-xs">Mixed language</Badge>
               )}
             </div>
@@ -90,11 +95,11 @@ export function ReportWithLanguageBreakdownPage() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
-              <TechnologyGroup icon={<Layers className="h-4 w-4" />} title="Frameworks" values={frameworks} primary={report.stack.framework} />
-              <TechnologyGroup icon={<Boxes className="h-4 w-4" />} title="Runtimes" values={runtimes} primary={report.stack.runtime} />
-              <TechnologyGroup icon={<Package className="h-4 w-4" />} title="Package Manager" values={[report.stack.packageManager]} />
-              <TechnologyGroup icon={<Wrench className="h-4 w-4" />} title="Build Tool" values={[report.stack.buildTool]} />
-              <TechnologyGroup icon={<Database className="h-4 w-4" />} title="Database" values={[report.stack.database]} />
+              <TechnologyGroup icon={<Layers className="h-4 w-4" />} title="Frameworks" values={frameworks} primary={stack?.framework} />
+              <TechnologyGroup icon={<Boxes className="h-4 w-4" />} title="Runtimes" values={runtimes} primary={stack?.runtime} />
+              {stack && <TechnologyGroup icon={<Package className="h-4 w-4" />} title="Package Manager" values={[stack.packageManager]} />}
+              {stack && <TechnologyGroup icon={<Wrench className="h-4 w-4" />} title="Build Tool" values={[stack.buildTool]} />}
+              {stack && <TechnologyGroup icon={<Database className="h-4 w-4" />} title="Database" values={[stack.database]} />}
             </div>
           </CardContent>
         </Card>
