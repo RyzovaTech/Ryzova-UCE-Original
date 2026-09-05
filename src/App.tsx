@@ -31,7 +31,7 @@ function RouteSeo() {
       }
     : pathname === '/analyze'
       ? {
-          title: 'Analyze a Project — UCE Compatibility Checker',
+          title: 'Software Compatibility Analyzer — UCE',
           description: 'Analyze a ZIP archive or public GitHub repository with deterministic, browser-based software compatibility checks.',
           canonicalPath: '/analyze',
           indexable: true,
