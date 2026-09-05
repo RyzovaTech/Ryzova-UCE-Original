@@ -1,8 +1,9 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Loader as Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LandingPage } from '@/pages/LandingPage';
+import { SeoHead } from '@/components/SeoHead';
 
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const AnalyzePage = lazy(() => import('@/pages/AnalyzePage').then(m => ({ default: m.AnalyzePage })));
@@ -17,9 +18,52 @@ function PageLoader() {
   );
 }
 
+function RouteSeo() {
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  const seo = pathname === '/'
+    ? {
+        title: 'UCE — Universal Compatibility Engine',
+        description: 'UCE is an open-source software compatibility checker for Git repositories and project archives, with local-first dependency and configuration analysis.',
+        canonicalPath: '/',
+        indexable: true,
+      }
+    : pathname === '/analyze'
+      ? {
+          title: 'Analyze a Project — UCE',
+          description: 'Analyze a ZIP archive or public GitHub repository with deterministic, browser-based compatibility checks.',
+          canonicalPath: '/analyze',
+          indexable: true,
+        }
+      : pathname === '/dashboard'
+        ? {
+            title: 'Dashboard — UCE',
+            description: 'Review your locally stored UCE compatibility analysis history and project health reports.',
+            canonicalPath: '/dashboard',
+            indexable: false,
+          }
+        : pathname === '/settings'
+          ? {
+              title: 'Settings — UCE',
+              description: 'Manage UCE preferences and locally stored analysis data.',
+              canonicalPath: '/settings',
+              indexable: false,
+            }
+          : {
+              title: 'Compatibility Report — UCE',
+              description: 'View a locally generated UCE software compatibility analysis report.',
+              canonicalPath: pathname,
+              indexable: false,
+            };
+
+  return <SeoHead {...seo} />;
+}
+
 function App() {
   return (
     <BrowserRouter>
+      <RouteSeo />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<Navigate to="/" replace />} />
