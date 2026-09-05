@@ -7,7 +7,7 @@ import { SeoHead } from '@/components/SeoHead';
 
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const AnalyzePage = lazy(() => import('@/pages/AnalyzePage').then(m => ({ default: m.AnalyzePage })));
-const ReportPage = lazy(() => import('@/pages/ReportPage').then(m => ({ default: m.ReportPage })));
+const ReportPage = lazy(() => import('@/pages/ReportWithLanguageBreakdownPage').then(m => ({ default: m.ReportWithLanguageBreakdownPage })));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 function PageLoader() {
