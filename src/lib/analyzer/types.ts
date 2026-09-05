@@ -59,7 +59,7 @@ export interface LanguageProfile {
   percentage: number;
 }
 
-export type TechnologyKind = 'framework' | 'runtime' | 'database' | 'build-tool' | 'package-manager' | 'library' | 'testing' | 'linting' | 'styling' | 'auth' | 'api' | 'orm' | 'ci-cd' | 'container' | 'cloud';
+export type TechnologyKind = 'framework' | 'runtime' | 'database' | 'build-tool' | 'package-manager' | 'library' | 'testing' | 'linting' | 'styling' | 'auth' | 'api' | 'orm' | 'ci-cd' | 'container' | 'cloud' | 'configuration';
 
 export interface TechnologyEvidence {
   name: string;
