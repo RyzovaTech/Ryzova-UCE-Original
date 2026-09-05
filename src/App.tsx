@@ -24,15 +24,15 @@ function RouteSeo() {
 
   const seo = pathname === '/'
     ? {
-        title: 'UCE — Universal Compatibility Engine',
-        description: 'UCE is an open-source software compatibility checker for Git repositories and project archives, with local-first dependency and configuration analysis.',
+        title: 'UCE — Open-Source Software Compatibility Checker',
+        description: 'UCE is an open-source software compatibility checker for Git repositories and project archives, with local-first dependency, runtime, and configuration analysis.',
         canonicalPath: '/',
         indexable: true,
       }
     : pathname === '/analyze'
       ? {
-          title: 'Analyze a Project — UCE',
-          description: 'Analyze a ZIP archive or public GitHub repository with deterministic, browser-based compatibility checks.',
+          title: 'Analyze a Project — UCE Compatibility Checker',
+          description: 'Analyze a ZIP archive or public GitHub repository with deterministic, browser-based software compatibility checks.',
           canonicalPath: '/analyze',
           indexable: true,
         }
