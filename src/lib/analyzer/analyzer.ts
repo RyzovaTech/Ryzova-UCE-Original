@@ -9,6 +9,7 @@ import type {
 } from './types';
 import { parseFiles } from './parser';
 import { detectStack, buildSummary } from './detectors';
+import { detectLanguageProfile } from './language-profile';
 import { classifyProject, NON_SOFTWARE_MESSAGE } from './classifier';
 import { runAnalysis } from '../compatibility/analysis/engine';
 import { computeScore } from '../compatibility/scoring';
@@ -17,9 +18,7 @@ import { CATEGORIES } from '../compatibility/categories';
 
 const ANALYSIS_VERSION = 'uce-1.2.2';
 
-function generateId(): string {
-  return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-}
+function generateId(): string { return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 
 function buildTimeline(): TimelineStep[] {
   return [
@@ -43,54 +42,25 @@ function buildNonSoftwareTimeline(): TimelineStep[] {
 }
 
 function buildNonSoftwareCategories(): CategoryResult[] {
-  return CATEGORIES.map((cat) => ({
-    id: cat.id,
-    label: cat.label,
-    status: 'unknown' as const,
-    score: 0,
-    issues: [] as Issue[],
-    summary: 'Not applicable — project is not a software engineering project.',
-  }));
+  return CATEGORIES.map((cat) => ({ id: cat.id, label: cat.label, status: 'unknown' as const, score: 0, issues: [] as Issue[], summary: 'Not applicable — project is not a software engineering project.' }));
 }
 
-const ZERO_SCORE: CompatibilityScore = {
-  runtime: 0,
-  dependencies: 0,
-  configuration: 0,
-  structure: 0,
-  environment: 0,
-  security: 0,
-  deployment: 0,
-  performance: 0,
-  overall: 0,
-};
+const ZERO_SCORE: CompatibilityScore = { runtime: 0, dependencies: 0, configuration: 0, structure: 0, environment: 0, security: 0, deployment: 0, performance: 0, overall: 0 };
 
 export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const detectedFiles = parseFiles(input.files);
   const classification = classifyProject(input.files, detectedFiles);
-  const stack = detectStack(input.files, detectedFiles);
+  const detectedLanguages = detectLanguageProfile(input.files);
+  const stack = { ...detectStack(input.files, detectedFiles), languages: detectedLanguages };
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
 
-  // Non-software projects: skip compatibility scoring, return classification-only report
   if (!classification.isSoftware) {
     return {
-      id: generateId(),
-      createdAt: new Date().toISOString(),
-      analysisVersion: ANALYSIS_VERSION,
-      classification,
-      summary,
-      stack,
-      detectedFiles,
-      categories: buildNonSoftwareCategories(),
-      issues: [],
-      score: ZERO_SCORE,
+      id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION,
+      classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE,
       timeline: buildNonSoftwareTimeline(),
-      notes: [
-        `Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`,
-        'Results are generated using deterministic classification rules — no AI or external calls.',
-        NON_SOFTWARE_MESSAGE,
-      ],
+      notes: [`Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE],
       source: input.source,
     };
   }
@@ -100,40 +70,21 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const score = computeScore(categories);
   const issues = categories.flatMap((c) => c.issues);
   const recommendations = buildRecommendations(categories);
-
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const scanTimeMs = Math.round(endTime - startTime);
   const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
-    ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10
-    : undefined;
+    ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined;
   const rulesExecuted = categories.reduce((sum, c) => sum + c.issues.length, 0);
-
   if (summary.scanStats) {
     summary.scanStats.scanTimeMs = scanTimeMs;
     if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB;
     summary.scanStats.rulesExecuted = rulesExecuted;
   }
-
-  const notes: string[] = [
-    `Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`,
-    'Results are generated using deterministic compatibility rules — no AI or external calls.',
-    recommendations[0],
-  ];
-
+  const notes: string[] = [`Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
   return {
-    id: generateId(),
-    createdAt: new Date().toISOString(),
-    analysisVersion: ANALYSIS_VERSION,
-    classification,
-    summary,
-    stack,
-    detectedFiles,
-    categories,
-    issues,
-    score,
-    timeline: buildTimeline(),
-    notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes,
-    source: input.source,
+    id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary,
+    stack, detectedFiles, categories, issues, score, timeline: buildTimeline(),
+    notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source,
   };
 }
 
