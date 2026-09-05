@@ -9,7 +9,7 @@ import { detectTechnologyIntelligence } from './intelligence';
 import { detectCodeIntelligence } from './code-intelligence';
 import { detectSecurityIntelligence } from './security-intelligence';
 import { classifyProject, NON_SOFTWARE_MESSAGE } from './classifier';
-import { runAnalysis } from '../compatibility/analysis/engine';
+import { runAnalysis, countApplicableRules } from '../compatibility/analysis/engine';
 import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
@@ -72,7 +72,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime);
   const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined;
-  const rulesExecuted = categories.reduce((sum, c) => sum + c.issues.length, 0);
+  const rulesExecuted = countApplicableRules(stack.language);
   if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0); }
   const notes: string[] = [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ')}.`);
