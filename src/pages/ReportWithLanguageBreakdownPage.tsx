@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Boxes, Languages, Layers, Package, Wrench, Cpu, Database } from 'lucide-react';
+import { Boxes, Languages, Layers, Package, Wrench, Cpu, Database, Cloud, GitBranch, Monitor, Server } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useReportEngine } from '@/hooks/useReportEngine';
@@ -19,12 +19,21 @@ export function ReportWithLanguageBreakdownPage() {
   const stack = report?.stack;
   const languages = stack?.languages ?? [];
   const primaryLanguage = stack?.primaryLanguage ?? stack?.language;
-  const frameworks = stack
-    ? (stack.frameworks ?? (stack.framework !== 'Unknown' ? [stack.framework] : []))
-    : [];
-  const runtimes = stack
-    ? (stack.runtimes ?? (stack.runtime !== 'Unknown' ? [stack.runtime] : []))
-    : [];
+  const frameworks = stack ? uniqueKnown([...(stack.frameworks ?? []), stack.framework]) : [];
+  const runtimes = stack ? uniqueKnown([...(stack.runtimes ?? []), stack.runtime]) : [];
+  const confidence = stack?.confidence;
+
+  const technologyGroups = stack ? [
+    { icon: <Layers className="h-4 w-4" />, title: 'Frameworks', values: frameworks, primary: stack.framework, confidence: confidence?.framework },
+    { icon: <Boxes className="h-4 w-4" />, title: 'Runtimes', values: runtimes, primary: stack.runtime, confidence: confidence?.runtime },
+    { icon: <Package className="h-4 w-4" />, title: 'Package Manager', values: uniqueKnown([stack.packageManager]), confidence: confidence?.packageManager },
+    { icon: <Wrench className="h-4 w-4" />, title: 'Build Tool', values: uniqueKnown([stack.buildTool]), confidence: confidence?.buildTool },
+    { icon: <Database className="h-4 w-4" />, title: 'Database', values: uniqueKnown([stack.database]) },
+    { icon: <Monitor className="h-4 w-4" />, title: 'Frontend', values: uniqueKnown([stack.frontend]) },
+    { icon: <Server className="h-4 w-4" />, title: 'Backend', values: uniqueKnown([stack.backend]) },
+    { icon: <GitBranch className="h-4 w-4" />, title: 'Monorepo', values: uniqueKnown([stack.monorepo ?? 'Unknown']) },
+    { icon: <Cloud className="h-4 w-4" />, title: 'Cloud Provider', values: uniqueKnown([stack.cloudProvider ?? 'Unknown']) },
+  ] : [];
 
   return (
     <>
@@ -82,24 +91,36 @@ export function ReportWithLanguageBreakdownPage() {
         </Card>
       )}
 
-      {report && (frameworks.length > 0 || runtimes.length > 0) && (
+      {report && stack && (
         <Card className="mb-6 animate-slide-up">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Cpu className="h-4 w-4" />
-              Technology Intelligence
-            </CardTitle>
-            <CardDescription>
-              Multiple frameworks and runtimes detected from project dependencies, configuration and manifests.
-            </CardDescription>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Cpu className="h-4 w-4" />
+                  Technology Intelligence
+                </CardTitle>
+                <CardDescription>
+                  Full technology stack detected from dependencies, configuration, manifests and project structure.
+                </CardDescription>
+              </div>
+              <Badge variant="secondary" className="shrink-0 text-xs">
+                {technologyGroups.reduce((count, group) => count + group.values.length, 0)} detected
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <TechnologyGroup icon={<Layers className="h-4 w-4" />} title="Frameworks" values={frameworks} primary={stack?.framework} />
-              <TechnologyGroup icon={<Boxes className="h-4 w-4" />} title="Runtimes" values={runtimes} primary={stack?.runtime} />
-              {stack && <TechnologyGroup icon={<Package className="h-4 w-4" />} title="Package Manager" values={[stack.packageManager]} />}
-              {stack && <TechnologyGroup icon={<Wrench className="h-4 w-4" />} title="Build Tool" values={[stack.buildTool]} />}
-              {stack && <TechnologyGroup icon={<Database className="h-4 w-4" />} title="Database" values={[stack.database]} />}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {technologyGroups.map((group) => (
+                <TechnologyGroup
+                  key={group.title}
+                  icon={group.icon}
+                  title={group.title}
+                  values={group.values}
+                  primary={group.primary}
+                  confidence={group.confidence}
+                />
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -115,20 +136,22 @@ function TechnologyGroup({
   title,
   values,
   primary,
+  confidence,
 }: {
   icon: ReactNode;
   title: string;
   values: string[];
   primary?: string;
+  confidence?: number;
 }) {
-  const visible = values.filter((value, index) => value && value !== 'Unknown' && (index === 0 || value !== values[index - 1]));
+  const visible = uniqueKnown(values);
   if (!visible.length) return null;
 
   return (
     <div className="rounded-lg border bg-muted/20 p-4">
       <div className="mb-3 flex items-center gap-2 text-sm font-medium">
         {icon}
-        {title}
+        <span>{title}</span>
         <Badge variant="secondary" className="ml-auto text-[10px]">{visible.length} detected</Badge>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -139,8 +162,18 @@ function TechnologyGroup({
           </Badge>
         ))}
       </div>
+      {confidence !== undefined && (
+        <div className="mt-3 flex items-center justify-between border-t pt-2 text-[11px] text-muted-foreground">
+          <span>Detection confidence</span>
+          <span className="font-medium text-foreground">{Math.round(confidence)}%</span>
+        </div>
+      )}
     </div>
   );
+}
+
+function uniqueKnown(values: string[]): string[] {
+  return [...new Set(values.filter((value) => value && value !== 'Unknown' && value !== 'None'))];
 }
 
 function formatBytes(bytes: number): string {
