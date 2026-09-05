@@ -52,16 +52,12 @@ function safeJson(content: string | null): Record<string, unknown> | null {
   }
 }
 
-// Tally total bytes of source code per language, restricted to source roots
-// (excludes node_modules, vendor, tests, docs, build output, tooling dirs).
-// Used to decide between competing language signals — e.g. a Linux kernel
-// tarball that ships a few Node-based tooling files should be C, not TypeScript.
 const SOURCE_ROOT_SKIP_PREFIXES = [
   'node_modules/', 'vendor/', 'third_party/', 'dist/', 'build/', 'out/',
   '.next/', '.nuxt/', '.svelte-kit/', 'target/', '__pycache__/', '.venv/',
   'venv/', 'docs/', 'doc/', 'Documentation/', 'test/', 'tests/', '__tests__/',
   'spec/', 'fixtures/', 'examples/', 'demo/', 'samples/', 'coverage/',
-  'tools/', // tooling dirs often contain JS/TS that is NOT the project's language
+  'tools/',
 ];
 
 function isLikelySourceRoot(path: string): boolean {
@@ -81,6 +77,18 @@ const EXT_LANGUAGE: Record<string, Language> = {
   '.scala': 'Scala', '.sbt': 'Scala', '.cs': 'C#',
   '.c': 'C', '.h': 'C', '.cpp': 'C++', '.cc': 'C++', '.cxx': 'C++', '.hpp': 'C++', '.hh': 'C++',
   '.php': 'PHP',
+  '.zig': 'Zig',
+  '.ml': 'OCaml', '.mli': 'OCaml',
+  '.hs': 'Haskell', '.lhs': 'Haskell',
+  '.lua': 'Lua',
+  '.jl': 'Julia',
+  '.r': 'R', '.R': 'R',
+  '.cr': 'Crystal',
+  '.nim': 'Nim',
+  '.sol': 'Solidity',
+  '.v': 'V',
+  '.pl': 'Perl', '.pm': 'Perl',
+  '.erl': 'Erlang', '.hrl': 'Erlang',
 };
 
 function tallyLanguageBytes(projectFiles: ProjectFile[]): Map<Language, number> {
@@ -99,8 +107,6 @@ function tallyLanguageBytes(projectFiles: ProjectFile[]): Map<Language, number> 
   return totals;
 }
 
-// Kernel / low-level C project signatures — directories and files that are
-// strong signals of a C system-software project (Linux kernel, busybox, etc.).
 function hasKernelSignatures(files: DetectedFile[] | ProjectFile[]): boolean {
   const paths = files.map((f) => f.path);
   const has = (p: string) => paths.some((x) => x === p || x.startsWith(p + '/') || x.endsWith('/' + p));
@@ -109,29 +115,19 @@ function hasKernelSignatures(files: DetectedFile[] | ProjectFile[]): boolean {
 }
 
 export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[]): Language {
-  // --- Volume-weighted language detection ---
-  // Tally source bytes per language first, then reconcile with manifest signals.
-  // This prevents a large C codebase from being misdetected as TypeScript just
-  // because it ships a few Node-based tooling files (tsconfig.json, package.json).
   const byteTotals = tallyLanguageBytes(projectFiles);
   const sortedByVolume = Array.from(byteTotals.entries()).sort((a, b) => b[1] - a[1]);
   const dominantByVolume = sortedByVolume[0]?.[0];
   const dominantBytes = sortedByVolume[0]?.[1] ?? 0;
   const secondBytes = sortedByVolume[1]?.[1] ?? 0;
-  // Dominant only if it has meaningful volume and clearly outweighs the runner-up.
   const hasClearVolumeWinner = dominantBytes > 0 && dominantBytes >= secondBytes * 4 && dominantBytes > 50_000;
 
-  // --- Kernel / system C detection (high confidence) ---
-  // Strong C signatures override JS/TS manifests when the C volume is significant.
   const cBytes = byteTotals.get('C') ?? 0;
   const cppBytes = byteTotals.get('C++') ?? 0;
   if (hasKernelSignatures(files) && cBytes > 100_000 && cBytes > cppBytes) {
     return 'C';
   }
 
-  // --- Manifest-based detection (high confidence) ---
-  // Only trust a manifest if its language is consistent with the volume signal,
-  // OR there is no clear volume winner (small / mixed projects).
   const manifestSaysTS = hasFile(files, 'tsconfig.json') || hasPrefix(files, 'tsconfig.');
   if (manifestSaysTS) {
     if (hasClearVolumeWinner && dominantByVolume !== 'TypeScript' && dominantByVolume !== 'JavaScript') {
@@ -190,7 +186,6 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
     return 'Dart';
   }
   if (hasFile(files, 'CMakeLists.txt')) {
-    // CMake is used for both C and C++; pick whichever has more source volume.
     if (cBytes > cppBytes && cBytes > 0) return 'C';
     if (hasClearVolumeWinner && (dominantByVolume === 'C' || dominantByVolume === 'C++')) {
       return dominantByVolume;
@@ -209,9 +204,16 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
     if (hasClearVolumeWinner && dominantByVolume !== 'C#') return dominantByVolume;
     return 'C#';
   }
+  if (hasFile(files, 'build.zig') || hasFile(files, 'build.zig.zon')) return 'Zig';
+  if (hasFile(files, 'dune-project') || hasFile(files, 'dune-workspace') || hasFile(files, 'opam')) return 'OCaml';
+  if (hasFile(files, 'stack.yaml') || hasFile(files, 'cabal.project') || hasFile(files, 'package.yaml')) return 'Haskell';
+  if (hasFile(files, 'Project.toml') && hasExtension(projectFiles, '.jl')) return 'Julia';
+  if (hasFile(files, 'DESCRIPTION') && (hasExtension(projectFiles, '.r') || hasExtension(projectFiles, '.R'))) return 'R';
+  if (hasFile(files, 'shard.yml')) return 'Crystal';
+  if (hasFile(files, 'v.mod')) return 'V';
+  if (hasFile(files, 'cpanfile') || hasFile(files, 'Makefile.PL') || hasFile(files, 'Build.PL')) return 'Perl';
+  if (hasFile(files, 'rebar.config') || hasFile(files, 'rebar3')) return 'Erlang';
 
-  // --- Extension-based fallback (catches source-only projects) ---
-  // Prefer the volume winner if there is one; otherwise fall back to first-match.
   if (hasClearVolumeWinner) return dominantByVolume;
   if (hasExtension(projectFiles, '.ts') || hasExtension(projectFiles, '.tsx')) return 'TypeScript';
   if (hasExtension(projectFiles, '.js') || hasExtension(projectFiles, '.jsx') || hasExtension(projectFiles, '.mjs') || hasExtension(projectFiles, '.cjs')) return 'JavaScript';
@@ -225,10 +227,21 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
   if (hasExtension(projectFiles, '.swift')) return 'Swift';
   if (hasExtension(projectFiles, '.scala') || hasExtension(projectFiles, '.sbt')) return 'Scala';
   if (hasExtension(projectFiles, '.cs')) return 'C#';
-  // Distinguish C from C++: .c/.h → C; .cpp/.cc/.cxx/.hpp/.hh → C++.
   if (hasExtension(projectFiles, '.cpp') || hasExtension(projectFiles, '.cc') || hasExtension(projectFiles, '.cxx') || hasExtension(projectFiles, '.hpp') || hasExtension(projectFiles, '.hh')) return 'C++';
   if (hasExtension(projectFiles, '.c') || hasExtension(projectFiles, '.h')) return 'C';
   if (hasExtension(projectFiles, '.php')) return 'PHP';
+  if (hasExtension(projectFiles, '.zig')) return 'Zig';
+  if (hasExtension(projectFiles, '.ml') || hasExtension(projectFiles, '.mli')) return 'OCaml';
+  if (hasExtension(projectFiles, '.hs') || hasExtension(projectFiles, '.lhs')) return 'Haskell';
+  if (hasExtension(projectFiles, '.lua')) return 'Lua';
+  if (hasExtension(projectFiles, '.jl')) return 'Julia';
+  if (hasExtension(projectFiles, '.r')) return 'R';
+  if (hasExtension(projectFiles, '.cr')) return 'Crystal';
+  if (hasExtension(projectFiles, '.nim')) return 'Nim';
+  if (hasExtension(projectFiles, '.sol')) return 'Solidity';
+  if (hasExtension(projectFiles, '.v')) return 'V';
+  if (hasExtension(projectFiles, '.pl') || hasExtension(projectFiles, '.pm')) return 'Perl';
+  if (hasExtension(projectFiles, '.erl') || hasExtension(projectFiles, '.hrl')) return 'Erlang';
 
   return 'Unknown';
 }
@@ -260,6 +273,11 @@ export function detectFramework(files: DetectedFile[], projectFiles: ProjectFile
   if (deps['fastify']) return 'Fastify';
   if (deps['@nestjs/core']) return 'NestJS';
   if (deps['hono']) return 'Hono';
+  if (deps['@builder.io/qwik']) return 'Qwik';
+  if (deps['preact']) return 'Preact';
+  if (deps['alpinejs']) return 'Alpine.js';
+  if (deps['lit']) return 'Lit';
+  if (deps['@stencil/core']) return 'Stencil';
 
   if (hasFile(files, 'requirements.txt') || hasFile(files, 'pyproject.toml') || hasFile(files, 'setup.py') || hasFile(files, 'setup.cfg')) {
     const req = readFileText(projectFiles, 'requirements.txt')
@@ -275,6 +293,7 @@ export function detectFramework(files: DetectedFile[], projectFiles: ProjectFile
     const pom = readFileText(projectFiles, 'pom.xml') ?? '';
     if (/spring-boot/i.test(pom)) return 'Spring Boot';
     if (/quarkus/i.test(pom)) return 'Quarkus';
+    if (/playframework|com\.typesafe\.play/i.test(pom)) return 'Play Framework';
   }
   if (hasFile(files, 'Cargo.toml')) {
     const cargo = readFileText(projectFiles, 'Cargo.toml') ?? '';
@@ -304,6 +323,19 @@ export function detectFramework(files: DetectedFile[], projectFiles: ProjectFile
   if (hasFile(files, 'go.mod')) {
     const gomod = readFileText(projectFiles, 'go.mod') ?? '';
     if (/gin-gonic\/gin/.test(gomod)) return 'Gin';
+    if (/gofiber\/fiber/.test(gomod)) return 'Fiber';
+    if (/labstack\/echo/.test(gomod)) return 'Echo';
+    if (/go-chi\/chi/.test(gomod)) return 'Chi';
+    if (/revel\/revel/.test(gomod)) return 'Revel';
+  }
+  if (hasFile(files, 'build.gradle') || hasFile(files, 'build.gradle.kts')) {
+    const gradle = readFileText(projectFiles, 'build.gradle') ?? readFileText(projectFiles, 'build.gradle.kts') ?? '';
+    if (/ktor/i.test(gradle)) return 'Ktor';
+    if (/micronaut/i.test(gradle)) return 'Micronaut';
+  }
+  if (hasFile(files, 'Package.swift')) {
+    const swift = readFileText(projectFiles, 'Package.swift') ?? '';
+    if (/vapor/i.test(swift)) return 'Vapor';
   }
   return 'Unknown';
 }
@@ -313,7 +345,7 @@ export function detectRuntime(files: DetectedFile[], projectFiles: ProjectFile[]
   if (stack.language === 'Rust') return 'Rust';
   if (stack.language === 'Go') return 'Go';
   if (stack.language === 'Ruby') return 'Ruby';
-  if (stack.language === 'Elixir') return 'BEAM';
+  if (stack.language === 'Elixir' || stack.language === 'Erlang') return 'BEAM';
   if (stack.language === 'Dart') return 'Dart';
   if (stack.language === 'Swift') return 'Swift';
   if (stack.language === 'C#') return '.NET';
@@ -360,8 +392,6 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
   if (hasFile(files, 'Package.swift')) return 'swift-package';
   if (hasFile(files, 'build.sbt')) return 'sbt';
   if (hasFile(files, 'packages.config') || projectFiles.some((f) => !f.isDirectory && f.path.toLowerCase().endsWith('.csproj'))) return 'nuget';
-
-  // Language-based fallback for source-only projects
   if (language === 'Python') return 'pip';
   if (language === 'Rust') return 'cargo';
   if (language === 'Go') return 'go-modules';
@@ -373,7 +403,6 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
   if (language === 'Swift') return 'swift-package';
   if (language === 'C#') return 'nuget';
   if (language === 'TypeScript' || language === 'JavaScript') return 'npm';
-
   return 'Unknown';
 }
 
@@ -397,13 +426,12 @@ export function detectBuildTool(files: DetectedFile[], stack: { framework: Frame
   if (hasPrefix(files, 'webpack.config.')) return 'Webpack';
   if (hasPrefix(files, 'rollup.config.')) return 'Rollup';
   if (hasPrefix(files, 'esbuild.config.')) return 'esbuild';
+  if (hasFile(files, 'hardhat.config.js') || hasFile(files, 'hardhat.config.ts')) return 'turbopack';
   if (hasFile(files, 'pyproject.toml') || hasFile(files, 'requirements.txt') || hasFile(files, 'requirements-dev.txt')) {
     if (stack.packageManager === 'poetry') return 'poetry';
     if (stack.packageManager === 'hatch') return 'hatch';
     return 'pip';
   }
-
-  // Language-based fallback for source-only projects
   if (stack.language === 'Python') return 'pip';
   if (stack.language === 'Rust') return 'Cargo';
   if (stack.language === 'Go') return 'Unknown';
@@ -411,20 +439,19 @@ export function detectBuildTool(files: DetectedFile[], stack: { framework: Frame
   if (stack.language === 'Swift') return 'Swift Package Manager';
   if (stack.language === 'Elixir') return 'Mix';
   if (stack.language === 'Dart') return 'Pub';
-
   if (stack.framework === 'React') return 'Create React App';
   return 'Unknown';
 }
 
 const FRONTEND_FRAMEWORKS: Framework[] = [
   'Next.js', 'Nuxt', 'Astro', 'Remix', 'Gatsby', 'React', 'Vue', 'Angular',
-  'Svelte', 'SvelteKit', 'Solid', 'Flutter',
+  'Svelte', 'SvelteKit', 'Solid', 'Qwik', 'Preact', 'Alpine.js', 'Lit', 'Stencil', 'Flutter',
 ];
 
 const BACKEND_FRAMEWORKS: Framework[] = [
-  'Express', 'NestJS', 'Fastify', 'Hono', 'Django', 'Flask', 'FastAPI',
-  'Spring Boot', 'Quarkus', 'Actix', 'Axum', 'Rocket', 'Rails', 'Sinatra',
-  'Phoenix', 'Laravel', 'Symfony', 'Gin',
+  'Express', 'NestJS', 'Fastify', 'Hono', 'Fiber', 'Echo', 'Chi', 'Django', 'Flask', 'FastAPI',
+  'Spring Boot', 'Quarkus', 'Ktor', 'Micronaut', 'Actix', 'Axum', 'Rocket', 'Rails', 'Sinatra',
+  'Phoenix', 'Vapor', 'Revel', 'Play Framework', 'Laravel', 'Symfony', 'Gin',
 ];
 
 export function detectMonorepo(detectedFiles: DetectedFile[], projectFiles: ProjectFile[]): MonorepoTool | 'None' {
@@ -438,9 +465,7 @@ export function detectMonorepo(detectedFiles: DetectedFile[], projectFiles: Proj
     try {
       const p = JSON.parse(pkg.content);
       if (p.workspaces) return 'Yarn Workspaces';
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
   return 'None';
 }
@@ -456,21 +481,11 @@ export function detectCloudProvider(detectedFiles: DetectedFile[]): CloudProvide
 }
 
 function computeConfidence(
-  detectedFiles: DetectedFile[],
-  projectFiles: ProjectFile[],
-  language: Language,
-  framework: Framework,
-  runtime: Runtime,
-  packageManager: PackageManager,
-  buildTool: BuildTool
+  detectedFiles: DetectedFile[], projectFiles: ProjectFile[], language: Language, framework: Framework,
+  runtime: Runtime, packageManager: PackageManager, buildTool: BuildTool
 ): DetectionConfidence {
   const hasManifest = (names: string[]) => detectedFiles.some((f) => names.some((n) => f.path === n || f.path.endsWith('/' + n)));
-  const hasExtension = (ext: string) => projectFiles.some((f) => !f.isDirectory && f.path.toLowerCase().endsWith(ext));
-
-  // Volume-weighted language confidence. A manifest is strong evidence, but
-  // if the actual source bytes are dominated by a different language, the
-  // manifest is likely for tooling only (e.g. Linux kernel ships tsconfig.json
-  // for its Node-based tooling) — drop confidence sharply in that case.
+  const hasExt = (ext: string) => projectFiles.some((f) => !f.isDirectory && f.path.toLowerCase().endsWith(ext.toLowerCase()));
   const byteTotals = tallyLanguageBytes(projectFiles);
   const sortedBytes = Array.from(byteTotals.entries()).sort((a, b) => b[1] - a[1]);
   const topLangByBytes = sortedBytes[0]?.[0];
@@ -480,57 +495,32 @@ function computeConfidence(
   const volumeMismatch = volumeDominant && topLangByBytes !== language;
 
   let languageConfidence = 50;
-  if (language === 'TypeScript') {
-    if (hasManifest(['tsconfig.json'])) languageConfidence = 100;
-    else if (hasManifest(['package.json'])) languageConfidence = 95;
-    else if (hasExtension('.ts') || hasExtension('.tsx')) languageConfidence = 80;
-  } else if (language === 'JavaScript') {
-    if (hasManifest(['package.json'])) languageConfidence = 100;
-    else if (hasExtension('.js') || hasExtension('.jsx')) languageConfidence = 80;
-  } else if (language === 'Python') {
-    if (hasManifest(['pyproject.toml', 'setup.py', 'requirements.txt'])) languageConfidence = 100;
-    else if (hasExtension('.py')) languageConfidence = 80;
-  } else if (language === 'Rust') {
-    if (hasManifest(['Cargo.toml'])) languageConfidence = 100;
-    else if (hasExtension('.rs')) languageConfidence = 80;
-  } else if (language === 'Go') {
-    if (hasManifest(['go.mod'])) languageConfidence = 100;
-    else if (hasExtension('.go')) languageConfidence = 80;
-  } else if (language === 'C') {
-    // C is detected when kernel signatures or .c/.h volume dominate.
-    if (hasKernelSignatures(detectedFiles)) languageConfidence = 98;
-    else if (hasExtension('.c') || hasExtension('.h')) languageConfidence = 85;
-  } else if (language === 'C++') {
-    if (hasManifest(['CMakeLists.txt'])) languageConfidence = 95;
-    else if (hasExtension('.cpp') || hasExtension('.cc') || hasExtension('.hpp')) languageConfidence = 85;
-  } else if (language !== 'Unknown') {
-    languageConfidence = hasManifest(['Cargo.toml', 'go.mod', 'pom.xml', 'build.gradle', 'composer.json', 'Gemfile', 'mix.exs', 'pubspec.yaml', 'CMakeLists.txt', 'Package.swift', 'build.sbt']) ? 100 : 80;
-  }
-  // If the source volume is dominated by a different language, the manifest
-  // is likely tooling-only — cap confidence low so the UI can flag uncertainty.
-  if (volumeMismatch) {
-    languageConfidence = Math.min(languageConfidence, 45);
-  }
+  const strongLanguageManifests: Partial<Record<Language, string[]>> = {
+    TypeScript: ['tsconfig.json'], JavaScript: ['package.json'], Python: ['pyproject.toml', 'setup.py', 'requirements.txt'],
+    Rust: ['Cargo.toml'], Go: ['go.mod'], Java: ['pom.xml', 'build.gradle'], Kotlin: ['build.gradle.kts'],
+    C: ['Kconfig', 'Kbuild', 'CMakeLists.txt'], 'C++': ['CMakeLists.txt'], PHP: ['composer.json'], Ruby: ['Gemfile'],
+    Elixir: ['mix.exs'], Dart: ['pubspec.yaml'], Swift: ['Package.swift'], Scala: ['build.sbt'], 'C#': ['packages.config'],
+    Zig: ['build.zig', 'build.zig.zon'], OCaml: ['dune-project', 'dune-workspace', 'opam'], Haskell: ['stack.yaml', 'cabal.project', 'package.yaml'],
+    Lua: ['.luacheckrc'], Julia: ['Project.toml'], R: ['DESCRIPTION', 'NAMESPACE', 'renv.lock'], Crystal: ['shard.yml'], Nim: ['nimble'],
+    Solidity: ['foundry.toml', 'hardhat.config.js', 'hardhat.config.ts'], V: ['v.mod'], Perl: ['cpanfile', 'Makefile.PL', 'Build.PL'],
+    Erlang: ['rebar.config', 'rebar3'],
+  };
+  const manifests = strongLanguageManifests[language] ?? [];
+  if (manifests.length && hasManifest(manifests)) languageConfidence = 100;
+  else if (hasExt('.' + language.toLowerCase().replace('#', ''))) languageConfidence = 80;
+  else if (language !== 'Unknown') languageConfidence = 70;
+  if (volumeMismatch) languageConfidence = Math.min(languageConfidence, 45);
 
   let frameworkConfidence = 50;
   const pkg = projectFiles.find((f) => f.path === 'package.json' || f.path.endsWith('/package.json'));
   let pkgDeps: Record<string, string> = {};
   if (pkg?.content) {
-    try {
-      const p = JSON.parse(pkg.content);
-      pkgDeps = { ...(p.dependencies ?? {}), ...(p.devDependencies ?? {}) } as Record<string, string>;
-    } catch {
-      // ignore
-    }
+    try { const p = JSON.parse(pkg.content); pkgDeps = { ...(p.dependencies ?? {}), ...(p.devDependencies ?? {}) }; } catch {}
   }
   if (framework !== 'Unknown') {
-    const configBased = detectedFiles.some((f) =>
-      /next\.config|nuxt\.config|astro\.config|remix\.config|gatsby\.config|angular\.json|svelte\.config/.test(f.path)
-    );
-    const depBased = !!pkgDeps[framework] || !!pkgDeps['@angular/core'] || !!pkgDeps['@sveltejs/kit'] || !!pkgDeps['react'] || !!pkgDeps['vue'] || !!pkgDeps['solid-js'] || !!pkgDeps['express'] || !!pkgDeps['fastify'] || !!pkgDeps['@nestjs/core'] || !!pkgDeps['hono'];
-    if (configBased) frameworkConfidence = 99;
-    else if (depBased) frameworkConfidence = 95;
-    else frameworkConfidence = 75;
+    const configBased = detectedFiles.some((f) => /next\.config|nuxt\.config|astro\.config|remix\.config|gatsby\.config|angular\.json|svelte\.config/.test(f.path));
+    const depBased = !!pkgDeps['@angular/core'] || !!pkgDeps['@sveltejs/kit'] || !!pkgDeps['react'] || !!pkgDeps['vue'] || !!pkgDeps['solid-js'] || !!pkgDeps['express'] || !!pkgDeps['fastify'] || !!pkgDeps['@nestjs/core'] || !!pkgDeps['hono'] || !!pkgDeps['@builder.io/qwik'] || !!pkgDeps['preact'] || !!pkgDeps['alpinejs'] || !!pkgDeps['lit'] || !!pkgDeps['@stencil/core'];
+    if (configBased) frameworkConfidence = 99; else if (depBased) frameworkConfidence = 95; else frameworkConfidence = 75;
   }
 
   let runtimeConfidence = 50;
@@ -553,19 +543,10 @@ function computeConfidence(
 
   let buildConfidence = 50;
   if (buildTool !== 'Unknown') {
-    const configBased = detectedFiles.some((f) =>
-      /vite\.config|next\.config|nuxt\.config|astro\.config|remix\.config|gatsby\.config|angular\.json|webpack\.config|rollup\.config|esbuild\.config|Cargo\.toml|pom\.xml|build\.gradle|CMakeLists\.txt|Makefile|turbo\.json/.test(f.path)
-    );
+    const configBased = detectedFiles.some((f) => /vite\.config|next\.config|nuxt\.config|astro\.config|remix\.config|gatsby\.config|angular\.json|webpack\.config|rollup\.config|esbuild\.config|Cargo\.toml|pom\.xml|build\.gradle|CMakeLists\.txt|Makefile|turbo\.json/.test(f.path));
     buildConfidence = configBased ? 98 : 75;
   }
-
-  return {
-    language: languageConfidence,
-    framework: frameworkConfidence,
-    runtime: runtimeConfidence,
-    packageManager: pmConfidence,
-    buildTool: buildConfidence,
-  };
+  return { language: languageConfidence, framework: frameworkConfidence, runtime: runtimeConfidence, packageManager: pmConfidence, buildTool: buildConfidence };
 }
 
 export function detectStack(projectFiles: ProjectFile[], detectedFiles: DetectedFile[]): TechnologyStack {
@@ -574,60 +555,36 @@ export function detectStack(projectFiles: ProjectFile[], detectedFiles: Detected
   const runtime = detectRuntime(detectedFiles, projectFiles, { language, framework });
   const packageManager = detectPackageManager(detectedFiles, projectFiles, language);
   const buildTool = detectBuildTool(detectedFiles, { framework, packageManager, language });
-
-  const frontend: Framework | 'None' | 'Unknown' =
-    FRONTEND_FRAMEWORKS.includes(framework) ? framework : 'Unknown';
-  const backend: Framework | 'None' | 'Unknown' =
-    BACKEND_FRAMEWORKS.includes(framework) ? framework : 'None';
-
-  const database: 'Detected' | 'Unknown' =
-    projectFiles.some((f) =>
-      /prisma|schema\.prisma|drizzle|sequelize|typeorm|mongoose|knex|mikro-orm|alembic|sqlx|golang-migrate|dbmate|gqlgen|hasura|supabase|firebase|firestore|redis|memcached|elasticsearch/i.test(
-        f.path
-      )
-    )
-      ? 'Detected'
-      : 'Unknown';
-
+  const frontend: Framework | 'None' | 'Unknown' = FRONTEND_FRAMEWORKS.includes(framework) ? framework : 'Unknown';
+  const backend: Framework | 'None' | 'Unknown' = BACKEND_FRAMEWORKS.includes(framework) ? framework : 'None';
+  const database: TechnologyStack['database'] = (() => {
+    const paths = projectFiles.map((f) => f.path.toLowerCase());
+    const has = (pattern: RegExp) => paths.some((p) => pattern.test(p));
+    const text = projectFiles.filter((f) => !f.isDirectory && f.content).map((f) => f.content ?? '').join('\n');
+    if (has(/supabase|supabase\.toml/) || /supabase/i.test(text)) return 'Supabase';
+    if (has(/firebase|firestore/) || /firebase|firestore/i.test(text)) return 'Firebase';
+    if (has(/redis|ioredis|redis\.conf/)) return 'Redis';
+    if (has(/elasticsearch|elastic\.yml|elastic\.yaml/)) return 'Elasticsearch';
+    if (has(/opensearch/)) return 'OpenSearch';
+    if (has(/postgres|postgresql|pg_/) || /postgres(?:ql)?/i.test(text)) return 'PostgreSQL';
+    if (has(/mysql/) || /mysql/i.test(text)) return 'MySQL';
+    if (has(/mariadb/) || /mariadb/i.test(text)) return 'MariaDB';
+    if (has(/sqlite/) || /sqlite/i.test(text)) return 'SQLite';
+    if (has(/mongodb|mongoose/) || /mongodb/i.test(text)) return 'MongoDB';
+    if (has(/cassandra/) || /cassandra/i.test(text)) return 'Cassandra';
+    if (has(/dynamodb|aws-sdk.*dynamodb/) || /dynamodb/i.test(text)) return 'DynamoDB';
+    if (has(/cockroach/) || /cockroachdb?/i.test(text)) return 'CockroachDB';
+    if (has(/neo4j/) || /neo4j/i.test(text)) return 'Neo4j';
+    if (has(/prisma|schema\.prisma|drizzle|sequelize|typeorm|knex|mikro-orm|alembic|sqlx|golang-migrate|dbmate|gqlgen|hasura|memcached/)) return 'Detected';
+    return 'Unknown';
+  })();
   const monorepo = detectMonorepo(detectedFiles, projectFiles);
   const cloudProvider = detectCloudProvider(detectedFiles);
   const confidence = computeConfidence(detectedFiles, projectFiles, language, framework, runtime, packageManager, buildTool);
-
-  return {
-    language,
-    framework,
-    runtime,
-    packageManager,
-    buildTool,
-    frontend,
-    backend,
-    database,
-    configFiles: detectedFiles.map((f) => f.path),
-    monorepo,
-    cloudProvider,
-    confidence,
-  };
+  return { language, framework, runtime, packageManager, buildTool, frontend, backend, database, configFiles: detectedFiles.map((f) => f.path), monorepo, cloudProvider, confidence };
 }
 
-export function buildSummary(
-  name: string,
-  projectFiles: ProjectFile[],
-  detectedFiles: DetectedFile[],
-  stack: TechnologyStack,
-  scanStats: ScanStats
-): ProjectSummary {
-  const foldersScanned = new Set(
-    projectFiles.filter((f) => f.isDirectory).map((f) => f.path)
-  ).size;
-  return {
-    name,
-    framework: stack.framework,
-    language: stack.language,
-    runtime: stack.runtime,
-    packageManager: stack.packageManager,
-    detectedConfigFiles: detectedFiles.map((f) => f.path),
-    filesScanned: projectFiles.filter((f) => !f.isDirectory).length,
-    foldersScanned,
-    scanStats,
-  };
+export function buildSummary(name: string, projectFiles: ProjectFile[], detectedFiles: DetectedFile[], stack: TechnologyStack, scanStats: ScanStats): ProjectSummary {
+  const foldersScanned = new Set(projectFiles.filter((f) => f.isDirectory).map((f) => f.path)).size;
+  return { name, framework: stack.framework, language: stack.language, runtime: stack.runtime, packageManager: stack.packageManager, detectedConfigFiles: detectedFiles.map((f) => f.path), filesScanned: projectFiles.filter((f) => !f.isDirectory).length, foldersScanned, scanStats };
 }
