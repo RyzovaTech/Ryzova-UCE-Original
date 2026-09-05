@@ -32,10 +32,12 @@ export interface DependencyEdge { from: string; to: string; kind: 'import' | 're
 export interface ApiEndpoint { method: string; route: string; file: string; line: number; framework?: string; }
 export interface CodeQualitySignals { largeFiles: Array<{ file: string; lines: number }>; largeFunctions: Array<{ file: string; name: string; line: number }>; todoCount: number; fixmeCount: number; circularDependencies: string[][]; }
 export interface CodeIntelligence { filesAnalyzed: number; symbols: CodeSymbol[]; dependencyEdges: DependencyEdge[]; apiEndpoints: ApiEndpoint[]; entryPoints: string[]; architectureAreas: Record<string, string[]>; quality: CodeQualitySignals; }
+export interface SecurityFinding { id: string; title: string; severity: Severity; file: string; line: number; evidence: string; recommendation: string; }
+export interface SecurityIntelligence { findings: SecurityFinding[]; score: number; filesScanned: number; rulesExecuted: number; }
 
 export interface TechnologyStack {
   language: Language; languages?: LanguageProfile[]; mixedLanguage?: boolean; primaryLanguage?: Language; secondaryLanguages?: LanguageProfile[];
-  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence;
+  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence;
   framework: Framework; runtime: Runtime; packageManager: PackageManager; buildTool: BuildTool; frontend: Framework | 'None' | 'Unknown'; backend: Framework | 'None' | 'Unknown'; database: Database; configFiles: string[]; monorepo?: MonorepoTool | 'None'; cloudProvider?: CloudProvider | 'None'; confidence?: DetectionConfidence;
 }
 export type MonorepoTool = 'Nx' | 'Turborepo' | 'Lerna' | 'Rush' | 'pnpm Workspaces' | 'Yarn Workspaces' | 'None';
