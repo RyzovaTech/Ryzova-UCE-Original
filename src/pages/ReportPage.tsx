@@ -23,6 +23,7 @@ import {
 import { useReportEngine } from '@/hooks/useReportEngine';
 import { ScoreRing, scoreStatus, CategoryBar } from '@/components/reports/ScoreRing';
 import { SeverityBadge } from '@/components/reports/SeverityBadge';
+import { BrowserCompatibilityPanel } from '@/components/reports/BrowserCompatibilityPanel';
 import { exportJson, exportMarkdown, downloadFile } from '@/lib/report/export';
 import { sortIssues } from '@/lib/compatibility/recommendations';
 import type { AnalysisResult, Issue, Severity } from '@/lib/analyzer/types';
@@ -320,6 +321,11 @@ export function ReportPage() {
         </Card>
       )}
 
+      {/* Browser Compatibility */}
+      {isSoftware && report.stack.browserCompatibility && (
+        <BrowserCompatibilityPanel data={report.stack.browserCompatibility} />
+      )}
+
       {/* Non-software notice */}
       {!isSoftware && (
         <Card className="border-warning/30 bg-warning/10">
@@ -378,7 +384,6 @@ export function ReportPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Issue count chips */}
           <div className="mb-4 flex flex-wrap gap-2">
             <CountChip label="Critical" count={issueCounts.critical} severity="critical" />
             <CountChip label="Warning" count={issueCounts.warning} severity="warning" />
