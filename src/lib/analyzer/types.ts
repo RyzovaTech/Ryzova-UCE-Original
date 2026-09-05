@@ -62,6 +62,12 @@ export interface LanguageProfile {
 export interface TechnologyStack {
   language: Language;
   languages?: LanguageProfile[];
+  /** True when two or more meaningful languages are present in the source tree. */
+  mixedLanguage?: boolean;
+  /** Highest-volume source language; kept separate from `language` for clarity in mixed projects. */
+  primaryLanguage?: Language;
+  /** Meaningful secondary languages, ordered by source volume. */
+  secondaryLanguages?: LanguageProfile[];
   framework: Framework;
   runtime: Runtime;
   packageManager: PackageManager;
