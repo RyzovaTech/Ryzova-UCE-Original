@@ -68,6 +68,10 @@ export interface TechnologyStack {
   primaryLanguage?: Language;
   /** Meaningful secondary languages, ordered by source volume. */
   secondaryLanguages?: LanguageProfile[];
+  /** All credible frameworks detected, ordered with the legacy primary framework first. */
+  frameworks?: Framework[];
+  /** All credible runtimes detected, ordered with the legacy primary runtime first. */
+  runtimes?: Runtime[];
   framework: Framework;
   runtime: Runtime;
   packageManager: PackageManager;
