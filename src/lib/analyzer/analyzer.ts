@@ -14,7 +14,8 @@ import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
 
-const ANALYSIS_VERSION = 'uce-2.0.0';
+const UCE_VERSION = '2.0.0';
+const ANALYSIS_VERSION = `uce-${UCE_VERSION}`;
 function generateId(): string { return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function buildTimeline(): TimelineStep[] {
   return [
@@ -65,7 +66,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
 
   if (!classification.isSoftware) {
-    return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source };
+    return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source };
   }
   const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName };
   const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
@@ -73,7 +74,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined;
   const rulesExecuted = categories.reduce((sum, c) => sum + c.issues.length, 0);
   if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0); }
-  const notes: string[] = [`Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
+  const notes: string[] = [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ')}.`);
   if (stack.frameworks && stack.frameworks.length > 1) notes.push(`Multiple frameworks detected: ${stack.frameworks.join(', ')}.`);
   if (stack.runtimes && stack.runtimes.length > 1) notes.push(`Multiple runtimes detected: ${stack.runtimes.join(', ')}.`);
