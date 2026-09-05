@@ -20,8 +20,12 @@ function isApplicable(ruleId: string, language: Language): boolean {
   return JS_TS_LANGUAGES.has(language);
 }
 
+function normalizePath(path: string): string {
+  return path.replace(/\\/g, '/').replace(/^\.\//, '').replace(/^\/+/, '');
+}
+
 function fileBase(path: string): string {
-  return path.replace(/^\.\//, '').split('/').pop() ?? path;
+  return normalizePath(path).split('/').pop() ?? path;
 }
 
 function tsconfigFiles(ctx: RuleContext): ProjectFile[] {
@@ -45,6 +49,16 @@ function anyTsconfigOption(ctx: RuleContext, option: string, predicate: (value: 
   return false;
 }
 
+function packageJson(ctx: RuleContext): Record<string, unknown> | null {
+  const file = ctx.files.find((f) => !f.isDirectory && fileBase(f.path) === 'package.json');
+  if (!file?.content) return null;
+  try {
+    return JSON.parse(file.content) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 function hasEslintConfig(ctx: RuleContext): boolean {
   return ctx.files.some((f) => {
     if (f.isDirectory) return false;
@@ -55,22 +69,57 @@ function hasEslintConfig(ctx: RuleContext): boolean {
   });
 }
 
+function hasCiWorkflow(ctx: RuleContext): boolean {
+  return ctx.files.some((f) => {
+    if (f.isDirectory) return false;
+    return /^\.github\/workflows\/[^/]+\.(yml|yaml)$/i.test(normalizePath(f.path));
+  });
+}
+
 function filterEvidenceAwareFalsePositives(ruleId: string, issues: Issue[], ctx: RuleContext): Issue[] {
   if (!issues.length) return issues;
 
   if (ruleId === 'tsconfig-strict-mode' && anyTsconfigOption(ctx, 'strict', (v) => v === true)) {
-    return issues.filter((issue) => issue.id !== 'tsconfig-strict-missing');
+    issues = issues.filter((issue) => issue.id !== 'tsconfig-strict-missing');
   }
 
   if (ruleId === 'tsconfig-module-resolution' && anyTsconfigOption(ctx, 'moduleResolution', (v) => typeof v === 'string' && v.length > 0)) {
-    return issues.filter((issue) => issue.id !== 'tsconfig-module-resolution-missing');
+    issues = issues.filter((issue) => issue.id !== 'tsconfig-module-resolution-missing');
   }
 
   if (ruleId === 'eslint-config-present' && hasEslintConfig(ctx)) {
-    return issues.filter((issue) => issue.id !== 'eslint-config-missing');
+    issues = issues.filter((issue) => issue.id !== 'eslint-config-missing');
+  }
+
+  // CI/CD is a capability. Never report it as missing when a workflow is present.
+  if (hasCiWorkflow(ctx)) {
+    issues = issues.filter((issue) =>
+      !/ci\/cd|continuous integration|continuous delivery/i.test(issue.title) &&
+      !/ci\/cd|continuous integration|continuous delivery/i.test(issue.description)
+    );
+  }
+
+  // Applications do not need a publishable package entry point. Detect app-style
+  // manifests before reporting a missing main/module/exports/bin field.
+  if (ruleId === 'package-json-main-entry' || ruleId === 'pkg-entry-point-missing') {
+    const pkg = packageJson(ctx);
+    const scripts = pkg?.scripts as Record<string, unknown> | undefined;
+    const appLike = pkg?.private === true ||
+      (!!scripts && (typeof scripts.dev === 'string' || typeof scripts.build === 'string'));
+    if (appLike) issues = issues.filter((issue) => issue.id !== 'pkg-entry-point-missing');
   }
 
   return issues;
+}
+
+function deduplicateIssues(issues: Issue[]): Issue[] {
+  const seen = new Set<string>();
+  return issues.filter((issue) => {
+    const key = `${issue.id}|${normalizePath(issue.affectedFile)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function statusFromIssues(issues: Issue[]): CategoryStatus {
@@ -81,13 +130,11 @@ function statusFromIssues(issues: Issue[]): CategoryStatus {
 }
 
 function scoreFromIssues(issues: Issue[]): number {
-  let penalty = 0;
+  // Informational advisories are guidance, not compatibility failures.
   const criticalCount = issues.filter((i) => i.severity === 'critical').length;
   const warningCount = issues.filter((i) => i.severity === 'warning').length;
-  const infoCount = issues.filter((i) => i.severity === 'info').length;
-  penalty += Math.min(criticalCount, 4) * 20 + Math.max(0, criticalCount - 4) * 5;
-  penalty += Math.min(warningCount, 5) * 10 + Math.max(0, warningCount - 5) * 3;
-  penalty += Math.min(infoCount, 10) * 3 + Math.max(0, infoCount - 10) * 1;
+  const penalty = Math.min(criticalCount, 4) * 20 + Math.max(0, criticalCount - 4) * 5 +
+    Math.min(warningCount, 5) * 10 + Math.max(0, warningCount - 5) * 3;
   return Math.max(0, Math.round(100 - penalty));
 }
 
@@ -112,7 +159,7 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
   }
 
   return CATEGORIES.map((cat) => {
-    const issues = byCategory.get(cat.id) ?? [];
+    const issues = deduplicateIssues(byCategory.get(cat.id) ?? []);
     const status = statusFromIssues(issues);
     const score = scoreFromIssues(issues);
     const summary = issues.length === 0
