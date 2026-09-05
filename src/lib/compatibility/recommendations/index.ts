@@ -21,7 +21,7 @@ export function buildRecommendations(categories: CategoryResult[]): string[] {
 
   if (!critical.length && !warnings.length) {
     if (info.length) {
-      recs.push(`All deterministic compatibility checks passed. ${info.length} informational advisory${info.length > 1 ? 'ies' : ''} remain for optional project improvements.`);
+      recs.push(`All deterministic compatibility checks passed. ${info.length} informational ${info.length === 1 ? 'advisory' : 'advisories'} remain for optional project improvements.`);
     } else {
       recs.push('All deterministic compatibility checks passed. No compatibility action is required.');
     }
