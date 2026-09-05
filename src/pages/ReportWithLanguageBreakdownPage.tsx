@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Languages } from 'lucide-react';
+import { Boxes, Languages, Layers, Package, Wrench, Cpu, Database } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useReportEngine } from '@/hooks/useReportEngine';
@@ -17,6 +17,8 @@ export function ReportWithLanguageBreakdownPage() {
 
   const languages = report?.stack.languages ?? [];
   const primaryLanguage = report?.stack.primaryLanguage ?? report?.stack.language;
+  const frameworks = report?.stack.frameworks ?? (report?.stack.framework !== 'Unknown' ? [report.stack.framework] : []);
+  const runtimes = report?.stack.runtimes ?? (report?.stack.runtime !== 'Unknown' ? [report.stack.runtime] : []);
 
   return (
     <>
@@ -73,8 +75,65 @@ export function ReportWithLanguageBreakdownPage() {
           </CardContent>
         </Card>
       )}
+
+      {report && (frameworks.length > 0 || runtimes.length > 0) && (
+        <Card className="mb-6 animate-slide-up">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Cpu className="h-4 w-4" />
+              Technology Intelligence
+            </CardTitle>
+            <CardDescription>
+              Multiple frameworks and runtimes detected from project dependencies, configuration and manifests.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <TechnologyGroup icon={<Layers className="h-4 w-4" />} title="Frameworks" values={frameworks} primary={report.stack.framework} />
+              <TechnologyGroup icon={<Boxes className="h-4 w-4" />} title="Runtimes" values={runtimes} primary={report.stack.runtime} />
+              <TechnologyGroup icon={<Package className="h-4 w-4" />} title="Package Manager" values={[report.stack.packageManager]} />
+              <TechnologyGroup icon={<Wrench className="h-4 w-4" />} title="Build Tool" values={[report.stack.buildTool]} />
+              <TechnologyGroup icon={<Database className="h-4 w-4" />} title="Database" values={[report.stack.database]} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <ReportPage />
     </>
+  );
+}
+
+function TechnologyGroup({
+  icon,
+  title,
+  values,
+  primary,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  values: string[];
+  primary?: string;
+}) {
+  const visible = values.filter((value, index) => value && value !== 'Unknown' && (index === 0 || value !== values[index - 1]));
+  if (!visible.length) return null;
+
+  return (
+    <div className="rounded-lg border bg-muted/20 p-4">
+      <div className="mb-3 flex items-center gap-2 text-sm font-medium">
+        {icon}
+        {title}
+        <Badge variant="secondary" className="ml-auto text-[10px]">{visible.length} detected</Badge>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {visible.map((value) => (
+          <Badge key={value} variant={value === primary ? 'default' : 'outline'}>
+            {value}
+            {value === primary && <span className="ml-1 text-[10px] opacity-80">Primary</span>}
+          </Badge>
+        ))}
+      </div>
+    </div>
   );
 }
 
