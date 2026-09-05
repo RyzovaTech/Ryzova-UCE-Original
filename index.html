@@ -59,11 +59,15 @@
     <noscript>
       <main>
         <h1>Universal Compatibility Engine (UCE)</h1>
-        <p>UCE is an open-source, local-first software compatibility checker for Git repositories and project archives. It helps developers identify runtime, dependency, framework, configuration, and project-structure compatibility risks before deployment.</p>
+        <p>UCE is an open-source, local-first software compatibility checker for Git repositories and project archives. It helps developers identify runtime, dependency, framework, configuration, and project-structure compatibility risks before deployment. UCE is designed to make software setup problems easier to understand without requiring an AI service or sending a local project to a remote analysis service.</p>
         <h2>Analyze a Project</h2>
-        <p>Analyze a ZIP archive or a public GitHub repository in your browser. UCE detects project structure, languages, frameworks, runtimes, package managers, dependencies, lockfiles, configuration, and compatibility risks, then produces an engineering compatibility report.</p>
-        <h2>How UCE Helps</h2>
-        <p>UCE uses deterministic compatibility checks rather than AI-generated guesses. It is designed for developers, indie hackers, software teams, and open-source maintainers who want a clear view of project health before debugging or deployment.</p>
+        <p>Analyze a ZIP archive or a public GitHub repository in your browser. UCE detects project structure, programming languages, frameworks, runtimes, package managers, dependencies, lockfiles, build tools, configuration, and compatibility risks. The analyzer turns these observations into a clear engineering report so developers can investigate problems before they become build or deployment blockers.</p>
+        <h2>How UCE Helps Developers</h2>
+        <p>UCE uses deterministic compatibility checks rather than AI-generated guesses. It can identify common issues such as incompatible runtime versions, outdated dependency majors, missing lockfiles, duplicate dependency ranges, environment configuration gaps, and project structure concerns. The result is intended to give developers a practical starting point for debugging and maintenance.</p>
+        <h2>Built for Software Projects</h2>
+        <p>UCE supports a broad range of common software stacks and is useful for individual developers, indie hackers, software teams, and open-source maintainers. The goal is simple: provide an understandable compatibility baseline before development gets blocked. Reports focus on detected technology, severity, impact, and recommended next steps rather than marketing claims.</p>
+        <h2>Local-First and Open Source</h2>
+        <p>ZIP project archives are analyzed locally in the browser. Public Git repositories are fetched only when you explicitly provide a remote repository for analysis. UCE is released as open source under the Apache License 2.0, so developers can inspect the implementation, report issues, contribute improvements, and understand how compatibility checks are performed.</p>
         <p><a href="/analyze">Analyze a project with UCE</a></p>
       </main>
     </noscript>
