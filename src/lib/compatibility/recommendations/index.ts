@@ -2,21 +2,29 @@ import type { CategoryResult, Issue } from '../../analyzer/types';
 
 export function buildRecommendations(categories: CategoryResult[]): string[] {
   const recs: string[] = [];
-  const critical = categories.flatMap((c) => c.issues).filter((i) => i.severity === 'critical');
-  const warnings = categories.flatMap((c) => c.issues).filter((i) => i.severity === 'warning');
+  const allIssues = categories.flatMap((c) => c.issues);
+  const critical = allIssues.filter((i) => i.severity === 'critical');
+  const warnings = allIssues.filter((i) => i.severity === 'warning');
+  const info = allIssues.filter((i) => i.severity === 'info');
 
   if (critical.length) {
     recs.push(`Resolve ${critical.length} critical issue${critical.length > 1 ? 's' : ''} before deploying — these block runtime or security.`);
   }
   if (warnings.length) {
-    recs.push(`Address ${warnings.length} warning${warnings.length > 1 ? 's' : ''} to improve long-term maintainability.`);
+    recs.push(`Address ${warnings.length} warning${warnings.length > 1 ? 's' : ''} to improve compatibility and long-term maintainability.`);
   }
+
   const lowest = [...categories].sort((a, b) => a.score - b.score)[0];
   if (lowest && lowest.score < 90) {
-    recs.push(`Focus on the ${lowest.label} category next — it has the lowest score (${lowest.score}).`);
+    recs.push(`Focus on the ${lowest.label} category next — it has the lowest compatibility score (${lowest.score}).`);
   }
-  if (recs.length === 0) {
-    recs.push('No action required — the project passes all deterministic compatibility checks.');
+
+  if (!critical.length && !warnings.length) {
+    if (info.length) {
+      recs.push(`All deterministic compatibility checks passed. ${info.length} informational advisory${info.length > 1 ? 'ies' : ''} remain for optional project improvements.`);
+    } else {
+      recs.push('All deterministic compatibility checks passed. No compatibility action is required.');
+    }
   }
   return recs;
 }
