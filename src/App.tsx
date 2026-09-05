@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom';
 import { Loader as Loader2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { LandingPage } from '@/pages/LandingPage';
@@ -60,16 +60,42 @@ function RouteSeo() {
   return <SeoHead {...seo} />;
 }
 
+function CrawlableSiteNav() {
+  return (
+    <nav aria-label="Public UCE pages" className="sr-only">
+      <Link to="/">UCE Home</Link>
+      <Link to="/analyze">Analyze a Project</Link>
+    </nav>
+  );
+}
+
+function AnalyzeRoute() {
+  return (
+    <>
+      <section aria-labelledby="analyze-guide" className="sr-only">
+        <h2 id="analyze-guide">How UCE analyzes your project</h2>
+        <p>
+          UCE analyzes ZIP archives and public GitHub repositories in your browser. It detects project structure,
+          languages, frameworks, runtimes, package managers, dependencies, lockfiles, configuration, and compatibility risks,
+          then produces a scored engineering report.
+        </p>
+      </section>
+      <AnalyzePage />
+    </>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <RouteSeo />
+      <CrawlableSiteNav />
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/pricing" element={<Navigate to="/" replace />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
-          <Route path="/analyze" element={<Suspense fallback={<PageLoader />}><AnalyzePage /></Suspense>} />
+          <Route path="/analyze" element={<Suspense fallback={<PageLoader />}><AnalyzeRoute /></Suspense>} />
           <Route path="/report" element={<Suspense fallback={<PageLoader />}><ReportPage /></Suspense>} />
           <Route path="/report/:id" element={<Suspense fallback={<PageLoader />}><ReportPage /></Suspense>} />
           <Route path="/settings" element={<Suspense fallback={<PageLoader />}><SettingsPage /></Suspense>} />
