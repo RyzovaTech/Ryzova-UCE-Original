@@ -59,6 +59,44 @@ export interface LanguageProfile {
   percentage: number;
 }
 
+export type TechnologyKind = 'framework' | 'runtime' | 'database' | 'build-tool' | 'package-manager' | 'library' | 'testing' | 'linting' | 'styling' | 'auth' | 'api' | 'orm' | 'ci-cd' | 'container' | 'cloud';
+
+export interface TechnologyEvidence {
+  name: string;
+  kind: TechnologyKind;
+  confidence: number;
+  evidence: string[];
+  version?: string;
+}
+
+export interface DependencyItem {
+  name: string;
+  version: string;
+  type: 'runtime' | 'development' | 'peer' | 'optional';
+}
+
+export interface DependencyIntelligence {
+  manager: PackageManager;
+  total: number;
+  runtime: number;
+  development: number;
+  peer: number;
+  optional: number;
+  dependencies: DependencyItem[];
+  duplicateNames: string[];
+  versionConflicts: string[];
+  healthScore: number;
+}
+
+export type ArchitectureType = 'SPA' | 'SSR' | 'SSG' | 'API Server' | 'Frontend + Backend' | 'Library' | 'Monorepo' | 'CLI' | 'Mobile App' | 'Desktop App' | 'Unknown';
+
+export interface ArchitectureIntelligence {
+  primary: ArchitectureType;
+  patterns: ArchitectureType[];
+  confidence: number;
+  evidence: string[];
+}
+
 export interface TechnologyStack {
   language: Language;
   languages?: LanguageProfile[];
@@ -72,6 +110,12 @@ export interface TechnologyStack {
   frameworks?: Framework[];
   /** All credible runtimes detected, ordered with the legacy primary runtime first. */
   runtimes?: Runtime[];
+  /** Evidence-backed technology inventory for Technology Intelligence 2.0. */
+  technologyEvidence?: TechnologyEvidence[];
+  /** Dependency inventory and basic health analysis. */
+  dependencyIntelligence?: DependencyIntelligence;
+  /** Architecture/pattern inference from project structure and configuration. */
+  architecture?: ArchitectureIntelligence;
   framework: Framework;
   runtime: Runtime;
   packageManager: PackageManager;
