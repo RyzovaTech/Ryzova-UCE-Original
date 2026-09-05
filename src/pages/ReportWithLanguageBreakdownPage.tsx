@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Boxes, Languages, Layers, Package, Wrench, Cpu, Database } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -110,7 +111,7 @@ function TechnologyGroup({
   values,
   primary,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   values: string[];
   primary?: string;
