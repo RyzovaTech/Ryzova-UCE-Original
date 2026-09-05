@@ -7,6 +7,9 @@ import type { CodeIntelligence } from '@/lib/analyzer/types';
 export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
   if (!data) return null;
   const areas = Object.entries(data.architectureAreas).filter(([, files]) => files.length > 0);
+  const uniqueDependencyEdges = Array.from(
+    new Map(data.dependencyEdges.map((edge) => [`${edge.from}|${edge.to}`, edge])).values(),
+  );
   return (
     <Card className="mb-6 animate-slide-up">
       <CardHeader>
@@ -21,7 +24,7 @@ export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
       <CardContent className="space-y-5">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
           <Metric icon={<Boxes className="h-4 w-4" />} label="Symbols" value={data.symbols.length} />
-          <Metric icon={<GitBranch className="h-4 w-4" />} label="Internal edges" value={data.dependencyEdges.length} />
+          <Metric icon={<GitBranch className="h-4 w-4" />} label="Internal edges" value={uniqueDependencyEdges.length} />
           <Metric icon={<Route className="h-4 w-4" />} label="API endpoints" value={data.apiEndpoints.length} />
           <Metric icon={<Terminal className="h-4 w-4" />} label="Entry points" value={data.entryPoints.length} />
         </div>
@@ -44,7 +47,7 @@ export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
         </section>
         <section className="rounded-lg border bg-muted/20 p-4">
           <div className="mb-3 text-sm font-semibold">Dependency Graph</div>
-          {data.dependencyEdges.length ? <div className="grid gap-1.5 max-h-52 overflow-auto">{data.dependencyEdges.slice(0, 40).map((edge, index) => <div key={`${edge.from}-${edge.to}-${index}`} className="flex gap-2 text-[11px] font-mono"><span className="truncate">{edge.from}</span><span className="text-muted-foreground">→</span><span className="truncate">{edge.to}</span></div>)}</div> : <p className="text-xs text-muted-foreground">No internal relative import edges were detected.</p>}
+          {uniqueDependencyEdges.length ? <div className="grid gap-1.5 max-h-52 overflow-auto">{uniqueDependencyEdges.slice(0, 40).map((edge) => <div key={`${edge.from}-${edge.to}`} className="flex gap-2 text-[11px] font-mono"><span className="truncate">{edge.from}</span><span className="text-muted-foreground">→</span><span className="truncate">{edge.to}</span></div>)}</div> : <p className="text-xs text-muted-foreground">No internal relative import edges were detected.</p>}
         </section>
       </CardContent>
     </Card>
