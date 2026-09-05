@@ -1,4 +1,4 @@
-import type { CategoryId, CategoryResult, CategoryStatus, Issue, Language } from '../../analyzer/types';
+import type { CategoryId, CategoryResult, CategoryStatus, Issue, Language, ProjectFile } from '../../analyzer/types';
 import type { RuleContext } from '../types';
 import { ALL_RULES } from '../rules';
 import { CATEGORIES } from '../categories';
@@ -40,6 +40,73 @@ function isApplicable(ruleId: string, language: Language): boolean {
   return JS_TS_LANGUAGES.has(language);
 }
 
+function fileBase(path: string): string {
+  return path.replace(/^\.\//, '').split('/').pop() ?? path;
+}
+
+function projectFileContent(files: ProjectFile[], path: string): string | null {
+  const match = files.find((f) => !f.isDirectory && (f.path === path || f.path.endsWith('/' + path)));
+  return match?.content ?? null;
+}
+
+function tsconfigFiles(ctx: RuleContext): ProjectFile[] {
+  return ctx.files.filter((f) => {
+    if (f.isDirectory) return false;
+    const base = fileBase(f.path);
+    return base === 'tsconfig.json' || /^tsconfig\..+\.json$/i.test(base);
+  });
+}
+
+function anyTsconfigOption(ctx: RuleContext, option: string, predicate: (value: unknown) => boolean): boolean {
+  for (const file of tsconfigFiles(ctx)) {
+    if (!file.content) continue;
+    try {
+      const parsed = JSON.parse(file.content) as { compilerOptions?: Record<string, unknown> };
+      if (predicate(parsed.compilerOptions?.[option])) return true;
+    } catch {
+      // Invalid JSON is handled by the individual rule; do not let it break analysis.
+    }
+  }
+  return false;
+}
+
+function hasEslintConfig(ctx: RuleContext): boolean {
+  return ctx.files.some((f) => {
+    if (f.isDirectory) return false;
+    const base = fileBase(f.path);
+    return base === '.eslintrc' ||
+      /^\.eslintrc\.(json|js|cjs|mjs)$/i.test(base) ||
+      /^eslint\.config\.(js|mjs|cjs|ts|mts|cts)$/i.test(base);
+  });
+}
+
+function filterEvidenceAwareFalsePositives(ruleId: string, issues: Issue[], ctx: RuleContext): Issue[] {
+  if (!issues.length) return issues;
+
+  // TypeScript project references can move compiler options out of the root
+  // tsconfig.json. If ANY referenced tsconfig enables strict mode, the project
+  // is strict and must not be reported as non-strict just because the root
+  // config is a references-only file.
+  if (ruleId === 'tsconfig-strict-mode' && anyTsconfigOption(ctx, 'strict', (v) => v === true)) {
+    return issues.filter((issue) => issue.id !== 'tsconfig-strict-missing');
+  }
+
+  // Likewise, moduleResolution may legitimately live in tsconfig.app.json or
+  // another referenced config rather than the root tsconfig.json.
+  if (ruleId === 'tsconfig-module-resolution' && anyTsconfigOption(ctx, 'moduleResolution', (v) => typeof v === 'string' && v.length > 0)) {
+    return issues.filter((issue) => issue.id !== 'tsconfig-module-resolution-missing');
+  }
+
+  // Use the complete project file tree as evidence. detectedFiles is a useful
+  // index, but compatibility rules must not disagree with files already found
+  // by the parser (especially ESLint flat configs).
+  if (ruleId === 'eslint-config-present' && hasEslintConfig(ctx)) {
+    return issues.filter((issue) => issue.id !== 'eslint-config-missing');
+  }
+
+  return issues;
+}
+
 function statusFromIssues(issues: Issue[]): CategoryStatus {
   if (issues.length === 0) return 'good';
   if (issues.some((i) => i.severity === 'critical')) return 'warning';
@@ -68,6 +135,7 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
     let issues: Issue[] = [];
     try {
       issues = rule.run(ctx) ?? [];
+      issues = filterEvidenceAwareFalsePositives(rule.id, issues, ctx);
     } catch {
       // A single rule failing should never crash the whole analysis.
       issues = [];
