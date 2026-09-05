@@ -13,7 +13,7 @@ const problems = [
 ];
 
 const features = [
-  { icon: GitBranch, title: 'Git Repository Analysis', desc: 'Analyze a public GitHub repository or ZIP archive without changing your workflow.', beta: true },
+  { icon: GitBranch, title: 'Git Repository Analysis', desc: 'Analyze a public GitHub repository or ZIP archive without changing your workflow.' },
   { icon: ShieldCheck, title: 'Compatibility Detection', desc: 'Deterministic rules flag runtime, dependency, and config risk.' },
   { icon: Zap, title: 'Runtime Insights', desc: 'See the detected runtime, language, and build tool at a glance.' },
   { icon: Layers, title: 'Dependency Awareness', desc: 'Spot outdated majors, missing lockfiles, and duplicate ranges.' },
@@ -46,7 +46,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
           <UceLogo size="md" />
-          <span className="font-mono text-xs text-muted-foreground">UCE · v1.2.2</span>
+          <span className="font-mono text-xs text-muted-foreground">UCE · v2.0.0</span>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
               Dashboard
@@ -238,13 +238,8 @@ export function LandingPage() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
                       <Icon className="h-4 w-4" />
                     </div>
-                    <CardTitle className="flex items-center gap-2 text-base">
+                    <CardTitle className="text-base">
                       {f.title}
-                      {f.beta && (
-                        <span className="rounded border border-primary/30 bg-primary/10 px-1 py-px text-[8px] font-semibold leading-none tracking-[0.12em] text-primary">
-                          BETA
-                        </span>
-                      )}
                     </CardTitle>
                     <CardDescription>{f.desc}</CardDescription>
                   </CardHeader>
@@ -347,7 +342,7 @@ export function LandingPage() {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-10 md:flex-row md:px-8">
           <UceLogo size="sm" />
           <p className="text-xs text-muted-foreground">
-            Built by Ryzova · Trust First philosophy · v1.2.2
+            Built by Ryzova · Trust First philosophy · v2.0.0
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <a href="https://github.com/ryzovauce-ryzova/Ryzova-UCE" target="_blank" rel="noreferrer" className="hover:text-foreground">GitHub</a>
