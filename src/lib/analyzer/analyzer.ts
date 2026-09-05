@@ -7,13 +7,14 @@ import { detectLanguageProfile } from './language-profile';
 import { detectTechnologyProfiles } from './technology-profiles';
 import { detectTechnologyIntelligence } from './intelligence';
 import { detectCodeIntelligence } from './code-intelligence';
+import { detectSecurityIntelligence } from './security-intelligence';
 import { classifyProject, NON_SOFTWARE_MESSAGE } from './classifier';
 import { runAnalysis } from '../compatibility/analysis/engine';
 import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
 
-const ANALYSIS_VERSION = 'uce-1.4.0';
+const ANALYSIS_VERSION = 'uce-1.5.0';
 function generateId(): string { return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function buildTimeline(): TimelineStep[] {
   return [
@@ -23,8 +24,9 @@ function buildTimeline(): TimelineStep[] {
     { step: 4, label: 'Technology detected', description: 'Languages, frameworks, runtime, and tooling inferred from project evidence.', status: 'done' },
     { step: 5, label: 'Intelligence built', description: 'Technology evidence, dependency health, and architecture patterns correlated.', status: 'done' },
     { step: 6, label: 'Code intelligence', description: 'Symbols, dependency graph, API routes, entry points, and quality signals extracted.', status: 'done' },
-    { step: 7, label: 'Rules executed', description: 'Deterministic compatibility rules evaluated per category.', status: 'done' },
-    { step: 8, label: 'Report generated', description: 'Scores, issues, and intelligence assembled.', status: 'done' },
+    { step: 7, label: 'Security intelligence', description: 'Deterministic security rules scanned source for credential and unsafe-code signals.', status: 'done' },
+    { step: 8, label: 'Rules executed', description: 'Deterministic compatibility rules evaluated per category.', status: 'done' },
+    { step: 9, label: 'Report generated', description: 'Scores, issues, and intelligence assembled.', status: 'done' },
   ];
 }
 function buildNonSoftwareTimeline(): TimelineStep[] {
@@ -59,6 +61,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const intelligence = detectTechnologyIntelligence(input.files, detectedFiles, stack);
   stack.technologyEvidence = intelligence.evidence; stack.dependencyIntelligence = intelligence.dependencies; stack.architecture = intelligence.architecture;
   stack.codeIntelligence = detectCodeIntelligence(input.files);
+  stack.securityIntelligence = detectSecurityIntelligence(input.files);
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
 
   if (!classification.isSoftware) {
@@ -69,7 +72,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime);
   const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined;
   const rulesExecuted = categories.reduce((sum, c) => sum + c.issues.length, 0);
-  if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted; }
+  if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0); }
   const notes: string[] = [`Analysis completed by UCE Engine v${ANALYSIS_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ')}.`);
   if (stack.frameworks && stack.frameworks.length > 1) notes.push(`Multiple frameworks detected: ${stack.frameworks.join(', ')}.`);
@@ -77,6 +80,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.architecture) notes.push(`Architecture: ${stack.architecture.primary} (${Math.round(stack.architecture.confidence)}% confidence).`);
   if (stack.dependencyIntelligence && stack.dependencyIntelligence.total > 0) notes.push(`Dependency intelligence: ${stack.dependencyIntelligence.total} direct manifest entries; health ${stack.dependencyIntelligence.healthScore}%.`);
   if (stack.codeIntelligence) notes.push(`Code intelligence: ${stack.codeIntelligence.symbols.length} symbols, ${stack.codeIntelligence.dependencyEdges.length} internal dependency edges, ${stack.codeIntelligence.apiEndpoints.length} API endpoints.`);
+  if (stack.securityIntelligence) notes.push(`Security intelligence: ${stack.securityIntelligence.findings.length} findings; static security score ${stack.securityIntelligence.score}%.`);
   return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories, issues, score, timeline: buildTimeline(), notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source };
 }
 export type { ProjectFile };
