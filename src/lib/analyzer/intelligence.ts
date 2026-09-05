@@ -84,7 +84,6 @@ function detectArchitecture(files: ProjectFile[], detectedFiles: DetectedFile[],
 
 export function detectTechnologyIntelligence(files: ProjectFile[], detectedFiles: DetectedFile[], stack: TechnologyStack): { evidence: TechnologyEvidence[]; dependencies: DependencyIntelligence; architecture: ArchitectureIntelligence } {
   const evidence: TechnologyEvidence[] = [];
-  const pkg = packageJson(files);
   const deps = dependencyMaps(files);
   const depNames = new Set(deps.map((item) => item.name));
   const pkgText = read(files, ['package.json']);
