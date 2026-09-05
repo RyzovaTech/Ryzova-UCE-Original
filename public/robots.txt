@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+User-agent: Applebot
+Allow: /
+
 Sitemap: https://uce.ryzova.com/sitemap.xml
