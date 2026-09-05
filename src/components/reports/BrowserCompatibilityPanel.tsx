@@ -12,7 +12,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
   if (!data) return null;
 
   const status = data.score >= 95 ? 'Compatible' : data.score >= 80 ? 'Partial compatibility' : 'Compatibility issues';
-  const StatusIcon = data.findings.length === 0 ? CheckCircle2 : AlertTriangle;
+  const statusIcon = data.findings.length === 0 ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
 
   return (
     <Card>
@@ -34,7 +34,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
           <div className="rounded-md border bg-muted/50 p-3">
             <p className="text-xs text-muted-foreground">Status</p>
             <p className="mt-1 flex items-center gap-1.5 text-sm font-semibold">
-              <StatusIcon className="h-4 w-4" aria-hidden="true" /> {status}
+              {statusIcon} {status}
             </p>
           </div>
           <div className="rounded-md border bg-muted/50 p-3">
@@ -58,7 +58,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
           </div>
         </div>
 
-        {data.findings.length > 0 && (
+        {data.findings.length > 0 ? (
           <>
             <Separator />
             <div className="space-y-3">
@@ -80,9 +80,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
               ))}
             </div>
           </>
-        )}
-
-        {data.findings.length === 0 && (
+        ) : (
           <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 p-3 text-sm">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             No browser compatibility findings were detected for the selected targets.
