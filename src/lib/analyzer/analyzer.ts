@@ -12,13 +12,14 @@ import type {
 import { parseFiles } from './parser';
 import { detectStack, buildSummary } from './detectors';
 import { detectLanguageProfile } from './language-profile';
+import { detectTechnologyProfiles } from './technology-profiles';
 import { classifyProject, NON_SOFTWARE_MESSAGE } from './classifier';
 import { runAnalysis } from '../compatibility/analysis/engine';
 import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
 
-const ANALYSIS_VERSION = 'uce-1.2.3';
+const ANALYSIS_VERSION = 'uce-1.2.4';
 
 function generateId(): string { return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 
@@ -49,10 +50,6 @@ function buildNonSoftwareCategories(): CategoryResult[] {
 
 const ZERO_SCORE: CompatibilityScore = { runtime: 0, dependencies: 0, configuration: 0, structure: 0, environment: 0, security: 0, deployment: 0, performance: 0, overall: 0 };
 
-// A language is considered meaningful when it has at least 1% of source bytes,
-// or when it has at least two source files. This prevents a single tiny helper
-// file from making a normal project look mixed while still recognizing genuine
-// polyglot projects with small integration layers.
 const MIXED_LANGUAGE_MIN_PERCENT = 1;
 const MIXED_LANGUAGE_MIN_FILES = 2;
 
@@ -71,7 +68,6 @@ function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]
     mixedLanguage: secondary.length > 0,
     primaryLanguage: primary.language,
     secondaryLanguages: secondary,
-    // Keep the legacy `language` field stable: it represents the primary language.
     language: primary.language,
   };
 }
@@ -81,7 +77,11 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const detectedFiles = parseFiles(input.files);
   const classification = classifyProject(input.files, detectedFiles);
   const detectedLanguages = detectLanguageProfile(input.files);
-  const stack = enrichLanguageStack(detectStack(input.files, detectedFiles), detectedLanguages);
+  const baseStack = detectStack(input.files, detectedFiles);
+  const stack = enrichLanguageStack(baseStack, detectedLanguages);
+  const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack);
+  stack.frameworks = technologyProfiles.frameworks;
+  stack.runtimes = technologyProfiles.runtimes;
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
 
   if (!classification.isSoftware) {
@@ -113,6 +113,12 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) {
     const breakdown = stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ');
     notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${breakdown}.`);
+  }
+  if (stack.frameworks && stack.frameworks.length > 1) {
+    notes.push(`Multiple frameworks detected: ${stack.frameworks.join(', ')}.`);
+  }
+  if (stack.runtimes && stack.runtimes.length > 1) {
+    notes.push(`Multiple runtimes detected: ${stack.runtimes.join(', ')}.`);
   }
   return {
     id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary,
