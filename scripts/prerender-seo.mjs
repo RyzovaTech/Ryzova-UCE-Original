@@ -10,14 +10,20 @@ const replaceMeta = (source, pattern, replacement) => source.replace(pattern, re
 
 let analyzeHtml = html;
 analyzeHtml = replaceMeta(analyzeHtml, /<title>[^<]*<\/title>/i, '<title>Analyze a Project — UCE</title>');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="description" content="[^"]*"\s*\/>/i, '<meta name="description" content="Analyze Git repositories and project archives with UCE. Detect dependencies, runtimes, frameworks, configuration, and software compatibility risks in a local-first workflow." />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="robots" content="[^"]*"\s*\/>/i, '<meta name="robots" content="index, follow" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<link rel="canonical" href="[^"]*"\s*\/>/i, '<link rel="canonical" href="https://uce.ryzova.com/analyze" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:title" content="[^"]*"\s*\/>/i, '<meta property="og:title" content="Analyze a Project — UCE" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:description" content="[^"]*"\s*\/>/i, '<meta property="og:description" content="Analyze Git repositories and project archives for dependencies, runtimes, configuration, and compatibility risks." />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:url" content="[^"]*"\s*\/>/i, '<meta property="og:url" content="https://uce.ryzova.com/analyze" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:title" content="[^"]*"\s*\/>/i, '<meta name="twitter:title" content="Analyze a Project — UCE" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:description" content="[^"]*"\s*\/>/i, '<meta name="twitter:description" content="Open-source compatibility analysis for Git repositories and software projects." />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="description" content="[^"]*"\s*\/?\s*>/i, '<meta name="description" content="Analyze Git repositories and project archives with UCE. Detect dependencies, runtimes, frameworks, configuration, and software compatibility risks in a local-first workflow." />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="robots" content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<link rel="canonical" href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/analyze" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:type" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:type" content="website" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:title" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="Analyze a Project — UCE" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:description" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:description" content="Analyze Git repositories and project archives for dependencies, runtimes, configuration, and compatibility risks." />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:url" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/analyze" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:image" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:image" content="https://uce.ryzova.com/uce-logo.svg" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:image:alt" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:image:alt" content="UCE — Universal Compatibility Engine logo" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:card" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:card" content="summary" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:title" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="Analyze a Project — UCE" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:description" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:description" content="Open-source compatibility analysis for Git repositories and software projects." />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:image" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:image" content="https://uce.ryzova.com/uce-logo.svg" />');
+analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:image:alt" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:image:alt" content="UCE — Universal Compatibility Engine logo" />');
 
 const analyzeJsonLd = {
   '@context': 'https://schema.org',
