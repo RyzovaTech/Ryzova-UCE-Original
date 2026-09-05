@@ -52,13 +52,25 @@ const SYMBOL_PATTERNS: Array<[SymbolKind, RegExp]> = [
   ['enum', /\benum\s+([A-Za-z_$][\w$]*)/g],
   ['component', /\b(?:const|function)\s+([A-Z][A-Za-z0-9_$]*)/g],
 ];
+
+// API detection is intentionally strict. Generic `.get(...)` calls are not
+// routes: they are commonly HTTP headers, maps, DOM APIs, or arbitrary data
+// access. A route must look like an actual path and be attached to a known
+// server/router object, or use a framework-specific decorator.
 const API_PATTERNS: Array<[string, RegExp]> = [
-  ['GET', /\.(get)\s*\(\s*[`'\"]([^`'\"]+)/gi],
-  ['POST', /\.(post)\s*\(\s*[`'\"]([^`'\"]+)/gi],
-  ['PUT', /\.(put)\s*\(\s*[`'\"]([^`'\"]+)/gi],
-  ['PATCH', /\.(patch)\s*\(\s*[`'\"]([^`'\"]+)/gi],
-  ['DELETE', /\.(delete)\s*\(\s*[`'\"]([^`'\"]+)/gi],
-  ['ROUTE', /(?:app|router|server)\.route\s*\(\s*[`'\"]([^`'\"]+)/gi],
+  ['GET', /\b(?:app|router|server|api|fastify)\s*\.\s*get\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['POST', /\b(?:app|router|server|api|fastify)\s*\.\s*post\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['PUT', /\b(?:app|router|server|api|fastify)\s*\.\s*put\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['PATCH', /\b(?:app|router|server|api|fastify)\s*\.\s*patch\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['DELETE', /\b(?:app|router|server|api|fastify)\s*\.\s*delete\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['OPTIONS', /\b(?:app|router|server|api|fastify)\s*\.\s*options\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['HEAD', /\b(?:app|router|server|api|fastify)\s*\.\s*head\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['ROUTE', /\b(?:app|router|server|api)\s*\.\s*route\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['GET', /@(?:app|router)\.(?:get)\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['POST', /@(?:app|router)\.(?:post)\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['PUT', /@(?:app|router)\.(?:put)\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['DELETE', /@(?:app|router)\.(?:delete)\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
+  ['GET', /@(app|router)\.(?:route)\s*\(\s*[`'\"](\/[^`'\"]*)[`'\"]/gi],
 ];
 
 function lineAt(source: string, offset: number): number { return source.slice(0, offset).split('\n').length; }
@@ -133,8 +145,12 @@ export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
     for (const [method, regex] of API_PATTERNS) {
       regex.lastIndex = 0; let match: RegExpExecArray | null;
       while ((match = regex.exec(source))) {
-        const route = method === 'ROUTE' ? match[1] : match[2];
-        apiEndpoints.push({ method: method === 'ROUTE' ? 'ROUTE' : method, route, file: file.path, line: lineAt(source, match.index) });
+        // Decorator patterns may have an extra receiver capture; the route is
+        // always the final capture group. This also keeps language names such
+        // as C and C++ from being mistaken for endpoints.
+        const route = match[match.length - 1];
+        if (!route || !route.startsWith('/')) continue;
+        apiEndpoints.push({ method, route, file: file.path, line: lineAt(source, match.index) });
       }
     }
     todoCount += (source.match(/\bTODO\b/gi) ?? []).length;
