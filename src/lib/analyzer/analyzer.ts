@@ -70,9 +70,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   }
   const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName };
   const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
-  const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime);
-  const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined;
-  const rulesExecuted = countApplicableRules(stack.language);
+  const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime); const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined; const rulesExecuted = countApplicableRules(stack.language);
   if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0); }
   const notes: string[] = [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ')}.`);
@@ -81,7 +79,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.architecture) notes.push(`Architecture: ${stack.architecture.primary} (${Math.round(stack.architecture.confidence)}% confidence).`);
   if (stack.dependencyIntelligence && stack.dependencyIntelligence.total > 0) notes.push(`Dependency intelligence: ${stack.dependencyIntelligence.total} direct manifest entries; health ${stack.dependencyIntelligence.healthScore}%.`);
   if (stack.codeIntelligence) notes.push(`Code intelligence: ${stack.codeIntelligence.symbols.length} symbols, ${stack.codeIntelligence.dependencyEdges.length} internal dependency edges, ${stack.codeIntelligence.apiEndpoints.length} API endpoints.`);
-  if (stack.securityIntelligence) notes.push(`Security intelligence: ${stack.securityIntelligence.findings.length} findings; static security score ${stack.securityIntelligence.score}%.`);
+  if (stack.securityIntelligence) { const findingCount = stack.securityIntelligence.findings.length; notes.push(`Security intelligence: ${findingCount} finding${findingCount === 1 ? '' : 's'}; static security score ${stack.securityIntelligence.score}%.`); }
   return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories, issues, score, timeline: buildTimeline(), notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source };
 }
 export type { ProjectFile };
