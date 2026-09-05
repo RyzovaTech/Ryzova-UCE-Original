@@ -1,16 +1,9 @@
 export type Severity = 'critical' | 'warning' | 'info';
-
-export type CategoryId =
-  | 'runtime' | 'dependencies' | 'configuration' | 'structure'
-  | 'environment' | 'security' | 'deployment' | 'performance';
-
+export type CategoryId = 'runtime' | 'dependencies' | 'configuration' | 'structure' | 'environment' | 'security' | 'deployment' | 'performance';
 export type CategoryStatus = 'good' | 'warning' | 'unknown';
 export type ProjectType = 'Software Project' | 'Game Project' | 'Media Archive' | 'Document Archive' | 'Unknown Archive';
 export interface ProjectClassification { type: ProjectType; isSoftware: boolean; reason: string; }
-
-export type Language =
-  | 'TypeScript' | 'JavaScript' | 'Python' | 'Java' | 'Kotlin' | 'Go' | 'Rust' | 'PHP' | 'Ruby' | 'Elixir' | 'Dart' | 'C' | 'C++' | 'Swift' | 'Scala' | 'C#'
-  | 'Zig' | 'OCaml' | 'Haskell' | 'Lua' | 'Julia' | 'R' | 'Crystal' | 'Nim' | 'Solidity' | 'V' | 'Perl' | 'Erlang' | 'Unknown';
+export type Language = 'TypeScript' | 'JavaScript' | 'Python' | 'Java' | 'Kotlin' | 'Go' | 'Rust' | 'PHP' | 'Ruby' | 'Elixir' | 'Dart' | 'C' | 'C++' | 'Swift' | 'Scala' | 'C#' | 'Zig' | 'OCaml' | 'Haskell' | 'Lua' | 'Julia' | 'R' | 'Crystal' | 'Nim' | 'Solidity' | 'V' | 'Perl' | 'Erlang' | 'Unknown';
 export type Runtime = 'Node.js' | 'Bun' | 'Deno' | 'Python' | 'JVM' | 'Go' | 'Rust' | 'Ruby' | 'BEAM' | 'Dart' | 'Swift' | '.NET' | 'Unknown';
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun' | 'pip' | 'poetry' | 'pdm' | 'pipenv' | 'uv' | 'hatch' | 'cargo' | 'maven' | 'gradle' | 'composer' | 'go-modules' | 'bundler' | 'mix' | 'pub' | 'swift-package' | 'sbt' | 'nuget' | 'Unknown';
 export type BuildTool = 'Vite' | 'Next.js' | 'Nuxt' | 'Astro' | 'Remix' | 'Gatsby' | 'Angular CLI' | 'Create React App' | 'Webpack' | 'esbuild' | 'Rollup' | 'Turbo' | 'Cargo' | 'Maven' | 'Gradle' | 'pip' | 'poetry' | 'hatch' | 'CMake' | 'Make' | 'Swift Package Manager' | 'Mix' | 'Pub' | 'turbopack' | 'Unknown';
@@ -26,7 +19,6 @@ export interface DependencyItem { name: string; version: string; type: 'runtime'
 export interface DependencyIntelligence { manager: PackageManager; total: number; runtime: number; development: number; peer: number; optional: number; dependencies: DependencyItem[]; duplicateNames: string[]; versionConflicts: string[]; healthScore: number; }
 export type ArchitectureType = 'SPA' | 'SSR' | 'SSG' | 'API Server' | 'Frontend + Backend' | 'Library' | 'Monorepo' | 'CLI' | 'Mobile App' | 'Desktop App' | 'Unknown';
 export interface ArchitectureIntelligence { primary: ArchitectureType; patterns: ArchitectureType[]; confidence: number; evidence: string[]; }
-
 export interface CodeSymbol { name: string; kind: 'function' | 'class' | 'interface' | 'type' | 'enum' | 'component' | 'export'; file: string; line: number; exported: boolean; }
 export interface DependencyEdge { from: string; to: string; kind: 'import' | 'require' | 'dynamic-import'; }
 export interface ApiEndpoint { method: string; route: string; file: string; line: number; framework?: string; }
@@ -34,10 +26,12 @@ export interface CodeQualitySignals { largeFiles: Array<{ file: string; lines: n
 export interface CodeIntelligence { filesAnalyzed: number; symbols: CodeSymbol[]; dependencyEdges: DependencyEdge[]; apiEndpoints: ApiEndpoint[]; entryPoints: string[]; architectureAreas: Record<string, string[]>; quality: CodeQualitySignals; }
 export interface SecurityFinding { id: string; title: string; severity: Severity; file: string; line: number; evidence: string; recommendation: string; }
 export interface SecurityIntelligence { findings: SecurityFinding[]; score: number; filesScanned: number; rulesExecuted: number; }
-
+export interface BrowserTarget { browser: 'Chrome' | 'Firefox' | 'Safari' | 'Edge'; version: number; }
+export interface BrowserCompatibilityFinding { feature: string; kind: 'javascript' | 'css' | 'web-api'; file: string; line: number; status: 'supported' | 'partial' | 'unsupported' | 'unknown'; affectedBrowsers: BrowserTarget['browser'][]; recommendation: string; }
+export interface BrowserCompatibilityIntelligence { targets: BrowserTarget[]; findings: BrowserCompatibilityFinding[]; score: number; filesScanned: number; featuresChecked: number; }
 export interface TechnologyStack {
   language: Language; languages?: LanguageProfile[]; mixedLanguage?: boolean; primaryLanguage?: Language; secondaryLanguages?: LanguageProfile[];
-  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence;
+  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence; browserCompatibility?: BrowserCompatibilityIntelligence;
   framework: Framework; runtime: Runtime; packageManager: PackageManager; buildTool: BuildTool; frontend: Framework | 'None' | 'Unknown'; backend: Framework | 'None' | 'Unknown'; database: Database; configFiles: string[]; monorepo?: MonorepoTool | 'None'; cloudProvider?: CloudProvider | 'None'; confidence?: DetectionConfidence;
 }
 export type MonorepoTool = 'Nx' | 'Turborepo' | 'Lerna' | 'Rush' | 'pnpm Workspaces' | 'Yarn Workspaces' | 'None';
