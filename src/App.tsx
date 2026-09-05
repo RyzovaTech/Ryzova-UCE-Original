@@ -60,21 +60,24 @@ function RouteSeo() {
   return <SeoHead {...seo} />;
 }
 
-function CrawlableSiteNav() {
+function PublicLinksFooter() {
   return (
-    <nav aria-label="Public UCE pages" className="sr-only">
-      <Link to="/">UCE Home</Link>
-      <Link to="/analyze">Analyze a Project</Link>
-    </nav>
+    <footer className="border-t bg-muted/30">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 py-6 text-sm md:px-8">
+        <Link to="/" className="font-medium text-foreground hover:text-primary">UCE Home</Link>
+        <Link to="/analyze" className="font-medium text-foreground hover:text-primary">Analyze a Project</Link>
+        <span className="text-muted-foreground">Open-source, local-first compatibility analysis</span>
+      </div>
+    </footer>
   );
 }
 
 function AnalyzeRoute() {
   return (
     <>
-      <section aria-labelledby="analyze-guide" className="sr-only">
-        <h2 id="analyze-guide">How UCE analyzes your project</h2>
-        <p>
+      <section aria-labelledby="analyze-guide" className="mb-6 rounded-lg border bg-muted/30 p-5">
+        <h2 id="analyze-guide" className="text-lg font-semibold tracking-tight">How UCE analyzes your project</h2>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
           UCE analyzes ZIP archives and public GitHub repositories in your browser. It detects project structure,
           languages, frameworks, runtimes, package managers, dependencies, lockfiles, configuration, and compatibility risks,
           then produces a scored engineering report.
@@ -89,9 +92,8 @@ function App() {
   return (
     <BrowserRouter>
       <RouteSeo />
-      <CrawlableSiteNav />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<><LandingPage /><PublicLinksFooter /></>} />
         <Route path="/pricing" element={<Navigate to="/" replace />} />
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><DashboardPage /></Suspense>} />
