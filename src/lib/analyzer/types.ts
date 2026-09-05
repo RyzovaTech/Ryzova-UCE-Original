@@ -26,147 +26,38 @@ export interface ProjectClassification {
 }
 
 export type Language =
-  | 'TypeScript'
-  | 'JavaScript'
-  | 'Python'
-  | 'Java'
-  | 'Kotlin'
-  | 'Go'
-  | 'Rust'
-  | 'PHP'
-  | 'Ruby'
-  | 'Elixir'
-  | 'Dart'
-  | 'C'
-  | 'C++'
-  | 'Swift'
-  | 'Scala'
-  | 'C#'
-  | 'Zig'
-  | 'OCaml'
-  | 'Haskell'
-  | 'Lua'
-  | 'Julia'
-  | 'R'
-  | 'Crystal'
-  | 'Nim'
-  | 'Solidity'
-  | 'V'
-  | 'Perl'
-  | 'Erlang'
-  | 'Unknown';
+  | 'TypeScript' | 'JavaScript' | 'Python' | 'Java' | 'Kotlin' | 'Go' | 'Rust'
+  | 'PHP' | 'Ruby' | 'Elixir' | 'Dart' | 'C' | 'C++' | 'Swift' | 'Scala' | 'C#'
+  | 'Zig' | 'OCaml' | 'Haskell' | 'Lua' | 'Julia' | 'R' | 'Crystal' | 'Nim'
+  | 'Solidity' | 'V' | 'Perl' | 'Erlang' | 'Unknown';
 
 export type Runtime =
-  | 'Node.js'
-  | 'Bun'
-  | 'Deno'
-  | 'Python'
-  | 'JVM'
-  | 'Go'
-  | 'Rust'
-  | 'Ruby'
-  | 'BEAM'
-  | 'Dart'
-  | 'Swift'
-  | '.NET'
-  | 'Unknown';
+  | 'Node.js' | 'Bun' | 'Deno' | 'Python' | 'JVM' | 'Go' | 'Rust' | 'Ruby'
+  | 'BEAM' | 'Dart' | 'Swift' | '.NET' | 'Unknown';
 
 export type PackageManager =
-  | 'npm'
-  | 'pnpm'
-  | 'yarn'
-  | 'bun'
-  | 'pip'
-  | 'poetry'
-  | 'pdm'
-  | 'pipenv'
-  | 'uv'
-  | 'hatch'
-  | 'cargo'
-  | 'maven'
-  | 'gradle'
-  | 'composer'
-  | 'go-modules'
-  | 'bundler'
-  | 'mix'
-  | 'pub'
-  | 'swift-package'
-  | 'sbt'
-  | 'nuget'
-  | 'Unknown';
+  | 'npm' | 'pnpm' | 'yarn' | 'bun' | 'pip' | 'poetry' | 'pdm' | 'pipenv'
+  | 'uv' | 'hatch' | 'cargo' | 'maven' | 'gradle' | 'composer' | 'go-modules'
+  | 'bundler' | 'mix' | 'pub' | 'swift-package' | 'sbt' | 'nuget' | 'Unknown';
 
 export type BuildTool =
-  | 'Vite'
-  | 'Next.js'
-  | 'Nuxt'
-  | 'Astro'
-  | 'Remix'
-  | 'Gatsby'
-  | 'Angular CLI'
-  | 'Create React App'
-  | 'Webpack'
-  | 'esbuild'
-  | 'Rollup'
-  | 'Turbo'
-  | 'Cargo'
-  | 'Maven'
-  | 'Gradle'
-  | 'pip'
-  | 'poetry'
-  | 'hatch'
-  | 'CMake'
-  | 'Make'
-  | 'Swift Package Manager'
-  | 'Mix'
-  | 'Pub'
-  | 'turbopack'
-  | 'Unknown';
+  | 'Vite' | 'Next.js' | 'Nuxt' | 'Astro' | 'Remix' | 'Gatsby' | 'Angular CLI'
+  | 'Create React App' | 'Webpack' | 'esbuild' | 'Rollup' | 'Turbo' | 'Cargo'
+  | 'Maven' | 'Gradle' | 'pip' | 'poetry' | 'hatch' | 'CMake' | 'Make'
+  | 'Swift Package Manager' | 'Mix' | 'Pub' | 'turbopack' | 'Unknown';
 
 export type Framework =
-  | 'Next.js'
-  | 'Nuxt'
-  | 'Astro'
-  | 'Remix'
-  | 'Gatsby'
-  | 'React'
-  | 'Vue'
-  | 'Angular'
-  | 'Svelte'
-  | 'SvelteKit'
-  | 'Solid'
-  | 'Qwik'
-  | 'Preact'
-  | 'Alpine.js'
-  | 'Lit'
-  | 'Stencil'
-  | 'Express'
-  | 'NestJS'
-  | 'Fastify'
-  | 'Hono'
-  | 'Fiber'
-  | 'Echo'
-  | 'Chi'
-  | 'Django'
-  | 'Flask'
-  | 'FastAPI'
-  | 'Spring Boot'
-  | 'Quarkus'
-  | 'Ktor'
-  | 'Micronaut'
-  | 'Actix'
-  | 'Axum'
-  | 'Rocket'
-  | 'Rails'
-  | 'Sinatra'
-  | 'Phoenix'
-  | 'Vapor'
-  | 'Revel'
-  | 'Play Framework'
-  | 'Laravel'
-  | 'Symfony'
-  | 'Flutter'
-  | 'Gin'
-  | 'Unknown';
+  | 'Next.js' | 'Nuxt' | 'Astro' | 'Remix' | 'Gatsby' | 'React' | 'Vue' | 'Angular'
+  | 'Svelte' | 'SvelteKit' | 'Solid' | 'Qwik' | 'Preact' | 'Alpine.js' | 'Lit'
+  | 'Stencil' | 'Express' | 'NestJS' | 'Fastify' | 'Hono' | 'Fiber' | 'Echo' | 'Chi'
+  | 'Django' | 'Flask' | 'FastAPI' | 'Spring Boot' | 'Quarkus' | 'Ktor' | 'Micronaut'
+  | 'Actix' | 'Axum' | 'Rocket' | 'Rails' | 'Sinatra' | 'Phoenix' | 'Vapor' | 'Revel'
+  | 'Play Framework' | 'Laravel' | 'Symfony' | 'Flutter' | 'Gin' | 'Unknown';
+
+export type Database =
+  | 'PostgreSQL' | 'MySQL' | 'MariaDB' | 'SQLite' | 'MongoDB' | 'Redis' | 'Cassandra'
+  | 'DynamoDB' | 'Elasticsearch' | 'OpenSearch' | 'Firebase' | 'Supabase'
+  | 'CockroachDB' | 'Neo4j' | 'Detected' | 'Unknown';
 
 export interface ProjectFile {
   path: string;
@@ -198,7 +89,7 @@ export interface TechnologyStack {
   buildTool: BuildTool;
   frontend: Framework | 'None' | 'Unknown';
   backend: Framework | 'None' | 'Unknown';
-  database: 'Detected' | 'Unknown';
+  database: Database;
   configFiles: string[];
   monorepo?: MonorepoTool | 'None';
   cloudProvider?: CloudProvider | 'None';
@@ -206,22 +97,10 @@ export interface TechnologyStack {
 }
 
 export type MonorepoTool =
-  | 'Nx'
-  | 'Turborepo'
-  | 'Lerna'
-  | 'Rush'
-  | 'pnpm Workspaces'
-  | 'Yarn Workspaces'
-  | 'None';
+  | 'Nx' | 'Turborepo' | 'Lerna' | 'Rush' | 'pnpm Workspaces' | 'Yarn Workspaces' | 'None';
 
 export type CloudProvider =
-  | 'Vercel'
-  | 'Netlify'
-  | 'Railway'
-  | 'Fly.io'
-  | 'Render'
-  | 'Cloudflare'
-  | 'None';
+  | 'Vercel' | 'Netlify' | 'Railway' | 'Fly.io' | 'Render' | 'Cloudflare' | 'None';
 
 export interface ScanStats {
   projectSize: number;
@@ -284,15 +163,8 @@ export interface CompatibilityScore {
 }
 
 export type AnalysisStage =
-  | 'idle'
-  | 'uploading'
-  | 'reading'
-  | 'detecting'
-  | 'analyzing'
-  | 'scoring'
-  | 'reporting'
-  | 'completed'
-  | 'error';
+  | 'idle' | 'uploading' | 'reading' | 'detecting' | 'analyzing' | 'scoring'
+  | 'reporting' | 'completed' | 'error';
 
 export interface TimelineStep {
   step: number;
