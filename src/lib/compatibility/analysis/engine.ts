@@ -91,6 +91,10 @@ function scoreFromIssues(issues: Issue[]): number {
   return Math.max(0, Math.round(100 - penalty));
 }
 
+export function countApplicableRules(language: Language): number {
+  return ALL_RULES.reduce((count, rule) => count + (isApplicable(rule.id, language) ? 1 : 0), 0);
+}
+
 export function runAnalysis(ctx: RuleContext): CategoryResult[] {
   const byCategory = new Map<CategoryId, Issue[]>();
   for (const rule of ALL_RULES) {
