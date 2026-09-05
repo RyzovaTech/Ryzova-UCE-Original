@@ -3,7 +3,7 @@
 > UCE is an open-source, local-first software compatibility checker for Git repositories and project archives.
 
 ## Product
-UCE analyzes project structure, runtimes, dependencies, configuration, and related compatibility risks in the browser.
+UCE analyzes project structure, runtimes, dependencies, configuration, and compatibility risks in the browser.
 
 ## Features
 - Analyze ZIP project archives locally
@@ -18,4 +18,4 @@ UCE analyzes project structure, runtimes, dependencies, configuration, and relat
 - https://uce.ryzova.com/analyze
 
 ## Source
-- https://github.com/ryzovauce-ryzova/Ryzova-UCE
+- https://github.com/RyzovaTech/Ryzova-UCE-Original
