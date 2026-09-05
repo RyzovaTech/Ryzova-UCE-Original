@@ -72,7 +72,9 @@ function hasEslintConfig(ctx: RuleContext): boolean {
 function hasCiWorkflow(ctx: RuleContext): boolean {
   return ctx.files.some((f) => {
     if (f.isDirectory) return false;
-    return /^\.github\/workflows\/[^/]+\.(yml|yaml)$/i.test(normalizePath(f.path));
+    const path = normalizePath(f.path);
+    // Uploaded archives may prefix every path with the project directory.
+    return /(?:^|\/)\.github\/workflows\/[^/]+\.(yml|yaml)$/i.test(path);
   });
 }
 
