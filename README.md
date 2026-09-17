@@ -1,62 +1,50 @@
-# UCE — Universal Compatibility Engine
+# Ryzova UCE — Universal Compatibility Engine
 
-**Universal Compatibility Engine (UCE)** is an open-source developer tool
-for analyzing software projects and identifying compatibility issues
-before deployment.
+**Ryzova UCE™ (Universal Compatibility Engine)** is an open-source developer tool from
+[Ryzova](https://www.ryzova.com/) for analyzing software projects and identifying compatibility
+issues before deployment.
 
-UCE helps developers understand project dependencies, framework versions,
-runtime requirements, and potential compatibility conflicts.
+- **Official website:** [uce.ryzova.com](https://uce.ryzova.com/)
+- **Official repository:** [RyzovaTech/Ryzova-UCE-Original](https://github.com/RyzovaTech/Ryzova-UCE-Original)
+- **Ryzova:** [www.ryzova.com](https://www.ryzova.com/)
 
-## Features
+## What Ryzova UCE analyzes
 
-- Project compatibility analysis
-- Git repository analysis for public GitHub repositories and Git remotes
-- Dependency analysis
-- Framework and version detection
-- Runtime compatibility checks
-- Compatibility issue detection
-- Detailed compatibility reports
-- Local-first project analysis: ZIP archives stay in your browser; public GitHub repositories are downloaded only when you explicitly provide a remote, then analyzed in-browser
+UCE inspects the technical signals that affect whether a software project can be installed, built,
+tested, or deployed reliably. Its deterministic analysis covers:
 
-## Why UCE?
+- Project structure and configuration
+- Languages, frameworks, runtimes, and build tools
+- Package managers, dependencies, and lockfiles
+- Runtime, dependency, configuration, and structure compatibility risks
+- Findings organized by severity, impact, and recommended next steps
 
-Modern software projects depend on many frameworks, packages, runtimes,
-and configuration layers.
+## How it works
 
-A small version mismatch can cause build failures, runtime errors,
-or deployment problems.
+Use the browser-based analyzer with either a ZIP project archive or a public GitHub repository.
+ZIP archives are analyzed locally in the browser. A public repository is downloaded only when its
+URL is explicitly provided, and its project files are then analyzed in-browser. UCE does not use
+AI-generated guesses for compatibility findings.
 
-UCE is designed to help developers identify these compatibility risks
-before they become deployment problems.
+## Who it is for
 
-## Open Source
+Ryzova UCE is intended for developers, software teams, indie hackers, and open-source maintainers
+who need a practical compatibility baseline before debugging, contributing to, or deploying a
+project.
 
-UCE is fully open source and licensed under the
-[Apache License 2.0](LICENSE).
+## Open source
 
-Contributions, improvements, bug reports, and ideas are welcome.
+Ryzova UCE is licensed under the [Apache License 2.0](LICENSE). Contributions, improvements, bug
+reports, and factual documentation updates are welcome.
 
-## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change. To report a vulnerability,
+follow the private disclosure guidance in [SECURITY.md](SECURITY.md).
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting changes.
+## Project identity
 
-## Security
+Ryzova UCE is a product and open-source project from Ryzova; it is not a separate company or
+organization. The canonical organization identity is [Ryzova](https://www.ryzova.com/), and this is
+the official source repository for the Universal Compatibility Engine.
 
-If you discover a security vulnerability, please read
-[SECURITY.md](SECURITY.md).
-
-## Ryzova
-
-UCE is developed as part of the **Ryzova** software ecosystem.
-
-Learn more about Ryzova:
-
-**[Ryzova — Software & Technology](https://www.ryzova.com/)**
-
-**[UCE Product Page](https://www.ryzova.com/uce)**
-
----
-
-**UCE — Universal Compatibility Engine**
-
-Built with a focus on open source, developer freedom, and reliable software compatibility.
+For a concise factual overview suitable for future community introductions, see
+[docs/PROJECT-INTRODUCTION.md](docs/PROJECT-INTRODUCTION.md).

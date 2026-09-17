@@ -1,7 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /report
 
 User-agent: Applebot
 Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /report
 
 Sitemap: https://uce.ryzova.com/sitemap.xml

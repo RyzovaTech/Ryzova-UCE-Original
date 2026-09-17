@@ -79,22 +79,11 @@ export function SeoHead({ title, description, canonicalPath, indexable = true }:
       url: canonical,
       isPartOf: {
         "@type": "WebSite",
+        "@id": `${SITE_ORIGIN}/#website`,
         name: "Ryzova UCE — Universal Compatibility Engine",
         url: `${SITE_ORIGIN}/`,
       },
-      about: {
-        "@type": "SoftwareApplication",
-        name: "Ryzova UCE™ — Universal Compatibility Engine",
-        applicationCategory: "DeveloperApplication",
-        operatingSystem: "Web",
-        url: `${SITE_ORIGIN}/`,
-        image: LOGO_URL,
-        description:
-          "An open-source, local-first software compatibility checker for Git repositories and project archives.",
-        license: "https://www.apache.org/licenses/LICENSE-2.0",
-        publisher: { "@id": "https://www.ryzova.com/#organization" },
-        sameAs: ["https://github.com/RyzovaTech/Ryzova-UCE-Original"],
-      },
+      about: { "@id": `${SITE_ORIGIN}/#software` },
     });
   }, [title, description, canonicalPath, indexable]);
 

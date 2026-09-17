@@ -165,13 +165,11 @@ export function LandingPage() {
                 Open Source · Deterministic Engine
               </Badge>
               <h1 className="text-4xl font-bold leading-[1.1] tracking-tight md:text-5xl lg:text-6xl">
-                Stop wasting hours fixing{" "}
-                <span className="text-gradient">broken project setups.</span>
+                Ryzova UCE™ — <span className="text-gradient">Universal Compatibility Engine</span>
               </h1>
               <p className="mt-6 text-lg text-muted-foreground md:text-xl">
-                Ryzova UCE™ (Universal Compatibility Engine) is an open-source developer tool from
-                Ryzova for analyzing software projects and identifying compatibility issues before
-                deployment.
+                An open-source developer tool from Ryzova for analyzing software projects and
+                identifying compatibility issues before deployment.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" onClick={() => navigate("/analyze")} className="gap-2">
@@ -335,7 +333,7 @@ export function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                  Runs entirely in your browser — nothing leaves your machine
+                  Analyzes ZIP project archives locally in your browser
                 </div>
               </CardContent>
             </Card>
@@ -446,7 +444,7 @@ export function LandingPage() {
             </Badge>
             <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">Open Source</h2>
             <p className="mt-3 text-muted-foreground">
-              UCE is free and open source, built for developers and teams.
+              Ryzova UCE is free and open source, built for developers and teams.
             </p>
             <p className="mt-1 text-muted-foreground">Licensed under Apache License 2.0.</p>
           </div>

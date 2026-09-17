@@ -42,9 +42,9 @@ function RouteSeo() {
         }
       : pathname === "/analyze"
         ? {
-            title: "Software Compatibility Analyzer — UCE",
+            title: "Software Compatibility Analyzer — Ryzova UCE",
             description:
-              "Analyze a ZIP archive or public GitHub repository with deterministic, browser-based software compatibility checks.",
+              "Analyze a ZIP archive or public GitHub repository with Ryzova UCE's deterministic, browser-based software compatibility checks.",
             canonicalPath: "/analyze",
             indexable: true,
           }
@@ -104,10 +104,29 @@ function AnalyzeRoute() {
           How UCE analyzes your project
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          UCE analyzes ZIP archives and public GitHub repositories in your browser. It detects
-          project structure, languages, frameworks, runtimes, package managers, dependencies,
-          lockfiles, configuration, and compatibility risks, then produces a scored engineering
-          report.
+          Ryzova UCE analyzes ZIP archives and public GitHub repositories in your browser. It
+          detects project structure, languages, frameworks, runtimes, package managers,
+          dependencies, lockfiles, configuration, and compatibility risks, then produces a scored
+          engineering report.
+        </p>
+        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+          Ryzova UCE is an open-source developer tool from{" "}
+          <a
+            href="https://www.ryzova.com/"
+            className="font-medium text-foreground hover:text-primary"
+          >
+            Ryzova™
+          </a>
+          . Its source is available in the{" "}
+          <a
+            href="https://github.com/RyzovaTech/Ryzova-UCE-Original"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-foreground hover:text-primary"
+          >
+            official Ryzova UCE GitHub repository
+          </a>
+          .
         </p>
       </section>
       <AnalyzePage />

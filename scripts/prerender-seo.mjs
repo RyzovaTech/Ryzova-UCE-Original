@@ -12,12 +12,12 @@ let analyzeHtml = html;
 analyzeHtml = replaceMeta(
   analyzeHtml,
   /<title>[^<]*<\/title>/i,
-  "<title>Software Compatibility Analyzer — UCE</title>",
+  "<title>Software Compatibility Analyzer — Ryzova UCE</title>",
 );
 analyzeHtml = replaceMeta(
   analyzeHtml,
   /<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i,
-  '<meta name="description" content="Analyze Git repositories and project archives with UCE. Detect dependencies, runtimes, frameworks, configuration, and software compatibility risks in a local-first workflow." />',
+  '<meta name="description" content="Analyze Git repositories and project archives with Ryzova UCE. Detect dependencies, runtimes, frameworks, configuration, and software compatibility risks in a local-first workflow." />',
 );
 analyzeHtml = replaceMeta(
   analyzeHtml,
@@ -37,7 +37,7 @@ analyzeHtml = replaceMeta(
 analyzeHtml = replaceMeta(
   analyzeHtml,
   /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i,
-  '<meta property="og:title" content="Software Compatibility Analyzer — UCE" />',
+  '<meta property="og:title" content="Software Compatibility Analyzer — Ryzova UCE" />',
 );
 analyzeHtml = replaceMeta(
   analyzeHtml,
@@ -67,7 +67,7 @@ analyzeHtml = replaceMeta(
 analyzeHtml = replaceMeta(
   analyzeHtml,
   /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i,
-  '<meta name="twitter:title" content="Software Compatibility Analyzer — UCE" />',
+  '<meta name="twitter:title" content="Software Compatibility Analyzer — Ryzova UCE" />',
 );
 analyzeHtml = replaceMeta(
   analyzeHtml,
@@ -88,24 +88,17 @@ analyzeHtml = replaceMeta(
 const analyzeJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebPage",
-  name: "Software Compatibility Analyzer — UCE",
+  name: "Software Compatibility Analyzer — Ryzova UCE",
   description:
     "Analyze Git repositories and project archives for dependencies, runtimes, frameworks, configuration, and compatibility risks.",
   url: "https://uce.ryzova.com/analyze",
   isPartOf: {
     "@type": "WebSite",
+    "@id": "https://uce.ryzova.com/#website",
     name: "Ryzova UCE — Universal Compatibility Engine",
     url: "https://uce.ryzova.com/",
   },
-  about: {
-    "@type": "SoftwareApplication",
-    name: "Ryzova UCE™ — Universal Compatibility Engine",
-    applicationCategory: "DeveloperApplication",
-    operatingSystem: "Web",
-    url: "https://uce.ryzova.com/",
-    publisher: { "@id": "https://www.ryzova.com/#organization" },
-    sameAs: ["https://github.com/RyzovaTech/Ryzova-UCE-Original"],
-  },
+  about: { "@id": "https://uce.ryzova.com/#software" },
 };
 
 analyzeHtml = analyzeHtml.replace(
@@ -129,6 +122,7 @@ const fallback = `
         <h2>Open source and local first</h2>
         <p>UCE is released under the Apache License 2.0. The project is intended to be understandable and inspectable by developers and open-source maintainers. Local project archives stay in the browser during analysis, while remote repository analysis occurs only when a repository is explicitly supplied. Use the analyzer to investigate a project and then review the generated findings in the UCE interface.</p>
         <p><a href="/">Return to UCE</a></p>
+        <p><a href="https://github.com/RyzovaTech/Ryzova-UCE-Original">View the official Ryzova UCE repository on GitHub</a></p>
         <p><a href="https://www.ryzova.com/">Built by Ryzova™</a></p>
       </main>
     </noscript>`;
