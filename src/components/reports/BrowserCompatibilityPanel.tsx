@@ -11,7 +11,7 @@ interface BrowserCompatibilityPanelProps {
 export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelProps) {
   if (!data) return null;
 
-  const status = data.score >= 95 ? 'Compatible' : data.score >= 80 ? 'Partial compatibility' : 'Compatibility issues';
+  const status = data.score >= 95 ? 'No issues detected' : data.score >= 80 ? 'Partial compatibility' : 'Compatibility issues';
   const statusIcon = data.findings.length === 0 ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
 
   return (
@@ -22,7 +22,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
           Browser Compatibility
         </CardTitle>
         <CardDescription>
-          Web-platform compatibility checked against detected browser targets.
+          Static checks for known unsupported features against detected browser targets; this is not a full runtime test.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -83,7 +83,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
         ) : (
           <div className="flex items-center gap-2 rounded-md border border-success/30 bg-success/10 p-3 text-sm">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            No browser compatibility findings were detected for the selected targets.
+            No unsupported features were detected in these static checks for the selected targets.
           </div>
         )}
       </CardContent>

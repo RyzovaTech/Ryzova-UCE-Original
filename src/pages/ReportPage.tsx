@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useReportEngine } from '@/hooks/useReportEngine';
-import { ScoreRing, scoreStatus, CategoryBar } from '@/components/reports/ScoreRing';
+import { ScoreRing, reportStatus, CategoryBar } from '@/components/reports/ScoreRing';
 import { SeverityBadge } from '@/components/reports/SeverityBadge';
 import { BrowserCompatibilityPanel } from '@/components/reports/BrowserCompatibilityPanel';
 import { exportJson, exportMarkdown, downloadFile } from '@/lib/report/export';
@@ -119,7 +119,7 @@ export function ReportPage() {
     );
   }
 
-  const status = scoreStatus(report.score.overall);
+  const status = reportStatus(report.score.overall, report.issues.filter((issue) => issue.severity === 'critical').length, report.issues.filter((issue) => issue.severity === 'warning').length);
   const isSoftware = report.classification?.isSoftware ?? true;
   const projectType = report.classification?.type ?? 'Software Project';
 
@@ -173,7 +173,7 @@ export function ReportPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-5">
             {isSoftware ? (
-              <ScoreRing score={report.score.overall} />
+              <ScoreRing score={report.score.overall} status={status} />
             ) : (
               <div className="flex flex-col items-center gap-3 py-8 text-center">
                 <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-dashed border-muted-foreground/20">
@@ -530,7 +530,7 @@ export function ReportPage() {
           <CardContent>
             <ul className="divide-y">
               {history.map((h) => {
-                const s = scoreStatus(h.result.score.overall);
+                const s = reportStatus(h.result.score.overall, h.result.issues.filter((issue) => issue.severity === 'critical').length, h.result.issues.filter((issue) => issue.severity === 'warning').length);
                 return (
                   <li key={h.id}>
                     <button

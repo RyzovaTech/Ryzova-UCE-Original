@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useReportEngine } from '@/hooks/useReportEngine';
 import { toShareableList } from '@/lib/storage';
-import { scoreStatus } from '@/components/reports/ScoreRing';
+import { reportStatus } from '@/components/reports/ScoreRing';
 import { SeverityBadge } from '@/components/reports/SeverityBadge';
 
 export function DashboardPage() {
@@ -127,7 +127,7 @@ export function DashboardPage() {
             ) : (
               <ul className="divide-y">
                 {recent.map((r) => {
-                  const status = scoreStatus(r.overallScore);
+                  const status = reportStatus(r.overallScore, r.criticalCount, r.warningCount);
                   return (
                     <li key={r.id}>
                       <button

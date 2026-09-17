@@ -65,6 +65,8 @@ function detectArchitecture(files: ProjectFile[], detectedFiles: DetectedFile[],
   const add = (pattern: ArchitectureType, reason: string) => { if (!patterns.includes(pattern)) patterns.push(pattern); evidence.push(reason); };
 
   if (stack.monorepo && stack.monorepo !== 'None') add('Monorepo', `${stack.monorepo} workspace configuration detected.`);
+  const dependencies = new Set(dependencyMaps(files).map((item) => item.name));
+  if (dependencies.has('electron') || dependencies.has('@electron-forge/cli') || hasAny(['electron/', 'electron-builder.'])) add('Desktop App', 'Electron dependency or desktop application markers detected.');
   if (stack.framework === 'Flutter' || (hasAny(['android/', 'ios/']) && paths.some((p) => p.endsWith('pubspec.yaml')))) add('Mobile App', 'Flutter/mobile project markers detected.');
   if (['Next.js', 'Nuxt', 'SvelteKit', 'Remix'].includes(stack.framework)) add('SSR', `${stack.framework} server-rendering capable application detected.`);
   if (stack.buildTool === 'Vite' && stack.frontend !== 'None' && stack.frontend !== 'Unknown') add('SPA', `Vite + ${stack.frontend} frontend markers detected.`);

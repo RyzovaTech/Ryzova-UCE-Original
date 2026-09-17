@@ -18,6 +18,10 @@ function hasFile(files: DetectedFile[] | ProjectFile[], name: string): boolean {
   return files.some((f) => f.path === name || f.path.endsWith('/' + name));
 }
 
+function hasRootFile(files: DetectedFile[] | ProjectFile[], name: string): boolean {
+  return files.some((file) => file.path === name);
+}
+
 function hasPrefix(files: DetectedFile[] | ProjectFile[], prefix: string): boolean {
   return files.some((f) => {
     const base = f.path.split('/').pop() ?? f.path;
@@ -361,11 +365,11 @@ export function detectRuntime(files: DetectedFile[], projectFiles: ProjectFile[]
 }
 
 export function detectPackageManager(files: DetectedFile[], projectFiles: ProjectFile[], language: Language): PackageManager {
-  if (hasFile(files, 'pnpm-lock.yaml')) return 'pnpm';
-  if (hasFile(files, 'yarn.lock')) return 'yarn';
-  if (hasFile(files, 'bun.lockb') || hasFile(files, 'bun.lock')) return 'bun';
-  if (hasFile(files, 'package-lock.json')) return 'npm';
-  if (hasFile(files, 'package.json')) return 'npm';
+  if (hasRootFile(files, 'pnpm-lock.yaml')) return 'pnpm';
+  if (hasRootFile(files, 'yarn.lock')) return 'yarn';
+  if (hasRootFile(files, 'bun.lockb') || hasRootFile(files, 'bun.lock')) return 'bun';
+  if (hasRootFile(files, 'package-lock.json')) return 'npm';
+  if (hasRootFile(files, 'package.json')) return 'npm';
   if (hasFile(files, 'pyproject.toml')) {
     const content = readFileText(projectFiles, 'pyproject.toml') ?? '';
     if (/\[tool\.poetry\]/i.test(content)) return 'poetry';

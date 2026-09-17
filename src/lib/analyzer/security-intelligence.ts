@@ -1,13 +1,13 @@
 import type { ProjectFile, SecurityFinding, SecurityIntelligence } from './types';
 
-interface Rule { id: string; title: string; severity: SecurityFinding['severity']; pattern: RegExp; evidence: string; recommendation: string; }
+interface Rule { id: string; title: string; severity: SecurityFinding['severity']; pattern: RegExp; evidence: string; recommendation: string; shouldReport?: (match: RegExpMatchArray) => boolean; }
 
 const RULES: Rule[] = [
   { id: 'SEC001', title: 'Potential hardcoded credential', severity: 'critical', pattern: /(?:password|passwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*['"][^'"\n]{8,}['"]/i, evidence: 'A credential-like value is assigned directly in source.', recommendation: 'Move secrets to environment variables or a managed secret store.' },
   { id: 'SEC002', title: 'Dynamic code execution', severity: 'critical', pattern: /\beval\s*\(|new\s+Function\s*\(/, evidence: 'Dynamic code execution was detected.', recommendation: 'Avoid eval/new Function and use explicit parsing or safe dispatch.' },
-  { id: 'SEC003', title: 'Potential command injection sink', severity: 'critical', pattern: /\b(?:exec|execSync|spawn|spawnSync)\s*\(/, evidence: 'A process execution API is used and should be reviewed for untrusted input.', recommendation: 'Use fixed commands, argument arrays, and strict input validation.' },
+  { id: 'SEC003', title: 'Process execution API requires review', severity: 'warning', pattern: /\b(?:exec|execSync|spawn|spawnSync)\s*\(/, evidence: 'A process execution API is used; review whether any argument can be influenced by untrusted input.', recommendation: 'Use fixed commands, argument arrays, and strict input validation.' },
   { id: 'SEC004', title: 'Unsafe HTML injection sink', severity: 'warning', pattern: /\bdangerouslySetInnerHTML\b|\binnerHTML\s*=/, evidence: 'Raw HTML is inserted into a document.', recommendation: 'Prefer escaped rendering and sanitize any HTML that must be accepted.' },
-  { id: 'SEC005', title: 'Insecure HTTP endpoint', severity: 'warning', pattern: /\bhttp:\/\//i, evidence: 'An HTTP URL literal was found; review whether sensitive traffic can use HTTPS.', recommendation: 'Use HTTPS for production network traffic and avoid sending secrets over HTTP.' },
+  { id: 'SEC005', title: 'Non-HTTPS URL literal', severity: 'info', pattern: /\bhttp:\/\/[^\s'"`]+/i, evidence: 'A non-HTTPS URL literal was found; review whether it is used for production traffic.', recommendation: 'Use HTTPS for production network traffic and avoid sending secrets over HTTP.', shouldReport: (match) => !/^http:\/\/(?:localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?(?:\/|$)/i.test(match[0]) },
   { id: 'SEC006', title: 'Wildcard CORS policy', severity: 'warning', pattern: /(?:Access-Control-Allow-Origin|origin)\s*[:=]\s*['"]\*['"]|cors\s*\(\s*\{[^}]*origin\s*:\s*['"]\*['"]/is, evidence: 'CORS appears to allow every origin.', recommendation: 'Restrict allowed origins to the domains required by the application.' },
   { id: 'SEC007', title: 'Debug logging in source', severity: 'info', pattern: /\bconsole\.(?:log|debug)\s*\(/, evidence: 'Debug logging is present and may expose sensitive runtime data.', recommendation: 'Remove sensitive debug logs or gate them behind a safe development-only logger.' },
 ];
@@ -17,12 +17,18 @@ const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligenc
 
 function normalizePath(path: string): string { return path.replace(/^\.\//, '').replace(/\\/g, '/'); }
 
+/** Test, fixture, mock and sample code is excluded from production-security signals. */
+export function isNonProductionPath(path: string): boolean {
+  const normalized = normalizePath(path);
+  return /(^|\/)(?:__tests__|tests?|e2e(?:-tests)?|fixtures?|mocks?|samples?|examples?|storybook|stories|scaffold|benchmarks?)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(normalized);
+}
+
 export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntelligence {
   const findings: SecurityFinding[] = [];
   const seen = new Set<string>();
   const sourceFiles = files.filter((file) => {
     const path = normalizePath(file.path);
-    return !file.isDirectory && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path);
+    return !file.isDirectory && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
   });
 
   for (const file of sourceFiles) {
@@ -31,6 +37,7 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
       const flags = rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`;
       const pattern = new RegExp(rule.pattern.source, flags);
       for (const match of source.matchAll(pattern)) {
+        if (rule.shouldReport && !rule.shouldReport(match)) continue;
         const line = source.slice(0, match.index).split('\n').length;
         const normalizedPath = normalizePath(file.path);
         const id = `${rule.id}:${normalizedPath}:${line}`;

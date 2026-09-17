@@ -23,11 +23,12 @@ export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          <Metric icon={<Boxes className="h-4 w-4" />} label="Symbols" value={data.symbols.length} />
-          <Metric icon={<GitBranch className="h-4 w-4" />} label="Internal edges" value={uniqueDependencyEdges.length} />
-          <Metric icon={<Route className="h-4 w-4" />} label="API endpoints" value={data.apiEndpoints.length} />
+          <Metric icon={<Boxes className="h-4 w-4" />} label="Symbols" value={data.symbols.length} capped={data.symbols.length === 2000} />
+          <Metric icon={<GitBranch className="h-4 w-4" />} label="Internal edges" value={uniqueDependencyEdges.length} capped={uniqueDependencyEdges.length === 3000} />
+          <Metric icon={<Route className="h-4 w-4" />} label="API endpoints" value={data.apiEndpoints.length} capped={data.apiEndpoints.length === 500} />
           <Metric icon={<Terminal className="h-4 w-4" />} label="Entry points" value={data.entryPoints.length} />
         </div>
+        <p className="text-xs text-muted-foreground">Large-project results are capped at 2,000 symbols, 3,000 dependency edges, and 500 API endpoints.</p>
         <div className="grid gap-4 lg:grid-cols-2">
           <section className="rounded-lg border bg-muted/20 p-4">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Network className="h-4 w-4" />Architecture Map</div>
@@ -53,6 +54,6 @@ export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
     </Card>
   );
 }
-function Metric({ icon, label, value }: { icon?: ReactNode; label: string; value: number }) {
-  return <div className="rounded-md border bg-background p-2 text-center"><div className="flex items-center justify-center gap-1.5 text-base font-semibold tabular-nums">{icon}{value}</div><div className="text-[10px] text-muted-foreground">{label}</div></div>;
+function Metric({ icon, label, value, capped = false }: { icon?: ReactNode; label: string; value: number; capped?: boolean }) {
+  return <div className="rounded-md border bg-background p-2 text-center"><div className="flex items-center justify-center gap-1.5 text-base font-semibold tabular-nums">{icon}{value}{capped ? '+' : ''}</div><div className="text-[10px] text-muted-foreground">{label}</div></div>;
 }

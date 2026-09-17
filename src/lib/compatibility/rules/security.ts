@@ -1,6 +1,7 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile } from './shared';
+import { isNonProductionPath } from '../../analyzer/security-intelligence';
 
 const KNOWN_VULNERABLE_VERSIONS: Record<string, string[]> = {
   'lodash': ['4.17.19', '4.17.20', '4.17.4', '4.17.5', '4.17.10', '4.17.11', '4.17.14', '4.17.15'],
@@ -26,6 +27,9 @@ const EXPOSED_KEY_PATTERNS: RegExp[] = [
   /xox[baprs]-[a-zA-Z0-9-]+/,
   /AIza[a-zA-Z0-9_-]{35}/,
 ];
+
+const DATABASE_URL_RE = /(?:postgres(?:ql)?|mongodb(?:\+srv)?|mysql):\/\/[^\s'"]+:[^\s'"]+@/i;
+const PLACEHOLDER_DATABASE_URL_RE = /(?:postgres(?:ql)?:\/\/(?:test|user|username|your[_-]?user):(?:test|pass|password|your[_-]?password)@|ep-xxx|example\.com)/i;
 
 export const securityRules: CompatibilityRule[] = [
   {
@@ -135,7 +139,7 @@ export const securityRules: CompatibilityRule[] = [
       const sourceFiles = ctx.files.filter(
         (f) => !f.isDirectory && f.content &&
           /\.(ts|js|tsx|jsx|py|rb|go|rs|java|kt|php|env|yaml|yml|json|toml)$/i.test(f.path) &&
-          !f.path.includes('node_modules/') && !f.path.includes('.d.ts')
+          !f.path.includes('node_modules/') && !f.path.includes('.d.ts') && !isNonProductionPath(f.path)
       );
       for (const file of sourceFiles) {
         if (!file.content) continue;
@@ -168,9 +172,9 @@ export const securityRules: CompatibilityRule[] = [
     category: 'security',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasPkgLock = ctx.detectedFiles.some((f) => f.path.endsWith('package-lock.json'));
-      const hasPnpmLock = ctx.detectedFiles.some((f) => f.path.endsWith('pnpm-lock.yaml'));
-      const hasYarnLock = ctx.detectedFiles.some((f) => f.path.endsWith('yarn.lock'));
+      const hasPkgLock = ctx.detectedFiles.some((f) => f.path === 'package-lock.json');
+      const hasPnpmLock = ctx.detectedFiles.some((f) => f.path === 'pnpm-lock.yaml');
+      const hasYarnLock = ctx.detectedFiles.some((f) => f.path === 'yarn.lock');
       if (!hasPkgLock && !hasPnpmLock && !hasYarnLock) return issues;
       const pkg = readFile(ctx, 'package.json');
       if (!pkg) return issues;
@@ -211,7 +215,7 @@ export const securityRules: CompatibilityRule[] = [
         const depCount = Object.keys({ ...(p.dependencies ?? {}), ...(p.devDependencies ?? {}) } as Record<string, string>).length;
         if (depCount > 0) {
           const hasLock = ctx.detectedFiles.some(
-            (f) => f.path.endsWith('package-lock.json') || f.path.endsWith('pnpm-lock.yaml') || f.path.endsWith('yarn.lock')
+            (f) => f.path === 'package-lock.json' || f.path === 'pnpm-lock.yaml' || f.path === 'yarn.lock'
           );
           if (!hasLock) {
             issues.push({
@@ -244,6 +248,7 @@ export const securityRules: CompatibilityRule[] = [
       const configFiles = ctx.files.filter(
         (f) => !f.isDirectory && f.content &&
           /(next\.config|vite\.config|nuxt\.config|app\.ts|app\.js|server\.ts|server\.js|index\.ts|index\.js)$/i.test(f.path)
+          && !isNonProductionPath(f.path)
       );
       for (const file of configFiles) {
         if (!file.content) continue;
@@ -276,13 +281,11 @@ export const securityRules: CompatibilityRule[] = [
       const sourceFiles = ctx.files.filter(
         (f) => !f.isDirectory && f.content &&
           /\.(ts|js|tsx|jsx|py|rb|go|rs|java|kt|php)$/i.test(f.path) &&
-          !f.path.includes('node_modules/')
+          !f.path.includes('node_modules/') && !isNonProductionPath(f.path)
       );
       for (const file of sourceFiles) {
         if (!file.content) continue;
-        if (/postgres(?:ql)?:\/\/[^\s'"]+:[^\s'"]+@/i.test(file.content) ||
-            /mongodb(?:\+srv)?:\/\/[^\s'"]+:[^\s'"]+@/i.test(file.content) ||
-            /mysql:\/\/[^\s'"]+:[^\s'"]+@/i.test(file.content)) {
+        if (DATABASE_URL_RE.test(file.content) && !PLACEHOLDER_DATABASE_URL_RE.test(file.content)) {
           issues.push({
             id: `hardcoded-db-url-${file.path}`,
             title: 'Hardcoded database URL with credentials detected',

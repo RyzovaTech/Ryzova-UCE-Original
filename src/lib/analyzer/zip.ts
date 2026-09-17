@@ -171,6 +171,15 @@ function isLikelyText(name: string): boolean {
   return TEXT_EXTENSIONS.some((ext) => base.endsWith(ext));
 }
 
+/** GitHub and other exporters commonly wrap a project in one top-level folder. */
+function commonArchiveRoot(files: ProjectFile[]): string | null {
+  if (files.length === 0) return null;
+  const roots = new Set(files.map((file) => file.path.split('/')[0]).filter(Boolean));
+  if (roots.size !== 1) return null;
+  const [root] = [...roots];
+  return files.every((file) => file.path.startsWith(`${root}/`)) ? root : null;
+}
+
 export async function readZip(file: File): Promise<ZipReadResult> {
   if (!file.name.toLowerCase().endsWith('.zip')) {
     throw new ZipReadError('Unsupported file type. Please upload a .zip archive.');
@@ -356,6 +365,12 @@ export async function readZip(file: File): Promise<ZipReadResult> {
 
     files.push({ path: entry.name, size, isDirectory: false, content });
     filesAnalyzed++;
+  }
+
+  // Analyze the project itself, rather than the arbitrary archive wrapper directory.
+  const archiveRoot = commonArchiveRoot(files);
+  if (archiveRoot) {
+    for (const projectFile of files) projectFile.path = projectFile.path.slice(archiveRoot.length + 1);
   }
 
   // --- Phase 4: Derive directory entries ---

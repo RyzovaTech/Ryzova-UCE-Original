@@ -7,12 +7,16 @@ export function scoreStatus(score: number): { label: string; text: string } {
   return { label: 'Poor', text: 'text-destructive' };
 }
 
-export function ScoreRing({ score, size = 120 }: { score: number; size?: number }) {
+export function reportStatus(score: number, criticalCount = 0, warningCount = 0): { label: string; text: string } {
+  if (criticalCount > 0) return { label: 'Critical', text: 'text-destructive' };
+  if (warningCount > 0) return { label: 'Needs attention', text: 'text-warning' };
+  return scoreStatus(score);
+}
+
+export function ScoreRing({ score, size = 120, status = scoreStatus(score) }: { score: number; size?: number; status?: { label: string; text: string } }) {
   const radius = (size - 12) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
-  const status = scoreStatus(score);
-
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
