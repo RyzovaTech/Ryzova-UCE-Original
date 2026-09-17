@@ -1,41 +1,117 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
 
-const distIndex = resolve('dist/index.html');
-const analyzeIndex = resolve('dist/analyze/index.html');
+const distIndex = resolve("dist/index.html");
+const analyzeIndex = resolve("dist/analyze/index.html");
 
-const html = await readFile(distIndex, 'utf8');
+const html = await readFile(distIndex, "utf8");
 
 const replaceMeta = (source, pattern, replacement) => source.replace(pattern, replacement);
 
 let analyzeHtml = html;
-analyzeHtml = replaceMeta(analyzeHtml, /<title>[^<]*<\/title>/i, '<title>Software Compatibility Analyzer — UCE</title>');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="description" content="[^"]*"\s*\/?\s*>/i, '<meta name="description" content="Analyze Git repositories and project archives with UCE. Detect dependencies, runtimes, frameworks, configuration, and software compatibility risks in a local-first workflow." />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="robots" content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<link rel="canonical" href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/analyze" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:type" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:type" content="website" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:title" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="Software Compatibility Analyzer — UCE" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:description" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:description" content="Analyze Git repositories and project archives for dependencies, runtimes, configuration, and compatibility risks." />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:url" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/analyze" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:image" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:image" content="https://uce.ryzova.com/uce-logo.svg" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta property="og:image:alt" content="[^"]*"\s*\/?\s*>/i, '<meta property="og:image:alt" content="UCE — Universal Compatibility Engine logo" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:card" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:card" content="summary" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:title" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="Software Compatibility Analyzer — UCE" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:description" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:description" content="Open-source compatibility analysis for Git repositories and software projects." />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:image" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:image" content="https://uce.ryzova.com/uce-logo.svg" />');
-analyzeHtml = replaceMeta(analyzeHtml, /<meta name="twitter:image:alt" content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:image:alt" content="UCE — Universal Compatibility Engine logo" />');
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<title>[^<]*<\/title>/i,
+  "<title>Software Compatibility Analyzer — UCE</title>",
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="description" content="Analyze Git repositories and project archives with UCE. Detect dependencies, runtimes, frameworks, configuration, and software compatibility risks in a local-first workflow." />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="robots" content="index, follow" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i,
+  '<link rel="canonical" href="https://uce.ryzova.com/analyze" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+property="og:type"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta property="og:type" content="website" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta property="og:title" content="Software Compatibility Analyzer — UCE" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta property="og:description" content="Analyze Git repositories and project archives for dependencies, runtimes, configuration, and compatibility risks." />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta property="og:url" content="https://uce.ryzova.com/analyze" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta property="og:image" content="https://uce.ryzova.com/uce-logo.svg" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+property="og:image:alt"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta property="og:image:alt" content="Ryzova UCE — Universal Compatibility Engine logo" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="twitter:card"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="twitter:card" content="summary" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="twitter:title" content="Software Compatibility Analyzer — UCE" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="twitter:description" content="Open-source compatibility analysis for Git repositories and software projects." />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="twitter:image" content="https://uce.ryzova.com/uce-logo.svg" />',
+);
+analyzeHtml = replaceMeta(
+  analyzeHtml,
+  /<meta\s+name="twitter:image:alt"\s+content="[^"]*"\s*\/?\s*>/i,
+  '<meta name="twitter:image:alt" content="Ryzova UCE — Universal Compatibility Engine logo" />',
+);
 
 const analyzeJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: 'Software Compatibility Analyzer — UCE',
-  description: 'Analyze Git repositories and project archives for dependencies, runtimes, frameworks, configuration, and compatibility risks.',
-  url: 'https://uce.ryzova.com/analyze',
-  isPartOf: { '@type': 'WebSite', name: 'UCE — Universal Compatibility Engine', url: 'https://uce.ryzova.com/' },
-  about: { '@type': 'SoftwareApplication', name: 'UCE — Universal Compatibility Engine', applicationCategory: 'DeveloperApplication', operatingSystem: 'Web', url: 'https://uce.ryzova.com/' },
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Software Compatibility Analyzer — UCE",
+  description:
+    "Analyze Git repositories and project archives for dependencies, runtimes, frameworks, configuration, and compatibility risks.",
+  url: "https://uce.ryzova.com/analyze",
+  isPartOf: {
+    "@type": "WebSite",
+    name: "Ryzova UCE — Universal Compatibility Engine",
+    url: "https://uce.ryzova.com/",
+  },
+  about: {
+    "@type": "SoftwareApplication",
+    name: "Ryzova UCE™ — Universal Compatibility Engine",
+    applicationCategory: "DeveloperApplication",
+    operatingSystem: "Web",
+    url: "https://uce.ryzova.com/",
+    publisher: { "@id": "https://www.ryzova.com/#organization" },
+    sameAs: ["https://github.com/RyzovaTech/Ryzova-UCE-Original"],
+  },
 };
 
-analyzeHtml = analyzeHtml.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/i, `<script type="application/ld+json">${JSON.stringify(analyzeJsonLd)}</script>`);
+analyzeHtml = analyzeHtml.replace(
+  /<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
+  `<script type="application/ld+json">${JSON.stringify(analyzeJsonLd)}</script>`,
+);
 
 const fallback = `
     <noscript>
@@ -53,11 +129,12 @@ const fallback = `
         <h2>Open source and local first</h2>
         <p>UCE is released under the Apache License 2.0. The project is intended to be understandable and inspectable by developers and open-source maintainers. Local project archives stay in the browser during analysis, while remote repository analysis occurs only when a repository is explicitly supplied. Use the analyzer to investigate a project and then review the generated findings in the UCE interface.</p>
         <p><a href="/">Return to UCE</a></p>
+        <p><a href="https://www.ryzova.com/">Built by Ryzova™</a></p>
       </main>
     </noscript>`;
 
 analyzeHtml = analyzeHtml.replace(/\s*<noscript>[\s\S]*?<\/noscript>/i, fallback);
 
 await mkdir(dirname(analyzeIndex), { recursive: true });
-await writeFile(analyzeIndex, analyzeHtml, 'utf8');
-console.log('Generated route-specific SEO HTML: dist/analyze/index.html');
+await writeFile(analyzeIndex, analyzeHtml, "utf8");
+console.log("Generated route-specific SEO HTML: dist/analyze/index.html");

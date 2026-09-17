@@ -1,6 +1,8 @@
-# UCE — Universal Compatibility Engine
+# Ryzova UCE — Universal Compatibility Engine
 
 > UCE is an open-source, local-first software compatibility checker for Git repositories and project archives.
+
+Ryzova UCE is an open-source developer tool from Ryzova.
 
 ## Product
 UCE analyzes project structure, runtimes, dependencies, configuration, and compatibility risks in the browser.
@@ -19,3 +21,4 @@ UCE analyzes project structure, runtimes, dependencies, configuration, and compa
 
 ## Source
 - https://github.com/RyzovaTech/Ryzova-UCE-Original
+- https://www.ryzova.com/

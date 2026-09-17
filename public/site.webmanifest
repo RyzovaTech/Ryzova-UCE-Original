@@ -1,7 +1,7 @@
 {
-  "name": "UCE — Universal Compatibility Engine",
+  "name": "Ryzova UCE — Universal Compatibility Engine",
   "short_name": "UCE",
-  "description": "A local-first software compatibility checker for Git repositories and project archives.",
+  "description": "An open-source developer tool from Ryzova for software compatibility analysis.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020718",
