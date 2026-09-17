@@ -15,6 +15,9 @@ export interface DetectionConfidence { language: number; framework: number; runt
 export interface LanguageProfile { language: Language; bytes: number; files: number; percentage: number; }
 export type TechnologyKind = 'framework' | 'runtime' | 'database' | 'build-tool' | 'package-manager' | 'library' | 'testing' | 'linting' | 'styling' | 'auth' | 'api' | 'orm' | 'ci-cd' | 'container' | 'cloud' | 'configuration';
 export interface TechnologyEvidence { name: string; kind: TechnologyKind; confidence: number; evidence: string[]; version?: string; }
+export type DetectionConfidenceLevel = 'confirmed' | 'likely' | 'possible';
+export interface DetectionEvidence { kind: 'dependency' | 'file' | 'configuration' | 'manifest' | 'import' | 'content' | 'structure'; source: string; description: string; weight: number; }
+export interface TechnologyDetection { id: string; name: string; kind: TechnologyKind; confidence: number; level: DetectionConfidenceLevel; evidence: DetectionEvidence[]; }
 export interface DependencyItem { name: string; version: string; type: 'runtime' | 'development' | 'peer' | 'optional'; }
 export interface DependencyIntelligence { manager: PackageManager; total: number; runtime: number; development: number; peer: number; optional: number; dependencies: DependencyItem[]; duplicateNames: string[]; versionConflicts: string[]; healthScore: number; }
 export type ArchitectureType = 'SPA' | 'SSR' | 'SSG' | 'API Server' | 'Frontend + Backend' | 'Library' | 'Monorepo' | 'CLI' | 'Mobile App' | 'Desktop App' | 'Unknown';
@@ -31,7 +34,7 @@ export interface BrowserCompatibilityFinding { feature: string; kind: 'javascrip
 export interface BrowserCompatibilityIntelligence { targets: BrowserTarget[]; findings: BrowserCompatibilityFinding[]; score: number; filesScanned: number; featuresChecked: number; }
 export interface TechnologyStack {
   language: Language; languages?: LanguageProfile[]; mixedLanguage?: boolean; primaryLanguage?: Language; secondaryLanguages?: LanguageProfile[];
-  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence; browserCompatibility?: BrowserCompatibilityIntelligence;
+  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; technologyDetections?: TechnologyDetection[]; knowledgeVersion?: string; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence; browserCompatibility?: BrowserCompatibilityIntelligence;
   framework: Framework; runtime: Runtime; packageManager: PackageManager; buildTool: BuildTool; frontend: Framework | 'None' | 'Unknown'; backend: Framework | 'None' | 'Unknown'; database: Database; configFiles: string[]; monorepo?: MonorepoTool | 'None'; cloudProvider?: CloudProvider | 'None'; confidence?: DetectionConfidence;
 }
 export type MonorepoTool = 'Nx' | 'Turborepo' | 'Lerna' | 'Rush' | 'pnpm Workspaces' | 'Yarn Workspaces' | 'None';

@@ -1,4 +1,5 @@
 import type { Language, ProjectFile } from './types';
+import { isProjectEvidenceFile } from './project-scope';
 
 const EXTENSIONS: Record<string, Language> = {
   '.ts': 'TypeScript', '.tsx': 'TypeScript', '.js': 'JavaScript', '.jsx': 'JavaScript', '.mjs': 'JavaScript', '.cjs': 'JavaScript',
@@ -10,11 +11,6 @@ const EXTENSIONS: Record<string, Language> = {
   '.erl': 'Erlang', '.hrl': 'Erlang',
 };
 
-const IGNORED_PREFIXES = [
-  'node_modules/', 'vendor/', 'third_party/', 'dist/', 'build/', 'out/', '.next/', '.nuxt/', '.svelte-kit/',
-  'target/', '__pycache__/', '.venv/', 'venv/', 'coverage/', 'fixtures/', 'examples/', 'demo/', 'samples/',
-];
-
 export interface LanguageProfile {
   language: Language;
   bytes: number;
@@ -22,15 +18,10 @@ export interface LanguageProfile {
   percentage: number;
 }
 
-function isSource(path: string): boolean {
-  const normalized = path.replace(/^\.\//, '');
-  return !IGNORED_PREFIXES.some((prefix) => normalized.startsWith(prefix) || normalized.includes(`/${prefix}`));
-}
-
 export function detectLanguageProfile(files: ProjectFile[]): LanguageProfile[] {
   const totals = new Map<Language, { bytes: number; files: number }>();
   for (const file of files) {
-    if (file.isDirectory || !isSource(file.path)) continue;
+    if (!isProjectEvidenceFile(file)) continue;
     const lower = file.path.toLowerCase();
     const dot = lower.lastIndexOf('.');
     if (dot < 0) continue;

@@ -5,6 +5,7 @@ import { parseFiles } from './parser';
 import { detectStack, buildSummary } from './detectors';
 import { detectLanguageProfile } from './language-profile';
 import { detectTechnologyProfiles } from './technology-profiles';
+import { detectRegisteredTechnologies, TECHNOLOGY_REGISTRY_VERSION } from './technology-registry';
 import { detectTechnologyIntelligence } from './intelligence';
 import { detectCodeIntelligence } from './code-intelligence';
 import { detectSecurityIntelligence } from './security-intelligence';
@@ -52,8 +53,9 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const detectedFiles = parseFiles(input.files); const classification = classifyProject(input.files, detectedFiles);
   const detectedLanguages = detectLanguageProfile(input.files); const baseStack = detectStack(input.files, detectedFiles);
-  const stack = enrichLanguageStack(baseStack, detectedLanguages); const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack);
+  const stack = enrichLanguageStack(baseStack, detectedLanguages); const registryDetections = detectRegisteredTechnologies(input.files); const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack, registryDetections);
   stack.frameworks = technologyProfiles.frameworks; stack.runtimes = technologyProfiles.runtimes;
+  stack.technologyDetections = registryDetections; stack.knowledgeVersion = TECHNOLOGY_REGISTRY_VERSION;
   const intelligence = detectTechnologyIntelligence(input.files, detectedFiles, stack);
   stack.technologyEvidence = intelligence.evidence; stack.dependencyIntelligence = intelligence.dependencies; stack.architecture = intelligence.architecture;
   stack.codeIntelligence = detectCodeIntelligence(input.files); stack.securityIntelligence = detectSecurityIntelligence(input.files);
