@@ -1,9 +1,11 @@
 import type { ProjectFile, DetectedFile, ProjectClassification } from './types';
+import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
 
 export const NON_SOFTWARE_MESSAGE =
   'This project was classified as a non-software archive. Compatibility scoring is only available for software engineering projects.';
 
 const SOFTWARE_EXTENSIONS = new Set([
+  ...Object.keys(ADDITIONAL_LANGUAGE_EXTENSIONS),
   '.ts', '.tsx', '.js', '.jsx', '.py', '.java', '.kt', '.go', '.rs', '.php',
   '.rb', '.cs', '.cpp', '.c', '.h', '.swift', '.scala', '.clj', '.ex', '.exs',
   '.elm', '.fs', '.vb', '.m', '.mm', '.dart', '.lua', '.pl', '.r', '.jl',

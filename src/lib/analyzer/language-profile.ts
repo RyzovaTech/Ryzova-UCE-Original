@@ -1,7 +1,9 @@
 import type { Language, ProjectFile } from './types';
 import { isProjectEvidenceFile } from './project-scope';
+import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
 
 const EXTENSIONS: Record<string, Language> = {
+  ...ADDITIONAL_LANGUAGE_EXTENSIONS,
   '.ts': 'TypeScript', '.tsx': 'TypeScript', '.js': 'JavaScript', '.jsx': 'JavaScript', '.mjs': 'JavaScript', '.cjs': 'JavaScript',
   '.py': 'Python', '.rs': 'Rust', '.go': 'Go', '.java': 'Java', '.kt': 'Kotlin', '.kts': 'Kotlin',
   '.rb': 'Ruby', '.ex': 'Elixir', '.exs': 'Elixir', '.dart': 'Dart', '.swift': 'Swift', '.scala': 'Scala', '.sbt': 'Scala',

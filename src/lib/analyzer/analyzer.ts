@@ -45,7 +45,10 @@ const MIXED_LANGUAGE_MIN_FILES = 2;
 function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]): TechnologyStack {
   if (profiles.length === 0) return { ...stack, languages: [] };
   const meaningful = profiles.filter((profile, index) => index === 0 || profile.percentage >= MIXED_LANGUAGE_MIN_PERCENT || profile.files >= MIXED_LANGUAGE_MIN_FILES);
-  const primary = meaningful[0] ?? profiles[0]; const secondary = meaningful.slice(1);
+  // Data/config files can dwarf executable sources without defining the runtime.
+  const supporting = new Set(['JSON', 'YAML', 'TOML', 'XML', 'CSS', 'SCSS', 'Sass', 'Less', 'Stylus']);
+  const primary = meaningful.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
+  const secondary = meaningful.filter((profile) => profile !== primary);
   return { ...stack, languages: profiles, mixedLanguage: secondary.length > 0, primaryLanguage: primary.language, secondaryLanguages: secondary, language: primary.language };
 }
 

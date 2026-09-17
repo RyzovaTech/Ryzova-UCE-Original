@@ -29,3 +29,6 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+      - name: Knowledge regression tests
+        run: npm test

@@ -10,7 +10,7 @@ const DOCUMENTATION_PATH_RE = /(^|\/)(?:docs?|documentation)(?:\/|$)|(^|\/)(?:re
 const CONFIG_BASENAME_RE = /^(?:package\.json|pyproject\.toml|requirements(?:-dev)?\.txt|cargo\.toml|go\.mod|pom\.xml|composer\.json|gemfile|mix\.exs|pubspec\.yaml|package\.swift|build\.sbt|[^/]+\.config\.[^/]+|tsconfig(?:\.[^/]+)?\.json|dockerfile(?:\.[^/]+)?|docker-compose\.[^/]+|\.env(?:\.[^/]+)?|[^/]+\.lock)$/i;
 
 export function normalizeProjectPath(path: string): string {
-  return path.replace(/^\.\//, '').replace(/\\/g, '/');
+  return path.replace(/\\/g, '/').replace(/^\.\//, '');
 }
 
 export function classifyProjectFileScope(path: string): ProjectFileScope {

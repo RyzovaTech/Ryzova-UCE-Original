@@ -1,4 +1,5 @@
 import type { ProjectFile, TechnologyDetection, TechnologyKind } from './types';
+import { TECHNOLOGY_KNOWLEDGE } from './technology-knowledge';
 import { classifyProjectFileScope, isProjectEvidenceFile, normalizeProjectPath } from './project-scope';
 
 export interface TechnologyDefinition {
@@ -16,8 +17,9 @@ const framework = (id: string, name: string, definition: Omit<TechnologyDefiniti
 const runtime = (id: string, name: string, definition: Omit<TechnologyDefinition, 'id' | 'name' | 'kind'>): TechnologyDefinition => ({ id, name, kind: 'runtime', ...definition });
 
 /** Versioned knowledge registry. Adding a technology must not require detector changes. */
-export const TECHNOLOGY_REGISTRY_VERSION = '1.0.0';
+export const TECHNOLOGY_REGISTRY_VERSION = '2.0.0';
 export const TECHNOLOGY_REGISTRY: readonly TechnologyDefinition[] = [
+  ...TECHNOLOGY_KNOWLEDGE,
   framework('nextjs', 'Next.js', { dependencies: ['next'], filePrefixes: ['next.config.'] }),
   framework('nuxt', 'Nuxt', { dependencies: ['nuxt'], filePrefixes: ['nuxt.config.'] }),
   framework('astro', 'Astro', { dependencies: ['astro'], filePrefixes: ['astro.config.'] }),
@@ -130,7 +132,7 @@ function confidenceFrom(weights: number[]): number {
 
 export function detectRegisteredTechnologies(files: ProjectFile[]): TechnologyDetection[] {
   const evidenceFiles = files.filter(isProjectEvidenceFile);
-  const dependencies = collectDependencies(files);
+  const dependencies = collectDependencies(evidenceFiles);
   const results: TechnologyDetection[] = [];
 
   for (const definition of TECHNOLOGY_REGISTRY) {
@@ -158,7 +160,10 @@ export function detectRegisteredTechnologies(files: ProjectFile[]): TechnologyDe
     }
     if (!evidence.length) continue;
     const deduped = Array.from(new Map(evidence.map((item) => [`${item.kind}|${item.source}|${item.description}`, item])).values());
-    const confidence = confidenceFrom(deduped.map((item) => item.weight));
+    // Repeating the same marker in many workspaces is not independent evidence.
+    const byKind = new Map<string, number>();
+    for (const item of deduped) byKind.set(item.kind, Math.max(byKind.get(item.kind) ?? 0, item.weight));
+    const confidence = confidenceFrom([...byKind.values()]);
     results.push({ id: definition.id, name: definition.name, kind: definition.kind, confidence, level: confidence >= 80 ? 'confirmed' : confidence >= 50 ? 'likely' : 'possible', evidence: deduped.slice(0, 8) });
   }
   return results.sort((a, b) => b.confidence - a.confidence || a.name.localeCompare(b.name));

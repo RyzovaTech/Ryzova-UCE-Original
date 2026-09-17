@@ -13,6 +13,8 @@ import type {
   CloudProvider,
   DetectionConfidence,
 } from './types';
+import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
+import { isProjectEvidenceFile } from './project-scope';
 
 function hasFile(files: DetectedFile[] | ProjectFile[], name: string): boolean {
   return files.some((f) => f.path === name || f.path.endsWith('/' + name));
@@ -73,6 +75,7 @@ function isLikelySourceRoot(path: string): boolean {
 }
 
 const EXT_LANGUAGE: Record<string, Language> = {
+  ...ADDITIONAL_LANGUAGE_EXTENSIONS,
   '.ts': 'TypeScript', '.tsx': 'TypeScript',
   '.js': 'JavaScript', '.jsx': 'JavaScript', '.mjs': 'JavaScript', '.cjs': 'JavaScript',
   '.py': 'Python', '.rs': 'Rust', '.go': 'Go', '.java': 'Java',
@@ -98,14 +101,14 @@ const EXT_LANGUAGE: Record<string, Language> = {
 function tallyLanguageBytes(projectFiles: ProjectFile[]): Map<Language, number> {
   const totals = new Map<Language, number>();
   for (const f of projectFiles) {
-    if (f.isDirectory) continue;
+    if (!isProjectEvidenceFile(f)) continue;
     if (!isLikelySourceRoot(f.path)) continue;
     const lower = f.path.toLowerCase();
     const dot = lower.lastIndexOf('.');
     if (dot < 0) continue;
     const ext = lower.slice(dot);
     const lang = EXT_LANGUAGE[ext];
-    if (!lang) continue;
+    if (!lang || ['JSON', 'YAML', 'TOML', 'XML', 'CSS', 'SCSS', 'Sass', 'Less', 'Stylus'].includes(lang)) continue;
     totals.set(lang, (totals.get(lang) ?? 0) + (f.size || 0));
   }
   return totals;
@@ -246,6 +249,10 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
   if (hasExtension(projectFiles, '.v')) return 'V';
   if (hasExtension(projectFiles, '.pl') || hasExtension(projectFiles, '.pm')) return 'Perl';
   if (hasExtension(projectFiles, '.erl') || hasExtension(projectFiles, '.hrl')) return 'Erlang';
+
+  const additional = Object.entries(ADDITIONAL_LANGUAGE_EXTENSIONS).find(([extension]) =>
+    projectFiles.some((file) => isProjectEvidenceFile(file) && file.path.toLowerCase().endsWith(extension)));
+  if (additional) return additional[1];
 
   return 'Unknown';
 }

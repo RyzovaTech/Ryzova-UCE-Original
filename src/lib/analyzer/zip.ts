@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
 import type { ProjectFile, ScanStats } from './types';
 import { formatFileSize } from '@/lib/utils';
 
@@ -150,6 +151,7 @@ const TEXT_BASENAMES = new Set([
 ]);
 
 const TEXT_EXTENSIONS = [
+  ...Object.keys(ADDITIONAL_LANGUAGE_EXTENSIONS),
   '.json', '.yaml', '.yml', '.toml', '.txt', '.md', '.rst', '.env',
   '.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs',
   '.py', '.go', '.rs', '.java', '.kt', '.kts',

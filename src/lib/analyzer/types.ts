@@ -1,9 +1,10 @@
+import type { AdditionalLanguage } from './language-knowledge';
 export type Severity = 'critical' | 'warning' | 'info';
 export type CategoryId = 'runtime' | 'dependencies' | 'configuration' | 'structure' | 'environment' | 'security' | 'deployment' | 'performance';
 export type CategoryStatus = 'good' | 'warning' | 'unknown';
 export type ProjectType = 'Software Project' | 'Game Project' | 'Media Archive' | 'Document Archive' | 'Unknown Archive';
 export interface ProjectClassification { type: ProjectType; isSoftware: boolean; reason: string; }
-export type Language = 'TypeScript' | 'JavaScript' | 'Python' | 'Java' | 'Kotlin' | 'Go' | 'Rust' | 'PHP' | 'Ruby' | 'Elixir' | 'Dart' | 'C' | 'C++' | 'Swift' | 'Scala' | 'C#' | 'Zig' | 'OCaml' | 'Haskell' | 'Lua' | 'Julia' | 'R' | 'Crystal' | 'Nim' | 'Solidity' | 'V' | 'Perl' | 'Erlang' | 'Unknown';
+export type Language = AdditionalLanguage | 'TypeScript' | 'JavaScript' | 'Python' | 'Java' | 'Kotlin' | 'Go' | 'Rust' | 'PHP' | 'Ruby' | 'Elixir' | 'Dart' | 'C' | 'C++' | 'Swift' | 'Scala' | 'C#' | 'Zig' | 'OCaml' | 'Haskell' | 'Lua' | 'Julia' | 'R' | 'Crystal' | 'Nim' | 'Solidity' | 'V' | 'Perl' | 'Erlang' | 'Unknown';
 export type Runtime = 'Node.js' | 'Bun' | 'Deno' | 'Python' | 'JVM' | 'Go' | 'Rust' | 'Ruby' | 'BEAM' | 'Dart' | 'Swift' | '.NET' | 'Unknown';
 export type PackageManager = 'npm' | 'pnpm' | 'yarn' | 'bun' | 'pip' | 'poetry' | 'pdm' | 'pipenv' | 'uv' | 'hatch' | 'cargo' | 'maven' | 'gradle' | 'composer' | 'go-modules' | 'bundler' | 'mix' | 'pub' | 'swift-package' | 'sbt' | 'nuget' | 'Unknown';
 export type BuildTool = 'Vite' | 'Next.js' | 'Nuxt' | 'Astro' | 'Remix' | 'Gatsby' | 'Angular CLI' | 'Create React App' | 'Webpack' | 'esbuild' | 'Rollup' | 'Turbo' | 'Cargo' | 'Maven' | 'Gradle' | 'pip' | 'poetry' | 'hatch' | 'CMake' | 'Make' | 'Swift Package Manager' | 'Mix' | 'Pub' | 'turbopack' | 'Unknown';
