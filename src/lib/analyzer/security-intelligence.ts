@@ -28,18 +28,20 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
   for (const file of sourceFiles) {
     const source = file.content ?? '';
     for (const rule of RULES) {
-      rule.pattern.lastIndex = 0;
-      const match = rule.pattern.exec(source);
-      if (!match) continue;
-      const line = source.slice(0, match.index).split('\n').length;
-      const normalizedPath = normalizePath(file.path);
-      // Stable de-duplication: one rule finding per file/line, regardless of
-      // how many detector passes or repeated matches produced it.
-      const id = `${rule.id}:${normalizedPath}:${line}`;
-      if (seen.has(id)) continue;
-      seen.add(id);
-      findings.push({ id, title: rule.title, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation });
+      const flags = rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`;
+      const pattern = new RegExp(rule.pattern.source, flags);
+      for (const match of source.matchAll(pattern)) {
+        const line = source.slice(0, match.index).split('\n').length;
+        const normalizedPath = normalizePath(file.path);
+        const id = `${rule.id}:${normalizedPath}:${line}`;
+        if (seen.has(id)) continue;
+        seen.add(id);
+        findings.push({ id, title: rule.title, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation });
+        if (findings.length >= 300) break;
+      }
+      if (findings.length >= 300) break;
     }
+    if (findings.length >= 300) break;
   }
 
   const weights = { critical: 20, warning: 7, info: 1 };

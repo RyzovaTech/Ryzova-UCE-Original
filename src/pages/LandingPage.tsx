@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UceLogo } from "@/components/UceLogo";
+import { UCE_VERSION } from "@/lib/app-version";
 
 const problems = [
   {
@@ -134,7 +135,7 @@ export function LandingPage() {
       <header className="sticky top-0 z-30 border-b bg-background">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 md:px-8">
           <UceLogo size="md" />
-          <span className="font-mono text-xs text-muted-foreground">UCE · v2.0.0</span>
+          <span className="font-mono text-xs text-muted-foreground">UCE · v{UCE_VERSION}</span>
           <div className="ml-auto flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
               Dashboard

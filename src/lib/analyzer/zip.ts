@@ -109,7 +109,10 @@ export class ZipReadError extends Error {
 function isIgnored(path: string): boolean {
   const normalized = path.replace(/^\.\//, '');
   return IGNORED_PATH_PREFIXES.some(
-    (prefix) => normalized.startsWith(prefix) || normalized === prefix.replace(/\/$/, '')
+    (prefix) => normalized.startsWith(prefix) ||
+      normalized.includes(`/${prefix}`) ||
+      normalized === prefix.replace(/\/$/, '') ||
+      normalized.endsWith(`/${prefix.replace(/\/$/, '')}`)
   );
 }
 

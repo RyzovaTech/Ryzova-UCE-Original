@@ -14,8 +14,8 @@ import { runAnalysis, countApplicableRules } from '../compatibility/analysis/eng
 import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
+import { UCE_VERSION } from '@/lib/app-version';
 
-const UCE_VERSION = '2.0.0';
 const ANALYSIS_VERSION = `uce-${UCE_VERSION}`;
 function generateId(): string { return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
 function buildTimeline(): TimelineStep[] { return [

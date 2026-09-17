@@ -24,7 +24,7 @@ export interface LanguageProfile {
 
 function isSource(path: string): boolean {
   const normalized = path.replace(/^\.\//, '');
-  return !IGNORED_PREFIXES.some((prefix) => normalized.startsWith(prefix));
+  return !IGNORED_PREFIXES.some((prefix) => normalized.startsWith(prefix) || normalized.includes(`/${prefix}`));
 }
 
 export function detectLanguageProfile(files: ProjectFile[]): LanguageProfile[] {

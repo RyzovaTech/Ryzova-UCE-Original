@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/hooks/useTheme';
 import { useReportEngine } from '@/hooks/useReportEngine';
 import { clearAllLocalData } from '@/lib/storage';
+import { UCE_VERSION } from '@/lib/app-version';
 
 export function SettingsPage() {
   const { theme, toggle } = useTheme();
@@ -100,11 +101,11 @@ export function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">About</CardTitle>
-          <CardDescription>Universal Compatibility Engine v1.2.2</CardDescription>
+          <CardDescription>Universal Compatibility Engine v{UCE_VERSION}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>UCE performs deterministic, local-first compatibility analysis of software projects.</p>
-          <p>No data leaves your browser. All analysis runs entirely client-side.</p>
+          <p>ZIP archives never leave your browser. Public GitHub repositories are fetched directly from GitHub, then analyzed client-side.</p>
         </CardContent>
       </Card>
     </div>

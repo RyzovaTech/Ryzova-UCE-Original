@@ -16,6 +16,9 @@ const ReportPage = lazy(() =>
     default: m.ReportWithLanguageBreakdownPage,
   })),
 );
+const ReportsPage = lazy(() =>
+  import("@/pages/ReportsPage").then((m) => ({ default: m.ReportsPage })),
+);
 const SettingsPage = lazy(() =>
   import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
@@ -170,7 +173,7 @@ function App() {
             path="/report"
             element={
               <Suspense fallback={<PageLoader />}>
-                <ReportPage />
+                <ReportsPage />
               </Suspense>
             }
           />

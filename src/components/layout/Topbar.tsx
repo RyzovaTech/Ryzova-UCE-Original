@@ -2,7 +2,7 @@ import { Link, useNavigate, NavLink } from 'react-router-dom';
 import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { UceLogo } from '@/components/UceLogo';
 
 const mobileItems = [
@@ -39,6 +39,7 @@ export function Topbar() {
                   const Icon = item.icon;
                   return (
                     <li key={item.to}>
+                      <SheetClose asChild>
                       <NavLink
                         to={item.to}
                         className={({ isActive }) =>
@@ -52,6 +53,7 @@ export function Topbar() {
                         <Icon className="h-4 w-4" />
                         {item.label}
                       </NavLink>
+                      </SheetClose>
                     </li>
                   );
                 })}

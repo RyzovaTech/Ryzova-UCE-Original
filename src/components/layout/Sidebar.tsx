@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, CloudUpload as UploadCloud, ChartBar as FileBarChart, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UceLogo } from '@/components/UceLogo';
+import { UCE_VERSION } from '@/lib/app-version';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,7 +47,7 @@ export function Sidebar() {
       </nav>
       <div className="border-t p-4">
         <div className="rounded-md border bg-gradient-to-br from-primary/10 to-secondary/10 p-3">
-          <p className="text-xs font-medium">UCE v2.0.0</p>
+          <p className="text-xs font-medium">UCE v{UCE_VERSION}</p>
           <p className="mt-1 text-[11px] text-muted-foreground">
             Deterministic compatibility analysis
           </p>

@@ -63,7 +63,7 @@ const SOURCE_ROOT_SKIP_PREFIXES = [
 function isLikelySourceRoot(path: string): boolean {
   const normalized = path.replace(/^\.\//, '');
   for (const skip of SOURCE_ROOT_SKIP_PREFIXES) {
-    if (normalized.startsWith(skip)) return false;
+    if (normalized.startsWith(skip) || normalized.includes(`/${skip}`)) return false;
   }
   return true;
 }

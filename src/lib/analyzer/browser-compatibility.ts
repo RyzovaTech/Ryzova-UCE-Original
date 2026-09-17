@@ -31,7 +31,14 @@ function parseBrowserslist(files: ProjectFile[]): BrowserTarget[] {
   if (!pkg?.content) return DEFAULT_TARGETS;
   try {
     const parsed = JSON.parse(pkg.content) as { browserslist?: unknown };
-    const values = Array.isArray(parsed.browserslist) ? parsed.browserslist : typeof parsed.browserslist === 'string' ? [parsed.browserslist] : [];
+    const browserslist = parsed.browserslist;
+    const values = Array.isArray(browserslist)
+      ? browserslist
+      : typeof browserslist === 'string'
+        ? [browserslist]
+        : browserslist && typeof browserslist === 'object'
+          ? Object.values(browserslist as Record<string, unknown>).flatMap((value) => Array.isArray(value) ? value : typeof value === 'string' ? [value] : [])
+          : [];
     const targets: BrowserTarget[] = [];
     for (const value of values) {
       const match = /^(chrome|firefox|safari|edge)\s*(?:>=|>)\s*(\d+(?:\.\d+)?)$/i.exec(String(value).trim());
@@ -47,13 +54,13 @@ function parseBrowserslist(files: ProjectFile[]): BrowserTarget[] {
 function isSourceFile(file: ProjectFile): boolean {
   if (file.isDirectory || typeof file.content !== 'string') return false;
   const path = file.path.replace(/\\/g, '/').toLowerCase();
-  if (!/\.(?:[cm]?[jt]sx?|css|html?)$/.test(path)) return false;
+  if (!/\.(?:[cm]?[jt]sx?|css|s[ac]ss|less|html?)$/.test(path)) return false;
   return !/(^|\/)node_modules\/|(^|\/)dist\/|(^|\/)build\/|(^|\/)coverage\/|(^|\/)[.]git\/|(^|\/)(?:vendor|generated|public)\//.test(path);
 }
 
 function isRelevantFile(file: ProjectFile, kind: BrowserCompatibilityFinding['kind']): boolean {
   const path = file.path.replace(/\\/g, '/').toLowerCase();
-  if (kind === 'css') return /\.css$/i.test(path);
+  if (kind === 'css') return /\.(?:css|s[ac]ss|less)$/i.test(path);
   if (kind === 'javascript') return /\.html?$/i.test(path);
   return /\.(?:[cm]?[jt]sx?|html?)$/i.test(path);
 }
