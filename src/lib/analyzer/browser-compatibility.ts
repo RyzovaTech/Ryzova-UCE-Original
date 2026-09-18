@@ -70,10 +70,12 @@ export function detectBrowserCompatibility(files: ProjectFile[]): BrowserCompati
       if (!isRelevantFile(file, rule.kind)) continue;
       const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.replace('g', '')); const match = pattern.exec(content);
       if (!match) continue;
-      const affected = resolution.targets.filter((target) => rule.unsupported?.includes(target.browser) || (rule.minimums[target.browser] !== undefined && target.version < rule.minimums[target.browser]!)).map((target) => target.browser);
+      const affectedTargets = resolution.targets.filter((target) => rule.unsupported?.includes(target.browser) || (rule.minimums[target.browser] !== undefined && target.version < rule.minimums[target.browser]!));
+      const affected = affectedTargets.map((target) => target.browser);
       if (!affected.length) continue;
       const key = `${file.path}|${rule.id}|${affected.join(',')}`; if (seen.has(key)) continue; seen.add(key);
-      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status: 'unsupported', affectedBrowsers: affected, recommendation: rule.recommendation });
+      const status = affectedTargets.every((target) => !rule.unsupported?.includes(target.browser) && rule.partialMinimums?.[target.browser] !== undefined && target.version >= rule.partialMinimums[target.browser]!) ? 'partial' : 'unsupported';
+      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status, affectedBrowsers: affected, recommendation: rule.recommendation });
     }
   }
   const uniqueFeatureTargets = new Set(findings.map((finding) => `${finding.id}|${finding.affectedBrowsers.join(',')}`));

@@ -11,6 +11,7 @@ import { detectTechnologyIntelligence } from './intelligence';
 import { detectCodeIntelligence } from './code-intelligence';
 import { detectSecurityIntelligence } from './security-intelligence';
 import { detectBrowserCompatibility } from './browser-compatibility';
+import { buildCorrelatedInsights } from './correlated-intelligence';
 import { classifyProject, NON_SOFTWARE_MESSAGE } from './classifier';
 import { runAnalysis, countApplicableRules } from '../compatibility/analysis/engine';
 import { computeScore } from '../compatibility/scoring';
@@ -65,6 +66,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   stack.technologyEvidence = intelligence.evidence; stack.dependencyIntelligence = intelligence.dependencies; stack.architecture = intelligence.architecture;
   stack.codeIntelligence = detectCodeIntelligence(input.files); stack.securityIntelligence = detectSecurityIntelligence(input.files);
   stack.browserCompatibility = detectBrowserCompatibility(input.files);
+  stack.intelligenceInsights = buildCorrelatedInsights(stack);
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
   if (!classification.isSoftware) return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source };
   const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName }; const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
@@ -79,6 +81,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.codeIntelligence) notes.push(`Code intelligence: ${stack.codeIntelligence.symbols.length} symbols, ${stack.codeIntelligence.dependencyEdges.length} internal dependency edges, ${stack.codeIntelligence.apiEndpoints.length} API endpoints.`);
   if (stack.securityIntelligence) { const findingCount = stack.securityIntelligence.findings.length; notes.push(`Security intelligence: ${findingCount} finding${findingCount === 1 ? '' : 's'}; static security score ${stack.securityIntelligence.score}%.`); }
   if (stack.browserCompatibility) { const findingCount = stack.browserCompatibility.findings.length; notes.push(`Browser compatibility: ${findingCount} compatibility finding${findingCount === 1 ? '' : 's'}; score ${stack.browserCompatibility.score}%.`); }
+  if (stack.intelligenceInsights?.length) notes.push(`Correlated intelligence: ${stack.intelligenceInsights.length} prioritized cross-engine insight${stack.intelligenceInsights.length === 1 ? '' : 's'}.`);
   return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories, issues, score, timeline: buildTimeline(), notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source };
 }
 export type { ProjectFile };

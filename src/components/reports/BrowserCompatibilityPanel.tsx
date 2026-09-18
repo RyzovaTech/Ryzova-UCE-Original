@@ -74,7 +74,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
                       <Badge variant="secondary">{finding.kind}</Badge>
                       <span className="text-sm font-medium">{finding.feature}</span>
                     </div>
-                    <Badge variant="destructive">Unsupported</Badge>
+                    <Badge variant={finding.status === 'partial' ? 'secondary' : 'destructive'}>{finding.status === 'partial' ? 'Partial' : 'Unsupported'}</Badge>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
                     {finding.file}:{finding.line} · Affected: {finding.affectedBrowsers.join(', ')}

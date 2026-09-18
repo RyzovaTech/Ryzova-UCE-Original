@@ -37,7 +37,7 @@ export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
           </section>
           <section className="rounded-lg border bg-muted/20 p-4">
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><Route className="h-4 w-4" />API Intelligence</div>
-            {data.apiEndpoints.length ? <div className="space-y-2">{data.apiEndpoints.slice(0, 8).map((endpoint, index) => <div key={`${endpoint.method}-${endpoint.route}-${endpoint.file}-${index}`} className="flex items-center gap-2 text-xs"><Badge variant="outline" className="w-14 justify-center text-[10px]">{endpoint.method}</Badge><span className="truncate font-mono">{endpoint.route}</span><span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{endpoint.file}:{endpoint.line}</span></div>)}</div> : <p className="text-xs text-muted-foreground">No recognizable route declarations found.</p>}
+            {data.apiEndpoints.length ? <div className="space-y-2">{data.apiEndpoints.slice(0, 8).map((endpoint, index) => <div key={`${endpoint.method}-${endpoint.route}-${endpoint.file}-${index}`} className="flex items-center gap-2 text-xs"><Badge variant="outline" className="w-14 justify-center text-[10px]">{endpoint.method}</Badge><span className="truncate font-mono">{endpoint.route}</span>{endpoint.framework && <Badge variant="secondary" className="hidden text-[10px] sm:inline-flex">{endpoint.framework}</Badge>}<span className="ml-auto shrink-0 text-[10px] text-muted-foreground">{endpoint.file}:{endpoint.line}</span></div>)}</div> : <p className="text-xs text-muted-foreground">No recognizable route declarations found.</p>}
           </section>
         </div>
         <section className="rounded-lg border bg-muted/20 p-4">

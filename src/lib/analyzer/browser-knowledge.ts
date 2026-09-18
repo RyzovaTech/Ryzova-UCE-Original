@@ -6,6 +6,7 @@ export interface BrowserFeatureDefinition {
   kind: BrowserCompatibilityFinding['kind'];
   pattern: RegExp;
   minimums: Partial<Record<BrowserName, number>>;
+  partialMinimums?: Partial<Record<BrowserName, number>>;
   unsupported?: BrowserName[];
   recommendation: string;
 }
@@ -18,7 +19,7 @@ export const BROWSER_FEATURES: readonly BrowserFeatureDefinition[] = [
   { id: 'popover', feature: 'Popover API', kind: 'web-api', pattern: /\.(?:showPopover|hidePopover|togglePopover)\s*\(|\b(?:popoverTargetElement|popoverTargetAction)\b|\bpopover\s*=\s*["'](?:auto|manual)["']/i, minimums: { Chrome: 114, Edge: 114, Firefox: 125, Safari: 17 }, recommendation: 'Feature-detect the Popover API or provide a dialog/menu fallback.' },
   { id: 'css-has', feature: 'CSS :has()', kind: 'css', pattern: /:has\s*\(/, minimums: { Chrome: 105, Edge: 105, Firefox: 121, Safari: 15.4 }, recommendation: 'Provide a fallback selector for browsers below the :has() baseline.' },
   { id: 'container-queries', feature: 'CSS container queries', kind: 'css', pattern: /@container\b/, minimums: { Chrome: 105, Edge: 105, Firefox: 110, Safari: 16 }, recommendation: 'Provide a media-query or layout fallback when container queries are unavailable.' },
-  { id: 'css-nesting', feature: 'CSS nesting', kind: 'css', pattern: /(?:^|\})\s*[.#[:][^{]+\{[^{}]*&(?:\s|[.#[:])/m, minimums: { Chrome: 120, Edge: 120, Firefox: 117, Safari: 17.2 }, recommendation: 'Compile nested CSS or provide unnested rules for older targets.' },
+  { id: 'css-nesting', feature: 'CSS nesting', kind: 'css', pattern: /(?:^|\})\s*[.#[:][^{]+\{[^{}]*&(?:\s|[.#[:])/m, minimums: { Chrome: 120, Edge: 120, Firefox: 117, Safari: 17.2 }, partialMinimums: { Chrome: 112, Edge: 112, Safari: 16.5 }, recommendation: 'Compile nested CSS or provide unnested rules for older targets.' },
   { id: 'css-subgrid', feature: 'CSS subgrid', kind: 'css', pattern: /grid-template-(?:rows|columns)\s*:\s*subgrid\b/i, minimums: { Chrome: 117, Edge: 117, Firefox: 71, Safari: 16 }, recommendation: 'Provide a regular grid fallback for browsers without subgrid.' },
   { id: 'color-mix', feature: 'CSS color-mix()', kind: 'css', pattern: /\bcolor-mix\s*\(/i, minimums: { Chrome: 111, Edge: 111, Firefox: 113, Safari: 16.2 }, recommendation: 'Provide a precomputed color fallback before color-mix().' },
   { id: 'backdrop-filter', feature: 'CSS backdrop-filter', kind: 'css', pattern: /(?:^|[;{\s])(?:-webkit-)?backdrop-filter\s*:/, minimums: { Chrome: 76, Edge: 79, Firefox: 103, Safari: 9 }, recommendation: 'Provide a background fallback for browsers without backdrop-filter.' },

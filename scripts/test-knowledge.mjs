@@ -38,6 +38,9 @@ const { detectBrowserCompatibility, resolveBrowserTargets } = load('src/lib/anal
 const { BROWSER_FEATURES } = load('src/lib/analyzer/browser-knowledge.ts');
 const { detectSecurityIntelligence, isNonProductionPath } = load('src/lib/analyzer/security-intelligence.ts');
 const { SECURITY_RULES, validateSecurityRules } = load('src/lib/analyzer/security-knowledge.ts');
+const { detectCodeIntelligence } = load('src/lib/analyzer/code-intelligence.ts');
+const { detectDependencyIntelligence } = load('src/lib/analyzer/intelligence.ts');
+const { buildCorrelatedInsights } = load('src/lib/analyzer/correlated-intelligence.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
@@ -179,6 +182,46 @@ test('security intelligence excludes non-production paths cross-platform', () =>
 test('unsafe deserialization rules distinguish safe YAML loading', () => {
   const result = detectSecurityIntelligence([file('src/unsafe.py', 'pickle.loads(payload)\nyaml.load(payload)\nyaml.load(payload, Loader=yaml.SafeLoader)')]);
   assert.ok(result.findings.some(item => item.ruleId === 'SEC015')); assert.equal(result.findings.filter(item => item.ruleId === 'SEC016').length, 1);
+});
+test('API intelligence covers file and framework routes', () => {
+  const result = detectCodeIntelligence([
+    file('app/api/users/[id]/route.ts', 'export async function GET() {}\nexport function DELETE() {}'),
+    file('api.py', '@app.post("/items")\ndef create(): pass'),
+    file('UserController.java', '@GetMapping("/users")\nvoid users() {}'),
+    file('routes/web.php', "Route::put('/profile', handler);"),
+    file('server.go', 'http.HandleFunc("/health", health)'),
+  ]);
+  for (const route of ['/api/users/:id', '/items', '/users', '/profile', '/health']) assert.ok(result.apiEndpoints.some(item => item.route === route));
+  assert.ok(result.frameworksCovered.length >= 5);
+});
+test('large functions use function span rather than containing file size', () => {
+  const manyLines = Array.from({ length: 300 }, (_, index) => `const value${index} = ${index};`).join('\n');
+  const result = detectCodeIntelligence([file('src/large.ts', `function tiny() { return 1; }\n${manyLines}`)]);
+  assert.equal(result.quality.largeFiles.length, 0); assert.equal(result.quality.largeFunctions.length, 0);
+  const largeBody = Array.from({ length: 85 }, () => 'work();').join('\n');
+  assert.equal(detectCodeIntelligence([file('src/function.ts', `function huge() {\n${largeBody}\n}`)]).quality.largeFunctions[0].lines, 87);
+});
+test('dependency intelligence correlates workspace conflicts and mutable sources', () => {
+  const result = detectDependencyIntelligence([
+    file('package.json', JSON.stringify({ dependencies: { react: '^18', loose: '*', remote: 'git+https://example.com/repo.git' } })),
+    file('packages/app/package.json', JSON.stringify({ dependencies: { react: '^19' } })),
+    file('fixtures/package.json', JSON.stringify({ dependencies: { ignored: 'latest' } })),
+  ], { packageManager: 'pnpm' });
+  assert.equal(result.manifestsScanned, 2); assert.equal(result.versionConflicts.length, 1);
+  assert.deepEqual(new Set(result.risks.map(item => item.kind)), new Set(['wildcard', 'remote-source', 'version-conflict']));
+  assert.ok(!result.risks.some(item => item.name === 'ignored'));
+});
+test('correlated intelligence prioritizes cross-engine signals', () => {
+  const insights = buildCorrelatedInsights({
+    securityIntelligence: { findings: [{ id: 'x', ruleId: 'SEC001', title: 'secret', severity: 'critical', file: 'src/a.ts', line: 1, evidence: 'safe', recommendation: 'fix' }], score: 0, filesScanned: 1, rulesExecuted: 1 },
+    browserCompatibility: { targets: [], findings: [{ feature: 'WebGPU', kind: 'web-api', file: 'src/a.ts', line: 2, status: 'unsupported', affectedBrowsers: ['Safari'], recommendation: 'fallback' }], score: 80, filesScanned: 1, featuresChecked: 25 },
+    dependencyIntelligence: { manager: 'pnpm', total: 1, runtime: 1, development: 0, peer: 0, optional: 0, dependencies: [], duplicateNames: [], versionConflicts: [], risks: [{ name: 'x', version: '*', source: 'package.json', kind: 'wildcard', severity: 'warning', recommendation: 'pin' }], healthScore: 90 },
+  });
+  assert.equal(insights[0].severity, 'critical'); assert.ok(insights.some(item => item.domain === 'browser')); assert.ok(insights.some(item => item.domain === 'dependencies'));
+});
+test('browser compatibility distinguishes partial support', () => {
+  const result = detectBrowserCompatibility([file('.browserslistrc', 'chrome 115'), file('src/style.css', '.card { & .title { color: red; } }')]);
+  assert.equal(result.findings.find(item => item.id === 'css-nesting').status, 'partial');
 });
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {

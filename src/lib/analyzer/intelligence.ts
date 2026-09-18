@@ -1,4 +1,5 @@
-import type { ArchitectureIntelligence, ArchitectureType, DependencyIntelligence, DependencyItem, DetectedFile, ProjectFile, TechnologyEvidence, TechnologyKind, TechnologyStack } from './types';
+import type { ArchitectureIntelligence, ArchitectureType, DependencyIntelligence, DependencyItem, DependencyRisk, DetectedFile, ProjectFile, TechnologyEvidence, TechnologyKind, TechnologyStack } from './types';
+import { isProjectEvidenceFile } from './project-scope';
 
 function read(files: ProjectFile[], names: string[]): string {
   return names.map((name) => files.find((f) => !f.isDirectory && (f.path === name || f.path.endsWith('/' + name)))?.content ?? '').join('\n');
@@ -13,36 +14,34 @@ function addEvidence(out: TechnologyEvidence[], name: string, kind: TechnologyKi
   out.push({ name, kind, confidence: Math.max(0, Math.min(100, confidence)), evidence, version });
 }
 
-function packageJson(files: ProjectFile[]): Record<string, unknown> | null {
-  const text = read(files, ['package.json']);
-  if (!text) return null;
-  try { return JSON.parse(text) as Record<string, unknown>; } catch { return null; }
-}
-
 function dependencyMaps(files: ProjectFile[]): DependencyItem[] {
-  const pkg = packageJson(files);
-  if (!pkg) return [];
   const result: DependencyItem[] = [];
   const sections: Array<[string, DependencyItem['type']]> = [
     ['dependencies', 'runtime'], ['devDependencies', 'development'], ['peerDependencies', 'peer'], ['optionalDependencies', 'optional'],
   ];
-  for (const [section, type] of sections) {
-    const values = pkg[section];
-    if (!values || typeof values !== 'object') continue;
-    for (const [name, version] of Object.entries(values as Record<string, unknown>)) {
-      if (typeof version === 'string') result.push({ name, version, type });
+  for (const file of files.filter((item) => isProjectEvidenceFile(item) && /(^|\/)package\.json$/i.test(item.path) && item.content)) {
+    let pkg: Record<string, unknown>; try { pkg = JSON.parse(file.content!) as Record<string, unknown>; } catch { continue; }
+    for (const [section, type] of sections) {
+      const values = pkg[section]; if (!values || typeof values !== 'object') continue;
+      for (const [name, version] of Object.entries(values as Record<string, unknown>)) if (typeof version === 'string') result.push({ name, version, type, source: file.path });
     }
   }
   return result;
 }
 
-function detectDependencyIntelligence(files: ProjectFile[], stack: TechnologyStack): DependencyIntelligence {
+export function detectDependencyIntelligence(files: ProjectFile[], stack: TechnologyStack): DependencyIntelligence {
   const items = dependencyMaps(files);
   const allByName = new Map<string, string[]>();
   for (const item of items) allByName.set(item.name, [...(allByName.get(item.name) ?? []), item.version]);
   const duplicateNames = [...allByName.entries()].filter(([, versions]) => versions.length > 1).map(([name]) => name);
   const versionConflicts = [...allByName.entries()].filter(([, versions]) => new Set(versions).size > 1).map(([name, versions]) => `${name}: ${[...new Set(versions)].join(' vs ')}`);
-  const healthScore = Math.max(0, Math.min(100, 100 - duplicateNames.length * 5 - versionConflicts.length * 12));
+  const risks: DependencyRisk[] = [];
+  for (const item of items) {
+    if (/^(?:\*|latest|next)$/i.test(item.version)) risks.push({ name: item.name, version: item.version, source: item.source ?? 'package.json', kind: 'wildcard', severity: 'warning', recommendation: 'Pin a reviewed version range and commit the lockfile.' });
+    else if (/^(?:https?:|git(?:\+|:)|github:)/i.test(item.version)) risks.push({ name: item.name, version: item.version, source: item.source ?? 'package.json', kind: 'remote-source', severity: 'warning', recommendation: 'Prefer a verified registry release or immutable commit digest.' });
+  }
+  for (const conflict of versionConflicts) risks.push({ name: conflict.split(':')[0], version: conflict, source: 'multiple package manifests', kind: 'version-conflict', severity: 'warning', recommendation: 'Align workspace dependency ranges to reduce inconsistent installations.' });
+  const healthScore = Math.max(0, Math.min(100, 100 - versionConflicts.length * 12 - risks.filter((risk) => risk.kind !== 'version-conflict').length * 8));
   return {
     manager: stack.packageManager,
     total: items.length,
@@ -53,6 +52,8 @@ function detectDependencyIntelligence(files: ProjectFile[], stack: TechnologySta
     dependencies: items.slice(0, 120),
     duplicateNames,
     versionConflicts,
+    risks: risks.slice(0, 100),
+    manifestsScanned: new Set(items.map((item) => item.source).filter(Boolean)).size,
     healthScore,
   };
 }
