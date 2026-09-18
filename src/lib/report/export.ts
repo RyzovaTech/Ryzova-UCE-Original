@@ -20,11 +20,11 @@ export function exportSarif(result: AnalysisResult): string {
       tool: { driver: { name: 'Ryzova UCE', informationUri: 'https://uce.ryzova.com/', version: result.analysisVersion, rules: [...rules.values()] } },
       automationDetails: { id: result.id },
       properties: { project: result.summary.name, localOnly: result.trust?.localOnly ?? true, knowledgePacks: result.trust?.knowledgePacks ?? [] },
-      results: findings.map((finding) => ({
+      results: findings.filter((finding) => finding.file !== 'Project-wide').map((finding) => ({
         ruleId: finding.ruleId ?? `${finding.module}.${slug(finding.title)}`,
         level: finding.severity === 'critical' ? 'error' : finding.severity === 'warning' ? 'warning' : 'note',
         message: { text: `${finding.description} Recommendation: ${finding.recommendation}` },
-        locations: finding.file === 'Project-wide' ? [] : [{ physicalLocation: { artifactLocation: { uri: finding.file.replace(/\\/g, '/') }, region: finding.line ? { startLine: finding.line } : undefined } }],
+        locations: [{ physicalLocation: { artifactLocation: { uri: finding.file.replace(/\\/g, '/') }, ...(finding.line ? { region: { startLine: finding.line } } : {}) } }],
         properties: { module: finding.module, confidence: finding.confidence, evidence: finding.evidence },
       })),
     }],
