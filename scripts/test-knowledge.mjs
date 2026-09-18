@@ -34,6 +34,8 @@ const { collectEcosystemDependencies } = load('src/lib/analyzer/ecosystem-depend
 const { ADDITIONAL_LANGUAGE_EXTENSIONS } = load('src/lib/analyzer/language-knowledge.ts');
 const { detectLanguageProfile } = load('src/lib/analyzer/language-profile.ts');
 const { classifyProjectFileScope } = load('src/lib/analyzer/project-scope.ts');
+const { detectBrowserCompatibility, resolveBrowserTargets } = load('src/lib/analyzer/browser-compatibility.ts');
+const { BROWSER_FEATURES } = load('src/lib/analyzer/browser-knowledge.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
@@ -128,6 +130,28 @@ test('Composer metadata is not dependency evidence', () => {
   assert.deepEqual(result.map(x => x.name), ['pestphp/pest']);
 });
 test('malformed Composer input is safe', () => assert.deepEqual(collectEcosystemDependencies([file('composer.json', 'null'), file('apps/api/composer.json', '{')]), []));
+test('browser feature knowledge has unique ids and broad Phase 3 coverage', () => {
+  assert.equal(new Set(BROWSER_FEATURES.map(item => item.id)).size, BROWSER_FEATURES.length);
+  assert.ok(BROWSER_FEATURES.length >= 25);
+});
+test('browser targets resolve from package browserslist with provenance', () => {
+  const result = resolveBrowserTargets([file('package.json', JSON.stringify({ browserslist: { production: ['chrome >= 100', 'firefox 110', 'safari >= 15.4', 'edge 100'] } }))]);
+  assert.equal(result.source, 'package.json#browserslist'); assert.equal(result.usedDefaults, false); assert.equal(result.targets.length, 4);
+});
+test('browserslistrc exact targets override package targets', () => {
+  const result = resolveBrowserTargets([file('.browserslistrc', '[production]\nchrome 90\nsafari >= 14'), file('package.json', JSON.stringify({ browserslist: ['chrome 120'] }))]);
+  assert.deepEqual(result.targets, [{ browser: 'Chrome', version: 90 }, { browser: 'Safari', version: 14 }]); assert.equal(result.source, '.browserslistrc');
+});
+test('unsupported web platform features are tied to configured targets', () => {
+  const result = detectBrowserCompatibility([file('.browserslistrc', 'chrome 100\nfirefox 120\nsafari 16\nedge 100'), file('src/app.ts', 'navigator.gpu; navigator.bluetooth; structuredClone(value);')]);
+  assert.ok(result.findings.some(item => item.id === 'webgpu' && item.affectedBrowsers.length === 4));
+  assert.ok(result.findings.some(item => item.id === 'web-bluetooth' && item.affectedBrowsers.includes('Safari')));
+  assert.ok(!result.findings.some(item => item.id === 'structured-clone'));
+});
+test('browser intelligence excludes test, fixture and generated code', () => {
+  const result = detectBrowserCompatibility([file('tests/app.ts', 'navigator.gpu'), file('fixtures/app.ts', 'navigator.gpu'), file('generated/app.ts', 'navigator.gpu')]);
+  assert.equal(result.filesScanned, 0); assert.deepEqual(result.findings, []);
+});
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {
     const fixture = definition.dependencies?.length

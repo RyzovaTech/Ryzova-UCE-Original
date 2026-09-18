@@ -1,97 +1,82 @@
-import type { ProjectFile } from './types';
-
-export type BrowserName = 'Chrome' | 'Firefox' | 'Safari' | 'Edge';
-export type BrowserSupportStatus = 'supported' | 'partial' | 'unsupported' | 'unknown';
-export interface BrowserTarget { browser: BrowserName; version: number; }
-export interface BrowserCompatibilityFinding { feature: string; kind: 'javascript' | 'css' | 'web-api'; file: string; line: number; status: BrowserSupportStatus; affectedBrowsers: BrowserName[]; recommendation: string; }
-export interface BrowserCompatibilityIntelligence { targets: BrowserTarget[]; findings: BrowserCompatibilityFinding[]; score: number; filesScanned: number; featuresChecked: number; }
+import type { BrowserCompatibilityIntelligence, BrowserName, BrowserTarget, ProjectFile } from './types';
+import { BROWSER_FEATURES, BROWSER_KNOWLEDGE_VERSION } from './browser-knowledge';
 
 const DEFAULT_TARGETS: BrowserTarget[] = [
   { browser: 'Chrome', version: 109 }, { browser: 'Firefox', version: 115 },
   { browser: 'Safari', version: 16.4 }, { browser: 'Edge', version: 109 },
 ];
+interface TargetResolution { targets: BrowserTarget[]; source: string; usedDefaults: boolean; }
 
-const FEATURE_MINIMUMS: Array<{ feature: string; kind: BrowserCompatibilityFinding['kind']; pattern: RegExp; minimums: Partial<Record<BrowserName, number>>; recommendation: string }> = [
-  { feature: 'WebGPU', kind: 'web-api', pattern: /navigator\.gpu\b/, minimums: { Chrome: 113, Edge: 113, Firefox: 141, Safari: 26 }, recommendation: 'Feature-detect navigator.gpu and provide a fallback.' },
-  { feature: 'View Transitions API', kind: 'web-api', pattern: /document\.startViewTransition\b/, minimums: { Chrome: 111, Edge: 111, Firefox: 144, Safari: 18 }, recommendation: 'Feature-detect startViewTransition and provide a normal transition fallback.' },
-  { feature: 'Popover API', kind: 'web-api', pattern: /\.(?:showPopover|hidePopover|togglePopover)\s*\(|\b(?:popoverTargetElement|popoverTargetAction)\b|\bpopover\s*=\s*["'](?:auto|manual)["']/i, minimums: { Chrome: 114, Edge: 114, Firefox: 125, Safari: 17 }, recommendation: 'Feature-detect the Popover API or provide a dialog/menu fallback.' },
-  { feature: 'CSS :has()', kind: 'css', pattern: /:has\s*\(/, minimums: { Chrome: 105, Edge: 105, Firefox: 121, Safari: 15.4 }, recommendation: 'Provide a fallback selector for browsers below the :has() baseline.' },
-  { feature: 'CSS container queries', kind: 'css', pattern: /@container\b/, minimums: { Chrome: 105, Edge: 105, Firefox: 110, Safari: 16 }, recommendation: 'Provide a media-query or layout fallback when container queries are unavailable.' },
-  { feature: 'CSS backdrop-filter', kind: 'css', pattern: /(?:^|[;{\s])(?:-webkit-)?backdrop-filter\s*:/, minimums: { Chrome: 76, Edge: 79, Firefox: 103, Safari: 9 }, recommendation: 'Provide a background fallback for browsers without backdrop-filter.' },
-  { feature: 'structuredClone()', kind: 'web-api', pattern: /\bstructuredClone\s*\(/, minimums: { Chrome: 98, Edge: 98, Firefox: 94, Safari: 15.4 }, recommendation: 'Use a compatible clone fallback for older browsers.' },
-  { feature: 'ResizeObserver', kind: 'web-api', pattern: /\bnew\s+ResizeObserver\s*\(|\bResizeObserver\s*\(/, minimums: { Chrome: 64, Edge: 79, Firefox: 69, Safari: 13.1 }, recommendation: 'Load a ResizeObserver polyfill when older browsers are supported.' },
-  { feature: 'IntersectionObserver', kind: 'web-api', pattern: /\bnew\s+IntersectionObserver\s*\(|\bIntersectionObserver\s*\(/, minimums: { Chrome: 51, Edge: 15, Firefox: 55, Safari: 12.1 }, recommendation: 'Load a polyfill or provide an eager-loading fallback for older browsers.' },
-  { feature: 'Import maps', kind: 'javascript', pattern: /<script[^>]+type=["']importmap["']/i, minimums: { Chrome: 89, Edge: 89, Firefox: 108, Safari: 16.4 }, recommendation: 'Bundle imports or provide an import-map fallback for older browsers.' },
-];
-
-function findLine(content: string, index: number): number { return content.slice(0, index).split('\n').length; }
-
-function parseBrowserslist(files: ProjectFile[]): BrowserTarget[] {
-  const pkg = files.find((file) => /(^|\/)package\.json$/i.test(file.path) && !file.isDirectory && file.content);
-  if (!pkg?.content) return DEFAULT_TARGETS;
+function browserName(value: string): BrowserName | undefined {
+  const name = value.toLowerCase();
+  if (name === 'chrome' || name === 'and_chr') return 'Chrome';
+  if (name === 'firefox' || name === 'firefox_android') return 'Firefox';
+  if (name === 'safari' || name === 'ios_saf') return 'Safari';
+  if (name === 'edge' || name === 'and_edge') return 'Edge';
+  return undefined;
+}
+function exactTargets(values: string[]): BrowserTarget[] {
+  const targets = new Map<BrowserName, number>();
+  for (const raw of values.flatMap((value) => value.split(','))) {
+    const value = raw.trim();
+    if (!value || value.startsWith('#') || /^\[.+\]$/.test(value)) continue;
+    const match = /^(chrome|and_chr|firefox|firefox_android|safari|ios_saf|edge|and_edge)\s*(?:>=|>|=)?\s*(\d+(?:\.\d+)?)$/i.exec(value);
+    if (!match) continue;
+    const name = browserName(match[1]); if (!name) continue;
+    const version = Number(match[2]); targets.set(name, Math.min(targets.get(name) ?? version, version));
+  }
+  return [...targets].map(([browser, version]) => ({ browser, version }));
+}
+function packageQueries(content: string): string[] {
   try {
-    const parsed = JSON.parse(pkg.content) as { browserslist?: unknown };
-    const browserslist = parsed.browserslist;
-    const values = Array.isArray(browserslist)
-      ? browserslist
-      : typeof browserslist === 'string'
-        ? [browserslist]
-        : browserslist && typeof browserslist === 'object'
-          ? Object.values(browserslist as Record<string, unknown>).flatMap((value) => Array.isArray(value) ? value : typeof value === 'string' ? [value] : [])
-          : [];
-    const targets: BrowserTarget[] = [];
-    for (const value of values) {
-      const match = /^(chrome|firefox|safari|edge)\s*(?:>=|>)\s*(\d+(?:\.\d+)?)$/i.exec(String(value).trim());
-      if (!match) continue;
-      const rawName = match[1].toLowerCase();
-      const name: BrowserName = rawName === 'chrome' ? 'Chrome' : rawName === 'firefox' ? 'Firefox' : rawName === 'safari' ? 'Safari' : 'Edge';
-      targets.push({ browser: name, version: Number(match[2]) });
+    const value = (JSON.parse(content) as { browserslist?: unknown }).browserslist;
+    if (typeof value === 'string') return [value];
+    if (Array.isArray(value)) return value.filter((item): item is string => typeof item === 'string');
+    if (value && typeof value === 'object') {
+      const environments = value as Record<string, unknown>;
+      const selected = environments.production ?? environments.defaults ?? Object.values(environments)[0];
+      return Array.isArray(selected) ? selected.filter((item): item is string => typeof item === 'string') : typeof selected === 'string' ? [selected] : [];
     }
-    return targets.length ? targets : DEFAULT_TARGETS;
-  } catch { return DEFAULT_TARGETS; }
+  } catch { /* Invalid manifests provide no target evidence. */ }
+  return [];
+}
+export function resolveBrowserTargets(files: ProjectFile[]): TargetResolution {
+  const config = files.find((file) => !file.isDirectory && /(^|\/)\.browserslistrc$/i.test(file.path) && file.content);
+  if (config?.content) { const targets = exactTargets(config.content.split(/\r?\n/)); if (targets.length) return { targets, source: config.path, usedDefaults: false }; }
+  const packageFile = files.find((file) => !file.isDirectory && /(^|\/)package\.json$/i.test(file.path) && file.content);
+  if (packageFile?.content) { const targets = exactTargets(packageQueries(packageFile.content)); if (targets.length) return { targets, source: `${packageFile.path}#browserslist`, usedDefaults: false }; }
+  return { targets: DEFAULT_TARGETS.map((target) => ({ ...target })), source: 'UCE default browser baseline', usedDefaults: true };
 }
 
+function findLine(content: string, index: number): number { return content.slice(0, index).split('\n').length; }
 function isSourceFile(file: ProjectFile): boolean {
   if (file.isDirectory || typeof file.content !== 'string') return false;
   const path = file.path.replace(/\\/g, '/').toLowerCase();
   if (!/\.(?:[cm]?[jt]sx?|css|s[ac]ss|less|html?)$/.test(path)) return false;
-  return !/(^|\/)node_modules\/|(^|\/)dist\/|(^|\/)build\/|(^|\/)coverage\/|(^|\/)[.]git\/|(^|\/)(?:vendor|generated|public)\//.test(path);
+  return !/(^|\/)(?:node_modules|dist|build|coverage|vendor|generated|public|tests?|fixtures?|examples?)(?:\/|$)|(^|\/)\.git\//.test(path);
 }
-
-function isRelevantFile(file: ProjectFile, kind: BrowserCompatibilityFinding['kind']): boolean {
+function isRelevantFile(file: ProjectFile, kind: 'javascript' | 'css' | 'web-api'): boolean {
   const path = file.path.replace(/\\/g, '/').toLowerCase();
-  if (kind === 'css') return /\.(?:css|s[ac]ss|less)$/i.test(path);
-  if (kind === 'javascript') return /\.html?$/i.test(path);
-  return /\.(?:[cm]?[jt]sx?|html?)$/i.test(path);
+  if (kind === 'css') return /\.(?:css|s[ac]ss|less)$/.test(path);
+  return /\.(?:[cm]?[jt]sx?|html?)$/.test(path);
 }
 
 export function detectBrowserCompatibility(files: ProjectFile[]): BrowserCompatibilityIntelligence {
-  const targets = parseBrowserslist(files);
-  const findings: BrowserCompatibilityFinding[] = [];
-  const sourceFiles = files.filter(isSourceFile);
-  const seen = new Set<string>();
-
+  const resolution = resolveBrowserTargets(files); const findings: BrowserCompatibilityIntelligence['findings'] = [];
+  const sourceFiles = files.filter(isSourceFile); const seen = new Set<string>();
   for (const file of sourceFiles) {
     const content = file.content ?? '';
-    for (const rule of FEATURE_MINIMUMS) {
+    for (const rule of BROWSER_FEATURES) {
       if (!isRelevantFile(file, rule.kind)) continue;
-      const match = rule.pattern.exec(content);
+      const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.replace('g', '')); const match = pattern.exec(content);
       if (!match) continue;
-      const affected = targets
-        .filter((target) => {
-          const minimum = rule.minimums[target.browser];
-          return minimum !== undefined && target.version < minimum;
-        })
-        .map((target) => target.browser);
+      const affected = resolution.targets.filter((target) => rule.unsupported?.includes(target.browser) || (rule.minimums[target.browser] !== undefined && target.version < rule.minimums[target.browser]!)).map((target) => target.browser);
       if (!affected.length) continue;
-      const key = `${file.path}|${rule.feature}|${affected.join(',')}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      findings.push({ feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status: 'unsupported', affectedBrowsers: affected, recommendation: rule.recommendation });
+      const key = `${file.path}|${rule.id}|${affected.join(',')}`; if (seen.has(key)) continue; seen.add(key);
+      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status: 'unsupported', affectedBrowsers: affected, recommendation: rule.recommendation });
     }
   }
-
-  const uniqueFeatureTargets = new Set(findings.map((finding) => `${finding.feature}|${finding.affectedBrowsers.join(',')}`));
-  const score = uniqueFeatureTargets.size === 0 ? 100 : Math.max(0, Math.round(100 - (uniqueFeatureTargets.size / FEATURE_MINIMUMS.length) * 100));
-  return { targets, findings: findings.slice(0, 200), score, filesScanned: sourceFiles.length, featuresChecked: FEATURE_MINIMUMS.length };
+  const uniqueFeatureTargets = new Set(findings.map((finding) => `${finding.id}|${finding.affectedBrowsers.join(',')}`));
+  const score = uniqueFeatureTargets.size === 0 ? 100 : Math.max(0, Math.round(100 - (uniqueFeatureTargets.size / BROWSER_FEATURES.length) * 100));
+  return { targets: resolution.targets, targetSource: resolution.source, defaultTargetsUsed: resolution.usedDefaults, knowledgeVersion: BROWSER_KNOWLEDGE_VERSION, findings: findings.slice(0, 200), score, filesScanned: sourceFiles.length, featuresChecked: BROWSER_FEATURES.length };
 }

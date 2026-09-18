@@ -32,9 +32,10 @@ export interface CodeQualitySignals { largeFiles: Array<{ file: string; lines: n
 export interface CodeIntelligence { filesAnalyzed: number; symbols: CodeSymbol[]; dependencyEdges: DependencyEdge[]; apiEndpoints: ApiEndpoint[]; entryPoints: string[]; architectureAreas: Record<string, string[]>; quality: CodeQualitySignals; }
 export interface SecurityFinding { id: string; title: string; severity: Severity; file: string; line: number; evidence: string; recommendation: string; }
 export interface SecurityIntelligence { findings: SecurityFinding[]; score: number; filesScanned: number; rulesExecuted: number; }
-export interface BrowserTarget { browser: 'Chrome' | 'Firefox' | 'Safari' | 'Edge'; version: number; }
-export interface BrowserCompatibilityFinding { feature: string; kind: 'javascript' | 'css' | 'web-api'; file: string; line: number; status: 'supported' | 'partial' | 'unsupported' | 'unknown'; affectedBrowsers: BrowserTarget['browser'][]; recommendation: string; }
-export interface BrowserCompatibilityIntelligence { targets: BrowserTarget[]; findings: BrowserCompatibilityFinding[]; score: number; filesScanned: number; featuresChecked: number; }
+export type BrowserName = 'Chrome' | 'Firefox' | 'Safari' | 'Edge';
+export interface BrowserTarget { browser: BrowserName; version: number; }
+export interface BrowserCompatibilityFinding { id?: string; feature: string; kind: 'javascript' | 'css' | 'web-api'; file: string; line: number; status: 'supported' | 'partial' | 'unsupported' | 'unknown'; affectedBrowsers: BrowserName[]; recommendation: string; }
+export interface BrowserCompatibilityIntelligence { targets: BrowserTarget[]; targetSource?: string; defaultTargetsUsed?: boolean; knowledgeVersion?: string; findings: BrowserCompatibilityFinding[]; score: number; filesScanned: number; featuresChecked: number; }
 export interface TechnologyStack {
   language: Language; languages?: LanguageProfile[]; mixedLanguage?: boolean; primaryLanguage?: Language; secondaryLanguages?: LanguageProfile[];
   frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; technologyDetections?: TechnologyDetection[]; technologyRelationships?: TechnologyRelationship[]; capabilities?: ProjectCapability[]; knowledgeVersion?: string; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence; browserCompatibility?: BrowserCompatibilityIntelligence;

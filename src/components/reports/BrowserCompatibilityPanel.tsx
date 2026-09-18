@@ -48,7 +48,10 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
         </div>
 
         <div>
-          <p className="mb-2 text-xs font-medium text-muted-foreground">Target browsers</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs font-medium text-muted-foreground">Target browsers</p>
+            {data.targetSource && <p className="text-xs text-muted-foreground">Source: {data.targetSource}</p>}
+          </div>
           <div className="flex flex-wrap gap-2">
             {data.targets.map((target) => (
               <Badge key={`${target.browser}-${target.version}`} variant="outline">
@@ -56,6 +59,7 @@ export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelPro
               </Badge>
             ))}
           </div>
+          {data.defaultTargetsUsed && <p className="mt-2 text-xs text-muted-foreground">No exact project targets were found, so UCE used its conservative default baseline.</p>}
         </div>
 
         {data.findings.length > 0 ? (
