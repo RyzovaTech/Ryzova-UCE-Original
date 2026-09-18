@@ -53,6 +53,7 @@ const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compat
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
+const { UCE_CATALOG_ITEMS } = load('src/lib/catalog.ts');
 const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
 const pkg = (name, deps) => file(name, JSON.stringify({ dependencies: deps }));
 let checks = 0;
@@ -250,6 +251,28 @@ test('Architecture Intelligence 2.0 recognizes evidence-backed compound patterns
   const detected = parseFiles(files); const stack = detectStack(files, detected);
   const architecture = detectTechnologyIntelligence(files, detected, stack).architecture;
   for (const pattern of ['Microservices', 'Event-driven', 'Background Workers']) assert.ok(architecture.patterns.includes(pattern), `${pattern}: ${architecture.patterns.join(', ')}`);
+});
+test('architecture detection excludes test and fixture manifests', () => {
+  const files = [
+    pkg('package.json', { react: '18' }),
+    pkg('e2e-tests/fixtures/services/web/package.json', { react: '18' }),
+    pkg('e2e-tests/fixtures/services/api/package.json', { express: '4' }),
+    pkg('e2e-tests/fixtures/services/jobs/package.json', { bullmq: '5' }),
+  ];
+  const detected = parseFiles(files); const stack = detectStack(files, detected);
+  const architecture = detectTechnologyIntelligence(files, detected, stack).architecture;
+  assert.ok(!architecture.patterns.includes('Microservices'), architecture.patterns.join(', '));
+});
+test('repeated informational security matches have a bounded score penalty', () => {
+  const files = Array.from({ length: 100 }, (_, index) => file(`src/module-${index}.ts`, 'console.log("diagnostic");'));
+  const result = detectSecurityIntelligence(files);
+  assert.ok(result.findings.length >= 100);
+  assert.ok(result.score >= 95, `security score was ${result.score}`);
+});
+test('catalog has unique visible cards within every section', () => {
+  const keys = UCE_CATALOG_ITEMS.map((item) => `${item.section}:${item.name.trim().toLocaleLowerCase()}`);
+  assert.equal(new Set(keys).size, keys.length);
+  assert.equal(new Set(UCE_CATALOG_ITEMS.map((item) => item.id)).size, UCE_CATALOG_ITEMS.length);
 });
 test('dependency intelligence correlates workspace conflicts and mutable sources', () => {
   const result = detectDependencyIntelligence([

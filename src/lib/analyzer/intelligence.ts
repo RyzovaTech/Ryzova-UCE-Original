@@ -58,10 +58,11 @@ export function detectDependencyIntelligence(files: ProjectFile[], stack: Techno
   };
 }
 
-function detectArchitecture(files: ProjectFile[], detectedFiles: DetectedFile[], stack: TechnologyStack): ArchitectureIntelligence {
+function detectArchitecture(files: ProjectFile[], _detectedFiles: DetectedFile[], stack: TechnologyStack): ArchitectureIntelligence {
   const evidence: string[] = [];
   const patterns: ArchitectureType[] = [];
-  const paths = files.filter((f) => !f.isDirectory).map((f) => f.path.toLowerCase());
+  const evidenceFiles = files.filter(isProjectEvidenceFile);
+  const paths = evidenceFiles.map((f) => f.path.toLowerCase());
   const hasAny = (parts: string[]) => paths.some((path) => parts.some((part) => path.includes(part)));
   const add = (pattern: ArchitectureType, reason: string) => { if (!patterns.includes(pattern)) patterns.push(pattern); evidence.push(reason); };
 
@@ -74,12 +75,12 @@ function detectArchitecture(files: ProjectFile[], detectedFiles: DetectedFile[],
   if (stack.buildTool === 'Astro' || stack.framework === 'Astro' || stack.buildTool === 'Gatsby') add('SSG', 'Static-site generation tooling detected.');
   if (stack.backend !== 'None' && stack.backend !== 'Unknown') add('API Server', `${stack.backend} backend framework detected.`);
   if (hasAny(['/api/', '/routes/', '/controllers/', 'server/', 'api/']) && stack.frontend !== 'None' && stack.frontend !== 'Unknown') add('Frontend + Backend', 'Frontend and server/API directory patterns detected.');
-  if (has(detectedFiles, ['Dockerfile', 'docker-compose.yml', 'compose.yml'])) add('API Server', 'Container/deployment files indicate a server-capable application.');
   if (hasAny(['bin/', 'cmd/']) || paths.some((p) => p.endsWith('/main.go'))) add('CLI', 'CLI-oriented bin/cmd or executable entrypoint structure detected.');
   if (hasAny(['index.d.ts']) && paths.some((p) => p.endsWith('package.json'))) add('Library', 'Package entrypoint and TypeScript declaration markers detected.');
   const manifestCount = paths.filter((path) => /(?:^|\/)(?:package\.json|pyproject\.toml|pom\.xml|go\.mod|cargo\.toml)$/.test(path)).length;
-  if (manifestCount >= 3 && hasAny(['services/', 'apps/'])) add('Microservices', `${manifestCount} service manifests and service-oriented directories detected.`);
-  if (has(detectedFiles, ['serverless.yml', 'serverless.yaml', 'sam.yaml', 'template.yaml']) || hasAny(['functions/', 'lambdas/'])) add('Serverless', 'Serverless deployment configuration or function directories detected.');
+  const serviceRoots = new Set(paths.flatMap((path) => { const match = /(?:^|\/)(?:services|apps)\/([^/]+)\/(?:package\.json|pyproject\.toml|pom\.xml|go\.mod|cargo\.toml)$/.exec(path); return match ? [match[1]] : []; }));
+  if (serviceRoots.size >= 3) add('Microservices', `${serviceRoots.size} independently manifested service/application roots detected.`);
+  if (has(evidenceFiles, ['serverless.yml', 'serverless.yaml', 'sam.yaml', 'template.yaml']) || hasAny(['functions/', 'lambdas/'])) add('Serverless', 'Serverless deployment configuration or function directories detected.');
   if ([...dependencies].some((name) => /kafka|rabbitmq|amqplib|nats|bullmq|eventemitter/i.test(name)) || hasAny(['events/', 'consumers/', 'producers/'])) add('Event-driven', 'Message broker dependencies or event producer/consumer structure detected.');
   if (hasAny(['domain/', 'adapters/', 'ports/', 'use-cases/', 'usecases/'])) add('Clean/Hexagonal', 'Domain, port, adapter, or use-case boundaries detected.');
   if (hasAny(['models/', 'views/', 'controllers/'])) add('MVC', 'Model, view, and controller directory markers detected.');
@@ -88,7 +89,7 @@ function detectArchitecture(files: ProjectFile[], detectedFiles: DetectedFile[],
   if (hasAny(['plugins/', 'extensions/']) && hasAny(['plugin-api', 'plugin.json', 'extension.json'])) add('Plugin Architecture', 'Plugin/extension modules and a plugin contract were detected.');
   if (hasAny(['service-worker', 'serviceworker', 'workbox', 'manifest.webmanifest']) || dependencies.has('workbox')) add('Offline-first', 'Service-worker, Workbox, or web-app manifest markers detected.');
   if (hasAny(['workers/', '.worker.', 'background-jobs/', 'queues/'])) add('Background Workers', 'Worker, queue, or background-job modules detected.');
-  if (has(detectedFiles, ['Dockerfile', 'docker-compose.yml', 'compose.yml']) || hasAny(['k8s/', 'kubernetes/', 'helm/'])) add('Containerized Application', 'Docker or Kubernetes deployment evidence detected.');
+  if (has(evidenceFiles, ['Dockerfile', 'docker-compose.yml', 'compose.yml']) || hasAny(['k8s/', 'kubernetes/', 'helm/'])) add('Containerized Application', 'Docker or Kubernetes deployment evidence detected.');
   if (!patterns.includes('Microservices') && manifestCount >= 2 && hasAny(['modules/', 'packages/'])) add('Modular Monolith', 'Multiple internal modules share a single repository deployment boundary.');
   if (!patterns.length) add('Unknown', 'No strong architecture pattern matched the available project evidence.');
 

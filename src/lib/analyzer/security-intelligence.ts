@@ -38,7 +38,18 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
     if (findings.length >= 300) break;
   }
   const weights = { critical: 20, warning: 7, info: 1 }; const confidenceWeights = { high: 1, medium: 0.7, low: 0.4 };
-  const penalty = findings.reduce((sum, finding) => sum + weights[finding.severity] * confidenceWeights[finding.confidence ?? 'medium'], 0);
+  // Repeated matches of one rule increase review effort, but should not make one
+  // informational pattern look equivalent to many independent security risks.
+  const findingsByRule = new Map<string, SecurityFinding[]>();
+  for (const finding of findings) {
+    const key = finding.ruleId ?? finding.title;
+    findingsByRule.set(key, [...(findingsByRule.get(key) ?? []), finding]);
+  }
+  const penalty = [...findingsByRule.values()].reduce((sum, group) => {
+    const representative = group[0];
+    const repeatMultiplier = 1 + Math.min(group.length - 1, 4) * 0.25;
+    return sum + weights[representative.severity] * confidenceWeights[representative.confidence ?? 'medium'] * repeatMultiplier;
+  }, 0);
   const categoryCounts: Partial<Record<SecurityRuleCategory, number>> = {};
   for (const finding of findings) if (finding.category) categoryCounts[finding.category] = (categoryCounts[finding.category] ?? 0) + 1;
   return { findings: findings.slice(0, 300), score: Math.max(0, Math.round(100 - penalty)), filesScanned: sourceFiles.length, rulesExecuted, knowledgeVersion: SECURITY_KNOWLEDGE_VERSION, categoryCounts };

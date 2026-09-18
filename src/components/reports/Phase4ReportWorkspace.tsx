@@ -36,7 +36,7 @@ import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveRe
 import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
 import { createPortableReportSummary } from '@/lib/report/sharing';
 import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
-import type { AnalysisResult, Severity } from '@/lib/analyzer/types';
+import type { AnalysisResult, SecurityFinding, Severity } from '@/lib/analyzer/types';
 
 type ReportSection = 'overview' | 'technology' | 'code' | 'security' | 'compatibility' | 'quality' | 'issues' | 'map';
 type UserMode = 'simple' | 'developer' | 'expert';
@@ -239,8 +239,31 @@ function CodeView({ report, mode }: { report: AnalysisResult; mode: UserMode }) 
 function SecurityView({ report, mode }: { report: AnalysisResult; mode: UserMode }) {
   const security = report.stack.securityIntelligence;
   if (!security) return <EmptyState text="Security analysis is not applicable or has insufficient evidence." />;
-  return <div className="space-y-4"><SectionHeading title="Security" description="Static security-sensitive signals that require developer confirmation." /><div className="grid gap-4 sm:grid-cols-3"><MetricCard label="Security score" value={`${security.score}%`} /><MetricCard label="Review signals" value={security.findings.length} /><MetricCard label="Production files" value={security.filesScanned} /></div><Card><CardContent className="space-y-3 p-5">{security.findings.length === 0 ? <EmptyState text="No security-sensitive pattern matched the current rules." /> : security.findings.slice(0, mode === 'simple' ? 5 : 30).map((finding) => <div key={finding.id} className="rounded-lg border p-3"><div className="flex flex-wrap items-center gap-2"><SoftStatusBadge status="Review required" /><span className="text-sm font-medium">{finding.title}</span><Badge variant={finding.severity === 'critical' ? 'destructive' : 'outline'}>{finding.severity}</Badge></div><p className="mt-2 text-xs text-muted-foreground">{finding.recommendation}</p>{mode !== 'simple' && <details className="mt-2 text-xs"><summary className="cursor-pointer font-medium">Technical evidence</summary><div className="mt-2 space-y-1 text-muted-foreground"><p className="font-mono">{finding.file}:{finding.line}</p><p>{finding.evidence}</p>{mode === 'expert' && finding.ruleId && <p>Rule ID: {finding.ruleId}</p>}</div></details>}</div>)}</CardContent></Card></div>;
+  const groups = groupSecurityFindings(security.findings);
+  const visibleGroups = groups.slice(0, mode === 'simple' ? 5 : 30);
+  return <div className="space-y-4"><SectionHeading title="Security" description="Static security-sensitive signals that require developer confirmation." /><div className="grid gap-4 sm:grid-cols-3"><MetricCard label="Security score" value={`${security.score}%`} /><MetricCard label="Rule groups" value={groups.length} /><MetricCard label="Signal locations" value={security.findings.length} /></div><Card><CardContent className="space-y-3 p-5">{groups.length === 0 ? <EmptyState text="No security-sensitive pattern matched the current rules." /> : visibleGroups.map((group) => { const finding = group.findings[0]; return <div key={group.key} className="rounded-lg border p-3"><div className="flex flex-wrap items-center gap-2"><SoftStatusBadge status={securityFindingStatus(finding)} /><span className="text-sm font-medium">{finding.title}</span><Badge variant={finding.severity === 'critical' ? 'destructive' : 'outline'}>{finding.severity}</Badge>{group.findings.length > 1 ? <Badge variant="secondary">{group.findings.length} locations</Badge> : null}</div><p className="mt-2 text-xs text-muted-foreground">{finding.recommendation}</p>{mode !== 'simple' && <details className="mt-2 text-xs"><summary className="cursor-pointer font-medium">Technical evidence</summary><div className="mt-2 space-y-2 text-muted-foreground"><p>{finding.evidence}</p><ul className="space-y-1">{group.findings.slice(0, mode === 'expert' ? 20 : 8).map((location) => <li key={location.id} className="font-mono">{location.file}:{location.line}</li>)}</ul>{group.findings.length > (mode === 'expert' ? 20 : 8) ? <p>+ {group.findings.length - (mode === 'expert' ? 20 : 8)} more locations</p> : null}{mode === 'expert' && finding.ruleId ? <p>Rule ID: {finding.ruleId}</p> : null}<p>False positive possible: {finding.falsePositivePossible ? 'Yes' : 'No'}</p></div></details>}</div>; })}{groups.length > visibleGroups.length ? <p className="text-center text-xs text-muted-foreground">Showing {visibleGroups.length} of {groups.length} rule groups. Use Expert mode or the Issue Center for full evidence.</p> : null}</CardContent></Card></div>;
 }
+
+function groupSecurityFindings(findings: SecurityFinding[]): Array<{ key: string; findings: SecurityFinding[] }> {
+  const groups = new Map<string, SecurityFinding[]>();
+  for (const finding of findings) {
+    const key = finding.ruleId ?? `${finding.category ?? 'security'}:${finding.title}`;
+    groups.set(key, [...(groups.get(key) ?? []), finding]);
+  }
+  return [...groups.entries()]
+    .map(([key, groupedFindings]) => ({ key, findings: groupedFindings }))
+    .sort((a, b) => severityRank(b.findings[0].severity) - severityRank(a.findings[0].severity) || b.findings.length - a.findings.length);
+}
+
+function securityFindingStatus(finding: SecurityFinding): SoftStatus {
+  if (finding.certainty === 'confirmed') return 'Confirmed';
+  if (finding.certainty === 'likely') return 'Likely';
+  if (finding.certainty === 'possible') return 'Possible';
+  if (finding.certainty === 'review-required') return 'Review required';
+  return finding.confidence === 'high' ? 'Confirmed' : finding.confidence === 'low' ? 'Possible' : 'Likely';
+}
+
+function severityRank(severity: Severity): number { return severity === 'critical' ? 3 : severity === 'warning' ? 2 : 1; }
 
 function CompatibilityView({ report, mode }: { report: AnalysisResult; mode: UserMode }) {
   const browser = report.stack.browserCompatibility;

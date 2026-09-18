@@ -1,7 +1,7 @@
-import { TECHNOLOGY_REGISTRY, TECHNOLOGY_REGISTRY_VERSION, type TechnologyDefinition } from '@/lib/analyzer/technology-registry';
-import { ADDITIONAL_LANGUAGE_EXTENSIONS } from '@/lib/analyzer/language-knowledge';
-import { BROWSER_FEATURES, BROWSER_KNOWLEDGE_VERSION } from '@/lib/analyzer/browser-knowledge';
-import { SECURITY_RULES, SECURITY_KNOWLEDGE_VERSION } from '@/lib/analyzer/security-knowledge';
+import { TECHNOLOGY_REGISTRY, TECHNOLOGY_REGISTRY_VERSION, type TechnologyDefinition } from './analyzer/technology-registry';
+import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './analyzer/language-knowledge';
+import { BROWSER_FEATURES, BROWSER_KNOWLEDGE_VERSION } from './analyzer/browser-knowledge';
+import { SECURITY_RULES, SECURITY_KNOWLEDGE_VERSION } from './analyzer/security-knowledge';
 
 export type CatalogSection = 'languages' | 'technologies' | 'architecture' | 'browser' | 'security' | 'intelligence';
 export interface CatalogItem {
@@ -30,15 +30,41 @@ function technologyEvidence(item: TechnologyDefinition): string[] {
 const languageExtensions = new Map<string, string[]>();
 for (const [extension, language] of Object.entries(ADDITIONAL_LANGUAGE_EXTENSIONS)) languageExtensions.set(language, [...(languageExtensions.get(language) ?? []), extension]);
 const languages = [...new Set([...CORE_LANGUAGES, ...languageExtensions.keys()])].sort().map<CatalogItem>((name) => ({
-  id: `language-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, name, section: 'languages', category: 'Language',
+  id: `language-${name.toLowerCase().replace(/\+/g, 'plus').replace(/#/g, 'sharp').replace(/[^a-z0-9]+/g, '-')}`, name, section: 'languages', category: 'Language',
   description: `UCE can include ${name} in primary, secondary, and mixed-language project profiles.`,
   evidence: languageExtensions.has(name) ? [`Extensions: ${languageExtensions.get(name)!.join(', ')}`] : ['Core source extension and project manifest evidence'],
   status: 'Strong support', version: TECHNOLOGY_REGISTRY_VERSION,
 }));
 
+// Several registry packs can contribute evidence for the same named technology.
+// The catalog presents one discoverable entry and merges those definitions rather
+// than making users interpret visually identical cards.
+const technologyGroups = new Map<string, TechnologyDefinition[]>();
+for (const definition of TECHNOLOGY_REGISTRY) {
+  const key = definition.name.trim().toLocaleLowerCase();
+  technologyGroups.set(key, [...(technologyGroups.get(key) ?? []), definition]);
+}
+const technologyCatalogItems = [...technologyGroups.values()].map<CatalogItem>((definitions) => {
+  const primary = definitions[0];
+  const categories = [...new Set(definitions.map((item) => item.kind))];
+  const evidence = [...new Set(definitions.flatMap(technologyEvidence))];
+  return {
+    id: `technology-${primary.id}`,
+    name: primary.name,
+    section: 'technologies',
+    category: categories.join(' · '),
+    description: definitions.length === 1
+      ? `${primary.name} detection definition in the UCE technology registry.`
+      : `${primary.name} combines ${definitions.length} registry definitions into one detection profile.`,
+    evidence,
+    status: 'Strong support',
+    version: TECHNOLOGY_REGISTRY_VERSION,
+  };
+});
+
 export const UCE_CATALOG_ITEMS: readonly CatalogItem[] = [
   ...languages,
-  ...TECHNOLOGY_REGISTRY.map<CatalogItem>((item) => ({ id: `technology-${item.id}`, name: item.name, section: 'technologies', category: item.kind, description: `${item.name} detection definition in the UCE technology registry.`, evidence: technologyEvidence(item), status: 'Strong support', version: TECHNOLOGY_REGISTRY_VERSION })),
+  ...technologyCatalogItems,
   ...ARCHITECTURES.map<CatalogItem>((name) => ({ id: `architecture-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`, name, section: 'architecture', category: 'Architecture pattern', description: `Evidence-based ${name} architecture classification.`, evidence: ['Project structure', 'Technology relationships', 'Configuration and manifest markers'], status: 'Static analysis only', version: '2.0' })),
   ...BROWSER_FEATURES.map<CatalogItem>((item) => ({ id: `browser-${item.id}`, name: item.feature, section: 'browser', category: item.kind, description: `Checks this feature against configured desktop and mobile browser targets.`, evidence: [`Rule ID: ${item.id}`, `Minimum-version data for ${Object.keys(item.minimums).join(', ')}`], status: 'Static analysis only', version: BROWSER_KNOWLEDGE_VERSION, recommendation: item.recommendation })),
   ...SECURITY_RULES.map<CatalogItem>((item) => ({ id: `security-${item.id}`, name: item.title, section: 'security', category: item.category, description: item.evidence, evidence: [`Rule ID: ${item.id}`, `Severity: ${item.severity}`, `Confidence: ${item.confidence}`], status: 'Static analysis only', version: SECURITY_KNOWLEDGE_VERSION, recommendation: item.recommendation })),
