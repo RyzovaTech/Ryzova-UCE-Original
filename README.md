@@ -51,7 +51,8 @@ output to code scanning for pull-request annotations.
 UCE knowledge packs use a versioned JSON schema, documented permissions, optional Ed25519
 publisher signatures, and declarative detector rules. Organization packs require explicit approval;
 pack rules are data and are not executed as arbitrary JavaScript. See
-[Knowledge packs](docs/KNOWLEDGE_PACKS.md) and [Phase 5 completion](docs/PHASE_5_COMPLETE.md).
+[Knowledge packs](docs/KNOWLEDGE_PACKS.md), [Phase 5 completion](docs/PHASE_5_COMPLETE.md), and the
+[five-phase major completion baseline](docs/ROADMAP_COMPLETION.md).
 
 ## Who it is for
 

@@ -4,14 +4,17 @@ import { BROWSER_FEATURES, BROWSER_KNOWLEDGE_VERSION } from './browser-knowledge
 const DEFAULT_TARGETS: BrowserTarget[] = [
   { browser: 'Chrome', version: 109 }, { browser: 'Firefox', version: 115 },
   { browser: 'Safari', version: 16.4 }, { browser: 'Edge', version: 109 },
+  { browser: 'Chrome Android', version: 109 }, { browser: 'Safari iOS', version: 16.4 },
 ];
 interface TargetResolution { targets: BrowserTarget[]; source: string; usedDefaults: boolean; }
 
 function browserName(value: string): BrowserName | undefined {
   const name = value.toLowerCase();
-  if (name === 'chrome' || name === 'and_chr') return 'Chrome';
+  if (name === 'chrome') return 'Chrome';
+  if (name === 'and_chr') return 'Chrome Android';
   if (name === 'firefox' || name === 'firefox_android') return 'Firefox';
-  if (name === 'safari' || name === 'ios_saf') return 'Safari';
+  if (name === 'safari') return 'Safari';
+  if (name === 'ios_saf') return 'Safari iOS';
   if (name === 'edge' || name === 'and_edge') return 'Edge';
   return undefined;
 }
@@ -49,15 +52,18 @@ export function resolveBrowserTargets(files: ProjectFile[]): TargetResolution {
 }
 
 function findLine(content: string, index: number): number { return content.slice(0, index).split('\n').length; }
+function minimumFor(rule: (typeof BROWSER_FEATURES)[number], browser: BrowserName): number | undefined { return rule.minimums[browser] ?? (browser === 'Chrome Android' ? rule.minimums.Chrome : browser === 'Safari iOS' ? rule.minimums.Safari : undefined); }
+function isUnsupported(rule: (typeof BROWSER_FEATURES)[number], browser: BrowserName): boolean { return Boolean(rule.unsupported?.includes(browser) || (browser === 'Chrome Android' && rule.unsupported?.includes('Chrome')) || (browser === 'Safari iOS' && rule.unsupported?.includes('Safari'))); }
 function isSourceFile(file: ProjectFile): boolean {
   if (file.isDirectory || typeof file.content !== 'string') return false;
   const path = file.path.replace(/\\/g, '/').toLowerCase();
   if (!/\.(?:[cm]?[jt]sx?|css|s[ac]ss|less|html?)$/.test(path)) return false;
   return !/(^|\/)(?:node_modules|dist|build|coverage|vendor|generated|public|tests?|fixtures?|examples?)(?:\/|$)|(^|\/)\.git\//.test(path);
 }
-function isRelevantFile(file: ProjectFile, kind: 'javascript' | 'css' | 'web-api'): boolean {
+function isRelevantFile(file: ProjectFile, kind: 'javascript' | 'css' | 'web-api' | 'html'): boolean {
   const path = file.path.replace(/\\/g, '/').toLowerCase();
   if (kind === 'css') return /\.(?:css|s[ac]ss|less)$/.test(path);
+  if (kind === 'html') return /\.html?$/.test(path);
   return /\.(?:[cm]?[jt]sx?|html?)$/.test(path);
 }
 
@@ -70,12 +76,12 @@ export function detectBrowserCompatibility(files: ProjectFile[]): BrowserCompati
       if (!isRelevantFile(file, rule.kind)) continue;
       const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.replace('g', '')); const match = pattern.exec(content);
       if (!match) continue;
-      const affectedTargets = resolution.targets.filter((target) => rule.unsupported?.includes(target.browser) || (rule.minimums[target.browser] !== undefined && target.version < rule.minimums[target.browser]!));
+      const affectedTargets = resolution.targets.filter((target) => isUnsupported(rule, target.browser) || (minimumFor(rule, target.browser) !== undefined && target.version < minimumFor(rule, target.browser)!));
       const affected = affectedTargets.map((target) => target.browser);
       if (!affected.length) continue;
       const key = `${file.path}|${rule.id}|${affected.join(',')}`; if (seen.has(key)) continue; seen.add(key);
-      const status = affectedTargets.every((target) => !rule.unsupported?.includes(target.browser) && rule.partialMinimums?.[target.browser] !== undefined && target.version >= rule.partialMinimums[target.browser]!) ? 'partial' : 'unsupported';
-      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status, affectedBrowsers: affected, recommendation: rule.recommendation });
+      const status = affectedTargets.every((target) => !isUnsupported(rule, target.browser) && rule.partialMinimums?.[target.browser] !== undefined && target.version >= rule.partialMinimums[target.browser]!) ? 'partial' : 'unsupported';
+      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status, affectedBrowsers: affected, recommendation: rule.recommendation, staticCheckOnly: true });
     }
   }
   const uniqueFeatureTargets = new Set(findings.map((finding) => `${finding.id}|${finding.affectedBrowsers.join(',')}`));

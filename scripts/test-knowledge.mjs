@@ -39,13 +39,13 @@ const { BROWSER_FEATURES } = load('src/lib/analyzer/browser-knowledge.ts');
 const { detectSecurityIntelligence, isNonProductionPath } = load('src/lib/analyzer/security-intelligence.ts');
 const { SECURITY_RULES, validateSecurityRules } = load('src/lib/analyzer/security-knowledge.ts');
 const { detectCodeIntelligence } = load('src/lib/analyzer/code-intelligence.ts');
-const { detectDependencyIntelligence } = load('src/lib/analyzer/intelligence.ts');
+const { detectDependencyIntelligence, detectTechnologyIntelligence } = load('src/lib/analyzer/intelligence.ts');
 const { buildCorrelatedInsights } = load('src/lib/analyzer/correlated-intelligence.ts');
 const { detectExtendedIntelligence } = load('src/lib/analyzer/extended-intelligence.ts');
 const { CORE_KNOWLEDGE_PACK } = load('src/lib/knowledge/core-pack.ts');
 const { validateKnowledgePack, exportKnowledgePack, importKnowledgePack } = load('src/lib/knowledge/validator.ts');
 const { buildTrustMetadata } = load('src/lib/analyzer/trust.ts');
-const { prepareAnalysisInput, fingerprintAnalysisInput } = load('src/lib/analyzer/execution.ts');
+const { prepareAnalysisInput, fingerprintAnalysisInput, diffAnalysisInputs } = load('src/lib/analyzer/execution.ts');
 const { validateDetectorRule, runDetectorRules } = load('src/lib/knowledge/sdk.ts');
 const { canonicalKnowledgePack, verifyKnowledgePack } = load('src/lib/knowledge/signatures.ts');
 const { PHASE5_ACCURACY_FIXTURES } = load('testing/fixtures/phase5/corpus.ts');
@@ -147,7 +147,7 @@ test('Composer metadata is not dependency evidence', () => {
 test('malformed Composer input is safe', () => assert.deepEqual(collectEcosystemDependencies([file('composer.json', 'null'), file('apps/api/composer.json', '{')]), []));
 test('browser feature knowledge has unique ids and broad Phase 3 coverage', () => {
   assert.equal(new Set(BROWSER_FEATURES.map(item => item.id)).size, BROWSER_FEATURES.length);
-  assert.ok(BROWSER_FEATURES.length >= 25);
+  assert.ok(BROWSER_FEATURES.length >= 100);
 });
 test('browser targets resolve from package browserslist with provenance', () => {
   const result = resolveBrowserTargets([file('package.json', JSON.stringify({ browserslist: { production: ['chrome >= 100', 'firefox 110', 'safari >= 15.4', 'edge 100'] } }))]);
@@ -175,7 +175,7 @@ test('security findings include category, confidence and safe evidence', () => {
   assert.ok(result.findings.some(item => item.ruleId === 'SEC001' && item.category === 'secrets' && item.confidence));
   assert.ok(result.findings.some(item => item.ruleId === 'SEC010' && item.category === 'transport'));
   assert.ok(result.findings.every(item => !item.evidence.includes('real-production-secret')));
-  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '3.0.0');
+  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.0.0');
 });
 test('security placeholders and local HTTP endpoints are suppressed', () => {
   const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const url = "http://localhost:3000/api";')]);
@@ -218,6 +218,38 @@ test('large functions use function span rather than containing file size', () =>
   assert.equal(result.quality.largeFiles.length, 0); assert.equal(result.quality.largeFunctions.length, 0);
   const largeBody = Array.from({ length: 85 }, () => 'work();').join('\n');
   assert.equal(detectCodeIntelligence([file('src/function.ts', `function huge() {\n${largeBody}\n}`)]).quality.largeFunctions[0].lines, 87);
+});
+test('Code Intelligence 2.0 reports calls, complexity, duplicates and module boundaries', () => {
+  const branchy = `export function calculate(value) {\n${Array.from({ length: 12 }, (_, index) => `if (value === ${index}) helper();`).join('\n')}\n}\nfunction helper() { return 1; }`;
+  const duplicate = `export function shared() {\n  const alpha = normalize(input);\n  const beta = validate(alpha);\n  const gamma = transform(beta);\n  const delta = serialize(gamma);\n  return publish(delta);\n  audit(delta);\n}`;
+  const result = detectCodeIntelligence([file('src/ui/page.ts', branchy), file('src/backend/service.ts', duplicate), file('src/ui/copy.ts', duplicate), file('src/orphan.ts', 'export const orphan = true;')]);
+  assert.ok(result.callRelationships.some(item => item.callee === 'helper'));
+  assert.ok(result.quality.complexity.some(item => item.symbol === 'calculate'));
+  assert.ok(result.quality.duplicateCode.length >= 1);
+  assert.ok(result.quality.unreferencedModules.includes('src/orphan.ts'));
+  assert.ok(result.parserCoverage['JavaScript/TypeScript'] >= 4);
+});
+test('mobile browser targets remain distinct and findings state static-check limitation', () => {
+  const targets = resolveBrowserTargets([file('.browserslistrc', 'and_chr 100\nios_saf 15')]).targets;
+  assert.deepEqual(targets.map(item => item.browser), ['Chrome Android', 'Safari iOS']);
+  const result = detectBrowserCompatibility([file('.browserslistrc', 'ios_saf 15'), file('src/app.ts', 'navigator.gpu')]);
+  assert.equal(result.findings[0].staticCheckOnly, true);
+});
+test('security configuration rules include scope and false-positive metadata', () => {
+  const result = detectSecurityIntelligence([file('deploy.yaml', 'securityContext:\n  privileged: true')]);
+  const finding = result.findings.find(item => item.ruleId === 'SEC032');
+  assert.equal(finding.scope, 'configuration'); assert.equal(finding.certainty, 'confirmed'); assert.equal(finding.falsePositivePossible, false);
+});
+test('incremental manifests distinguish reusable and changed files', () => {
+  const make = (files) => ({ fileName: 'project', files, source: 'upload', scanStats: { filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, foldersFound: 0, projectSize: 1, zipSize: 1, scanTime: 1, memoryUsed: 1, truncated: false } });
+  const diff = diffAnalysisInputs(make([file('a.ts', 'one'), file('b.ts', 'two')]), make([file('a.ts', 'one'), file('b.ts', 'changed'), file('c.ts', 'new')]));
+  assert.deepEqual(diff.added, ['c.ts']); assert.deepEqual(diff.changed, ['b.ts']); assert.deepEqual(diff.unchanged, ['a.ts']); assert.equal(diff.reusableRatio, 1 / 3);
+});
+test('Architecture Intelligence 2.0 recognizes evidence-backed compound patterns', () => {
+  const files = [pkg('services/web/package.json', { react: '18' }), pkg('services/api/package.json', { express: '4', bullmq: '5' }), pkg('services/jobs/package.json', { bullmq: '5' }), file('serverless.yml', 'service: api'), file('workers/email.ts', 'export const worker = true')];
+  const detected = parseFiles(files); const stack = detectStack(files, detected);
+  const architecture = detectTechnologyIntelligence(files, detected, stack).architecture;
+  for (const pattern of ['Microservices', 'Event-driven', 'Background Workers']) assert.ok(architecture.patterns.includes(pattern), `${pattern}: ${architecture.patterns.join(', ')}`);
 });
 test('dependency intelligence correlates workspace conflicts and mutable sources', () => {
   const result = detectDependencyIntelligence([

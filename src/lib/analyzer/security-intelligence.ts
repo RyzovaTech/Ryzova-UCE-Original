@@ -1,7 +1,7 @@
 import type { ProjectFile, SecurityFinding, SecurityIntelligence, SecurityRuleCategory } from './types';
 import { SECURITY_KNOWLEDGE_VERSION, SECURITY_RULES, validateSecurityRules } from './security-knowledge';
 
-const SOURCE_RE = /\.(tsx?|jsx?|mjs|cjs|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|c|cc|cpp|h|hpp|zig|lua|jl|r|cr|nim|sol|v|erl|hrl)$/i;
+const SOURCE_RE = /(?:Dockerfile|\.(?:tsx?|jsx?|mjs|cjs|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|c|cc|cpp|h|hpp|zig|lua|jl|r|cr|nim|sol|v|erl|hrl|json|ya?ml|tf))$/i;
 const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligence\.|security-knowledge\.|analyzer\.|scripts\/uce-scan\.mjs$)/i;
 function normalizePath(path: string): string { return path.replace(/^\.\//, '').replace(/\\/g, '/'); }
 
@@ -30,7 +30,7 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
         if (rule.shouldReport && !rule.shouldReport(match)) continue;
         const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
         if (seen.has(id)) continue; seen.add(id);
-        findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation });
+        findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation, scope: /(?:Dockerfile|\.github\/|\.(?:json|ya?ml|tf)$)/i.test(normalizedPath) ? 'configuration' : 'production', falsePositivePossible: rule.falsePositivePossible ?? rule.confidence !== 'high', certainty: rule.certainty ?? (rule.confidence === 'high' ? 'confirmed' : rule.confidence === 'medium' ? 'likely' : 'possible') });
         if (findings.length >= 300) break;
       }
       if (findings.length >= 300) break;

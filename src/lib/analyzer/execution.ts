@@ -17,6 +17,7 @@ export interface PreparedAnalysis {
   input: AnalysisInput;
   cacheKey: string;
 }
+export interface AnalysisInputDiff { added: string[]; changed: string[]; removed: string[]; unchanged: string[]; reusableRatio: number; }
 
 const PRIORITY_NAMES = /(^|\/)(package\.json|pyproject\.toml|cargo\.toml|go\.mod|pom\.xml|composer\.json|dockerfile|readme(?:\.md)?|\.github\/workflows\/[^/]+)$/i;
 const PRIORITY_EXTENSIONS = /\.(?:[cm]?[jt]sx?|py|go|rs|java|kt|swift|rb|php|cs|cpp|c|h|vue|svelte|astro|json|ya?ml|toml)$/i;
@@ -65,6 +66,22 @@ export function fingerprintAnalysisInput(input: AnalysisInput): string {
     if (file.content) update(file.content.length <= 4096 ? file.content : `${file.content.slice(0, 2048)}${file.content.slice(-2048)}`);
   }
   return `uce${ANALYSIS_CACHE_VERSION}-${(hash >>> 0).toString(16).padStart(8, '0')}-${input.files.length}`;
+}
+
+/** Content-aware manifest diff used by resumable clients and future module caches. */
+export function diffAnalysisInputs(previous: AnalysisInput, current: AnalysisInput): AnalysisInputDiff {
+  const before = new Map(previous.files.filter((file) => !file.isDirectory).map((file) => [file.path, fingerprintFile(file)]));
+  const after = new Map(current.files.filter((file) => !file.isDirectory).map((file) => [file.path, fingerprintFile(file)]));
+  const added: string[] = []; const changed: string[] = []; const unchanged: string[] = [];
+  for (const [path, fingerprint] of after) { if (!before.has(path)) added.push(path); else if (before.get(path) === fingerprint) unchanged.push(path); else changed.push(path); }
+  const removed = [...before.keys()].filter((path) => !after.has(path));
+  return { added, changed, removed, unchanged, reusableRatio: after.size ? unchanged.length / after.size : 1 };
+}
+
+function fingerprintFile(file: ProjectFile): string {
+  let hash = 2166136261; const value = `${file.path}\0${file.size}\0${file.content ?? ''}`;
+  for (let index = 0; index < value.length; index++) { hash ^= value.charCodeAt(index); hash = Math.imul(hash, 16777619); }
+  return (hash >>> 0).toString(16).padStart(8, '0');
 }
 
 export function markExecution(result: AnalysisResult, cached: boolean): AnalysisResult {

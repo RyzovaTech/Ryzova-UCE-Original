@@ -77,9 +77,22 @@ function detectArchitecture(files: ProjectFile[], detectedFiles: DetectedFile[],
   if (has(detectedFiles, ['Dockerfile', 'docker-compose.yml', 'compose.yml'])) add('API Server', 'Container/deployment files indicate a server-capable application.');
   if (hasAny(['bin/', 'cmd/']) || paths.some((p) => p.endsWith('/main.go'))) add('CLI', 'CLI-oriented bin/cmd or executable entrypoint structure detected.');
   if (hasAny(['index.d.ts']) && paths.some((p) => p.endsWith('package.json'))) add('Library', 'Package entrypoint and TypeScript declaration markers detected.');
+  const manifestCount = paths.filter((path) => /(?:^|\/)(?:package\.json|pyproject\.toml|pom\.xml|go\.mod|cargo\.toml)$/.test(path)).length;
+  if (manifestCount >= 3 && hasAny(['services/', 'apps/'])) add('Microservices', `${manifestCount} service manifests and service-oriented directories detected.`);
+  if (has(detectedFiles, ['serverless.yml', 'serverless.yaml', 'sam.yaml', 'template.yaml']) || hasAny(['functions/', 'lambdas/'])) add('Serverless', 'Serverless deployment configuration or function directories detected.');
+  if ([...dependencies].some((name) => /kafka|rabbitmq|amqplib|nats|bullmq|eventemitter/i.test(name)) || hasAny(['events/', 'consumers/', 'producers/'])) add('Event-driven', 'Message broker dependencies or event producer/consumer structure detected.');
+  if (hasAny(['domain/', 'adapters/', 'ports/', 'use-cases/', 'usecases/'])) add('Clean/Hexagonal', 'Domain, port, adapter, or use-case boundaries detected.');
+  if (hasAny(['models/', 'views/', 'controllers/'])) add('MVC', 'Model, view, and controller directory markers detected.');
+  if (hasAny(['viewmodels/', 'view-models/'])) add('MVVM', 'View-model directory structure detected.');
+  if ([...dependencies].some((name) => /single-spa|module-federation/i.test(name)) || paths.some((path) => /modulefederation|module-federation/i.test(path))) add('Microfrontend', 'Module federation or single-spa markers detected.');
+  if (hasAny(['plugins/', 'extensions/']) && hasAny(['plugin-api', 'plugin.json', 'extension.json'])) add('Plugin Architecture', 'Plugin/extension modules and a plugin contract were detected.');
+  if (hasAny(['service-worker', 'serviceworker', 'workbox', 'manifest.webmanifest']) || dependencies.has('workbox')) add('Offline-first', 'Service-worker, Workbox, or web-app manifest markers detected.');
+  if (hasAny(['workers/', '.worker.', 'background-jobs/', 'queues/'])) add('Background Workers', 'Worker, queue, or background-job modules detected.');
+  if (has(detectedFiles, ['Dockerfile', 'docker-compose.yml', 'compose.yml']) || hasAny(['k8s/', 'kubernetes/', 'helm/'])) add('Containerized Application', 'Docker or Kubernetes deployment evidence detected.');
+  if (!patterns.includes('Microservices') && manifestCount >= 2 && hasAny(['modules/', 'packages/'])) add('Modular Monolith', 'Multiple internal modules share a single repository deployment boundary.');
   if (!patterns.length) add('Unknown', 'No strong architecture pattern matched the available project evidence.');
 
-  const priority: ArchitectureType[] = ['Frontend + Backend', 'SSR', 'SSG', 'SPA', 'API Server', 'Mobile App', 'Desktop App', 'Library', 'Monorepo', 'CLI', 'Unknown'];
+  const priority: ArchitectureType[] = ['Microservices', 'Serverless', 'Desktop App', 'Mobile App', 'Frontend + Backend', 'SSR', 'SSG', 'SPA', 'API Server', 'Modular Monolith', 'Event-driven', 'Library', 'Monorepo', 'CLI', 'Unknown'];
   const primary = priority.find((item) => patterns.includes(item)) ?? patterns[0];
   const confidence = primary === 'Unknown' ? 35 : Math.min(98, 65 + Math.max(0, evidence.length - 1) * 7);
   return { primary, patterns, confidence, evidence: [...new Set(evidence)].slice(0, 8) };

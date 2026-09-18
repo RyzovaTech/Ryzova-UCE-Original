@@ -46,8 +46,8 @@ than pretending that it resolved those queries offline.
 
 ## Phase 3 completion baseline
 
-- 25 versioned browser feature rules with project target provenance
-- 20 context-aware security rules across eight categories
+- 100+ versioned browser feature rules with desktop/mobile target provenance
+- 40 context-aware security rules across thirteen categories
 - 12 API/framework route families plus file-based Next.js routing
 - Workspace-aware dependency risks and confidence-aware correlation
 - 654 deterministic regression checks

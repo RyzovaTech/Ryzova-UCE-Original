@@ -12,6 +12,8 @@ export interface WorkspaceFinding {
   recommendation: string;
   ruleId?: string;
   confidence?: number | string;
+  scope?: string;
+  falsePositivePossible?: boolean;
 }
 
 export interface FindingGroup {
@@ -64,6 +66,8 @@ export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFindi
       recommendation: item.recommendation,
       ruleId: item.ruleId,
       confidence: item.confidence,
+      scope: item.scope,
+      falsePositivePossible: item.falsePositivePossible,
     });
   }
 
