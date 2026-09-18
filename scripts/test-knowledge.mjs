@@ -41,6 +41,7 @@ const { SECURITY_RULES, validateSecurityRules } = load('src/lib/analyzer/securit
 const { detectCodeIntelligence } = load('src/lib/analyzer/code-intelligence.ts');
 const { detectDependencyIntelligence } = load('src/lib/analyzer/intelligence.ts');
 const { buildCorrelatedInsights } = load('src/lib/analyzer/correlated-intelligence.ts');
+const { detectExtendedIntelligence } = load('src/lib/analyzer/extended-intelligence.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
@@ -222,6 +223,35 @@ test('correlated intelligence prioritizes cross-engine signals', () => {
 test('browser compatibility distinguishes partial support', () => {
   const result = detectBrowserCompatibility([file('.browserslistrc', 'chrome 115'), file('src/style.css', '.card { & .title { color: red; } }')]);
   assert.equal(result.findings.find(item => item.id === 'css-nesting').status, 'partial');
+});
+const extendedStack = {
+  language: 'TypeScript', primaryLanguage: 'TypeScript', runtime: 'Node.js', runtimes: ['Node.js'], packageManager: 'pnpm', buildTool: 'Vite',
+  technologyDetections: [{ id: 'postgres', name: 'PostgreSQL', kind: 'database', confidence: 90, level: 'confirmed', evidence: [] }],
+  architecture: { primary: 'SPA', patterns: ['SPA'], confidence: 90, evidence: ['Vite app'] },
+  codeIntelligence: { filesAnalyzed: 3, symbols: [], dependencyEdges: [], apiEndpoints: [{ method: 'GET', route: '/api/users', file: 'src/api.ts', line: 1, framework: 'Express' }], entryPoints: [], architectureAreas: {}, quality: { largeFiles: [], largeFunctions: [], todoCount: 0, fixmeCount: 0, circularDependencies: [] } },
+};
+test('Phase 3.5 exposes every planned intelligence module', () => {
+  const intelligence = detectExtendedIntelligence([file('src/app.ts', 'export const app = 1')], extendedStack);
+  assert.equal(Object.keys(intelligence.modules).length, 14); assert.equal(intelligence.version, '3.5.0'); assert.ok(intelligence.overallScore >= 0);
+  for (const id of ['project', 'runtime', 'platform', 'build', 'testing', 'performance', 'accessibility', 'api', 'database', 'environment', 'license', 'documentation', 'maintainability', 'repository']) assert.equal(intelligence.modules[id].id, id);
+});
+test('accessibility intelligence finds deterministic HTML and JSX problems', () => {
+  const module = detectExtendedIntelligence([file('src/App.tsx', '<div onClick={go}><img src="x.png" /><a target="_blank">Open</a></div>')], extendedStack).modules.accessibility;
+  assert.deepEqual(new Set(module.findings.map(item => item.id)), new Set(['A11Y001', 'A11Y003', 'A11Y004']));
+});
+test('environment intelligence compares usage with safe example declarations', () => {
+  const module = detectExtendedIntelligence([file('.env.example', 'PUBLIC_URL=\n'), file('src/config.ts', 'const a = process.env.PUBLIC_URL; const b = process.env.SECRET_TOKEN;')], extendedStack).modules.environment;
+  assert.equal(module.metrics.requiredVariables, 2); assert.equal(module.metrics.undocumentedVariables, 1); assert.ok(module.findings[0].title.includes('SECRET_TOKEN'));
+});
+test('testing, license, documentation and repository readiness are evidence based', () => {
+  const files = [file('src/a.ts', 'export const a=1'), file('src/a.test.ts', 'test("a",()=>{})'), file('LICENSE', 'Apache License'), file('.gitignore', 'node_modules'), file('.github/workflows/ci.yml', 'jobs: {}'), file('README.md', '# App\n## Installation\n## Usage\n## Configuration\n## License')];
+  const intelligence = detectExtendedIntelligence(files, extendedStack);
+  assert.equal(intelligence.modules.testing.metrics.testFiles, 1); assert.equal(intelligence.modules.license.metrics.licenseFile, true); assert.equal(intelligence.modules.documentation.metrics.sections, 4); assert.equal(intelligence.modules.repository.metrics.workflows, true);
+});
+test('performance, platform, database and maintainability emit bounded findings', () => {
+  const repeated = 'const repeatedValue = calculateSomething();\n'.repeat(6); const files = [file('src/a.ts', `${repeated}const x = readFileSync(path); const p = "C:\\\\temp";`), file('src/b.ts', repeated), file('schema.prisma', 'model User { id Int @id }'), file('migrations/001.sql', 'CREATE TABLE users(id int);')];
+  const intelligence = detectExtendedIntelligence(files, extendedStack);
+  assert.ok(intelligence.modules.performance.findings.some(item => item.id === 'PERF002')); assert.ok(intelligence.modules.platform.findings.some(item => item.id === 'OS001')); assert.ok(Number(intelligence.modules.database.metrics.schemaModels) >= 1); assert.ok(Number(intelligence.modules.maintainability.metrics.duplicatedBlocks) >= 1);
 });
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {
