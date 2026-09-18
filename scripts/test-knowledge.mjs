@@ -165,7 +165,7 @@ test('unsupported web platform features are tied to configured targets', () => {
   assert.ok(!result.findings.some(item => item.id === 'structured-clone'));
 });
 test('browser intelligence excludes test, fixture and generated code', () => {
-  const result = detectBrowserCompatibility([file('tests/app.ts', 'navigator.gpu'), file('fixtures/app.ts', 'navigator.gpu'), file('generated/app.ts', 'navigator.gpu')]);
+  const result = detectBrowserCompatibility([file('tests/app.ts', 'navigator.gpu'), file('testing/app.ts', 'navigator.gpu'), file('e2e/app.ts', 'navigator.gpu'), file('fixtures/app.ts', 'navigator.gpu'), file('generated/app.ts', 'navigator.gpu')]);
   assert.equal(result.filesScanned, 0); assert.deepEqual(result.findings, []);
 });
 test('security registry is valid and expands Phase 3 coverage', () => {
@@ -179,8 +179,18 @@ test('security findings include category, confidence and safe evidence', () => {
   assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.0.0');
 });
 test('security placeholders and local HTTP endpoints are suppressed', () => {
-  const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const url = "http://localhost:3000/api";')]);
+  const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const backupApiKey = "fake-api-key-for-testing"; const url = "http://localhost:3000/api";')]);
   assert.deepEqual(result.findings, []);
+});
+test('credential-like regex matches are review warnings rather than automatic critical findings', () => {
+  const finding = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "plausible-production-value";')]).findings[0];
+  assert.equal(finding.ruleId, 'SEC001'); assert.equal(finding.severity, 'warning'); assert.equal(finding.certainty, 'likely');
+});
+test('private-key generation markers are not treated as embedded private keys', () => {
+  const generated = 'return `-----BEGIN OPENSSH PRIVATE KEY-----\\n${lines.join("\\n")}\\n-----END OPENSSH PRIVATE KEY-----\\n`;';
+  assert.ok(!detectSecurityIntelligence([file('src/keys.ts', generated)]).findings.some(item => item.ruleId === 'SEC008'));
+  const embedded = 'const key = `-----BEGIN PRIVATE KEY-----\nQUJDREVGR0hJSktMTU5PUA==\nUVJTVFVWV1hZWjEyMzQ1Ng==\n-----END PRIVATE KEY-----`;';
+  assert.ok(detectSecurityIntelligence([file('src/leaked.ts', embedded)]).findings.some(item => item.ruleId === 'SEC008' && item.severity === 'critical'));
 });
 test('security rules are language scoped', () => {
   const result = detectSecurityIntelligence([file('src/app.py', 'eval(data)\nconst x = { rejectUnauthorized: false }')]);
@@ -195,7 +205,7 @@ test('script-style test files are excluded from production security findings', (
   assert.equal(detectSecurityIntelligence([file('scripts/test-security.mjs', 'eval(input)')]).findings.length, 0);
 });
 test('security intelligence excludes non-production paths cross-platform', () => {
-  for (const path of ['tests/app.ts', 'docs/example.py', 'vendor/app.php', 'src\\fixtures\\app.ts']) assert.equal(isNonProductionPath(path), true);
+  for (const path of ['tests/app.ts', 'testing/server.ts', 'e2e/app.ts', 'docs/example.py', 'vendor/app.php', 'src\\fixtures\\app.ts']) assert.equal(isNonProductionPath(path), true);
   const result = detectSecurityIntelligence([file('examples/server.ts', 'const password = "real-production-secret"')]); assert.deepEqual(result.findings, []);
 });
 test('unsafe deserialization rules distinguish safe YAML loading', () => {
@@ -286,7 +296,7 @@ test('dependency intelligence correlates workspace conflicts and mutable sources
 });
 test('correlated intelligence prioritizes cross-engine signals', () => {
   const insights = buildCorrelatedInsights({
-    securityIntelligence: { findings: [{ id: 'x', ruleId: 'SEC001', title: 'secret', severity: 'critical', file: 'src/a.ts', line: 1, evidence: 'safe', recommendation: 'fix' }], score: 0, filesScanned: 1, rulesExecuted: 1 },
+    securityIntelligence: { findings: [{ id: 'x', ruleId: 'SEC008', title: 'secret', severity: 'critical', confidence: 'high', certainty: 'confirmed', file: 'src/a.ts', line: 1, evidence: 'safe', recommendation: 'fix' }], score: 0, filesScanned: 1, rulesExecuted: 1 },
     browserCompatibility: { targets: [], findings: [{ feature: 'WebGPU', kind: 'web-api', file: 'src/a.ts', line: 2, status: 'unsupported', affectedBrowsers: ['Safari'], recommendation: 'fallback' }], score: 80, filesScanned: 1, featuresChecked: 25 },
     dependencyIntelligence: { manager: 'pnpm', total: 1, runtime: 1, development: 0, peer: 0, optional: 0, dependencies: [], duplicateNames: [], versionConflicts: [], risks: [{ name: 'x', version: '*', source: 'package.json', kind: 'wildcard', severity: 'warning', recommendation: 'pin' }], healthScore: 90 },
   });
@@ -325,6 +335,21 @@ test('performance, platform, database and maintainability emit bounded findings'
   const intelligence = detectExtendedIntelligence(files, extendedStack);
   assert.ok(intelligence.modules.performance.findings.some(item => item.id === 'PERF002')); assert.ok(intelligence.modules.platform.findings.some(item => item.id === 'OS001')); assert.ok(Number(intelligence.modules.database.metrics.schemaModels) >= 1); assert.ok(Number(intelligence.modules.maintainability.metrics.duplicatedBlocks) >= 1);
 });
+test('repeated quality signals do not collapse module scores and test files are excluded', () => {
+  const files = [
+    ...Array.from({ length: 100 }, (_, index) => file(`src/module-${index}.ts`, 'const data = readFileSync(path);')),
+    file('testing/blocking.ts', 'const data = readFileSync(path);'),
+  ];
+  const module = detectExtendedIntelligence(files, extendedStack).modules.performance;
+  assert.equal(module.findings.length, 100); assert.ok(module.score >= 80, `performance score was ${module.score}`);
+});
+test('documentation intelligence prefers the root README over nested test documentation', () => {
+  const module = detectExtendedIntelligence([
+    file('testing/README.md', '# Fixture'),
+    file('README.md', '# Project\n## Installation\n## Usage\n## Configuration\n## License'),
+  ], extendedStack).modules.documentation;
+  assert.equal(module.metrics.sections, 4); assert.equal(module.findings.length, 0);
+});
 const workspaceReport = (id, issueTitles, score = 80, createdAt = '2026-01-01T00:00:00.000Z') => ({
   id, createdAt, analysisVersion: '2.0.0', source: 'upload', classification: { type: 'Software Project', isSoftware: true, reason: 'source' },
   summary: { name: 'workspace-app', language: 'TypeScript', framework: 'React', runtime: 'Node.js', packageManager: 'pnpm', detectedConfigFiles: [], filesScanned: 1, foldersScanned: 1, scanStats: { projectSize: 1, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } },
@@ -333,7 +358,9 @@ const workspaceReport = (id, issueTitles, score = 80, createdAt = '2026-01-01T00
   categories: [{ id: 'runtime', label: 'Runtime', status: 'warning', score, issues: [], summary: 'runtime' }], score: { runtime: score, dependencies: score, configuration: score, structure: score, environment: score, security: score, deployment: score, performance: score, overall: score }, detectedFiles: [], timeline: [], notes: [],
 });
 test('Phase 4 workspace unifies compatibility and intelligence findings', () => {
-  const findings = collectWorkspaceFindings(workspaceReport('one', ['Runtime mismatch']));
+  const report = workspaceReport('one', ['Runtime mismatch']);
+  report.issues.push({ id: 'security-intelligence-SEC001', title: 'Secret signal', category: 'security', severity: 'critical', description: 'duplicate bridge', reason: 'evidence', recommendation: 'Review secret', affectedFile: 'src/a.ts' });
+  const findings = collectWorkspaceFindings(report);
   assert.deepEqual(new Set(findings.map(item => item.module)), new Set(['runtime', 'security/secrets', 'browser']));
   assert.equal(findings.length, 3);
 });

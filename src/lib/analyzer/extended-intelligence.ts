@@ -7,7 +7,17 @@ const text = (files: ProjectFile[], pattern: RegExp): string => files.filter((fi
 const paths = (files: ProjectFile[]): string[] => files.filter((file) => !file.isDirectory).map((file) => file.path.replace(/\\/g, '/'));
 const lineAt = (source: string, offset: number): number => source.slice(0, offset).split('\n').length;
 const result = (id: ExtendedIntelligenceModuleId, label: string, summary: string, evidence: string[], findings: IntelligenceModuleFinding[], metrics: Record<string, number | string | boolean>): IntelligenceModuleResult => {
-  const penalty = findings.reduce((sum, finding) => sum + (finding.severity === 'critical' ? 20 : finding.severity === 'warning' ? 8 : 2) * finding.confidence / 100, 0);
+  const grouped = new Map<string, IntelligenceModuleFinding[]>();
+  for (const item of findings) {
+    const family = item.id.startsWith('ENV-') ? 'ENV-undocumented' : item.id;
+    grouped.set(family, [...(grouped.get(family) ?? []), item]);
+  }
+  const penalty = [...grouped.values()].reduce((sum, group) => {
+    const representative = group[0];
+    const weight = representative.severity === 'critical' ? 20 : representative.severity === 'warning' ? 4 : 0.5;
+    const repeatMultiplier = 1 + Math.min(group.length - 1, 9) * 0.5;
+    return sum + weight * representative.confidence / 100 * repeatMultiplier;
+  }, 0);
   const score = Math.max(0, Math.round(100 - penalty));
   return { id, label, score, status: findings.some((item) => item.severity === 'critical') ? 'risk' : findings.some((item) => item.severity === 'warning') ? 'review' : evidence.length ? 'healthy' : 'unknown', summary, evidence: [...new Set(evidence)].slice(0, 12), findings: findings.slice(0, 100), metrics };
 };
@@ -57,8 +67,9 @@ function testingModule(files: ProjectFile[], stack: TechnologyStack): Intelligen
 
 function performanceModule(files: ProjectFile[]): IntelligenceModuleResult {
   const findings: IntelligenceModuleFinding[] = []; const evidence: string[] = [];
-  for (const file of files.filter((item) => !item.isDirectory)) { const size = file.size ?? new TextEncoder().encode(file.content ?? '').length; if (/\.(?:png|jpe?g|gif|webp|svg|mp4|webm|woff2?|ttf)$/i.test(file.path) && size > 500_000) findings.push(finding('PERF001', 'Large static asset', 'warning', 90, `${file.path} is ${Math.round(size / 1024)} KB.`, 'Compress, resize, subset, or lazy-load this asset.', file.path)); const source = file.content ?? ''; const sync = /\b(?:readFileSync|writeFileSync|execSync|spawnSync)\s*\(/.exec(source); if (sync && sourceRe.test(file.path)) findings.push(finding('PERF002', 'Synchronous blocking operation', 'warning', 82, 'A synchronous filesystem or process API is used.', 'Use an asynchronous API on request or UI paths.', file.path, lineAt(source, sync.index))); }
-  const html = text(files, /\.html?$/i); if (/<script(?![^>]*(?:async|defer|type=["']module))[\s>]/i.test(html)) findings.push(finding('PERF003', 'Potential render-blocking script', 'info', 72, 'A classic script lacks async or defer.', 'Defer non-critical scripts or use modules.'));
+  const relevantFiles = productionFiles(files);
+  for (const file of relevantFiles) { const size = file.size ?? new TextEncoder().encode(file.content ?? '').length; if (/\.(?:png|jpe?g|gif|webp|svg|mp4|webm|woff2?|ttf)$/i.test(file.path) && size > 500_000) findings.push(finding('PERF001', 'Large static asset', 'warning', 90, `${file.path} is ${Math.round(size / 1024)} KB.`, 'Compress, resize, subset, or lazy-load this asset.', file.path)); const source = file.content ?? ''; const sync = /\b(?:readFileSync|writeFileSync|execSync|spawnSync)\s*\(/.exec(source); if (sync && sourceRe.test(file.path)) findings.push(finding('PERF002', 'Synchronous blocking operation', 'warning', 82, 'A synchronous filesystem or process API is used.', 'Use an asynchronous API on request or UI paths.', file.path, lineAt(source, sync.index))); }
+  const html = text(relevantFiles, /\.html?$/i); if (/<script(?![^>]*(?:async|defer|type=["']module))[\s>]/i.test(html)) findings.push(finding('PERF003', 'Potential render-blocking script', 'info', 72, 'A classic script lacks async or defer.', 'Defer non-critical scripts or use modules.'));
   return result('performance', 'Performance Intelligence', `${findings.length} static performance risks detected.`, evidence, findings, { largeAssets: findings.filter((x) => x.id === 'PERF001').length, blockingPatterns: findings.filter((x) => x.id !== 'PERF001').length });
 }
 
@@ -76,7 +87,7 @@ function apiModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceMo
 }
 
 function databaseModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
-  const all = paths(files); const source = text(files, /(?:schema\.prisma|\.sql$|models?\.[^/]+$|migrations?\/)/i); const models = (source.match(/\b(?:model|CREATE\s+TABLE|class)\s+[A-Za-z_]\w*/gi) ?? []).length; const migrations = all.filter((path) => /(?:^|\/)migrations?\//i.test(path)).length; const technologies = (stack.technologyDetections ?? []).filter((item) => item.kind === 'database' || item.kind === 'orm').map((item) => item.name); const findings: IntelligenceModuleFinding[] = [];
+  const relevantFiles = productionFiles(files); const all = paths(relevantFiles); const source = text(relevantFiles, /(?:schema\.prisma|\.sql$|models?\.[^/]+$|migrations?\/)/i); const models = (source.match(/\b(?:model|CREATE\s+TABLE|class)\s+[A-Za-z_]\w*/gi) ?? []).length; const migrations = all.filter((path) => /(?:^|\/)migrations?\//i.test(path)).length; const technologies = (stack.technologyDetections ?? []).filter((item) => item.kind === 'database' || item.kind === 'orm').map((item) => item.name); const findings: IntelligenceModuleFinding[] = [];
   if (technologies.length && models === 0 && migrations === 0) findings.push(finding('DB001', 'Database detected without schema or migrations', 'info', 68, `${technologies.join(', ')} detected but no schema model or migration files were recognized.`, 'Confirm schema management and document migration commands.'));
   return result('database', 'Database Intelligence', `${technologies.length} database/ORM technologies, ${models} schema models, ${migrations} migration files.`, technologies.map((name) => `Detected: ${name}`), findings, { technologies: technologies.length, schemaModels: models, migrationFiles: migrations });
 }
@@ -95,7 +106,7 @@ function licenseModule(files: ProjectFile[]): IntelligenceModuleResult {
 }
 
 function documentationModule(files: ProjectFile[]): IntelligenceModuleResult {
-  const readmeFile = files.find((file) => /(^|\/)README(?:\.[^/]*)?$/i.test(file.path)); const readme = readmeFile?.content ?? ''; const sections = { installation: /#{1,6}\s*(?:install|getting started|setup)/i.test(readme), usage: /#{1,6}\s*(?:usage|examples?|quick start)/i.test(readme), configuration: /#{1,6}\s*(?:configuration|environment|config)/i.test(readme), license: /#{1,6}\s*license/i.test(readme) }; const findings: IntelligenceModuleFinding[] = [];
+  const readmeFile = files.filter((file) => /(^|\/)README(?:\.[^/]*)?$/i.test(file.path) && classifyProjectFileScope(file.path) === 'documentation').sort((a, b) => a.path.split('/').length - b.path.split('/').length || a.path.length - b.path.length)[0]; const readme = readmeFile?.content ?? ''; const sections = { installation: /#{1,6}\s*(?:install|getting started|setup)/i.test(readme), usage: /#{1,6}\s*(?:usage|examples?|quick start)/i.test(readme), configuration: /#{1,6}\s*(?:configuration|environment|config)/i.test(readme), license: /#{1,6}\s*license/i.test(readme) }; const findings: IntelligenceModuleFinding[] = [];
   if (!readme.trim()) findings.push(finding('DOC001', 'README is missing or empty', 'warning', 98, 'No usable README content was found.', 'Add project purpose, setup, usage, configuration, and license information.')); else for (const [name, present] of Object.entries(sections)) if (!present) findings.push(finding(`DOC-${name}`, `README ${name} guidance not detected`, 'info', 72, `No ${name} heading was recognized.`, `Document ${name} in the README.`, readmeFile?.path));
   const all = paths(files); return result('documentation', 'Documentation Intelligence', `${Object.values(sections).filter(Boolean).length}/4 core README sections detected.`, all.filter((path) => /(?:README|CONTRIBUTING|CHANGELOG|SECURITY|openapi|swagger)/i.test(path)).slice(0, 12), findings, { readme: Boolean(readme.trim()), sections: Object.values(sections).filter(Boolean).length, contributing: all.some((p) => /CONTRIBUTING/i.test(p)), apiDocs: all.some((p) => /(?:openapi|swagger)/i.test(p)) });
 }

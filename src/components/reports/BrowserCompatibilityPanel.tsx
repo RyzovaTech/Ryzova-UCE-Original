@@ -11,7 +11,7 @@ interface BrowserCompatibilityPanelProps {
 export function BrowserCompatibilityPanel({ data }: BrowserCompatibilityPanelProps) {
   if (!data) return null;
 
-  const status = data.score >= 95 ? 'No issues detected' : data.score >= 80 ? 'Partial compatibility' : 'Compatibility issues';
+  const status = data.findings.length === 0 ? 'No issues detected' : data.score >= 95 ? 'Minor findings' : data.score >= 80 ? 'Partial compatibility' : 'Compatibility issues';
   const statusIcon = data.findings.length === 0 ? <CheckCircle2 className="h-4 w-4" aria-hidden="true" /> : <AlertTriangle className="h-4 w-4" aria-hidden="true" />;
 
   return (

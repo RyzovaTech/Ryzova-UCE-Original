@@ -167,19 +167,24 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
   const securityFindings = ctx.stack.securityIntelligence?.findings ?? [];
   if (securityFindings.length) {
     const list = byCategory.get('security') ?? [];
-    list.push(...securityFindings.map((finding) => ({
-      id: `security-intelligence-${finding.id}`,
-      title: finding.title,
+    const groups = new Map<string, typeof securityFindings>();
+    for (const finding of securityFindings) {
+      const key = finding.ruleId ?? finding.title;
+      groups.set(key, [...(groups.get(key) ?? []), finding]);
+    }
+    list.push(...[...groups.entries()].map(([key, findings]) => ({
+      id: `security-intelligence-${key}`,
+      title: findings[0].title,
       category: 'security' as const,
-      severity: finding.severity,
-      description: finding.evidence,
+      severity: findings[0].severity,
+      description: findings.length === 1 ? findings[0].evidence : `${findings[0].evidence} Detected at ${findings.length} locations.`,
       reason: 'The deterministic static security scan found a pattern that requires developer review.',
-      recommendation: finding.recommendation,
-      affectedFile: finding.file,
-      detected: `line ${finding.line}`,
+      recommendation: findings[0].recommendation,
+      affectedFile: findings[0].file,
+      detected: findings.length === 1 ? `line ${findings[0].line}` : `${findings.length} locations; first at line ${findings[0].line}`,
       expected: 'No matching security-sensitive pattern',
       impact: 'May introduce a security or maintainability risk.',
-      suggestedAction: finding.recommendation,
+      suggestedAction: findings[0].recommendation,
     })));
     byCategory.set('security', list);
   }
@@ -187,7 +192,10 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
   return CATEGORIES.map((cat) => {
     const issues = deduplicateIssues(byCategory.get(cat.id) ?? []);
     const status = statusFromIssues(issues);
-    const score = scoreFromIssues(issues);
+    const compatibilityScore = scoreFromIssues(issues);
+    const score = cat.id === 'security' && ctx.stack.securityIntelligence
+      ? Math.min(compatibilityScore, ctx.stack.securityIntelligence.score)
+      : compatibilityScore;
     const summary = issues.length === 0
       ? `No compatibility issues detected in ${cat.label.toLowerCase()}.`
       : `${issues.length} issue${issues.length > 1 ? 's' : ''} detected (${issues.filter((i) => i.severity === 'critical').length} critical).`;

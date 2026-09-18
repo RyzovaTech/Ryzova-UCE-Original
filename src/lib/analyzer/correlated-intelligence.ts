@@ -3,8 +3,10 @@ import type { IntelligenceInsight, TechnologyStack } from './types';
 export function buildCorrelatedInsights(stack: TechnologyStack): IntelligenceInsight[] {
   const insights: IntelligenceInsight[] = [];
   const add = (item: IntelligenceInsight) => { if (!insights.some((existing) => existing.id === item.id)) insights.push(item); };
-  const criticalSecurity = stack.securityIntelligence?.findings.filter((finding) => finding.severity === 'critical') ?? [];
-  if (criticalSecurity.length) add({ id: 'security-critical', domain: 'security', title: `${criticalSecurity.length} critical security signal${criticalSecurity.length === 1 ? '' : 's'} require review`, severity: 'critical', confidence: 95, evidence: criticalSecurity.slice(0, 5).map((finding) => `${finding.ruleId ?? finding.id} at ${finding.file}:${finding.line}`), recommendation: 'Review critical findings before deployment and rotate any exposed credentials.' });
+  const criticalSecurity = stack.securityIntelligence?.findings.filter((finding) => finding.severity === 'critical' && (finding.certainty === 'confirmed' || finding.confidence === 'high')) ?? [];
+  const criticalGroups = new Map<string, typeof criticalSecurity>();
+  for (const finding of criticalSecurity) { const key = finding.ruleId ?? finding.title; criticalGroups.set(key, [...(criticalGroups.get(key) ?? []), finding]); }
+  if (criticalGroups.size) add({ id: 'security-critical', domain: 'security', title: `${criticalGroups.size} confirmed critical security rule${criticalGroups.size === 1 ? '' : 's'} require review`, severity: 'critical', confidence: 95, evidence: [...criticalGroups.entries()].slice(0, 5).map(([ruleId, findings]) => `${ruleId}: ${findings.length} location${findings.length === 1 ? '' : 's'}; first at ${findings[0].file}:${findings[0].line}`), recommendation: 'Review confirmed critical findings before deployment and rotate any exposed credentials.' });
   const browser = stack.browserCompatibility;
   if (browser?.findings.length) add({ id: 'browser-target-gaps', domain: 'browser', title: 'Detected features exceed configured browser targets', severity: 'warning', confidence: browser.defaultTargetsUsed ? 70 : 92, evidence: browser.findings.slice(0, 5).map((finding) => `${finding.feature}: ${finding.affectedBrowsers.join(', ')}`), recommendation: 'Add feature detection, fallbacks, or update the documented browser support policy.' });
   const risks = stack.dependencyIntelligence?.risks ?? [];

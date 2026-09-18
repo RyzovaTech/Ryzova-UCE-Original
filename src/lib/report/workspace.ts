@@ -42,7 +42,7 @@ export interface ReportReviewState {
 }
 
 export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFinding[] {
-  const findings: WorkspaceFinding[] = report.issues.map((item) => ({
+  const findings: WorkspaceFinding[] = report.issues.filter((item) => !item.id.startsWith('security-intelligence-')).map((item) => ({
     id: `compatibility:${item.id}`,
     title: item.title,
     severity: item.severity,

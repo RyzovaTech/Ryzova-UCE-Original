@@ -1,5 +1,6 @@
 import type { BrowserCompatibilityIntelligence, BrowserName, BrowserTarget, ProjectFile } from './types';
 import { BROWSER_FEATURES, BROWSER_KNOWLEDGE_VERSION } from './browser-knowledge';
+import { isProjectEvidenceFile } from './project-scope';
 
 const DEFAULT_TARGETS: BrowserTarget[] = [
   { browser: 'Chrome', version: 109 }, { browser: 'Firefox', version: 115 },
@@ -55,10 +56,9 @@ function findLine(content: string, index: number): number { return content.slice
 function minimumFor(rule: (typeof BROWSER_FEATURES)[number], browser: BrowserName): number | undefined { return rule.minimums[browser] ?? (browser === 'Chrome Android' ? rule.minimums.Chrome : browser === 'Safari iOS' ? rule.minimums.Safari : undefined); }
 function isUnsupported(rule: (typeof BROWSER_FEATURES)[number], browser: BrowserName): boolean { return Boolean(rule.unsupported?.includes(browser) || (browser === 'Chrome Android' && rule.unsupported?.includes('Chrome')) || (browser === 'Safari iOS' && rule.unsupported?.includes('Safari'))); }
 function isSourceFile(file: ProjectFile): boolean {
-  if (file.isDirectory || typeof file.content !== 'string') return false;
+  if (!isProjectEvidenceFile(file) || typeof file.content !== 'string') return false;
   const path = file.path.replace(/\\/g, '/').toLowerCase();
-  if (!/\.(?:[cm]?[jt]sx?|css|s[ac]ss|less|html?)$/.test(path)) return false;
-  return !/(^|\/)(?:node_modules|dist|build|coverage|vendor|generated|public|tests?|fixtures?|examples?)(?:\/|$)|(^|\/)\.git\//.test(path);
+  return /\.(?:[cm]?[jt]sx?|css|s[ac]ss|less|html?)$/.test(path);
 }
 function isRelevantFile(file: ProjectFile, kind: 'javascript' | 'css' | 'web-api' | 'html'): boolean {
   const path = file.path.replace(/\\/g, '/').toLowerCase();
