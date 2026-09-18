@@ -23,7 +23,17 @@ than pretending that it resolved those queries offline.
 ## Remaining Phase 3 work
 
 - Broader browser feature coverage and richer support states
-- Security intelligence rule families with context-aware suppression
 - API and framework route intelligence across more ecosystems
 - Architecture, dependency-risk, and code-quality correlation
 - Unified evidence and confidence contracts across intelligence engines
+
+## Increment 2: security intelligence foundation
+
+- Versioned registry expanded from 7 to 20 deterministic rules
+- Eight security categories covering secrets, execution, injection, transport,
+  access control, information exposure, cryptography, and deserialization
+- Language/file applicability prevents unrelated-language matches
+- Placeholder credentials and local HTTP development endpoints are suppressed
+- Test, fixture, mock, documentation, example, generated, and vendor paths are excluded
+- Findings now carry stable rule ids, category, confidence, and non-secret evidence
+- Confidence-aware scoring and per-category finding counts

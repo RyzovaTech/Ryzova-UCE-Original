@@ -30,8 +30,9 @@ export interface DependencyEdge { from: string; to: string; kind: 'import' | 're
 export interface ApiEndpoint { method: string; route: string; file: string; line: number; framework?: string; }
 export interface CodeQualitySignals { largeFiles: Array<{ file: string; lines: number }>; largeFunctions: Array<{ file: string; name: string; line: number }>; todoCount: number; fixmeCount: number; circularDependencies: string[][]; }
 export interface CodeIntelligence { filesAnalyzed: number; symbols: CodeSymbol[]; dependencyEdges: DependencyEdge[]; apiEndpoints: ApiEndpoint[]; entryPoints: string[]; architectureAreas: Record<string, string[]>; quality: CodeQualitySignals; }
-export interface SecurityFinding { id: string; title: string; severity: Severity; file: string; line: number; evidence: string; recommendation: string; }
-export interface SecurityIntelligence { findings: SecurityFinding[]; score: number; filesScanned: number; rulesExecuted: number; }
+export type SecurityRuleCategory = 'secrets' | 'code-execution' | 'injection' | 'transport' | 'access-control' | 'information-exposure' | 'cryptography' | 'deserialization';
+export interface SecurityFinding { id: string; ruleId?: string; title: string; category?: SecurityRuleCategory; confidence?: 'high' | 'medium' | 'low'; severity: Severity; file: string; line: number; evidence: string; recommendation: string; }
+export interface SecurityIntelligence { findings: SecurityFinding[]; score: number; filesScanned: number; rulesExecuted: number; knowledgeVersion?: string; categoryCounts?: Partial<Record<SecurityRuleCategory, number>>; }
 export type BrowserName = 'Chrome' | 'Firefox' | 'Safari' | 'Edge';
 export interface BrowserTarget { browser: BrowserName; version: number; }
 export interface BrowserCompatibilityFinding { id?: string; feature: string; kind: 'javascript' | 'css' | 'web-api'; file: string; line: number; status: 'supported' | 'partial' | 'unsupported' | 'unknown'; affectedBrowsers: BrowserName[]; recommendation: string; }

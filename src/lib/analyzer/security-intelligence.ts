@@ -1,57 +1,45 @@
-import type { ProjectFile, SecurityFinding, SecurityIntelligence } from './types';
-
-interface Rule { id: string; title: string; severity: SecurityFinding['severity']; pattern: RegExp; evidence: string; recommendation: string; shouldReport?: (match: RegExpMatchArray) => boolean; }
-
-const RULES: Rule[] = [
-  { id: 'SEC001', title: 'Potential hardcoded credential', severity: 'critical', pattern: /(?:password|passwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*['"][^'"\n]{8,}['"]/i, evidence: 'A credential-like value is assigned directly in source.', recommendation: 'Move secrets to environment variables or a managed secret store.' },
-  { id: 'SEC002', title: 'Dynamic code execution', severity: 'critical', pattern: /\beval\s*\(|new\s+Function\s*\(/, evidence: 'Dynamic code execution was detected.', recommendation: 'Avoid eval/new Function and use explicit parsing or safe dispatch.' },
-  { id: 'SEC003', title: 'Process execution API requires review', severity: 'warning', pattern: /\b(?:exec|execSync|spawn|spawnSync)\s*\(/, evidence: 'A process execution API is used; review whether any argument can be influenced by untrusted input.', recommendation: 'Use fixed commands, argument arrays, and strict input validation.' },
-  { id: 'SEC004', title: 'Unsafe HTML injection sink', severity: 'warning', pattern: /\bdangerouslySetInnerHTML\b|\binnerHTML\s*=/, evidence: 'Raw HTML is inserted into a document.', recommendation: 'Prefer escaped rendering and sanitize any HTML that must be accepted.' },
-  { id: 'SEC005', title: 'Non-HTTPS URL literal', severity: 'info', pattern: /\bhttp:\/\/[^\s'"`]+/i, evidence: 'A non-HTTPS URL literal was found; review whether it is used for production traffic.', recommendation: 'Use HTTPS for production network traffic and avoid sending secrets over HTTP.', shouldReport: (match) => !/^http:\/\/(?:localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?(?:\/|$)/i.test(match[0]) },
-  { id: 'SEC006', title: 'Wildcard CORS policy', severity: 'warning', pattern: /(?:Access-Control-Allow-Origin|origin)\s*[:=]\s*['"]\*['"]|cors\s*\(\s*\{[^}]*origin\s*:\s*['"]\*['"]/is, evidence: 'CORS appears to allow every origin.', recommendation: 'Restrict allowed origins to the domains required by the application.' },
-  { id: 'SEC007', title: 'Debug logging in source', severity: 'info', pattern: /\bconsole\.(?:log|debug)\s*\(/, evidence: 'Debug logging is present and may expose sensitive runtime data.', recommendation: 'Remove sensitive debug logs or gate them behind a safe development-only logger.' },
-];
+import type { ProjectFile, SecurityFinding, SecurityIntelligence, SecurityRuleCategory } from './types';
+import { SECURITY_KNOWLEDGE_VERSION, SECURITY_RULES, validateSecurityRules } from './security-knowledge';
 
 const SOURCE_RE = /\.(tsx?|jsx?|mjs|cjs|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|c|cc|cpp|h|hpp|zig|lua|jl|r|cr|nim|sol|v|erl|hrl)$/i;
-const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligence\.|analyzer\.)/i;
-
+const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligence\.|security-knowledge\.|analyzer\.)/i;
 function normalizePath(path: string): string { return path.replace(/^\.\//, '').replace(/\\/g, '/'); }
 
-/** Test, fixture, mock and sample code is excluded from production-security signals. */
+/** Test, fixture, mock, documentation and sample code is excluded from production-security signals. */
 export function isNonProductionPath(path: string): boolean {
   const normalized = normalizePath(path);
-  return /(^|\/)(?:__tests__|tests?|e2e(?:-tests)?|fixtures?|mocks?|samples?|examples?|storybook|stories|scaffold|benchmarks?)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(normalized);
+  return /(^|\/)(?:__tests__|tests?|e2e(?:-tests)?|fixtures?|mocks?|samples?|examples?|docs?|storybook|stories|scaffold|benchmarks?|generated|vendor)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(normalized);
 }
 
+const validationErrors = validateSecurityRules();
+if (validationErrors.length) throw new Error(`Invalid UCE security registry: ${validationErrors.join('; ')}`);
+
 export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntelligence {
-  const findings: SecurityFinding[] = [];
-  const seen = new Set<string>();
+  const findings: SecurityFinding[] = []; const seen = new Set<string>(); let rulesExecuted = 0;
   const sourceFiles = files.filter((file) => {
     const path = normalizePath(file.path);
     return !file.isDirectory && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
   });
-
   for (const file of sourceFiles) {
-    const source = file.content ?? '';
-    for (const rule of RULES) {
+    const source = file.content ?? ''; const normalizedPath = normalizePath(file.path);
+    for (const rule of SECURITY_RULES) {
+      if (rule.filePattern && !new RegExp(rule.filePattern.source, rule.filePattern.flags.replace('g', '')).test(normalizedPath)) continue;
+      rulesExecuted++;
       const flags = rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`;
-      const pattern = new RegExp(rule.pattern.source, flags);
-      for (const match of source.matchAll(pattern)) {
+      for (const match of source.matchAll(new RegExp(rule.pattern.source, flags))) {
         if (rule.shouldReport && !rule.shouldReport(match)) continue;
-        const line = source.slice(0, match.index).split('\n').length;
-        const normalizedPath = normalizePath(file.path);
-        const id = `${rule.id}:${normalizedPath}:${line}`;
-        if (seen.has(id)) continue;
-        seen.add(id);
-        findings.push({ id, title: rule.title, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation });
+        const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
+        if (seen.has(id)) continue; seen.add(id);
+        findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation });
         if (findings.length >= 300) break;
       }
       if (findings.length >= 300) break;
     }
     if (findings.length >= 300) break;
   }
-
-  const weights = { critical: 20, warning: 7, info: 1 };
-  const penalty = findings.reduce((sum, finding) => sum + weights[finding.severity], 0);
-  return { findings: findings.slice(0, 300), score: Math.max(0, 100 - penalty), filesScanned: sourceFiles.length, rulesExecuted: RULES.length * sourceFiles.length };
+  const weights = { critical: 20, warning: 7, info: 1 }; const confidenceWeights = { high: 1, medium: 0.7, low: 0.4 };
+  const penalty = findings.reduce((sum, finding) => sum + weights[finding.severity] * confidenceWeights[finding.confidence ?? 'medium'], 0);
+  const categoryCounts: Partial<Record<SecurityRuleCategory, number>> = {};
+  for (const finding of findings) if (finding.category) categoryCounts[finding.category] = (categoryCounts[finding.category] ?? 0) + 1;
+  return { findings: findings.slice(0, 300), score: Math.max(0, Math.round(100 - penalty)), filesScanned: sourceFiles.length, rulesExecuted, knowledgeVersion: SECURITY_KNOWLEDGE_VERSION, categoryCounts };
 }

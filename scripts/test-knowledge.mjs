@@ -36,6 +36,8 @@ const { detectLanguageProfile } = load('src/lib/analyzer/language-profile.ts');
 const { classifyProjectFileScope } = load('src/lib/analyzer/project-scope.ts');
 const { detectBrowserCompatibility, resolveBrowserTargets } = load('src/lib/analyzer/browser-compatibility.ts');
 const { BROWSER_FEATURES } = load('src/lib/analyzer/browser-knowledge.ts');
+const { detectSecurityIntelligence, isNonProductionPath } = load('src/lib/analyzer/security-intelligence.ts');
+const { SECURITY_RULES, validateSecurityRules } = load('src/lib/analyzer/security-knowledge.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
@@ -151,6 +153,32 @@ test('unsupported web platform features are tied to configured targets', () => {
 test('browser intelligence excludes test, fixture and generated code', () => {
   const result = detectBrowserCompatibility([file('tests/app.ts', 'navigator.gpu'), file('fixtures/app.ts', 'navigator.gpu'), file('generated/app.ts', 'navigator.gpu')]);
   assert.equal(result.filesScanned, 0); assert.deepEqual(result.findings, []);
+});
+test('security registry is valid and expands Phase 3 coverage', () => {
+  assert.deepEqual(validateSecurityRules(), []); assert.ok(SECURITY_RULES.length >= 20);
+});
+test('security findings include category, confidence and safe evidence', () => {
+  const result = detectSecurityIntelligence([file('src/server.ts', 'const password = "real-production-secret";\nconst agent = { rejectUnauthorized: false };')]);
+  assert.ok(result.findings.some(item => item.ruleId === 'SEC001' && item.category === 'secrets' && item.confidence));
+  assert.ok(result.findings.some(item => item.ruleId === 'SEC010' && item.category === 'transport'));
+  assert.ok(result.findings.every(item => !item.evidence.includes('real-production-secret')));
+  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '3.0.0');
+});
+test('security placeholders and local HTTP endpoints are suppressed', () => {
+  const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const url = "http://localhost:3000/api";')]);
+  assert.deepEqual(result.findings, []);
+});
+test('security rules are language scoped', () => {
+  const result = detectSecurityIntelligence([file('src/app.py', 'eval(data)\nconst x = { rejectUnauthorized: false }')]);
+  assert.ok(!result.findings.some(item => item.ruleId === 'SEC002' || item.ruleId === 'SEC010'));
+});
+test('security intelligence excludes non-production paths cross-platform', () => {
+  for (const path of ['tests/app.ts', 'docs/example.py', 'vendor/app.php', 'src\\fixtures\\app.ts']) assert.equal(isNonProductionPath(path), true);
+  const result = detectSecurityIntelligence([file('examples/server.ts', 'const password = "real-production-secret"')]); assert.deepEqual(result.findings, []);
+});
+test('unsafe deserialization rules distinguish safe YAML loading', () => {
+  const result = detectSecurityIntelligence([file('src/unsafe.py', 'pickle.loads(payload)\nyaml.load(payload)\nyaml.load(payload, Loader=yaml.SafeLoader)')]);
+  assert.ok(result.findings.some(item => item.ruleId === 'SEC015')); assert.equal(result.findings.filter(item => item.ruleId === 'SEC016').length, 1);
 });
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {
