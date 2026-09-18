@@ -28,17 +28,14 @@ reveals detail progressively instead of rendering every result on one page.
 - **Expert:** full available evidence, rule IDs, graph-oriented views, suppression,
   and JSON export
 
-## Remaining Phase 4 increments
+## Completion status
 
-- Persist reviewed/suppressed findings per report instead of session-only state
-- Group structurally similar findings and expose group-level actions
-- Compare compatible scans and show regressions/resolutions
-- Add module-aware export selection and suppression metadata to exported reports
-- Add dedicated end-to-end accessibility and responsive-layout coverage
+The remaining report workflow items were completed in the next increment. See
+`PHASE_4_COMPLETE.md` for the final behavior and verification baseline.
 
 ## Verification baseline
 
-- 659 deterministic engine checks
+- 663 deterministic engine and report-workspace checks
 - TypeScript typecheck and ESLint
 - Production build and dependency audit
 - Browser verification is required when a runnable Chromium environment is available

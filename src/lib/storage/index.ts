@@ -1,8 +1,11 @@
 import type { AnalysisResult } from '@/lib/analyzer/types';
 import type { ShareableReport } from '@/lib/report/sharing';
+import type { ReportReviewState } from '@/lib/report/workspace';
 
 const HISTORY_KEY = 'uce:history';
 const SETTINGS_KEY = 'uce:settings';
+const REVIEW_STATE_KEY = 'uce:report-review:v1';
+const BASELINE_KEY = 'uce:report-baselines:v1';
 
 export interface HistoryEntry {
   id: string;
@@ -98,9 +101,45 @@ export function clearAllLocalData(): void {
   try {
     localStorage.removeItem(HISTORY_KEY);
     localStorage.removeItem(SETTINGS_KEY);
+    localStorage.removeItem(REVIEW_STATE_KEY);
+    localStorage.removeItem(BASELINE_KEY);
   } catch {
     // ignore — may throw in private browsing or restricted environments
   }
+}
+
+export function loadReportReviewState(reportId: string): ReportReviewState {
+  const fallback: ReportReviewState = { version: 1, reviewed: [], suppressed: [], updatedAt: '' };
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const states = safeParse<Record<string, ReportReviewState>>(localStorage.getItem(REVIEW_STATE_KEY), {});
+    const state = states[reportId];
+    return state?.version === 1 ? state : fallback;
+  } catch { return fallback; }
+}
+
+export function saveReportReviewState(reportId: string, state: ReportReviewState): boolean {
+  try {
+    const states = safeParse<Record<string, ReportReviewState>>(localStorage.getItem(REVIEW_STATE_KEY), {});
+    localStorage.setItem(REVIEW_STATE_KEY, JSON.stringify({ ...states, [reportId]: state }));
+    return true;
+  } catch { return false; }
+}
+
+export function loadProjectBaseline(projectName: string): string | null {
+  try {
+    const baselines = safeParse<Record<string, string>>(localStorage.getItem(BASELINE_KEY), {});
+    return baselines[projectName.trim().toLowerCase()] ?? null;
+  } catch { return null; }
+}
+
+export function saveProjectBaseline(projectName: string, reportId: string): boolean {
+  try {
+    const baselines = safeParse<Record<string, string>>(localStorage.getItem(BASELINE_KEY), {});
+    baselines[projectName.trim().toLowerCase()] = reportId;
+    localStorage.setItem(BASELINE_KEY, JSON.stringify(baselines));
+    return true;
+  } catch { return false; }
 }
 
 export function toShareableList(history: HistoryEntry[]): ShareableReport[] {

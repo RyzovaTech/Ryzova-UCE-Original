@@ -11,6 +11,8 @@ import {
   FileJson,
   FileSearch,
   FolderTree,
+  GitCompareArrows,
+  History,
   Layers3,
   LockKeyhole,
   Network,
@@ -28,7 +30,10 @@ import { CodeIntelligencePanel } from '@/components/reports/CodeIntelligence';
 import { ExtendedIntelligencePanel } from '@/components/reports/ExtendedIntelligencePanel';
 import { IntelligenceInsightsPanel } from '@/components/reports/IntelligenceInsightsPanel';
 import { exportJson, downloadFile } from '@/lib/report/export';
-import type { AnalysisResult, Issue, Severity } from '@/lib/analyzer/types';
+import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveReportReviewState } from '@/lib/storage';
+import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
+import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
+import type { AnalysisResult, Severity } from '@/lib/analyzer/types';
 
 type ReportSection = 'overview' | 'technology' | 'code' | 'security' | 'compatibility' | 'quality' | 'issues' | 'map';
 type UserMode = 'simple' | 'developer' | 'expert';
@@ -47,7 +52,7 @@ const NAV_ITEMS: Array<{ id: ReportSection; label: string; icon: typeof CircleGa
 
 const SEVERITIES: Array<'all' | Severity> = ['all', 'critical', 'warning', 'info'];
 
-export function Phase4ReportWorkspace({ report }: { report: AnalysisResult }) {
+export function Phase4ReportWorkspace({ report, history }: { report: AnalysisResult; history: AnalysisResult[] }) {
   const [section, setSection] = useState<ReportSection>('overview');
   const [mode, setMode] = useState<UserMode>(() => readMode());
 
@@ -80,7 +85,7 @@ export function Phase4ReportWorkspace({ report }: { report: AnalysisResult }) {
       </nav>
 
       <main>
-        {section === 'overview' && <OverviewView report={report} mode={mode} onNavigate={setSection} />}
+        {section === 'overview' && <OverviewView report={report} history={history} mode={mode} onNavigate={setSection} />}
         {section === 'technology' && <TechnologyView report={report} mode={mode} />}
         {section === 'code' && <CodeView report={report} mode={mode} />}
         {section === 'security' && <SecurityView report={report} mode={mode} />}
@@ -118,7 +123,7 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
   );
 }
 
-function OverviewView({ report, mode, onNavigate }: { report: AnalysisResult; mode: UserMode; onNavigate: (section: ReportSection) => void }) {
+function OverviewView({ report, history, mode, onNavigate }: { report: AnalysisResult; history: AnalysisResult[]; mode: UserMode; onNavigate: (section: ReportSection) => void }) {
   const critical = report.issues.filter((item) => item.severity === 'critical');
   const attention = report.categories.filter((item) => item.score < 80).sort((a, b) => a.score - b.score);
   const actions = topActions(report);
@@ -163,11 +168,52 @@ function OverviewView({ report, mode, onNavigate }: { report: AnalysisResult; mo
         <Card><CardHeader><CardTitle className="text-base">Scan confidence</CardTitle><CardDescription>{statusFromConfidence(confidence)} evidence across the primary detectors.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums">{confidence}%</span><SoftStatusBadge status={statusFromConfidence(confidence)} /></div><Progress value={confidence} /><p className="text-xs text-muted-foreground">Based on language, framework, runtime, package-manager, and build-tool evidence.</p></CardContent></Card>
       </div>
 
+      <ScanComparisonPanel report={report} history={history} mode={mode} />
+
       <details className="rounded-lg border bg-card p-4 text-sm">
         <summary className="cursor-pointer font-medium">Analysis limitations</summary>
         <ul className="mt-3 space-y-2 text-xs text-muted-foreground"><li>Static signals show review opportunities; they do not prove runtime behavior or exploitability.</li><li>Browser and platform results use detected targets and source patterns, not real-device execution.</li><li>Accessibility and license checks do not replace user testing or legal review.</li>{mode !== 'simple' && <li>Unknown or excluded files can reduce evidence confidence.</li>}</ul>
       </details>
     </div>
+  );
+}
+
+function ScanComparisonPanel({ report, history, mode }: { report: AnalysisResult; history: AnalysisResult[]; mode: UserMode }) {
+  const compatible = useMemo(() => compatibleProjectReports(report, history), [report, history]);
+  const storedBaseline = loadProjectBaseline(report.summary.name);
+  const initialId = compatible.some((item) => item.id === storedBaseline) ? (storedBaseline ?? '') : compatible[0]?.id ?? '';
+  const [baselineId, setBaselineId] = useState(initialId);
+  const [baselineSaved, setBaselineSaved] = useState(storedBaseline === report.id);
+  const baseline = compatible.find((item) => item.id === baselineId);
+  const comparison = baseline ? compareReports(report, baseline) : null;
+  const health = useMemo(() => [report, ...compatible].sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt)).slice(-8), [report, compatible]);
+
+  const markBaseline = () => setBaselineSaved(saveProjectBaseline(report.summary.name, report.id));
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div><CardTitle className="flex items-center gap-2 text-base"><GitCompareArrows className="h-4 w-4" />Scan comparison</CardTitle><CardDescription>Track new, resolved, and persisting findings against a compatible scan.</CardDescription></div>
+          <Button variant="outline" size="sm" onClick={markBaseline}>{baselineSaved ? 'Baseline saved' : 'Set current as baseline'}</Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {compatible.length > 0 ? (
+          <>
+            <label className="block space-y-1 text-xs text-muted-foreground"><span>Compare with</span><select value={baselineId} onChange={(event) => setBaselineId(event.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-xs text-foreground sm:max-w-md">{compatible.map((item) => <option key={item.id} value={item.id}>{new Date(item.createdAt).toLocaleString()} · {item.score.overall}%</option>)}</select></label>
+            {comparison && <div className="grid gap-3 sm:grid-cols-4"><MetricCard label="Score change" value={`${comparison.scoreDelta > 0 ? '+' : ''}${comparison.scoreDelta}`} /><MetricCard label="New" value={comparison.newFindings.length} /><MetricCard label="Resolved" value={comparison.resolvedFindings.length} /><MetricCard label="Persisting" value={comparison.persistingFindings.length} /></div>}
+            {mode !== 'simple' && comparison && <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{comparison.categoryDeltas.map((item) => <div key={item.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{item.label}</p><p className="mt-1 text-sm font-semibold">{item.current}% <span className={item.delta >= 0 ? 'text-success' : 'text-destructive'}>({item.delta > 0 ? '+' : ''}{item.delta})</span></p></div>)}</div>}
+          </>
+        ) : <p className="text-sm text-muted-foreground">No earlier scan with the same project name is available yet. Save this report as the future baseline.</p>}
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-sm font-medium"><History className="h-4 w-4" />Project health history</div>
+          <div className="flex h-28 items-end gap-2 rounded-lg border bg-muted/20 p-3" role="img" aria-label="Project health score history">
+            {health.map((item) => <div key={item.id} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1" title={`${new Date(item.createdAt).toLocaleString()}: ${item.score.overall}%`}><span className="text-center text-[9px] tabular-nums text-muted-foreground">{item.score.overall}</span><div className="min-h-1 rounded-t bg-primary" style={{ height: `${Math.max(4, item.score.overall)}%` }} /></div>)}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -208,19 +254,50 @@ function QualityView({ report, mode }: { report: AnalysisResult; mode: UserMode 
 function IssueCenter({ report, mode }: { report: AnalysisResult; mode: UserMode }) {
   const [query, setQuery] = useState('');
   const [severity, setSeverity] = useState<'all' | Severity>('all');
-  const [category, setCategory] = useState('all');
+  const [module, setModule] = useState('all');
   const [file, setFile] = useState('all');
-  const [reviewed, setReviewed] = useState<Set<string>>(() => new Set());
-  const [suppressed, setSuppressed] = useState<Set<string>>(() => new Set());
-  const files = useMemo(() => [...new Set(report.issues.map((item) => item.affectedFile))].sort(), [report.issues]);
-  const categories = useMemo(() => [...new Set(report.issues.map((item) => item.category))].sort(), [report.issues]);
-  const visible = useMemo(() => report.issues.filter((item) => {
-    const text = `${item.title} ${item.description} ${item.affectedFile}`.toLowerCase();
-    return !suppressed.has(item.id) && (severity === 'all' || item.severity === severity) && (category === 'all' || item.category === category) && (file === 'all' || item.affectedFile === file) && (!query || text.includes(query.toLowerCase()));
-  }), [report.issues, query, severity, category, file, suppressed]);
-  const toggle = (setter: React.Dispatch<React.SetStateAction<Set<string>>>, id: string) => setter((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const [groupSimilar, setGroupSimilar] = useState(true);
+  const [showSuppressed, setShowSuppressed] = useState(false);
+  const [reviewState, setReviewState] = useState<ReportReviewState>(() => loadReportReviewState(report.id));
+  const [selected, setSelected] = useState<Set<string>>(() => new Set());
+  const findings = useMemo(() => collectWorkspaceFindings(report), [report]);
+  const reviewed = useMemo(() => new Set(reviewState.reviewed), [reviewState.reviewed]);
+  const suppressed = useMemo(() => new Set(reviewState.suppressed), [reviewState.suppressed]);
+  const files = useMemo(() => [...new Set(findings.map((item) => item.file))].sort(), [findings]);
+  const modules = useMemo(() => [...new Set(findings.map((item) => item.module))].sort(), [findings]);
+  const visible = useMemo(() => findings.filter((item) => {
+    const text = `${item.title} ${item.description} ${item.evidence} ${item.file}`.toLowerCase();
+    return (showSuppressed || !suppressed.has(item.id)) && (severity === 'all' || item.severity === severity) && (module === 'all' || item.module === module) && (file === 'all' || item.file === file) && (!query || text.includes(query.toLowerCase()));
+  }), [findings, query, severity, module, file, showSuppressed, suppressed]);
+  const groups = useMemo(() => groupWorkspaceFindings(visible), [visible]);
 
-  return <div className="space-y-4"><SectionHeading title="Issue Center" description="Search, filter, review, and suppress static findings." /><Card><CardContent className="space-y-3 p-4"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search issues, files, or descriptions" className="pl-9" /></div><div className="grid gap-2 sm:grid-cols-3"><FilterSelect label="Severity" value={severity} onChange={(value) => setSeverity(value as 'all' | Severity)} options={SEVERITIES} /><FilterSelect label="Module" value={category} onChange={setCategory} options={['all', ...categories]} /><FilterSelect label="File" value={file} onChange={setFile} options={['all', ...files]} /></div></CardContent></Card><div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">{visible.length} of {report.issues.length} findings · {reviewed.size} reviewed · {suppressed.size} suppressed</p>{mode === 'expert' && <Button variant="outline" size="sm" onClick={() => exportSelected(report, visible)}>Export selected</Button>}</div><div className="space-y-2">{visible.map((issue) => <IssueRow key={issue.id} issue={issue} mode={mode} reviewed={reviewed.has(issue.id)} onReview={() => toggle(setReviewed, issue.id)} onSuppress={() => toggle(setSuppressed, issue.id)} />)}{visible.length === 0 && <EmptyState text="No findings match these filters." />}</div></div>;
+  const updateReviewState = (next: ReportReviewState) => {
+    setReviewState(next);
+    saveReportReviewState(report.id, next);
+  };
+  const toggleState = (kind: 'reviewed' | 'suppressed', ids: string[]) => {
+    const values = new Set(reviewState[kind]);
+    const remove = ids.every((id) => values.has(id));
+    for (const id of ids) {
+      if (remove) values.delete(id);
+      else values.add(id);
+    }
+    updateReviewState({ ...reviewState, [kind]: [...values], updatedAt: new Date().toISOString() });
+  };
+  const toggleSelection = (id: string) => setSelected((current) => { const next = new Set(current); if (next.has(id)) next.delete(id); else next.add(id); return next; });
+  const exportable = selected.size ? findings.filter((item) => selected.has(item.id)) : visible;
+
+  return (
+    <div className="space-y-4">
+      <SectionHeading title="Issue Center" description="Search, group, review, suppress, and export findings from every intelligence module." />
+      <Card><CardContent className="space-y-3 p-4"><div className="relative"><Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search issues, files, evidence, or descriptions" className="pl-9" /></div><div className="grid gap-2 sm:grid-cols-3"><FilterSelect label="Severity" value={severity} onChange={(value) => setSeverity(value as 'all' | Severity)} options={SEVERITIES} /><FilterSelect label="Module" value={module} onChange={setModule} options={['all', ...modules]} /><FilterSelect label="File" value={file} onChange={setFile} options={['all', ...files]} /></div><div className="flex flex-wrap gap-3 border-t pt-3 text-xs"><ToggleOption checked={groupSimilar} onChange={setGroupSimilar} label="Group similar findings" /><ToggleOption checked={showSuppressed} onChange={setShowSuppressed} label="Show suppressed" /></div></CardContent></Card>
+      <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-sm text-muted-foreground">{visible.length} of {findings.length} findings · {reviewed.size} reviewed · {suppressed.size} suppressed</p>{mode === 'expert' && <div className="flex gap-2"><Button variant="ghost" size="sm" onClick={() => setSelected(new Set(visible.map((item) => item.id)))}>Select visible</Button><Button variant="outline" size="sm" disabled={!exportable.length} onClick={() => exportSelected(report, exportable, reviewState)}>Export {selected.size ? selected.size : 'visible'}</Button></div>}</div>
+      <div className="space-y-2">
+        {groupSimilar ? groups.map((group) => <FindingGroupRow key={group.key} findings={group.findings} mode={mode} reviewed={group.findings.every((item) => reviewed.has(item.id))} suppressed={group.findings.every((item) => suppressed.has(item.id))} onReview={() => toggleState('reviewed', group.findings.map((item) => item.id))} onSuppress={() => toggleState('suppressed', group.findings.map((item) => item.id))} selected={selected} onSelect={toggleSelection} />) : visible.map((issue) => <IssueRow key={issue.id} issue={issue} mode={mode} reviewed={reviewed.has(issue.id)} suppressed={suppressed.has(issue.id)} selected={selected.has(issue.id)} onSelect={() => toggleSelection(issue.id)} onReview={() => toggleState('reviewed', [issue.id])} onSuppress={() => toggleState('suppressed', [issue.id])} />)}
+        {visible.length === 0 && <EmptyState text="No findings match these filters." />}
+      </div>
+    </div>
+  );
 }
 
 function ProjectMapView({ report, mode }: { report: AnalysisResult; mode: UserMode }) {
@@ -234,9 +311,17 @@ function EvidenceList({ report, expert }: { report: AnalysisResult; expert: bool
   return <Card><CardHeader><CardTitle className="text-base">Why UCE detected these technologies</CardTitle><CardDescription>Expand an item to see its evidence.</CardDescription></CardHeader><CardContent className="space-y-2">{evidence.slice(0, expert ? 50 : 15).map((item) => <details key={`${item.kind}-${item.name}`} className="rounded-lg border p-3"><summary className="flex cursor-pointer list-none items-center gap-2"><span className="text-sm font-medium">{item.name}</span><Badge variant="outline">{item.kind}</Badge><SoftStatusBadge status={statusFromConfidence(item.confidence)} /><ChevronRight className="ml-auto h-4 w-4" /></summary><ul className="mt-3 space-y-1 text-xs text-muted-foreground">{item.evidence.map((line) => <li key={line}>• {line}</li>)}</ul></details>)}</CardContent></Card>;
 }
 
-function IssueRow({ issue, mode, reviewed, onReview, onSuppress }: { issue: Issue; mode: UserMode; reviewed: boolean; onReview: () => void; onSuppress: () => void }) {
-  return <Card className={reviewed ? 'opacity-70' : ''}><CardContent className="p-4"><div className="flex flex-wrap items-start gap-2"><Badge variant={issue.severity === 'critical' ? 'destructive' : 'outline'}>{issue.severity}</Badge><div className="min-w-0 flex-1"><p className="text-sm font-medium">{issue.title}</p><p className="mt-1 text-xs text-muted-foreground">{issue.description}</p>{mode !== 'simple' && <details className="mt-3 text-xs"><summary className="cursor-pointer font-medium">Technical evidence</summary><div className="mt-2 space-y-1 text-muted-foreground"><p className="font-mono">{issue.affectedFile}</p><p>{issue.reason}</p><p className="text-foreground">Recommendation: {issue.recommendation}</p></div></details>}</div><SoftStatusBadge status="Review required" /></div><div className="mt-3 flex gap-2 border-t pt-3"><Button variant="ghost" size="sm" onClick={onReview}>{reviewed ? <CheckCircle2 className="mr-1 h-4 w-4" /> : null}{reviewed ? 'Reviewed' : 'Mark reviewed'}</Button>{mode === 'expert' && <Button variant="ghost" size="sm" onClick={onSuppress}>Suppress false positive</Button>}</div></CardContent></Card>;
+function FindingGroupRow({ findings, mode, reviewed, suppressed, onReview, onSuppress, selected, onSelect }: { findings: WorkspaceFinding[]; mode: UserMode; reviewed: boolean; suppressed: boolean; onReview: () => void; onSuppress: () => void; selected: Set<string>; onSelect: (id: string) => void }) {
+  const first = findings[0];
+  if (findings.length === 1) return <IssueRow issue={first} mode={mode} reviewed={reviewed} suppressed={suppressed} selected={selected.has(first.id)} onSelect={() => onSelect(first.id)} onReview={onReview} onSuppress={onSuppress} />;
+  return <Card className={reviewed ? 'opacity-70' : ''}><CardContent className="p-4"><div className="flex flex-wrap items-center gap-2"><Badge variant={first.severity === 'critical' ? 'destructive' : 'outline'}>{first.severity}</Badge><Badge variant="secondary">{first.module}</Badge><span className="text-sm font-medium">{first.title}</span><Badge variant="outline">{findings.length} similar</Badge>{suppressed && <Badge variant="outline">Suppressed</Badge>}</div><details className="mt-3"><summary className="cursor-pointer text-xs font-medium">View grouped locations</summary><div className="mt-2 space-y-2">{findings.map((item) => <label key={item.id} className="flex items-start gap-2 rounded-md border p-2 text-xs"><input type="checkbox" checked={selected.has(item.id)} onChange={() => onSelect(item.id)} className="mt-0.5" /><span><span className="block font-mono">{item.file}{item.line ? `:${item.line}` : ''}</span><span className="text-muted-foreground">{item.recommendation}</span></span></label>)}</div></details><div className="mt-3 flex gap-2 border-t pt-3"><Button variant="ghost" size="sm" onClick={onReview}>{reviewed ? <CheckCircle2 className="mr-1 h-4 w-4" /> : null}{reviewed ? 'Reviewed group' : 'Mark group reviewed'}</Button>{mode === 'expert' && <Button variant="ghost" size="sm" onClick={onSuppress}>{suppressed ? 'Restore group' : 'Suppress group'}</Button>}</div></CardContent></Card>;
 }
+
+function IssueRow({ issue, mode, reviewed, suppressed, selected, onSelect, onReview, onSuppress }: { issue: WorkspaceFinding; mode: UserMode; reviewed: boolean; suppressed: boolean; selected: boolean; onSelect: () => void; onReview: () => void; onSuppress: () => void }) {
+  return <Card className={reviewed ? 'opacity-70' : ''}><CardContent className="p-4"><div className="flex flex-wrap items-start gap-2">{mode === 'expert' && <input type="checkbox" checked={selected} onChange={onSelect} aria-label={`Select ${issue.title}`} className="mt-1" />}<Badge variant={issue.severity === 'critical' ? 'destructive' : 'outline'}>{issue.severity}</Badge><Badge variant="secondary">{issue.module}</Badge><div className="min-w-0 flex-1"><p className="text-sm font-medium">{issue.title}</p><p className="mt-1 text-xs text-muted-foreground">{issue.description}</p>{mode !== 'simple' && <details className="mt-3 text-xs"><summary className="cursor-pointer font-medium">Technical evidence</summary><div className="mt-2 space-y-1 text-muted-foreground"><p className="font-mono">{issue.file}{issue.line ? `:${issue.line}` : ''}</p><p>{issue.evidence}</p><p className="text-foreground">Recommendation: {issue.recommendation}</p>{mode === 'expert' && issue.ruleId && <p>Rule ID: {issue.ruleId}</p>}{mode === 'expert' && issue.confidence && <p>Confidence: {issue.confidence}</p>}</div></details>}</div><SoftStatusBadge status={suppressed ? 'Not applicable' : 'Review required'} /></div><div className="mt-3 flex gap-2 border-t pt-3"><Button variant="ghost" size="sm" onClick={onReview}>{reviewed ? <CheckCircle2 className="mr-1 h-4 w-4" /> : null}{reviewed ? 'Reviewed' : 'Mark reviewed'}</Button>{mode === 'expert' && <Button variant="ghost" size="sm" onClick={onSuppress}>{suppressed ? 'Restore finding' : 'Suppress false positive'}</Button>}</div></CardContent></Card>;
+}
+
+function ToggleOption({ checked, onChange, label }: { checked: boolean; onChange: (checked: boolean) => void; label: string }) { return <label className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /><span>{label}</span></label>; }
 
 function FilterSelect({ label, value, onChange, options }: { label: string; value: string; onChange: (value: string) => void; options: string[] }) {
   return <label className="space-y-1 text-xs text-muted-foreground"><span>{label}</span><select value={value} onChange={(event) => onChange(event.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-xs text-foreground"><option value="all">All {label.toLowerCase()}s</option>{options.filter((item) => item !== 'all').map((item) => <option key={item} value={item}>{item}</option>)}</select></label>;
@@ -255,5 +340,5 @@ function projectIdentity(report: AnalysisResult): string { const architecture = 
 function readinessText(score: number, critical: number): string { if (critical) return 'Important issues need review'; if (score >= 90) return 'Ready with strong confidence'; if (score >= 75) return 'Mostly ready; review a few areas'; if (score >= 50) return 'Usable, but needs focused improvements'; return 'Significant review is recommended'; }
 function isKnown(value: unknown): value is string { return typeof value === 'string' && value !== 'Unknown' && value !== 'None' && value.length > 0; }
 function topActions(report: AnalysisResult): string[] { const source = [...report.issues].sort((a, b) => ({ critical: 0, warning: 1, info: 2 }[a.severity] - { critical: 0, warning: 1, info: 2 }[b.severity])).map((item) => item.suggestedAction || item.recommendation).filter(Boolean); const moduleActions = Object.values(report.stack.extendedIntelligence?.modules ?? {}).flatMap((module) => module.findings.map((item) => item.recommendation)); const defaults = ['Confirm the detected project identity and target environment.', 'Review critical and warning findings before release.', 'Verify build and test commands in a clean environment.', 'Confirm browser, runtime, and deployment targets.', 'Record reviewed findings and accepted limitations.']; return [...new Set([...source, ...moduleActions, ...defaults])].slice(0, 5); }
-function exportSelected(report: AnalysisResult, issues: Issue[]) { const payload = JSON.stringify({ reportId: report.id, exportedAt: new Date().toISOString(), issues }, null, 2); downloadFile(`${report.summary.name}-selected-findings.json`, payload, 'application/json'); }
+function exportSelected(report: AnalysisResult, findings: WorkspaceFinding[], reviewState: ReportReviewState) { const payload = JSON.stringify({ schemaVersion: 1, reportId: report.id, project: report.summary.name, analysisVersion: report.analysisVersion, exportedAt: new Date().toISOString(), selection: { count: findings.length, modules: [...new Set(findings.map((item) => item.module))] }, reviewState, findings }, null, 2); downloadFile(`${report.summary.name}-selected-findings.json`, payload, 'application/json'); }
 function readMode(): UserMode { try { const saved = localStorage.getItem('uce-report-mode:v1'); if (saved === 'simple' || saved === 'developer' || saved === 'expert') return saved; } catch { /* private browsing */ } return 'simple'; }

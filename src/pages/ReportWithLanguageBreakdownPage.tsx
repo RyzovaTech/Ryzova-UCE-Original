@@ -17,7 +17,7 @@ export function ReportWithLanguageBreakdownPage() {
     setReport(id ? getById(id) : history[0]?.result ?? null);
   }, [id, history, getById]);
 
-  if (report) return <Phase4ReportWorkspace report={report} />;
+  if (report) return <Phase4ReportWorkspace key={report.id} report={report} history={history.map((entry) => entry.result)} />;
 
   return (
     <Card className="animate-slide-up">

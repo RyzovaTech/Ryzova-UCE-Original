@@ -42,6 +42,7 @@ const { detectCodeIntelligence } = load('src/lib/analyzer/code-intelligence.ts')
 const { detectDependencyIntelligence } = load('src/lib/analyzer/intelligence.ts');
 const { buildCorrelatedInsights } = load('src/lib/analyzer/correlated-intelligence.ts');
 const { detectExtendedIntelligence } = load('src/lib/analyzer/extended-intelligence.ts');
+const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
@@ -252,6 +253,41 @@ test('performance, platform, database and maintainability emit bounded findings'
   const repeated = 'const repeatedValue = calculateSomething();\n'.repeat(6); const files = [file('src/a.ts', `${repeated}const x = readFileSync(path); const p = "C:\\\\temp";`), file('src/b.ts', repeated), file('schema.prisma', 'model User { id Int @id }'), file('migrations/001.sql', 'CREATE TABLE users(id int);')];
   const intelligence = detectExtendedIntelligence(files, extendedStack);
   assert.ok(intelligence.modules.performance.findings.some(item => item.id === 'PERF002')); assert.ok(intelligence.modules.platform.findings.some(item => item.id === 'OS001')); assert.ok(Number(intelligence.modules.database.metrics.schemaModels) >= 1); assert.ok(Number(intelligence.modules.maintainability.metrics.duplicatedBlocks) >= 1);
+});
+const workspaceReport = (id, issueTitles, score = 80, createdAt = '2026-01-01T00:00:00.000Z') => ({
+  id, createdAt, analysisVersion: '2.0.0', source: 'upload', classification: { type: 'Software Project', isSoftware: true, reason: 'source' },
+  summary: { name: 'workspace-app', language: 'TypeScript', framework: 'React', runtime: 'Node.js', packageManager: 'pnpm', detectedConfigFiles: [], filesScanned: 1, foldersScanned: 1, scanStats: { projectSize: 1, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } },
+  stack: { language: 'TypeScript', framework: 'React', runtime: 'Node.js', packageManager: 'pnpm', buildTool: 'Vite', frontend: 'React', backend: 'None', database: 'Unknown', configFiles: [], securityIntelligence: { score: 50, filesScanned: 1, rulesExecuted: 1, findings: [{ id: 'secret', ruleId: 'SEC001', title: 'Secret signal', category: 'secrets', confidence: 'high', severity: 'critical', file: 'src/a.ts', line: 1, evidence: 'safe evidence', recommendation: 'Review secret' }] }, browserCompatibility: { targets: [], score: 80, filesScanned: 1, featuresChecked: 1, findings: [{ id: 'webgpu', feature: 'WebGPU', kind: 'web-api', file: 'src/a.ts', line: 2, status: 'unsupported', affectedBrowsers: ['Safari'], recommendation: 'Add fallback' }] } },
+  issues: issueTitles.map((title, index) => ({ id: `${id}-${index}`, title, category: 'runtime', severity: index ? 'warning' : 'critical', description: title, reason: 'evidence', recommendation: `Fix ${title}`, affectedFile: `src/${index}.ts` })),
+  categories: [{ id: 'runtime', label: 'Runtime', status: 'warning', score, issues: [], summary: 'runtime' }], score: { runtime: score, dependencies: score, configuration: score, structure: score, environment: score, security: score, deployment: score, performance: score, overall: score }, detectedFiles: [], timeline: [], notes: [],
+});
+test('Phase 4 workspace unifies compatibility and intelligence findings', () => {
+  const findings = collectWorkspaceFindings(workspaceReport('one', ['Runtime mismatch']));
+  assert.deepEqual(new Set(findings.map(item => item.module)), new Set(['runtime', 'security/secrets', 'browser']));
+  assert.equal(findings.length, 3);
+});
+test('Phase 4 similar finding groups remain deterministic', () => {
+  const report = workspaceReport('group', ['Repeated issue', 'Repeated issue']);
+  report.issues[1].affectedFile = 'src/other.ts';
+  report.issues[1].severity = 'critical';
+  const groups = groupWorkspaceFindings(collectWorkspaceFindings(report));
+  assert.equal(groups.find(item => item.title === 'Repeated issue').findings.length, 2);
+});
+test('Phase 4 scan comparison tracks new resolved and persisting findings', () => {
+  const baseline = workspaceReport('old', ['Persisting', 'Resolved'], 70);
+  const current = workspaceReport('new', ['Persisting', 'New'], 85, '2026-02-01T00:00:00.000Z');
+  current.issues[0].id = baseline.issues[0].id;
+  const comparison = compareReports(current, baseline);
+  assert.equal(comparison.scoreDelta, 15);
+  assert.ok(comparison.newFindings.some(item => item.title === 'New'));
+  assert.ok(comparison.resolvedFindings.some(item => item.title === 'Resolved'));
+  assert.ok(comparison.persistingFindings.some(item => item.title === 'Persisting'));
+});
+test('Phase 4 comparison only offers matching project identities', () => {
+  const current = workspaceReport('current', [], 80, '2026-03-01T00:00:00.000Z');
+  const older = workspaceReport('older', [], 70, '2026-01-01T00:00:00.000Z');
+  const other = workspaceReport('other', [], 90); other.summary.name = 'different-app';
+  assert.deepEqual(compatibleProjectReports(current, [current, other, older]).map(item => item.id), ['older']);
 });
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {
