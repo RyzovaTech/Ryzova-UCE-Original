@@ -22,6 +22,9 @@ const ReportsPage = lazy(() =>
 const SettingsPage = lazy(() =>
   import("@/pages/SettingsPage").then((m) => ({ default: m.SettingsPage })),
 );
+const CatalogPage = lazy(() =>
+  import("@/pages/CatalogPage").then((m) => ({ default: m.CatalogPage })),
+);
 
 function PageLoader() {
   return (
@@ -66,6 +69,13 @@ function RouteSeo() {
                 canonicalPath: "/settings",
                 indexable: false,
               }
+            : pathname === "/catalog"
+              ? {
+                  title: "UCE Detection Catalog — Ryzova UCE",
+                  description: "Explore the languages, technologies, architecture patterns, browser rules, security checks, and intelligence modules understood by Ryzova UCE.",
+                  canonicalPath: "/catalog",
+                  indexable: true,
+                }
             : {
                 title: "Compatibility Report — UCE",
                 description: "View a locally generated UCE software compatibility analysis report.",
@@ -190,6 +200,14 @@ function App() {
             element={
               <Suspense fallback={<PageLoader />}>
                 <SettingsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/catalog"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <CatalogPage />
               </Suspense>
             }
           />

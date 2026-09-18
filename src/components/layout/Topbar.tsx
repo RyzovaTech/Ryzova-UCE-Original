@@ -1,5 +1,5 @@
 import { Link, useNavigate, NavLink } from 'react-router-dom';
-import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, Settings } from 'lucide-react';
+import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, Settings, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { Sheet, SheetClose, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
@@ -10,6 +10,7 @@ const mobileItems = [
   { to: '/analyze', label: 'Analyze Project', icon: UploadCloud },
   { to: '/report', label: 'Reports', icon: FileBarChart },
   { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/catalog', label: 'UCE Catalog', icon: BookOpen },
 ];
 
 export function Topbar() {

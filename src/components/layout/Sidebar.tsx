@@ -1,5 +1,5 @@
 import { NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, CloudUpload as UploadCloud, ChartBar as FileBarChart, Settings } from 'lucide-react';
+import { LayoutDashboard, CloudUpload as UploadCloud, ChartBar as FileBarChart, Settings, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UceLogo } from '@/components/UceLogo';
 import { UCE_VERSION } from '@/lib/app-version';
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/analyze', label: 'Analyze Project', icon: UploadCloud },
   { to: '/report', label: 'Reports', icon: FileBarChart },
   { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/catalog', label: 'UCE Catalog', icon: BookOpen },
 ];
 
 export function Sidebar() {
