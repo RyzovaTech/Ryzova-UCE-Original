@@ -72,7 +72,7 @@ function RouteSeo() {
             : pathname === "/catalog"
               ? {
                   title: "UCE Detection Catalog — Ryzova UCE",
-                  description: "Explore the languages, technologies, architecture patterns, browser rules, security checks, and intelligence modules understood by Ryzova UCE.",
+                  description: "Explore UCE coverage for 77 languages, 639 software technologies, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities.",
                   canonicalPath: "/catalog",
                   indexable: true,
                 }

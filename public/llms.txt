@@ -7,6 +7,14 @@ Ryzova UCE is the Universal Compatibility Engine, an open-source project from Ry
 ## Product
 UCE analyzes project structure, runtimes, dependencies, configuration, and compatibility risks in the browser.
 
+## Detection Coverage
+- 77 programming language labels
+- 639 software technology definitions
+- 105 browser compatibility feature rules
+- 40 security checks across 13 categories
+- 22 evidence-based architecture patterns
+- 21 project intelligence capabilities
+
 ## Features
 - Analyze ZIP project archives locally
 - Analyze public GitHub repositories

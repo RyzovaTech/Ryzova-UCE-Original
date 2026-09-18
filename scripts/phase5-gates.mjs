@@ -19,6 +19,7 @@ const sitemap = fs.readFileSync('public/sitemap.xml', 'utf8');
 const catalogSeo = fs.readFileSync('public/catalog/index.html', 'utf8');
 if (!sitemap.includes('https://uce.ryzova.com/catalog')) failures.push('Public sitemap must include the UCE Catalog.');
 for (const marker of ['rel="canonical" href="https://uce.ryzova.com/catalog"', 'name="description"', 'index, follow']) if (!catalogSeo.includes(marker)) failures.push(`Catalog SEO is missing: ${marker}.`);
+for (const marker of ['77 programming language', '639 software technology', '105 browser compatibility', '40 security']) if (!catalogSeo.includes(marker)) failures.push(`Catalog coverage SEO is missing: ${marker}.`);
 
 const workflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8');
 for (const gate of ['npm run check', 'npm run build', 'npm test', 'npm run benchmark', 'npm audit --omit=dev', 'upload-sarif']) if (!workflow.includes(gate)) failures.push(`CI is missing release gate: ${gate}.`);
@@ -26,5 +27,5 @@ for (const gate of ['npm run check', 'npm run build', 'npm test', 'npm run bench
 const trust = fs.readFileSync('src/lib/analyzer/trust.ts', 'utf8');
 for (const statement of ['not proof of runtime behavior', 'do not replace', 'scoringFormula', 'knowledgePacks']) if (!trust.includes(statement)) failures.push(`Trust metadata is missing: ${statement}.`);
 
-console.log(JSON.stringify({ gateVersion: 1, schemas: 2, accessibilityChecks: 4, seoChecks: 4, workflowChecks: 6, trustChecks: 4, failures }));
+console.log(JSON.stringify({ gateVersion: 1, schemas: 2, accessibilityChecks: 4, seoChecks: 8, workflowChecks: 6, trustChecks: 4, failures }));
 if (failures.length) process.exit(1);
