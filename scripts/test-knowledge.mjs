@@ -28,6 +28,8 @@ function load(file) {
 const { detectRegisteredTechnologies, validateTechnologyRegistry, TECHNOLOGY_REGISTRY } = load('src/lib/analyzer/technology-registry.ts');
 const { TECHNOLOGY_KNOWLEDGE } = load('src/lib/analyzer/technology-knowledge.ts');
 const { ECOSYSTEM_KNOWLEDGE } = load('src/lib/analyzer/ecosystem-knowledge.ts');
+const { PLATFORM_KNOWLEDGE } = load('src/lib/analyzer/platform-knowledge.ts');
+const { buildTechnologyGraph, PROJECT_CAPABILITY_COUNT } = load('src/lib/analyzer/technology-graph.ts');
 const { collectEcosystemDependencies } = load('src/lib/analyzer/ecosystem-dependencies.ts');
 const { ADDITIONAL_LANGUAGE_EXTENSIONS } = load('src/lib/analyzer/language-knowledge.ts');
 const { detectLanguageProfile } = load('src/lib/analyzer/language-profile.ts');
@@ -109,6 +111,14 @@ test('Cargo handles aliases and ignores package metadata', () => {
   const result = collectEcosystemDependencies([file('Cargo.toml', '[package]\nname = "tokio"\n[dependencies]\nasync_rt = { package = "tokio", version = "1" }\n# serde = "1"')]);
   assert.deepEqual(result.map(x => x.name), ['tokio']);
 });
+test('pyproject reads PEP 621 and Poetry dependency declarations', () => {
+  const result = collectEcosystemDependencies([file('pyproject.toml', '[project]\ndependencies = [\n "FastAPI>=1",\n "SCIKIT_LEARN[extra]>=1"\n]\n[tool.poetry.dependencies]\npython = "^3.12"\nDjango = "^5"')]);
+  assert.deepEqual(result.map(item => item.name), ['fastapi', 'scikit-learn', 'django']);
+});
+test('Cargo reads workspace, target and dependency-table declarations', () => {
+  const result = collectEcosystemDependencies([file('Cargo.toml', '[workspace.dependencies]\nserde = "1"\n[target.\'cfg(unix)\'.dependencies]\ntokio = "1"\n[dependencies.reqwest]\nversion = "1"')]);
+  assert.deepEqual(result.map(item => item.name), ['serde', 'tokio', 'reqwest']);
+});
 test('Go require blocks exclude replace directives', () => {
   const result = collectEcosystemDependencies([file('go.mod', 'require (\n go.uber.org/zap v1.0.0 // indirect\n)\nreplace github.com/spf13/cobra => ./local')]);
   assert.deepEqual(result.map(x => x.name), ['go.uber.org/zap']);
@@ -118,4 +128,58 @@ test('Composer metadata is not dependency evidence', () => {
   assert.deepEqual(result.map(x => x.name), ['pestphp/pest']);
 });
 test('malformed Composer input is safe', () => assert.deepEqual(collectEcosystemDependencies([file('composer.json', 'null'), file('apps/api/composer.json', '{')]), []));
+for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
+  test('platform marker fixture: ' + definition.id, () => {
+    const fixture = definition.dependencies?.length
+      ? pkg('package.json', { [definition.dependencies[0]]: '1' })
+      : definition.files?.length
+        ? file(definition.files[0], 'marker')
+        : file(definition.filePrefixes[0] + 'ts', 'marker');
+    assert.ok(detectRegisteredTechnologies([fixture]).some(item => item.id === definition.id));
+  });
+}
+test('platform path pattern recognizes GitHub Actions', () => {
+  assert.ok(detectRegisteredTechnologies([file('.github/workflows/ci.yml', 'jobs: {}')]).some(item => item.id === 'ci2-github-actions'));
+});
+test('Phase 2 registry coverage gates', () => {
+  const counts = Object.fromEntries(['package-manager', 'build-tool', 'runtime', 'database', 'testing', 'cloud', 'ci-cd'].map(kind => [kind, PLATFORM_KNOWLEDGE.filter(item => item.kind === kind).length]));
+  assert.deepEqual(counts, { 'package-manager': 40, 'build-tool': 60, runtime: 25, database: 50, testing: 60, cloud: 40, 'ci-cd': 25 });
+  assert.equal(PROJECT_CAPABILITY_COUNT, 25);
+  assert.ok(TECHNOLOGY_REGISTRY.length >= 600);
+});
+test('technology graph exposes soft capabilities and evidence relationships', () => {
+  const detections = detectRegisteredTechnologies([
+    pkg('package.json', { react: '18', vite: '5', jest: '29', pg: '8' }),
+    file('vercel.json', '{}'),
+  ]);
+  const graph = buildTechnologyGraph(detections);
+  assert.ok(graph.capabilities.some(item => item.id === 'web-frontend'));
+  assert.ok(graph.capabilities.some(item => item.id === 'testing'));
+  assert.ok(graph.capabilities.some(item => item.id === 'database'));
+  assert.ok(graph.relationships.some(item => item.type === 'builds-with'));
+  assert.ok(graph.relationships.some(item => item.type === 'deploys-to'));
+  assert.ok(graph.relationships.every(item => item.evidence));
+});
+test('shared database drivers do not imply compatible database brands', () => {
+  const ids = detectRegisteredTechnologies([pkg('package.json', { pg: '8', mysql2: '3', 'cassandra-driver': '4' })]).map(item => item.id);
+  for (const id of ['db2-cockroachdb', 'db2-timescaledb', 'db2-scylladb', 'db2-tidb', 'db2-yugabytedb']) assert.ok(!ids.includes(id));
+});
+test('generic cloud filenames require vendor evidence', () => {
+  const generic = detectRegisteredTechnologies([
+    file('app.yaml', 'name: app'), file('service.yaml', 'kind: Service'),
+    file('manifest.yml', 'name: app'), file('template.yaml', 'kind: Template'),
+    file('.gitlab-ci.yml', 'build:\n  script: echo ok'),
+  ]).map(item => item.id);
+  for (const id of ['cloud2-google-app-engine', 'cloud2-google-cloud-run', 'cloud2-gitlab-pages', 'cloud2-cloud-foundry', 'cloud2-openshift']) assert.ok(!generic.includes(id));
+  const exact = detectRegisteredTechnologies([
+    file('app.yaml', 'runtime: nodejs20'), file('service.yaml', 'apiVersion: serving.knative.dev/v1'),
+    file('manifest.yml', 'applications:\n- name: app'), file('template.yaml', 'apiVersion: template.openshift.io/v1'),
+    file('.gitlab-ci.yml', 'pages:\n  script: publish'),
+  ]).map(item => item.id);
+  for (const id of ['cloud2-google-app-engine', 'cloud2-google-cloud-run', 'cloud2-gitlab-pages', 'cloud2-cloud-foundry', 'cloud2-openshift']) assert.ok(exact.includes(id));
+});
+test('Next.js does not imply Turbopack without its command flag', () => {
+  assert.ok(!detectRegisteredTechnologies([pkg('package.json', { next: '16' })]).some(item => item.id === 'build2-turbopack'));
+  assert.ok(detectRegisteredTechnologies([file('package.json', '{"dependencies":{"next":"16"},"scripts":{"dev":"next dev --turbopack"}}')]).some(item => item.id === 'build2-turbopack'));
+});
 console.log(JSON.stringify({ checks, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

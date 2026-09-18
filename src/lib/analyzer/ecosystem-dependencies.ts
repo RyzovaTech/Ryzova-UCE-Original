@@ -19,6 +19,22 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
         const match = /^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?\s*(?:[<>=!~;@]|$)/.exec(line);
         if (match) add('python', match[1].toLowerCase().replace(/[-_.]+/g, '-'));
       }
+    } else if (base === 'pyproject.toml') {
+      for (const block of file.content.matchAll(/(?:^|\n)\s*dependencies\s*=\s*\[([\s\S]*?)^\s*\]/gm)) {
+        for (const quoted of block[1].matchAll(/["']([^"']+)["']/g)) {
+          const item = /^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?\s*(?:[<>=!~;@]|$)/.exec(quoted[1].trim());
+          if (item) add('python', item[1].toLowerCase().replace(/[-_.]+/g, '-'));
+        }
+      }
+      let poetrySection = false;
+      for (const raw of file.content.split(/\r?\n/)) {
+        const line = raw.trim();
+        const header = /^\[([^\]]+)\]$/.exec(line);
+        if (header) { poetrySection = /^tool\.poetry(?:\.group\.[^.]+)?\.dependencies$/.test(header[1]); continue; }
+        if (!poetrySection || line.startsWith('#')) continue;
+        const entry = /^([A-Za-z0-9][A-Za-z0-9._-]*)\s*=/.exec(line);
+        if (entry && entry[1].toLowerCase() !== 'python') add('python', entry[1].toLowerCase().replace(/[-_.]+/g, '-'));
+      }
     } else if (base === 'composer.json') {
       try {
         const data = JSON.parse(file.content);
@@ -44,8 +60,13 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
         const line = raw.trim();
         if (!line || line.startsWith('#')) continue;
         const header = /^\[([^\]]+)\]\s*(?:#.*)?$/.exec(line);
-        if (header) { section = header[1]; continue; }
-        if (!/^(?:dependencies|dev-dependencies|build-dependencies)$/.test(section)) continue;
+        if (header) {
+          section = header[1];
+          const table = /^(?:(?:target\..+)\.)?(?:dependencies|dev-dependencies|build-dependencies)\.([A-Za-z0-9_-]+)$/.exec(section);
+          if (table) add('cargo', table[1]);
+          continue;
+        }
+        if (!/^(?:(?:target\..+)\.)?(?:dependencies|dev-dependencies|build-dependencies)$|^workspace\.dependencies$/.test(section)) continue;
         const entry = /^([A-Za-z0-9_-]+)\s*=\s*(["'].*["']|\{.*\})\s*(?:#.*)?$/.exec(line);
         if (!entry) continue;
         const alias = /\bpackage\s*=\s*["']([^"']+)["']/.exec(entry[2]);

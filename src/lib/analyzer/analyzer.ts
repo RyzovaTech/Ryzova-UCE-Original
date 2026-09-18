@@ -6,6 +6,7 @@ import { detectStack, buildSummary } from './detectors';
 import { detectLanguageProfile } from './language-profile';
 import { detectTechnologyProfiles } from './technology-profiles';
 import { detectRegisteredTechnologies, TECHNOLOGY_REGISTRY_VERSION } from './technology-registry';
+import { buildTechnologyGraph } from './technology-graph';
 import { detectTechnologyIntelligence } from './intelligence';
 import { detectCodeIntelligence } from './code-intelligence';
 import { detectSecurityIntelligence } from './security-intelligence';
@@ -59,6 +60,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const stack = enrichLanguageStack(baseStack, detectedLanguages); const registryDetections = detectRegisteredTechnologies(input.files); const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack, registryDetections);
   stack.frameworks = technologyProfiles.frameworks; stack.runtimes = technologyProfiles.runtimes;
   stack.technologyDetections = registryDetections; stack.knowledgeVersion = TECHNOLOGY_REGISTRY_VERSION;
+  const technologyGraph = buildTechnologyGraph(registryDetections); stack.capabilities = technologyGraph.capabilities; stack.technologyRelationships = technologyGraph.relationships;
   const intelligence = detectTechnologyIntelligence(input.files, detectedFiles, stack);
   stack.technologyEvidence = intelligence.evidence; stack.dependencyIntelligence = intelligence.dependencies; stack.architecture = intelligence.architecture;
   stack.codeIntelligence = detectCodeIntelligence(input.files); stack.securityIntelligence = detectSecurityIntelligence(input.files);

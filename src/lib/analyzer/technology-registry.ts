@@ -1,6 +1,7 @@
 import type { ProjectFile, TechnologyDetection, TechnologyKind } from './types';
 import { TECHNOLOGY_KNOWLEDGE } from './technology-knowledge';
 import { ECOSYSTEM_KNOWLEDGE } from './ecosystem-knowledge';
+import { PLATFORM_KNOWLEDGE } from './platform-knowledge';
 import { collectEcosystemDependencies, type Ecosystem } from './ecosystem-dependencies';
 import { classifyProjectFileScope, isProjectEvidenceFile, normalizeProjectPath } from './project-scope';
 
@@ -20,10 +21,11 @@ const framework = (id: string, name: string, definition: Omit<TechnologyDefiniti
 const runtime = (id: string, name: string, definition: Omit<TechnologyDefinition, 'id' | 'name' | 'kind'>): TechnologyDefinition => ({ id, name, kind: 'runtime', ...definition });
 
 /** Versioned knowledge registry. Adding a technology must not require detector changes. */
-export const TECHNOLOGY_REGISTRY_VERSION = '2.1.0';
+export const TECHNOLOGY_REGISTRY_VERSION = '2.2.0';
 export const TECHNOLOGY_REGISTRY: readonly TechnologyDefinition[] = [
   ...TECHNOLOGY_KNOWLEDGE,
   ...ECOSYSTEM_KNOWLEDGE,
+  ...PLATFORM_KNOWLEDGE,
   framework('nextjs', 'Next.js', { dependencies: ['next'], filePrefixes: ['next.config.'] }),
   framework('nuxt', 'Nuxt', { dependencies: ['nuxt'], filePrefixes: ['nuxt.config.'] }),
   framework('astro', 'Astro', { dependencies: ['astro'], filePrefixes: ['astro.config.'] }),
