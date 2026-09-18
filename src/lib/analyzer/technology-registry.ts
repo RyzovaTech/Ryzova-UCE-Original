@@ -1,5 +1,7 @@
 import type { ProjectFile, TechnologyDetection, TechnologyKind } from './types';
 import { TECHNOLOGY_KNOWLEDGE } from './technology-knowledge';
+import { ECOSYSTEM_KNOWLEDGE } from './ecosystem-knowledge';
+import { collectEcosystemDependencies, type Ecosystem } from './ecosystem-dependencies';
 import { classifyProjectFileScope, isProjectEvidenceFile, normalizeProjectPath } from './project-scope';
 
 export interface TechnologyDefinition {
@@ -7,6 +9,7 @@ export interface TechnologyDefinition {
   name: string;
   kind: TechnologyKind;
   dependencies?: string[];
+  ecosystemDependencies?: Array<{ ecosystem: Ecosystem; name: string }>;
   files?: string[];
   filePrefixes?: string[];
   pathPatterns?: RegExp[];
@@ -17,9 +20,10 @@ const framework = (id: string, name: string, definition: Omit<TechnologyDefiniti
 const runtime = (id: string, name: string, definition: Omit<TechnologyDefinition, 'id' | 'name' | 'kind'>): TechnologyDefinition => ({ id, name, kind: 'runtime', ...definition });
 
 /** Versioned knowledge registry. Adding a technology must not require detector changes. */
-export const TECHNOLOGY_REGISTRY_VERSION = '2.0.0';
+export const TECHNOLOGY_REGISTRY_VERSION = '2.1.0';
 export const TECHNOLOGY_REGISTRY: readonly TechnologyDefinition[] = [
   ...TECHNOLOGY_KNOWLEDGE,
+  ...ECOSYSTEM_KNOWLEDGE,
   framework('nextjs', 'Next.js', { dependencies: ['next'], filePrefixes: ['next.config.'] }),
   framework('nuxt', 'Nuxt', { dependencies: ['nuxt'], filePrefixes: ['nuxt.config.'] }),
   framework('astro', 'Astro', { dependencies: ['astro'], filePrefixes: ['astro.config.'] }),
@@ -96,6 +100,7 @@ export function validateTechnologyRegistry(registry: readonly TechnologyDefiniti
     ids.add(definition.id);
     if (!/^[a-z0-9][a-z0-9-]*$/.test(definition.id)) errors.push(`Invalid technology id: ${definition.id}`);
     if (!definition.name.trim()) errors.push(`Technology ${definition.id} has no display name`);
+    if (definition.ecosystemDependencies?.length) continue;
     if (!definition.dependencies?.length && !definition.files?.length && !definition.filePrefixes?.length && !definition.pathPatterns?.length && !definition.manifestPatterns?.length) errors.push(`Technology ${definition.id} has no detection signals`);
   }
   return errors;
@@ -133,10 +138,15 @@ function confidenceFrom(weights: number[]): number {
 export function detectRegisteredTechnologies(files: ProjectFile[]): TechnologyDetection[] {
   const evidenceFiles = files.filter(isProjectEvidenceFile);
   const dependencies = collectDependencies(evidenceFiles);
+  const ecosystemDependencies = collectEcosystemDependencies(evidenceFiles);
   const results: TechnologyDetection[] = [];
 
   for (const definition of TECHNOLOGY_REGISTRY) {
     const evidence: TechnologyDetection['evidence'] = [];
+    for (const dependency of ecosystemDependencies) {
+      if (!definition.ecosystemDependencies?.some(signal => signal.ecosystem === dependency.ecosystem && signal.name === dependency.name)) continue;
+      evidence.push({ kind: 'dependency', source: dependency.file, description: `${dependency.ecosystem} dependency ${dependency.name} declared`, weight: 55 });
+    }
     for (const dependency of dependencies) {
       if (!definition.dependencies?.includes(dependency.name)) continue;
       evidence.push({ kind: 'dependency', source: dependency.file, description: `Dependency ${dependency.name} declared`, weight: 55 });

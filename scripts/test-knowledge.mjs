@@ -27,6 +27,8 @@ function load(file) {
 }
 const { detectRegisteredTechnologies, validateTechnologyRegistry, TECHNOLOGY_REGISTRY } = load('src/lib/analyzer/technology-registry.ts');
 const { TECHNOLOGY_KNOWLEDGE } = load('src/lib/analyzer/technology-knowledge.ts');
+const { ECOSYSTEM_KNOWLEDGE } = load('src/lib/analyzer/ecosystem-knowledge.ts');
+const { collectEcosystemDependencies } = load('src/lib/analyzer/ecosystem-dependencies.ts');
 const { ADDITIONAL_LANGUAGE_EXTENSIONS } = load('src/lib/analyzer/language-knowledge.ts');
 const { detectLanguageProfile } = load('src/lib/analyzer/language-profile.ts');
 const { classifyProjectFileScope } = load('src/lib/analyzer/project-scope.ts');
@@ -83,4 +85,37 @@ test('large JSON payload does not change Node runtime', () => {
   assert.equal(stack.language, 'JavaScript');
   assert.equal(stack.runtime, 'Node.js');
 });
+function manifest(ecosystem, name) {
+  if (ecosystem === 'python') return file('requirements.txt', name + '>=1.0');
+  if (ecosystem === 'cargo') return file('Cargo.toml', '[dependencies]\n' + name + ' = "1.0"');
+  if (ecosystem === 'go') return file('go.mod', 'require ' + name + ' v1.0.0');
+  return file('composer.json', JSON.stringify({ require: { [name]: '^1.0' } }));
+}
+for (const definition of ECOSYSTEM_KNOWLEDGE) {
+  const signal = definition.ecosystemDependencies[0];
+  test('ecosystem fixture: ' + definition.id, () => {
+    const fixture = manifest(signal.ecosystem, signal.name);
+    assert.ok(detectRegisteredTechnologies([fixture]).some(x => x.id === definition.id));
+    assert.ok(!detectRegisteredTechnologies([pkg('package.json', { [signal.name]: '1' })]).some(x => x.id === definition.id));
+    assert.ok(!detectRegisteredTechnologies([{ ...fixture, path: 'fixtures/' + fixture.path }]).some(x => x.id === definition.id));
+    assert.ok(!detectRegisteredTechnologies([manifest(signal.ecosystem, 'not-' + signal.name)]).some(x => x.id === definition.id));
+  });
+}
+test('requirements ignores comments, includes and URLs', () => {
+  const result = collectEcosystemDependencies([file('requirements-dev.txt', '# torch\n-r torch\nhttps://example.com/torch\nSCIKIT_LEARN[extra]>=1 # comment\n')]);
+  assert.deepEqual(result.map(x => x.name), ['scikit-learn']);
+});
+test('Cargo handles aliases and ignores package metadata', () => {
+  const result = collectEcosystemDependencies([file('Cargo.toml', '[package]\nname = "tokio"\n[dependencies]\nasync_rt = { package = "tokio", version = "1" }\n# serde = "1"')]);
+  assert.deepEqual(result.map(x => x.name), ['tokio']);
+});
+test('Go require blocks exclude replace directives', () => {
+  const result = collectEcosystemDependencies([file('go.mod', 'require (\n go.uber.org/zap v1.0.0 // indirect\n)\nreplace github.com/spf13/cobra => ./local')]);
+  assert.deepEqual(result.map(x => x.name), ['go.uber.org/zap']);
+});
+test('Composer metadata is not dependency evidence', () => {
+  const result = collectEcosystemDependencies([file('composer.json', '{"description":"phpunit/phpunit","require-dev":{"pestphp/pest":"^1"}}')]);
+  assert.deepEqual(result.map(x => x.name), ['pestphp/pest']);
+});
+test('malformed Composer input is safe', () => assert.deepEqual(collectEcosystemDependencies([file('composer.json', 'null'), file('apps/api/composer.json', '{')]), []));
 console.log(JSON.stringify({ checks, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));
