@@ -1,8 +1,35 @@
 import type { AnalysisResult } from '../analyzer/types';
 import { formatFileSize } from '@/lib/utils';
+import { collectWorkspaceFindings } from './workspace';
 
 export function exportJson(result: AnalysisResult): string {
   return JSON.stringify(result, null, 2);
+}
+
+export function exportSarif(result: AnalysisResult): string {
+  const findings = collectWorkspaceFindings(result);
+  const rules = new Map<string, { id: string; name: string; shortDescription: { text: string }; help: { text: string } }>();
+  for (const finding of findings) {
+    const id = finding.ruleId ?? `${finding.module}.${slug(finding.title)}`;
+    if (!rules.has(id)) rules.set(id, { id, name: finding.title, shortDescription: { text: finding.description }, help: { text: finding.recommendation } });
+  }
+  const sarif = {
+    $schema: 'https://json.schemastore.org/sarif-2.1.0.json',
+    version: '2.1.0',
+    runs: [{
+      tool: { driver: { name: 'Ryzova UCE', informationUri: 'https://uce.ryzova.com/', version: result.analysisVersion, rules: [...rules.values()] } },
+      automationDetails: { id: result.id },
+      properties: { project: result.summary.name, localOnly: result.trust?.localOnly ?? true, knowledgePacks: result.trust?.knowledgePacks ?? [] },
+      results: findings.map((finding) => ({
+        ruleId: finding.ruleId ?? `${finding.module}.${slug(finding.title)}`,
+        level: finding.severity === 'critical' ? 'error' : finding.severity === 'warning' ? 'warning' : 'note',
+        message: { text: `${finding.description} Recommendation: ${finding.recommendation}` },
+        locations: finding.file === 'Project-wide' ? [] : [{ physicalLocation: { artifactLocation: { uri: finding.file.replace(/\\/g, '/') }, region: finding.line ? { startLine: finding.line } : undefined } }],
+        properties: { module: finding.module, confidence: finding.confidence, evidence: finding.evidence },
+      })),
+    }],
+  };
+  return JSON.stringify(sarif, null, 2);
 }
 
 export function exportMarkdown(result: AnalysisResult): string {
@@ -131,3 +158,5 @@ export function downloadFile(name: string, content: string, mime: string): void 
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+function slug(value: string): string { return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }

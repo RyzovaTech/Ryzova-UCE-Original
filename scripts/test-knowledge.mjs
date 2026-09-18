@@ -42,6 +42,9 @@ const { detectCodeIntelligence } = load('src/lib/analyzer/code-intelligence.ts')
 const { detectDependencyIntelligence } = load('src/lib/analyzer/intelligence.ts');
 const { buildCorrelatedInsights } = load('src/lib/analyzer/correlated-intelligence.ts');
 const { detectExtendedIntelligence } = load('src/lib/analyzer/extended-intelligence.ts');
+const { CORE_KNOWLEDGE_PACK } = load('src/lib/knowledge/core-pack.ts');
+const { validateKnowledgePack, exportKnowledgePack, importKnowledgePack } = load('src/lib/knowledge/validator.ts');
+const { buildTrustMetadata } = load('src/lib/analyzer/trust.ts');
 const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
@@ -288,6 +291,32 @@ test('Phase 4 comparison only offers matching project identities', () => {
   const older = workspaceReport('older', [], 70, '2026-01-01T00:00:00.000Z');
   const other = workspaceReport('other', [], 90); other.summary.name = 'different-app';
   assert.deepEqual(compatibleProjectReports(current, [current, other, older]).map(item => item.id), ['older']);
+});
+test('Phase 5 core knowledge pack validates against schema v1', () => {
+  const validation = validateKnowledgePack(CORE_KNOWLEDGE_PACK);
+  assert.equal(validation.valid, true); assert.equal(validation.signed, false);
+  assert.ok(validation.warnings.some(item => item.includes('unsigned')));
+  assert.equal(new Set(CORE_KNOWLEDGE_PACK.rules.map(item => item.id)).size, CORE_KNOWLEDGE_PACK.rules.length);
+});
+test('Phase 5 knowledge pack rejects duplicate rules and unknown permissions', () => {
+  const pack = JSON.parse(exportKnowledgePack(CORE_KNOWLEDGE_PACK));
+  pack.permissions.push('network-access'); pack.rules.push({ ...pack.rules[0] });
+  const validation = validateKnowledgePack(pack);
+  assert.equal(validation.valid, false);
+  assert.ok(validation.errors.some(item => item.includes('Unsupported permission')));
+  assert.ok(validation.errors.some(item => item.includes('Duplicate rule id')));
+});
+test('Phase 5 knowledge pack import is deterministic and signature-aware', () => {
+  const imported = importKnowledgePack(exportKnowledgePack(CORE_KNOWLEDGE_PACK));
+  assert.equal(imported.validation.valid, true); assert.equal(imported.pack.id, CORE_KNOWLEDGE_PACK.id);
+  assert.equal(importKnowledgePack('{broken').validation.valid, false);
+  assert.equal(importKnowledgePack(exportKnowledgePack(CORE_KNOWLEDGE_PACK), true).validation.valid, false);
+});
+test('Phase 5 trust metadata is local-only and scoring weights are transparent', () => {
+  const trust = buildTrustMetadata();
+  assert.equal(trust.localOnly, true); assert.equal(trust.networkAccessUsed, false); assert.equal(trust.sourceUploaded, false);
+  assert.equal(Math.round(Object.values(trust.scoreWeights).reduce((sum, value) => sum + value, 0) * 100), 100);
+  assert.equal(trust.knowledgePacks[0].id, CORE_KNOWLEDGE_PACK.id);
 });
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {

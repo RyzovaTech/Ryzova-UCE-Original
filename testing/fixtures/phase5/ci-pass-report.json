@@ -1,0 +1,11 @@
+{
+  "id": "fixture_phase5_ci_pass",
+  "createdAt": "2026-09-18T00:00:00.000Z",
+  "analysisVersion": "uce-2.0.0",
+  "summary": { "name": "phase5-fixture" },
+  "score": { "overall": 92 },
+  "categories": [],
+  "issues": [],
+  "stack": {},
+  "source": "upload"
+}

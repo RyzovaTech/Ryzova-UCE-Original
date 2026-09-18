@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   validate:
@@ -32,3 +33,12 @@ jobs:
 
       - name: Knowledge regression tests
         run: npm test
+
+      - name: UCE CI report gate
+        run: npm run uce:ci -- testing/fixtures/phase5/ci-pass-report.json --min-score=80 --max-critical=0 --sarif=uce-ci-results.sarif
+
+      - name: Upload UCE SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: uce-ci-results.sarif

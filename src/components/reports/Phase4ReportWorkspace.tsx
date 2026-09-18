@@ -17,6 +17,7 @@ import {
   LockKeyhole,
   Network,
   Search,
+  ShieldCheck,
   Sparkles,
   Wrench,
 } from 'lucide-react';
@@ -29,7 +30,7 @@ import { BrowserCompatibilityPanel } from '@/components/reports/BrowserCompatibi
 import { CodeIntelligencePanel } from '@/components/reports/CodeIntelligence';
 import { ExtendedIntelligencePanel } from '@/components/reports/ExtendedIntelligencePanel';
 import { IntelligenceInsightsPanel } from '@/components/reports/IntelligenceInsightsPanel';
-import { exportJson, downloadFile } from '@/lib/report/export';
+import { exportJson, exportSarif, downloadFile } from '@/lib/report/export';
 import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveReportReviewState } from '@/lib/storage';
 import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
 import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
@@ -100,6 +101,7 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
 
 function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; mode: UserMode; onModeChange: (mode: UserMode) => void }) {
   const exportReport = () => downloadFile(`${report.summary.name}-uce-report.json`, exportJson(report), 'application/json');
+  const exportSecurityReport = () => downloadFile(`${report.summary.name}-uce-results.sarif`, exportSarif(report), 'application/sarif+json');
   return (
     <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <div className="min-w-0">
@@ -116,7 +118,7 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
             <button key={item} type="button" onClick={() => onModeChange(item)} aria-pressed={mode === item} className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === item ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{item}</button>
           ))}
         </div>
-        {mode === 'expert' && <Button variant="outline" size="sm" className="gap-2" onClick={exportReport}><FileJson className="h-4 w-4" />JSON</Button>}
+        {mode === 'expert' && <><Button variant="outline" size="sm" className="gap-2" onClick={exportSecurityReport}><ShieldCheck className="h-4 w-4" />SARIF</Button><Button variant="outline" size="sm" className="gap-2" onClick={exportReport}><FileJson className="h-4 w-4" />JSON</Button></>}
         <Button variant="outline" size="sm" className="gap-2" onClick={() => window.print()}><Download className="h-4 w-4" />PDF</Button>
       </div>
     </header>

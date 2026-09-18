@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uce.ryzova.com/schemas/knowledge-pack-v1.json",
+  "title": "UCE Knowledge Pack Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "version", "publisher", "description", "uceCompatibility", "permissions", "rules"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$" },
+    "publisher": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "uceCompatibility": { "type": "string", "minLength": 1 },
+    "permissions": { "type": "array", "uniqueItems": true, "items": { "enum": ["read-project-files", "emit-findings", "declare-technology", "declare-compatibility"] } },
+    "rules": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rule" } },
+    "signature": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "title", "documentation", "version"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$" },
+        "kind": { "enum": ["technology", "security", "browser", "compatibility", "intelligence"] },
+        "title": { "type": "string", "minLength": 1 },
+        "documentation": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$" }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "keyId", "digest", "signature"],
+      "properties": {
+        "algorithm": { "const": "ed25519" },
+        "keyId": { "type": "string", "minLength": 1 },
+        "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" },
+        "signature": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
