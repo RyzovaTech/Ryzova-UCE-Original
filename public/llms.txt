@@ -18,6 +18,7 @@ UCE analyzes project structure, runtimes, dependencies, configuration, and compa
 ## Public Pages
 - https://uce.ryzova.com/
 - https://uce.ryzova.com/analyze
+- https://uce.ryzova.com/catalog — searchable UCE detection and intelligence catalog
 
 ## Source
 - Official repository: https://github.com/RyzovaTech/Ryzova-UCE-Original

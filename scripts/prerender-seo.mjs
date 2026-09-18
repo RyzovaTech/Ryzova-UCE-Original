@@ -3,6 +3,7 @@ import { dirname, resolve } from "node:path";
 
 const distIndex = resolve("dist/index.html");
 const analyzeIndex = resolve("dist/analyze/index.html");
+const catalogIndex = resolve("dist/catalog/index.html");
 
 const html = await readFile(distIndex, "utf8");
 
@@ -131,4 +132,49 @@ analyzeHtml = analyzeHtml.replace(/\s*<noscript>[\s\S]*?<\/noscript>/i, fallback
 
 await mkdir(dirname(analyzeIndex), { recursive: true });
 await writeFile(analyzeIndex, analyzeHtml, "utf8");
-console.log("Generated route-specific SEO HTML: dist/analyze/index.html");
+
+let catalogHtml = html;
+const catalogMeta = [
+  [/<title>[^<]*<\/title>/i, "<title>UCE Detection Catalog — Languages, Technologies and Rules</title>"],
+  [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="description" content="Explore the languages, frameworks, runtimes, databases, browser compatibility rules, security checks, and intelligence modules understood by Ryzova UCE." />'],
+  [/<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />'],
+  [/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/catalog" />'],
+  [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="UCE Detection Catalog — Ryzova UCE" />'],
+  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:description" content="Browse the transparent detection knowledge behind Ryzova UCE, including languages, technologies, browser features, security rules, and intelligence modules." />'],
+  [/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/catalog" />'],
+  [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="UCE Detection Catalog — Ryzova UCE" />'],
+  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:description" content="Explore UCE language, technology, architecture, browser, security, and intelligence knowledge." />'],
+];
+for (const [pattern, replacement] of catalogMeta) catalogHtml = replaceMeta(catalogHtml, pattern, replacement);
+
+const catalogJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  name: "UCE Detection Catalog",
+  description: "A searchable catalog of languages, technologies, compatibility rules, and intelligence capabilities understood by Ryzova UCE.",
+  url: "https://uce.ryzova.com/catalog",
+  isPartOf: { "@type": "WebSite", "@id": "https://uce.ryzova.com/#website", name: "Ryzova UCE — Universal Compatibility Engine", url: "https://uce.ryzova.com/" },
+  about: { "@id": "https://uce.ryzova.com/#software" },
+  mainEntity: { "@type": "DefinedTermSet", name: "Ryzova UCE detection knowledge", description: "Programming languages, software technologies, architecture patterns, browser compatibility features, security checks, and intelligence modules." },
+};
+catalogHtml = catalogHtml.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/i, `<script type="application/ld+json">${JSON.stringify(catalogJsonLd)}</script>`);
+const catalogFallback = `
+    <noscript>
+      <main>
+        <h1>Ryzova UCE Detection Catalog</h1>
+        <p>Explore the languages, frameworks, libraries, runtimes, databases, tools, browser features, security checks, architecture patterns, and intelligence modules understood by Ryzova UCE.</p>
+        <h2>Language and technology detection</h2>
+        <p>UCE uses manifests, dependencies, imports, configuration files, source extensions, content signatures, and repository structure to identify project technologies.</p>
+        <h2>Compatibility intelligence</h2>
+        <p>The catalog documents code, architecture, dependency, runtime, platform, build, testing, performance, accessibility, API, database, environment, deployment, license, documentation, maintainability, and repository analysis.</p>
+        <h2>Browser and security knowledge</h2>
+        <p>Browser entries explain target-version compatibility and fallbacks. Security entries explain static review signals, confidence, recommendations, and false-positive limitations. These checks are not proof of runtime behavior or an exploitable vulnerability.</p>
+        <p><a href="/analyze">Analyze a project with UCE</a></p>
+        <p><a href="/">Return to Ryzova UCE</a></p>
+        <p><a href="https://github.com/RyzovaTech/Ryzova-UCE-Original">View the official Ryzova UCE repository</a></p>
+      </main>
+    </noscript>`;
+catalogHtml = catalogHtml.replace(/\s*<noscript>[\s\S]*?<\/noscript>/i, catalogFallback);
+await mkdir(dirname(catalogIndex), { recursive: true });
+await writeFile(catalogIndex, catalogHtml, "utf8");
+console.log("Generated route-specific SEO HTML: dist/analyze/index.html, dist/catalog/index.html");
