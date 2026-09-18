@@ -18,6 +18,8 @@ tested, or deployed reliably. Its deterministic analysis covers:
 - Package managers, dependencies, and lockfiles
 - Runtime, dependency, configuration, and structure compatibility risks
 - Findings organized by severity, impact, and recommended next steps
+- Browser, security, architecture, API, database, testing, accessibility, performance, license,
+  documentation, repository, deployment, and platform intelligence
 
 ## How it works
 
@@ -25,6 +27,31 @@ Use the browser-based analyzer with either a ZIP project archive or a public Git
 ZIP archives are analyzed locally in the browser. A public repository is downloaded only when its
 URL is explicitly provided, and its project files are then analyzed in-browser. UCE does not use
 AI-generated guesses for compatibility findings.
+
+Large projects are analyzed with explicit file and memory budgets. If source is sampled or content
+is truncated, the report records the exact limitation instead of presenting partial coverage as a
+complete scan.
+
+## Browser, CLI, and CI usage
+
+The web application runs analysis in a Web Worker and supports cancellation, resume, progressive
+identity results, and a bounded local cache.
+
+```bash
+npm install
+npm run uce:scan -- /path/to/project --output=uce-report.json
+npm run uce:ci -- uce-report.json --min-score=80 --max-critical=0 --sarif=uce-results.sarif
+```
+
+The CLI reads project files but never executes project code. GitHub Actions can upload the SARIF
+output to code scanning for pull-request annotations.
+
+## Knowledge packs
+
+UCE knowledge packs use a versioned JSON schema, documented permissions, optional Ed25519
+publisher signatures, and declarative detector rules. Organization packs require explicit approval;
+pack rules are data and are not executed as arbitrary JavaScript. See
+[Knowledge packs](docs/KNOWLEDGE_PACKS.md) and [Phase 5 completion](docs/PHASE_5_COMPLETE.md).
 
 ## Who it is for
 

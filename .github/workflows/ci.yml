@@ -34,6 +34,18 @@ jobs:
       - name: Knowledge regression tests
         run: npm test
 
+      - name: JSON schema, accessibility, and trust gates
+        run: npm run validate:schema
+
+      - name: Performance benchmark
+        run: npm run benchmark
+
+      - name: Dependency security audit
+        run: npm audit --omit=dev
+
+      - name: UCE repository self-scan
+        run: npm run security:self-scan
+
       - name: UCE CI report gate
         run: npm run uce:ci -- testing/fixtures/phase5/ci-pass-report.json --min-score=80 --max-critical=0 --sarif=uce-ci-results.sarif
 
@@ -41,4 +53,14 @@ jobs:
         if: always()
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: uce-ci-results.sarif
+          sarif_file: uce-self-scan.sarif
+
+      - name: Upload UCE reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uce-analysis-reports
+          path: |
+            uce-self-scan.json
+            uce-self-scan.sarif
+            uce-ci-results.sarif

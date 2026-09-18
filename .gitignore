@@ -27,6 +27,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+uce-self-scan.json
+uce-self-scan.sarif
+uce-ci-results.sarif
 
 # Coverage
 coverage/

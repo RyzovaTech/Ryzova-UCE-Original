@@ -1,16 +1,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readZip } from '@/lib/analyzer/zip';
-import { analyzeProject } from '@/lib/analyzer/analyzer';
+import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
+import { markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
 import { getGitHubArchiveUrl, parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
 import { saveReportToHistory } from '@/lib/storage';
-import type { AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
+import type { AnalysisInput, AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
 
 export interface AnalyzerState {
   stage: AnalysisStage;
   progress: number;
   result: AnalysisResult | null;
   error: string | null;
+  message: string | null;
+  cacheHit: boolean;
+  canResume: boolean;
+  preview: { projectType: string; language: string; framework: string; runtime: string } | null;
 }
 
 const INITIAL_STATE: AnalyzerState = {
@@ -18,6 +23,10 @@ const INITIAL_STATE: AnalyzerState = {
   progress: 0,
   result: null,
   error: null,
+  message: null,
+  cacheHit: false,
+  canResume: false,
+  preview: null,
 };
 
 const STAGE_PROGRESS: Record<AnalysisStage, number> = {
@@ -60,6 +69,9 @@ export function useAnalyzer() {
   const runningRef = useRef(false);
   const requestIdRef = useRef(0);
   const remoteAbortRef = useRef<AbortController | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const workerRejectRef = useRef<((error: Error) => void) | null>(null);
+  const resumableRef = useRef<AnalysisInput | null>(null);
 
   const safeSetState = useCallback((update: Partial<AnalyzerState> | ((prev: AnalyzerState) => AnalyzerState)) => {
     if (mountedRef.current) {
@@ -77,6 +89,9 @@ export function useAnalyzer() {
   useEffect(() => () => {
     mountedRef.current = false;
     remoteAbortRef.current?.abort();
+    workerRef.current?.terminate();
+    workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
+    workerRejectRef.current = null;
     clearAnalysisTimeout();
   }, [clearAnalysisTimeout]);
 
@@ -95,47 +110,44 @@ export function useAnalyzer() {
     requestIdRef.current += 1;
     remoteAbortRef.current?.abort();
     remoteAbortRef.current = null;
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
+    workerRejectRef.current = null;
     clearAnalysisTimeout();
     runningRef.current = false;
-    safeSetState({ ...INITIAL_STATE, stage: 'idle' });
+    safeSetState({ ...INITIAL_STATE, stage: 'idle', canResume: Boolean(resumableRef.current), message: resumableRef.current ? 'Cancelled safely. Resume restarts the prepared local scan.' : null });
   }, [safeSetState, clearAnalysisTimeout]);
 
   const runAnalysis = useCallback(
     async (files: import('@/lib/analyzer/types').ProjectFile[], name: string, source: 'upload' | 'demo' | 'github', scanStats: import('@/lib/analyzer/types').ScanStats, requestId: number): Promise<AnalysisResult> => {
       ensureCurrentRequest(requestId);
-      safeSetState((s) => ({ ...s, stage: 'reading', progress: STAGE_PROGRESS.reading, error: null }));
-      await delay(300);
-      ensureCurrentRequest(requestId);
-
-      safeSetState((s) => ({ ...s, stage: 'detecting', progress: STAGE_PROGRESS.detecting }));
-      await delay(300);
-      ensureCurrentRequest(requestId);
-
-      safeSetState((s) => ({ ...s, stage: 'analyzing', progress: STAGE_PROGRESS.analyzing }));
-      await delay(400);
-      ensureCurrentRequest(requestId);
-
-      safeSetState((s) => ({ ...s, stage: 'scoring', progress: STAGE_PROGRESS.scoring }));
-      await delay(200);
-      ensureCurrentRequest(requestId);
-
-      safeSetState((s) => ({ ...s, stage: 'reporting', progress: STAGE_PROGRESS.reporting }));
-      await delay(150);
-      ensureCurrentRequest(requestId);
-
       try {
-        const result = analyzeProject({ files, fileName: name, source, scanStats });
+        safeSetState((s) => ({ ...s, stage: 'reading', progress: STAGE_PROGRESS.reading, error: null, cacheHit: false, canResume: false, message: 'Preparing a bounded, deterministic analysis input.' }));
+        await delay(0);
+        const prepared = prepareAnalysisInput({ files, fileName: name, source, scanStats });
+        resumableRef.current = prepared.input;
+        const cached = loadCachedAnalysis(prepared.cacheKey);
+        let result: AnalysisResult;
+        if (cached) {
+          result = markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, createdAt: new Date().toISOString(), source }, true);
+          safeSetState((s) => ({ ...s, stage: 'reporting', progress: 95, cacheHit: true, message: 'Reused a matching local analysis cache entry.' }));
+        } else {
+          result = await executeInWorker(prepared.input, requestId, workerRef, workerRejectRef, (stage, progress, message) => safeSetState((s) => ({ ...s, stage, progress, message })), (preview) => safeSetState((s) => ({ ...s, preview })));
+          saveCachedAnalysis(prepared.cacheKey, result);
+        }
         ensureCurrentRequest(requestId);
         saveReportToHistory(result);
+        resumableRef.current = null;
         clearAnalysisTimeout();
-        safeSetState({ stage: 'completed', result, error: null, progress: 100 });
+        safeSetState({ stage: 'completed', result, error: null, progress: 100, message: cached ? 'Analysis complete from local cache.' : 'Analysis complete in a background worker.', cacheHit: Boolean(cached), canResume: false });
         if (requestId === requestIdRef.current) runningRef.current = false;
         return result;
       } catch (e) {
         if (requestId === requestIdRef.current) runningRef.current = false;
         clearAnalysisTimeout();
         const message = e instanceof Error ? e.message : 'Analysis failed unexpectedly.';
-        if (requestId === requestIdRef.current) safeSetState({ stage: 'error', result: null, error: message, progress: 0 });
+        if (requestId === requestIdRef.current) safeSetState({ ...INITIAL_STATE, stage: 'error', error: message, canResume: Boolean(resumableRef.current) });
         throw e;
       }
     },
@@ -148,7 +160,7 @@ export function useAnalyzer() {
       if (file.size > MAX_ARCHIVE_SIZE) {
         const mb = (file.size / (1024 * 1024)).toFixed(1);
         const msg = `The uploaded file is ${mb}MB. The maximum supported size is 50MB.`;
-        safeSetState({ stage: 'error', error: msg, progress: 0 });
+        safeSetState({ ...INITIAL_STATE, stage: 'error', error: msg });
         runningRef.current = false;
         return Promise.reject(new Error(msg));
       }
@@ -164,7 +176,7 @@ export function useAnalyzer() {
           runningRef.current = false;
           clearAnalysisTimeout();
           const msg = 'The archive contains no files. Check the ZIP contents and try again.';
-          safeSetState({ stage: 'error', error: msg, progress: 0 });
+          safeSetState({ ...INITIAL_STATE, stage: 'error', error: msg });
           return Promise.reject(new Error(msg));
         }
         ensureCurrentRequest(requestId);
@@ -176,7 +188,7 @@ export function useAnalyzer() {
         const message = /zip|corrupt|invalid|crc|bad archive/i.test(raw)
           ? 'The archive could not be read. It may be corrupted or in an unsupported format.'
           : raw;
-        if (requestId === requestIdRef.current) safeSetState({ stage: 'error', error: message, progress: 0 });
+        if (requestId === requestIdRef.current) safeSetState({ ...INITIAL_STATE, stage: 'error', error: message, canResume: Boolean(resumableRef.current) });
         throw e;
       }
     },
@@ -247,7 +259,7 @@ export function useAnalyzer() {
           : e instanceof TypeError && /failed to fetch/i.test(e.message)
             ? 'Could not connect to GitHub. Your browser, network, or content-security policy may be blocking GitHub downloads.'
             : e instanceof Error ? e.message : 'Failed to fetch GitHub repository.';
-        if (requestId === requestIdRef.current) safeSetState({ stage: 'error', error: message, progress: 0 });
+        if (requestId === requestIdRef.current) safeSetState({ ...INITIAL_STATE, stage: 'error', error: message, canResume: Boolean(resumableRef.current) });
         throw e;
       }
     },
@@ -257,10 +269,50 @@ export function useAnalyzer() {
   const reset = useCallback(() => {
     requestIdRef.current += 1;
     remoteAbortRef.current?.abort();
+    workerRef.current?.terminate();
+    workerRef.current = null;
+    workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
+    workerRejectRef.current = null;
+    resumableRef.current = null;
     clearAnalysisTimeout();
     runningRef.current = false;
     safeSetState(INITIAL_STATE);
   }, [safeSetState, clearAnalysisTimeout]);
 
-  return { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, isRunning: runningRef.current };
+  const resume = useCallback(async (): Promise<AnalysisResult> => {
+    if (!resumableRef.current) throw new Error('No cancelled analysis is available to resume.');
+    const requestId = startRequest();
+    const input = resumableRef.current;
+    return runAnalysis(input.files, input.fileName, input.source, input.scanStats, requestId);
+  }, [runAnalysis, startRequest]);
+
+  return { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, resume, isRunning: runningRef.current };
+}
+
+async function executeInWorker(
+  input: AnalysisInput,
+  requestId: number,
+  workerRef: React.MutableRefObject<Worker | null>,
+  workerRejectRef: React.MutableRefObject<((error: Error) => void) | null>,
+  onProgress: (stage: AnalysisStage, progress: number, message: string) => void,
+  onPreview: (preview: AnalyzerState['preview']) => void,
+): Promise<AnalysisResult> {
+  if (typeof Worker === 'undefined') {
+    const { analyzeProject } = await import('@/lib/analyzer/analyzer');
+    return markExecution(analyzeProject(input), false);
+  }
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../lib/analyzer/analysis.worker.ts', import.meta.url), { type: 'module' });
+    workerRef.current = worker;
+    workerRejectRef.current = reject;
+    worker.onmessage = (event: MessageEvent<{ type: string; requestId: number; stage?: AnalysisStage; progress?: number; message?: string; result?: AnalysisResult; preview?: NonNullable<AnalyzerState['preview']> }>) => {
+      if (event.data.requestId !== requestId) return;
+      if (event.data.type === 'progress' && event.data.stage && typeof event.data.progress === 'number') onProgress(event.data.stage, event.data.progress, event.data.message ?? 'Analysis in progress.');
+      if (event.data.type === 'preview' && event.data.preview) onPreview(event.data.preview);
+      if (event.data.type === 'complete' && event.data.result) { worker.terminate(); workerRef.current = null; workerRejectRef.current = null; resolve(event.data.result); }
+      if (event.data.type === 'error') { worker.terminate(); workerRef.current = null; workerRejectRef.current = null; reject(new Error(event.data.message ?? 'Worker analysis failed.')); }
+    };
+    worker.onerror = (event) => { worker.terminate(); workerRef.current = null; workerRejectRef.current = null; reject(new Error(event.message || 'Worker analysis failed.')); };
+    worker.postMessage({ type: 'analyze', requestId, input });
+  });
 }

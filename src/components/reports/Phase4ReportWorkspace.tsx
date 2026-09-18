@@ -17,6 +17,7 @@ import {
   LockKeyhole,
   Network,
   Search,
+  Share2,
   ShieldCheck,
   Sparkles,
   Wrench,
@@ -33,6 +34,7 @@ import { IntelligenceInsightsPanel } from '@/components/reports/IntelligenceInsi
 import { exportJson, exportSarif, downloadFile } from '@/lib/report/export';
 import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveReportReviewState } from '@/lib/storage';
 import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
+import { createPortableReportSummary } from '@/lib/report/sharing';
 import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
 import type { AnalysisResult, Severity } from '@/lib/analyzer/types';
 
@@ -102,6 +104,7 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
 function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; mode: UserMode; onModeChange: (mode: UserMode) => void }) {
   const exportReport = () => downloadFile(`${report.summary.name}-uce-report.json`, exportJson(report), 'application/json');
   const exportSecurityReport = () => downloadFile(`${report.summary.name}-uce-results.sarif`, exportSarif(report), 'application/sarif+json');
+  const exportShareableSummary = () => downloadFile(`${report.summary.name}-uce-shareable-summary.json`, JSON.stringify(createPortableReportSummary(report), null, 2), 'application/json');
   return (
     <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <div className="min-w-0">
@@ -119,6 +122,7 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
           ))}
         </div>
         {mode === 'expert' && <><Button variant="outline" size="sm" className="gap-2" onClick={exportSecurityReport}><ShieldCheck className="h-4 w-4" />SARIF</Button><Button variant="outline" size="sm" className="gap-2" onClick={exportReport}><FileJson className="h-4 w-4" />JSON</Button></>}
+        <Button variant="outline" size="sm" className="gap-2" onClick={exportShareableSummary}><Share2 className="h-4 w-4" />Share summary</Button>
         <Button variant="outline" size="sm" className="gap-2" onClick={() => window.print()}><Download className="h-4 w-4" />PDF</Button>
       </div>
     </header>

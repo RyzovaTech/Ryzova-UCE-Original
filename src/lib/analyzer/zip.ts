@@ -334,6 +334,7 @@ export async function readZip(file: File): Promise<ZipReadResult> {
   const files: ProjectFile[] = [];
   let totalTextContent = 0;
   let filesAnalyzed = 0;
+  let contentTruncated = false;
 
   for (const entry of analyzableEntries) {
     const size =
@@ -343,6 +344,7 @@ export async function readZip(file: File): Promise<ZipReadResult> {
     if (totalTextContent >= MAX_TOTAL_TEXT_CONTENT) {
       // We've hit the text content ceiling — still include file metadata, just don't read content
       files.push({ path: entry.name, size, isDirectory: false });
+      contentTruncated = true;
       filesAnalyzed++;
       continue;
     }
@@ -363,6 +365,8 @@ export async function readZip(file: File): Promise<ZipReadResult> {
       } catch {
         content = undefined;
       }
+    } else if (isText && size > MAX_SINGLE_TEXT_FILE) {
+      contentTruncated = true;
     }
 
     files.push({ path: entry.name, size, isDirectory: false, content });
@@ -395,6 +399,11 @@ export async function readZip(file: File): Promise<ZipReadResult> {
     filesAnalyzed,
     filesIgnored: ignoredCount,
     ignoredCategories: Array.from(ignoredCategorySet).sort(),
+    sampled: false,
+    truncated: contentTruncated,
+    truncationReason: contentTruncated ? `Text content exceeded the ${formatFileSize(MAX_TOTAL_TEXT_CONTENT)} total or ${formatFileSize(MAX_SINGLE_TEXT_FILE)} per-file read budget.` : undefined,
+    contentBytesRead: totalTextContent,
+    contentByteLimit: MAX_TOTAL_TEXT_CONTENT,
   };
 
   const baseName = file.name.replace(/\.zip$/i, '');

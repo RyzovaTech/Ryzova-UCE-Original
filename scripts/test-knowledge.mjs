@@ -45,6 +45,10 @@ const { detectExtendedIntelligence } = load('src/lib/analyzer/extended-intellige
 const { CORE_KNOWLEDGE_PACK } = load('src/lib/knowledge/core-pack.ts');
 const { validateKnowledgePack, exportKnowledgePack, importKnowledgePack } = load('src/lib/knowledge/validator.ts');
 const { buildTrustMetadata } = load('src/lib/analyzer/trust.ts');
+const { prepareAnalysisInput, fingerprintAnalysisInput } = load('src/lib/analyzer/execution.ts');
+const { validateDetectorRule, runDetectorRules } = load('src/lib/knowledge/sdk.ts');
+const { canonicalKnowledgePack, verifyKnowledgePack } = load('src/lib/knowledge/signatures.ts');
+const { PHASE5_ACCURACY_FIXTURES } = load('testing/fixtures/phase5/corpus.ts');
 const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
@@ -53,6 +57,7 @@ const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLe
 const pkg = (name, deps) => file(name, JSON.stringify({ dependencies: deps }));
 let checks = 0;
 function test(name, run) { run(); checks++; console.log('PASS ' + name); }
+async function asyncTest(name, run) { await run(); checks++; console.log('PASS ' + name); }
 
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
@@ -179,6 +184,14 @@ test('security placeholders and local HTTP endpoints are suppressed', () => {
 test('security rules are language scoped', () => {
   const result = detectSecurityIntelligence([file('src/app.py', 'eval(data)\nconst x = { rejectUnauthorized: false }')]);
   assert.ok(!result.findings.some(item => item.ruleId === 'SEC002' || item.ruleId === 'SEC010'));
+});
+test('process execution rule does not confuse RegExp.exec with child processes', () => {
+  const result = detectSecurityIntelligence([file('src/matcher.ts', 'const match = regex.exec(source);')]);
+  assert.ok(!result.findings.some(item => item.ruleId === 'SEC003'));
+});
+test('script-style test files are excluded from production security findings', () => {
+  assert.equal(isNonProductionPath('scripts/test-knowledge.mjs'), true);
+  assert.equal(detectSecurityIntelligence([file('scripts/test-security.mjs', 'eval(input)')]).findings.length, 0);
 });
 test('security intelligence excludes non-production paths cross-platform', () => {
   for (const path of ['tests/app.ts', 'docs/example.py', 'vendor/app.php', 'src\\fixtures\\app.ts']) assert.equal(isNonProductionPath(path), true);
@@ -318,6 +331,38 @@ test('Phase 5 trust metadata is local-only and scoring weights are transparent',
   assert.equal(Math.round(Object.values(trust.scoreWeights).reduce((sum, value) => sum + value, 0) * 100), 100);
   assert.equal(trust.knowledgePacks[0].id, CORE_KNOWLEDGE_PACK.id);
 });
+test('Phase 5 execution budgets prioritize source and label truncation accurately', () => {
+  const files = [file('assets/blob.txt', 'x'.repeat(50)), file('package.json', '{"dependencies":{"react":"18"}}'), file('src/app.ts', 'export const app=1')];
+  const prepared = prepareAnalysisInput({ files, fileName: 'budget', source: 'upload', scanStats: { projectSize: 100, filesFound: 3, filesAnalyzed: 3, filesIgnored: 0, ignoredCategories: [] } }, { maxFiles: 2, maxContentBytes: 100, maxSingleFileBytes: 100 });
+  assert.equal(prepared.input.scanStats.sampled, true); assert.equal(prepared.input.scanStats.truncated, true);
+  assert.deepEqual(prepared.input.files.map(item => item.path), ['package.json', 'src/app.ts']);
+  assert.equal(fingerprintAnalysisInput(prepared.input), fingerprintAnalysisInput(prepared.input));
+});
+test('Phase 5 detector SDK validates and executes bounded declarative rules', () => {
+  const rule = { id: 'org.console-log', title: 'Debug log', severity: 'info', include: ['src/**/*.ts'], pattern: 'console\\.log\\(', message: 'Debug logging found.', recommendation: 'Remove it.', maxFindings: 2 };
+  assert.deepEqual(validateDetectorRule(rule), []);
+  const findings = runDetectorRules([rule], [file('src/lib/a.ts', 'console.log(1);\nconsole.log(2);\nconsole.log(3);'), file('vendor/a.ts', 'console.log(4)')]);
+  assert.equal(findings.length, 2); assert.ok(findings.every(item => item.file === 'src/lib/a.ts'));
+});
+test('Phase 5 canonical pack serialization excludes signatures and is stable', () => {
+  const left = canonicalKnowledgePack(CORE_KNOWLEDGE_PACK);
+  const right = canonicalKnowledgePack({ ...CORE_KNOWLEDGE_PACK, signature: { algorithm: 'ed25519', keyId: 'test', digest: `sha256:${'0'.repeat(64)}`, signature: 'x' } });
+  assert.equal(left, right); assert.ok(!right.includes('signature'));
+});
+test('Phase 5 accuracy corpus contains 100+ diverse representative projects', () => {
+  assert.ok(PHASE5_ACCURACY_FIXTURES.length >= 100);
+  for (const kind of ['positive', 'negative', 'mixed-stack', 'monorepo', 'vendor-heavy', 'vulnerable', 'browser', 'cross-platform']) assert.ok(PHASE5_ACCURACY_FIXTURES.some(item => item.kind === kind));
+});
+for (const fixture of PHASE5_ACCURACY_FIXTURES) {
+  test('accuracy fixture: ' + fixture.id, () => {
+    const parsed = parseFiles(fixture.files); const classification = classifyProject(fixture.files, parsed);
+    assert.equal(classification.isSoftware, fixture.expected.software);
+    const detections = detectRegisteredTechnologies(fixture.files);
+    assert.ok(detections.length >= (fixture.expected.minimumDetections ?? 0));
+    if (fixture.expected.securityFinding) assert.ok(detectSecurityIntelligence(fixture.files).findings.length > 0);
+    if (fixture.expected.browserFinding) assert.ok(detectBrowserCompatibility(fixture.files).findings.length > 0);
+  });
+}
 for (const definition of PLATFORM_KNOWLEDGE.filter(item => item.dependencies?.length || item.files?.length || item.filePrefixes?.length)) {
   test('platform marker fixture: ' + definition.id, () => {
     const fixture = definition.dependencies?.length
@@ -371,5 +416,18 @@ test('generic cloud filenames require vendor evidence', () => {
 test('Next.js does not imply Turbopack without its command flag', () => {
   assert.ok(!detectRegisteredTechnologies([pkg('package.json', { next: '16' })]).some(item => item.id === 'build2-turbopack'));
   assert.ok(detectRegisteredTechnologies([file('package.json', '{"dependencies":{"next":"16"},"scripts":{"dev":"next dev --turbopack"}}')]).some(item => item.id === 'build2-turbopack'));
+});
+await asyncTest('Phase 5 verifies trusted Ed25519 packs and rejects tampering', async () => {
+  const keys = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
+  const unsigned = JSON.parse(exportKnowledgePack(CORE_KNOWLEDGE_PACK));
+  const payload = new TextEncoder().encode(canonicalKnowledgePack(unsigned));
+  const digest = Buffer.from(await crypto.subtle.digest('SHA-256', payload)).toString('hex');
+  const signature = Buffer.from(await crypto.subtle.sign({ name: 'Ed25519' }, keys.privateKey, payload)).toString('base64');
+  const publicKey = Buffer.from(await crypto.subtle.exportKey('raw', keys.publicKey)).toString('base64');
+  const signed = { ...unsigned, signature: { algorithm: 'ed25519', keyId: 'ryzova-test', digest: `sha256:${digest}`, signature } };
+  const verified = await verifyKnowledgePack(signed, [{ keyId: 'ryzova-test', publisher: signed.publisher, publicKey }]);
+  assert.equal(verified.trusted, true); assert.equal(verified.valid, true);
+  const tampered = await verifyKnowledgePack({ ...signed, description: 'tampered' }, [{ keyId: 'ryzova-test', publisher: signed.publisher, publicKey }]);
+  assert.equal(tampered.trusted, false); assert.equal(tampered.valid, false);
 });
 console.log(JSON.stringify({ checks, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

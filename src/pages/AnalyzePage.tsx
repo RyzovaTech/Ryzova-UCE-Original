@@ -41,7 +41,7 @@ const SUPPORTED_FORMATS = ['.zip'];
 export function AnalyzePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, isRunning } = useAnalyzer();
+  const { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, resume, isRunning } = useAnalyzer();
   const [dragOver, setDragOver] = useState(false);
   const [githubUrl, setGithubUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -248,7 +248,7 @@ export function AnalyzePage() {
       </Tabs>
 
       {/* Progress / states */}
-      {(busy || state.stage === 'completed' || state.stage === 'error') && (
+      {(busy || state.stage === 'completed' || state.stage === 'error' || state.canResume) && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
@@ -279,6 +279,8 @@ export function AnalyzePage() {
                   {STAGE_LABELS[state.stage]} — {state.progress}% complete
                 </div>
                 <Progress value={state.progress} className="h-2" aria-label="Analysis progress" />
+                {state.message ? <p className="text-xs text-muted-foreground">{state.message}</p> : null}
+                {state.preview ? <div className="grid gap-2 rounded-md border bg-muted/20 p-3 text-xs sm:grid-cols-4"><span><strong>Project:</strong> {state.preview.projectType}</span><span><strong>Language:</strong> {state.preview.language}</span><span><strong>Framework:</strong> {state.preview.framework}</span><span><strong>Runtime:</strong> {state.preview.runtime}</span></div> : null}
                 <ol className="space-y-2.5">
                   {STEPS.map((s) => {
                     const idx = stageIndex(s.stage);
@@ -318,13 +320,16 @@ export function AnalyzePage() {
               </>
             )}
             {state.stage === 'error' ? (
-              <Button variant="outline" onClick={reset} className="gap-2">
-                Reset
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                {state.canResume ? <Button onClick={() => resume().catch(() => undefined)} className="gap-2">Resume analysis</Button> : null}
+                <Button variant="outline" onClick={reset} className="gap-2">Reset</Button>
+              </div>
             ) : busy ? (
               <Button variant="outline" onClick={cancel} className="gap-2">
                 Cancel analysis
               </Button>
+            ) : state.stage === 'idle' && state.canResume ? (
+              <Button onClick={() => resume().catch(() => undefined)} className="gap-2">Resume analysis</Button>
             ) : null}
           </CardContent>
         </Card>

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uce.ryzova.com/schemas/analysis-report-v1.json",
+  "title": "Ryzova UCE Analysis Report",
+  "type": "object",
+  "required": ["id", "createdAt", "analysisVersion", "classification", "summary", "stack", "categories", "issues", "score", "timeline", "notes", "source"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "analysisVersion": { "type": "string", "minLength": 1 },
+    "source": { "enum": ["upload", "demo", "github"] },
+    "classification": { "type": "object", "required": ["type", "isSoftware", "reason"] },
+    "summary": { "type": "object", "required": ["name", "scanStats"] },
+    "stack": { "type": "object" },
+    "categories": { "type": "array" },
+    "issues": { "type": "array" },
+    "score": { "type": "object", "required": ["overall"], "properties": { "overall": { "type": "number", "minimum": 0, "maximum": 100 } } },
+    "timeline": { "type": "array" },
+    "notes": { "type": "array", "items": { "type": "string" } },
+    "trust": { "type": "object", "required": ["localOnly", "networkAccessUsed", "sourceUploaded", "scoringFormula", "scoreWeights", "knowledgePacks", "limitations"] }
+  }
+}

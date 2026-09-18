@@ -2,13 +2,13 @@ import type { ProjectFile, SecurityFinding, SecurityIntelligence, SecurityRuleCa
 import { SECURITY_KNOWLEDGE_VERSION, SECURITY_RULES, validateSecurityRules } from './security-knowledge';
 
 const SOURCE_RE = /\.(tsx?|jsx?|mjs|cjs|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|c|cc|cpp|h|hpp|zig|lua|jl|r|cr|nim|sol|v|erl|hrl)$/i;
-const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligence\.|security-knowledge\.|analyzer\.)/i;
+const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligence\.|security-knowledge\.|analyzer\.|scripts\/uce-scan\.mjs$)/i;
 function normalizePath(path: string): string { return path.replace(/^\.\//, '').replace(/\\/g, '/'); }
 
 /** Test, fixture, mock, documentation and sample code is excluded from production-security signals. */
 export function isNonProductionPath(path: string): boolean {
   const normalized = normalizePath(path);
-  return /(^|\/)(?:__tests__|tests?|e2e(?:-tests)?|fixtures?|mocks?|samples?|examples?|docs?|storybook|stories|scaffold|benchmarks?|generated|vendor)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(normalized);
+  return /(^|\/)(?:__tests__|tests?|e2e(?:-tests)?|fixtures?|mocks?|samples?|examples?|docs?|storybook|stories|scaffold|benchmarks?|generated|vendor)(?:\/|$)|(?:^|\/)(?:test|spec)[-_.][^/]+\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$/i.test(normalized);
 }
 
 const validationErrors = validateSecurityRules();
