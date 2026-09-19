@@ -44,7 +44,15 @@ export function parseGitHubRepositoryUrl(value: string): GitHubRepository {
   };
 }
 
-/** Build the CORS-friendly GitHub archive endpoint for a known branch. */
+function encodePath(value: string): string {
+  return value.split('/').map(encodeURIComponent).join('/');
+}
+
+/**
+ * Build the same-origin archive relay endpoint for a known branch.
+ * GitHub's codeload host does not allow browser requests from arbitrary
+ * origins, so Vercel/Vite relay the public archive without analyzing it.
+ */
 export function getGitHubArchiveUrl(repository: GitHubRepository, branch: string): string {
-  return `https://codeload.github.com/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repository)}/zip/refs/heads/${encodeURIComponent(branch)}`;
+  return `/api/github/archive/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repository)}/${encodePath(branch)}`;
 }

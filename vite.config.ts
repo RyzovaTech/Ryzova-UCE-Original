@@ -4,6 +4,20 @@ import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
   plugins: [react()],
+  server: {
+    proxy: {
+      "/api/github/archive": {
+        target: "https://codeload.github.com",
+        changeOrigin: true,
+        rewrite(path) {
+          return path.replace(
+            /^\/api\/github\/archive\/([^/]+)\/([^/]+)\/(.+)$/,
+            "/$1/$2/zip/refs/heads/$3",
+          );
+        },
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

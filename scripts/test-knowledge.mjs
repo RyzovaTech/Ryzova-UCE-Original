@@ -54,6 +54,7 @@ const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
 const { UCE_CATALOG_ITEMS } = load('src/lib/catalog.ts');
+const { getGitHubArchiveUrl, parseGitHubRepositoryUrl } = load('src/lib/analyzer/repository.ts');
 const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
 const pkg = (name, deps) => file(name, JSON.stringify({ dependencies: deps }));
 let checks = 0;
@@ -62,6 +63,13 @@ async function asyncTest(name, run) { await run(); checks++; console.log('PASS '
 
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
+test('GitHub repository imports use the same-origin archive relay', () => {
+  const repository = parseGitHubRepositoryUrl('https://github.com/RyzovaTech/Ryzova-UCE-Original');
+  assert.equal(repository.owner, 'RyzovaTech');
+  assert.equal(repository.repository, 'Ryzova-UCE-Original');
+  assert.equal(getGitHubArchiveUrl(repository, 'release/next'), '/api/github/archive/RyzovaTech/Ryzova-UCE-Original/release/next');
+  assert.ok(!getGitHubArchiveUrl(repository, 'main').includes('codeload.github.com'));
+});
 test('malformed package manifests do not crash', () => assert.deepEqual(detectRegisteredTechnologies([file('package.json', '{bad')]).filter(x => x.kind !== 'runtime'), []));
 test('multiple workspace technologies coexist', () => {
   const ids = detectRegisteredTechnologies([pkg('apps/web/package.json', { react: '18' }), pkg('apps/api/package.json', { express: '4' })]).map(x => x.id);

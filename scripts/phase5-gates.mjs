@@ -28,8 +28,14 @@ for (const marker of ['UCE_CATALOG_ITEMS', "'ItemList'", "'DefinedTerm'", 'dist/
 const workflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8');
 for (const gate of ['npm run check', 'npm run build', 'npm test', 'npm run benchmark', 'npm audit --omit=dev', 'upload-sarif']) if (!workflow.includes(gate)) failures.push(`CI is missing release gate: ${gate}.`);
 
+const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
+const githubRelay = vercelConfig.rewrites?.find((rewrite) => rewrite.source === '/api/github/archive/:owner/:repository/:branch*');
+if (githubRelay?.destination !== 'https://codeload.github.com/:owner/:repository/zip/refs/heads/:branch*') failures.push('Vercel must relay GitHub archives through the same UCE origin.');
+const relayHeaders = vercelConfig.headers?.find((entry) => entry.source === '/api/github/archive/:path*')?.headers ?? [];
+if (!relayHeaders.some((header) => header.key === 'x-vercel-enable-rewrite-caching' && header.value === '0')) failures.push('GitHub archive relay caching must remain disabled.');
+
 const trust = fs.readFileSync('src/lib/analyzer/trust.ts', 'utf8');
 for (const statement of ['not proof of runtime behavior', 'do not replace', 'scoringFormula', 'knowledgePacks']) if (!trust.includes(statement)) failures.push(`Trust metadata is missing: ${statement}.`);
 
-console.log(JSON.stringify({ gateVersion: 1, schemas: 2, accessibilityChecks: 4, seoChecks: 18, workflowChecks: 6, trustChecks: 4, failures }));
+console.log(JSON.stringify({ gateVersion: 1, schemas: 2, accessibilityChecks: 4, seoChecks: 18, workflowChecks: 6, deploymentChecks: 2, trustChecks: 4, failures }));
 if (failures.length) process.exit(1);

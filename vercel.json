@@ -1,5 +1,24 @@
 {
+  "rewrites": [
+    {
+      "source": "/api/github/archive/:owner/:repository/:branch*",
+      "destination": "https://codeload.github.com/:owner/:repository/zip/refs/heads/:branch*"
+    }
+  ],
   "headers": [
+    {
+      "source": "/api/github/archive/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
     {
       "source": "/dashboard/:path*",
       "headers": [

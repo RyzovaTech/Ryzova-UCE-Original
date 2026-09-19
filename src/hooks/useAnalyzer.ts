@@ -215,6 +215,7 @@ export function useAnalyzer() {
   const analyzeGithub = useCallback(
     async (url: string): Promise<AnalysisResult> => {
       let requestId = -1;
+      let remoteStep: 'metadata' | 'archive' = 'metadata';
       try {
         requestId = startRequest();
         const repository = parseGitHubRepositoryUrl(url);
@@ -232,10 +233,20 @@ export function useAnalyzer() {
           : null;
         if (!defaultBranch) throw new Error('GitHub did not provide a default branch for this repository.');
 
+        remoteStep = 'archive';
         remoteAbortRef.current = new AbortController();
         const res = await fetchWithTimeout(getGitHubArchiveUrl(repository, defaultBranch), { signal: remoteAbortRef.current.signal });
         ensureCurrentRequest(requestId);
-        if (!res.ok) throw new Error(`GitHub returned ${res.status} while downloading the default branch.`);
+        if (!res.ok) {
+          const message = res.status === 404
+            ? 'GitHub could not provide the default-branch archive. The repository may be empty, unavailable, or recently renamed.'
+            : res.status === 413
+              ? 'The repository archive exceeds the relay download limit. Download the ZIP from GitHub and use ZIP Upload instead.'
+              : res.status === 429
+                ? 'GitHub archive retrieval is temporarily rate limited. Wait a moment or use ZIP Upload.'
+                : `The GitHub archive relay returned ${res.status}. Try again or use ZIP Upload.`;
+          throw new Error(message);
+        }
         const contentType = res.headers.get('content-type') ?? '';
         if (contentType && !/application\/(zip|octet-stream)|application\/x-zip-compressed/i.test(contentType)) {
           throw new Error('GitHub returned an unexpected response instead of a ZIP archive.');
@@ -255,9 +266,11 @@ export function useAnalyzer() {
         clearAnalysisTimeout();
         if (requestId === requestIdRef.current) runningRef.current = false;
         const message = e instanceof DOMException && e.name === 'AbortError'
-          ? 'GitHub did not respond within 30 seconds. Check your connection and try again.'
+          ? `${remoteStep === 'metadata' ? 'GitHub metadata' : 'The GitHub archive relay'} did not respond within 30 seconds. Check your connection and try again.`
           : e instanceof TypeError && /failed to fetch/i.test(e.message)
-            ? 'Could not connect to GitHub. Your browser, network, or content-security policy may be blocking GitHub downloads.'
+            ? remoteStep === 'metadata'
+              ? 'Could not contact the GitHub metadata API. Check your connection and try again.'
+              : 'Could not reach the UCE GitHub archive relay. Try again or download the repository ZIP from GitHub.'
             : e instanceof Error ? e.message : 'Failed to fetch GitHub repository.';
         if (requestId === requestIdRef.current) safeSetState({ ...INITIAL_STATE, stage: 'error', error: message, canResume: Boolean(resumableRef.current) });
         throw e;

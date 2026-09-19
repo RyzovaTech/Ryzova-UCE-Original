@@ -240,7 +240,7 @@ export function AnalyzePage() {
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Remote retrieval is limited to public GitHub repositories. Repository contents are processed locally after download; ZIP uploads never leave your browser.
+                Public GitHub archives are retrieved through UCE&apos;s same-origin relay, then extracted and analyzed locally in your browser. ZIP uploads never leave your browser.
               </p>
             </CardContent>
           </Card>
