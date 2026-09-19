@@ -1,57 +1,31 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { existsSync, readFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { dirname, extname, resolve } from "node:path";
-import ts from "typescript";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { build as viteBuild } from "vite";
 
 const distIndex = resolve("dist/index.html");
 const analyzeIndex = resolve("dist/analyze/index.html");
 const catalogIndex = resolve("dist/catalog/index.html");
 
-// Load the catalog's real TypeScript knowledge model so generated SEO pages
-// cannot silently drift away from the product UI or detector registry.
-const nativeRequire = createRequire(import.meta.url);
-const moduleCache = new Map();
-function resolveLocalModule(specifier, parentFile) {
-  const base = specifier.startsWith('@/')
-    ? resolve('src', specifier.slice(2))
-    : resolve(dirname(parentFile), specifier);
-  for (const candidate of [base, `${base}.ts`, `${base}.tsx`, `${base}.js`, resolve(base, 'index.ts')]) {
-    if (existsSync(candidate)) return candidate;
-  }
-  throw new Error(`Unable to resolve ${specifier} from ${parentFile}`);
-}
-function loadTypeScriptModule(filePath) {
-  const absolutePath = resolve(filePath);
-  if (moduleCache.has(absolutePath)) return moduleCache.get(absolutePath).exports;
-  const module = { exports: {} };
-  moduleCache.set(absolutePath, module);
-  const output = ts.transpileModule(readFileSync(absolutePath, 'utf8'), {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2020,
-      esModuleInterop: true,
-    },
-    fileName: absolutePath,
-  }).outputText;
-  const localRequire = (specifier) => {
-    if (specifier.startsWith('.') || specifier.startsWith('@/')) {
-      const resolved = resolveLocalModule(specifier, absolutePath);
-      return ['.ts', '.tsx'].includes(extname(resolved)) ? loadTypeScriptModule(resolved) : nativeRequire(resolved);
-    }
-    return nativeRequire(specifier);
-  };
-  new Function('require', 'module', 'exports', '__filename', '__dirname', output)(
-    localRequire,
-    module,
-    module.exports,
-    absolutePath,
-    dirname(absolutePath),
-  );
-  return module.exports;
-}
-
-const { UCE_CATALOG_ITEMS, UCE_CATALOG_COUNTS } = loadTypeScriptModule('src/lib/catalog.ts');
+// Bundle the real catalog as a temporary server-side ES module. This keeps SEO
+// synchronized with detector knowledge without evaluating generated code.
+const catalogBundleDir = resolve('dist/.catalog-seo');
+const catalogBundleFile = resolve(catalogBundleDir, 'catalog.mjs');
+await viteBuild({
+  configFile: false,
+  logLevel: 'silent',
+  resolve: { alias: { '@': resolve('src') } },
+  build: {
+    ssr: resolve('src/lib/catalog.ts'),
+    outDir: catalogBundleDir,
+    emptyOutDir: true,
+    copyPublicDir: false,
+    minify: false,
+    rollupOptions: { output: { entryFileNames: 'catalog.mjs' } },
+  },
+});
+const { UCE_CATALOG_ITEMS, UCE_CATALOG_COUNTS } = await import(pathToFileURL(catalogBundleFile).href);
+await rm(catalogBundleDir, { recursive: true, force: true });
 const escapeHtml = (value) => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
