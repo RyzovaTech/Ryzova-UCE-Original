@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 3,
+  "id": "com.ryzova.uce.v3-core",
+  "name": "UCE V3 Core Rules",
+  "version": "3.0.0-alpha.1",
+  "publisher": "RyzovaTech",
+  "description": "Bootstrap executable rules for the UCE V3 rule platform.",
+  "uceCompatibility": ">=2.0.0 <4.0.0",
+  "technologies": ["*"],
+  "modules": ["security", "code", "build", "dependency"],
+  "rules": [
+    {
+      "id": "security.javascript.dynamic-eval", "version": "3.0.0", "module": "security", "title": "Dynamic code evaluation",
+      "description": "Detects direct eval calls in production JavaScript and TypeScript source.", "technologies": ["javascript", "typescript"], "scope": ["production"], "severity": "warning", "confidence": "likely",
+      "detectors": [{ "kind": "regex", "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"], "exclude": ["**/*.d.ts"], "pattern": "\\beval\\s*\\(", "flags": "i" }],
+      "evidenceRequirements": { "minimum": 1 }, "recommendation": "Replace dynamic evaluation with explicit parsing or safe dispatch.",
+      "references": ["https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval"], "falsePositiveNotes": ["Generated parsers and sandbox implementations require manual review."], "tags": ["cwe-95"]
+    },
+    {
+      "id": "code.web.inner-html-assignment", "version": "3.0.0", "module": "code", "title": "DOM HTML assignment",
+      "description": "Locates direct innerHTML assignments for review.", "technologies": ["javascript", "typescript"], "scope": ["production"], "severity": "warning", "confidence": "possible",
+      "detectors": [{ "kind": "ast", "languages": ["javascript", "typescript"], "query": "assignment", "names": ["innerHTML"], "include": ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"] }],
+      "evidenceRequirements": { "minimum": 1 }, "recommendation": "Prefer safe DOM APIs or sanitize untrusted HTML before assignment.", "references": ["https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML"], "falsePositiveNotes": ["Constant trusted markup can be safe."]
+    },
+    {
+      "id": "build.typescript.strict-disabled", "version": "3.0.0", "module": "build", "title": "TypeScript strict mode disabled",
+      "description": "Detects an explicit false value for compilerOptions.strict.", "technologies": ["typescript"], "scope": ["configuration"], "severity": "info", "confidence": "confirmed",
+      "detectors": [{ "kind": "manifest", "files": ["**/tsconfig*.json", "tsconfig*.json"], "path": "compilerOptions.strict", "operator": "equals", "value": "false" }],
+      "evidenceRequirements": { "minimum": 1 }, "recommendation": "Enable strict mode incrementally and address the resulting type errors.", "references": ["https://www.typescriptlang.org/tsconfig/strict.html"], "falsePositiveNotes": ["Migration branches may disable strict mode temporarily."]
+    },
+    {
+      "id": "dependency.npm.unpinned-react", "version": "3.0.0", "module": "dependency", "title": "Unpinned React dependency",
+      "description": "Detects wildcard or latest React declarations.", "technologies": ["react"], "scope": ["configuration"], "severity": "warning", "confidence": "confirmed",
+      "detectors": [{ "kind": "dependency", "ecosystems": ["npm"], "names": ["react"], "version": "^(?:\\*|latest)$" }],
+      "evidenceRequirements": { "minimum": 1 }, "recommendation": "Use an intentional compatible version range and commit the lockfile.", "references": ["https://docs.npmjs.com/specifying-dependencies-and-devdependencies-in-a-package-json-file"], "falsePositiveNotes": []
+    },
+    {
+      "id": "build.container.latest-tag", "version": "3.0.0", "module": "build", "title": "Mutable container base tag",
+      "description": "Detects Docker FROM declarations that use the mutable latest tag.", "technologies": ["docker"], "scope": ["configuration"], "severity": "warning", "confidence": "confirmed",
+      "detectors": [{ "kind": "config", "files": ["**/Dockerfile", "Dockerfile", "**/Dockerfile.*"], "operator": "matches", "pattern": "^\\s*FROM\\s+[^\\s:]+(?::latest)?\\s*(?:AS\\s+\\w+)?$", "value": "latest" }],
+      "evidenceRequirements": { "minimum": 1 }, "recommendation": "Pin the base image to an intentional version or immutable digest.", "references": ["https://docs.docker.com/build/building/best-practices/"], "falsePositiveNotes": ["Local-only development images may intentionally track latest."]
+    }
+  ]
+}

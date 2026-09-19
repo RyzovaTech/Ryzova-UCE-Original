@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 
 const failures = [];
-for (const schema of ['schemas/knowledge-pack.schema.json', 'schemas/analysis-report.schema.json']) {
+for (const schema of ['schemas/knowledge-pack.schema.json', 'schemas/v3-rule-pack.schema.json', 'schemas/analysis-report.schema.json']) {
   try { const parsed = JSON.parse(fs.readFileSync(schema, 'utf8')); if (!parsed.$schema || !parsed.$id || parsed.type !== 'object') failures.push(`${schema} is missing required schema metadata.`); }
   catch (error) { failures.push(`${schema} is invalid JSON: ${error instanceof Error ? error.message : String(error)}`); }
 }
@@ -37,5 +37,7 @@ if (!relayHeaders.some((header) => header.key === 'x-vercel-enable-rewrite-cachi
 const trust = fs.readFileSync('src/lib/analyzer/trust.ts', 'utf8');
 for (const statement of ['not proof of runtime behavior', 'do not replace', 'scoringFormula', 'knowledgePacks']) if (!trust.includes(statement)) failures.push(`Trust metadata is missing: ${statement}.`);
 
-console.log(JSON.stringify({ gateVersion: 1, schemas: 2, accessibilityChecks: 4, seoChecks: 18, workflowChecks: 6, deploymentChecks: 2, trustChecks: 4, failures }));
+const v3Platform = ['src/lib/knowledge/v3-types.ts', 'src/lib/knowledge/v3-validator.ts', 'src/lib/knowledge/v3-sdk.ts', 'src/lib/knowledge/v3-registry.ts', 'src/lib/knowledge/v3-signatures.ts', 'src/lib/knowledge/v3-docs.ts', 'src/lib/knowledge/v3-default-packs.ts'];
+for (const file of v3Platform) if (!fs.existsSync(file)) failures.push(`V3 rule platform module is missing: ${file}.`);
+console.log(JSON.stringify({ gateVersion: 1, schemas: 3, accessibilityChecks: 4, seoChecks: 18, workflowChecks: 6, deploymentChecks: 2, trustChecks: 4, v3PlatformChecks: v3Platform.length, failures }));
 if (failures.length) process.exit(1);

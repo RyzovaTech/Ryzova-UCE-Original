@@ -20,6 +20,8 @@ import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
 import { UCE_VERSION } from '@/lib/app-version';
+import { executeV3RulePacks } from '../knowledge/v3-sdk';
+import { V3_DEFAULT_RULE_PACKS } from '../knowledge/v3-default-packs';
 
 const ANALYSIS_VERSION = `uce-${UCE_VERSION}`;
 function generateId(): string { return `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`; }
@@ -70,11 +72,16 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   stack.browserCompatibility = detectBrowserCompatibility(input.files);
   stack.intelligenceInsights = buildCorrelatedInsights(stack);
   if (classification.isSoftware) stack.extendedIntelligence = detectExtendedIntelligence(input.files, stack);
+  if (classification.isSoftware) {
+    const technologies = [stack.language, stack.framework, stack.runtime, stack.buildTool, ...(stack.frameworks ?? []), ...(stack.runtimes ?? []), ...(stack.technologyDetections ?? []).flatMap((item) => [item.id, item.name])]
+      .filter((item) => item && item !== 'Unknown' && item !== 'None').map((item) => String(item).toLowerCase());
+    stack.v3RulePlatform = executeV3RulePacks(V3_DEFAULT_RULE_PACKS, { files: input.files, technologies: [...new Set(technologies)] });
+  }
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
   if (!classification.isSoftware) return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source, trust: buildTrustMetadata(input.source) };
   const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName }; const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime); const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined; const rulesExecuted = countApplicableRules(stack.language);
-  if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0); }
+  if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0) + (stack.v3RulePlatform?.rulesExecuted ?? 0); }
   const notes: string[] = [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ')}.`);
   if (stack.frameworks && stack.frameworks.length > 1) notes.push(`Multiple frameworks detected: ${stack.frameworks.join(', ')}.`);
@@ -86,6 +93,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.browserCompatibility) { const findingCount = stack.browserCompatibility.findings.length; notes.push(`Browser compatibility: ${findingCount} compatibility finding${findingCount === 1 ? '' : 's'}; score ${stack.browserCompatibility.score}%.`); }
   if (stack.intelligenceInsights?.length) notes.push(`Correlated intelligence: ${stack.intelligenceInsights.length} prioritized cross-engine insight${stack.intelligenceInsights.length === 1 ? '' : 's'}.`);
   if (stack.extendedIntelligence) notes.push(`Phase 3.5 intelligence: ${Object.keys(stack.extendedIntelligence.modules).length} modules; combined static score ${stack.extendedIntelligence.overallScore}%.`);
+  if (stack.v3RulePlatform) notes.push(`V3 rule platform: ${stack.v3RulePlatform.rulesExecuted} applicable bootstrap rules executed from ${stack.v3RulePlatform.packIds.join(', ')}; ${stack.v3RulePlatform.findings.length} review signal${stack.v3RulePlatform.findings.length === 1 ? '' : 's'}.`);
   if (summary.scanStats.truncated) notes.push(`Analysis was truncated or sampled (${summary.scanStats.truncationReason ?? 'configured resource limits'}); absence of findings outside the analyzed content is not guaranteed.`);
   return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories, issues, score, timeline: buildTimeline(), notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source, trust: buildTrustMetadata(input.source) };
 }

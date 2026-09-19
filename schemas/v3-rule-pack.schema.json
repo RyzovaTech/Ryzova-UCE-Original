@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://uce.ryzova.com/schemas/rule-pack-v3.json",
+  "title": "UCE V3 Executable Rule Pack",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "name", "version", "publisher", "description", "uceCompatibility", "technologies", "modules", "rules"],
+  "properties": {
+    "schemaVersion": { "const": 3 },
+    "id": { "$ref": "#/$defs/id" },
+    "name": { "type": "string", "minLength": 1 },
+    "version": { "$ref": "#/$defs/version" },
+    "publisher": { "type": "string", "minLength": 1 },
+    "description": { "type": "string", "minLength": 1 },
+    "uceCompatibility": { "type": "string", "minLength": 1 },
+    "technologies": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "modules": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/module" } },
+    "dependencies": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": { "id": { "$ref": "#/$defs/id" }, "version": { "type": "string", "minLength": 1 } } } },
+    "rules": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rule" } },
+    "signature": { "$ref": "#/$defs/signature" }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+([._-][a-z0-9]+)*$" },
+    "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(-[0-9A-Za-z.-]+)?$" },
+    "module": { "enum": ["security", "browser", "language", "technology", "architecture", "code", "dependency", "runtime", "platform", "build", "testing", "performance", "accessibility", "api", "database", "environment", "deployment", "license", "documentation", "repository"] },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "module", "title", "description", "technologies", "scope", "severity", "confidence", "detectors", "evidenceRequirements", "recommendation", "references", "falsePositiveNotes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" }, "version": { "$ref": "#/$defs/version" }, "module": { "$ref": "#/$defs/module" },
+        "title": { "type": "string", "minLength": 1 }, "description": { "type": "string", "minLength": 1 },
+        "technologies": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+        "scope": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["production", "test", "fixture", "generated", "vendor", "documentation", "configuration"] } },
+        "severity": { "enum": ["critical", "warning", "info"] }, "confidence": { "enum": ["confirmed", "likely", "possible", "review-required"] },
+        "detectors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/detector" } },
+        "evidenceRequirements": { "type": "object", "additionalProperties": false, "required": ["minimum"], "properties": { "minimum": { "type": "integer", "minimum": 1 }, "requireDetectorKinds": { "type": "array", "uniqueItems": true, "items": { "enum": ["regex", "ast", "manifest", "dependency", "config"] } }, "requireAllDetectors": { "type": "boolean" } } },
+        "recommendation": { "type": "string", "minLength": 1 }, "references": { "type": "array", "items": { "type": "string", "format": "uri" } }, "falsePositiveNotes": { "type": "array", "items": { "type": "string" } },
+        "dependsOn": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } }, "conflictsWith": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+        "budget": { "type": "object", "additionalProperties": false, "properties": { "maxFiles": { "type": "integer", "minimum": 1 }, "maxMatches": { "type": "integer", "minimum": 1 }, "maxContentBytes": { "type": "integer", "minimum": 1 }, "maxMilliseconds": { "type": "number", "exclusiveMinimum": 0 } } },
+        "enabled": { "type": "boolean" }, "tags": { "type": "array", "uniqueItems": true, "items": { "type": "string" } }
+      }
+    },
+    "detector": {
+      "oneOf": [
+        { "type": "object", "required": ["kind", "include", "pattern"], "properties": { "kind": { "const": "regex" }, "include": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "exclude": { "type": "array", "items": { "type": "string" } }, "pattern": { "type": "string", "minLength": 1, "maxLength": 1000 }, "flags": { "type": "string", "pattern": "^[imsu]*$" } } },
+        { "type": "object", "required": ["kind", "languages", "query", "names"], "properties": { "kind": { "const": "ast" }, "languages": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "query": { "enum": ["call", "import", "assignment", "jsx-attribute", "declaration"] }, "names": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "include": { "type": "array", "items": { "type": "string" } } } },
+        { "type": "object", "required": ["kind", "files", "path", "operator"], "properties": { "kind": { "const": "manifest" }, "files": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "path": { "type": "string" }, "operator": { "$ref": "#/$defs/operator" }, "value": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "ecosystems", "names"], "properties": { "kind": { "const": "dependency" }, "ecosystems": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "names": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "version": { "type": "string" } } },
+        { "type": "object", "required": ["kind", "files", "operator"], "properties": { "kind": { "const": "config" }, "files": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "path": { "type": "string" }, "operator": { "$ref": "#/$defs/operator" }, "value": { "type": "string" }, "pattern": { "type": "string" } } }
+      ]
+    },
+    "operator": { "enum": ["exists", "equals", "not-equals", "contains", "matches"] },
+    "signature": { "type": "object", "additionalProperties": false, "required": ["algorithm", "keyId", "digest", "signature"], "properties": { "algorithm": { "const": "ed25519" }, "keyId": { "type": "string", "minLength": 1 }, "digest": { "type": "string", "pattern": "^sha256:[a-f0-9]{64}$" }, "signature": { "type": "string", "minLength": 1 } } }
+  }
+}

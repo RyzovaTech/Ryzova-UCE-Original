@@ -65,6 +65,7 @@ function load(file) {
   }
   if (cache.has(resolved)) return cache.get(resolved).exports;
   const module = { exports: {} }; cache.set(resolved, module);
+  if (resolved.endsWith('.json')) { module.exports = { default: JSON.parse(fs.readFileSync(resolved, 'utf8')) }; return module.exports; }
   const source = fs.readFileSync(resolved, 'utf8');
   const { outputText } = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } });
   const requireLocal = (specifier) => {

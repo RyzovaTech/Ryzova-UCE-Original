@@ -1,5 +1,6 @@
 import type { AnalysisTrustMetadata } from './types';
 import { CORE_KNOWLEDGE_PACK } from '../knowledge/core-pack';
+import { V3_CORE_RULE_PACK } from '../knowledge/v3-core-pack';
 import { COMPATIBILITY_SCORE_WEIGHTS } from '../compatibility/scoring/index';
 
 export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' = 'upload'): AnalysisTrustMetadata {
@@ -10,7 +11,10 @@ export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' = 'uploa
     sourceUploaded: false,
     scoringFormula: 'Weighted arithmetic mean of eight compatibility category scores, rounded to the nearest integer.',
     scoreWeights: { ...COMPATIBILITY_SCORE_WEIGHTS },
-    knowledgePacks: [{ id: CORE_KNOWLEDGE_PACK.id, version: CORE_KNOWLEDGE_PACK.version, schemaVersion: CORE_KNOWLEDGE_PACK.schemaVersion, signed: Boolean(CORE_KNOWLEDGE_PACK.signature) }],
+    knowledgePacks: [
+      { id: CORE_KNOWLEDGE_PACK.id, version: CORE_KNOWLEDGE_PACK.version, schemaVersion: CORE_KNOWLEDGE_PACK.schemaVersion, signed: Boolean(CORE_KNOWLEDGE_PACK.signature) },
+      { id: V3_CORE_RULE_PACK.id, version: V3_CORE_RULE_PACK.version, schemaVersion: V3_CORE_RULE_PACK.schemaVersion, signed: Boolean(V3_CORE_RULE_PACK.signature) },
+    ],
     limitations: [
       'Static findings are review signals, not proof of runtime behavior or exploitable vulnerabilities.',
       'Browser and platform checks do not execute the project on real devices.',

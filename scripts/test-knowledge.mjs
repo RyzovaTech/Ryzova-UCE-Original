@@ -13,6 +13,7 @@ function load(file) {
   if (cache.has(resolved)) return cache.get(resolved).exports;
   const module = { exports: {} };
   cache.set(resolved, module);
+  if (resolved.endsWith('.json')) { module.exports = { default: JSON.parse(fs.readFileSync(resolved, 'utf8')) }; return module.exports; }
   const source = fs.readFileSync(resolved, 'utf8');
   const { outputText } = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
@@ -20,7 +21,7 @@ function load(file) {
   const requireLocal = (specifier) => {
     if (!specifier.startsWith('.')) return nativeRequire(specifier);
     const target = path.resolve(path.dirname(resolved), specifier);
-    return load(target.endsWith('.ts') ? target : target + '.ts');
+    return load(path.extname(target) ? target : target + '.ts');
   };
   new Function('require', 'module', 'exports', outputText)(requireLocal, module, module.exports);
   return module.exports;
@@ -56,6 +57,12 @@ const { parseFiles } = load('src/lib/analyzer/parser.ts');
 const { UCE_CATALOG_ITEMS } = load('src/lib/catalog.ts');
 const { getGitHubArchiveUrl, parseGitHubRepositoryUrl } = load('src/lib/analyzer/repository.ts');
 const { archiveProcessingTimeoutMs, GITHUB_ARCHIVE_TIMEOUT_MS, MAX_COMPRESSED_ARCHIVE_BYTES } = load('src/lib/analyzer/archive-policy.ts');
+const { V3_CORE_RULE_PACK } = load('src/lib/knowledge/v3-core-pack.ts');
+const { validateV3RulePack, analyzeV3RuleGraph } = load('src/lib/knowledge/v3-validator.ts');
+const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
+const { V3RuleRegistry } = load('src/lib/knowledge/v3-registry.ts');
+const { canonicalV3RulePack, signV3RulePack, verifyV3RulePack } = load('src/lib/knowledge/v3-signatures.ts');
+const { generateV3RuleDocumentation } = load('src/lib/knowledge/v3-docs.ts');
 const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
 const pkg = (name, deps) => file(name, JSON.stringify({ dependencies: deps }));
 let checks = 0;
@@ -80,6 +87,60 @@ test('large archives use adaptive processing instead of the legacy 50MB cutoff',
   const pageSource = fs.readFileSync(path.join(root, 'src/pages/AnalyzePage.tsx'), 'utf8');
   assert.ok(!hookSource.includes('MAX_ARCHIVE_SIZE'));
   assert.ok(!pageSource.includes('ZIP archives up to 50 MB'));
+});
+test('V3 core rule pack satisfies the executable schema', () => {
+  const validation = validateV3RulePack(V3_CORE_RULE_PACK);
+  assert.equal(validation.valid, true, validation.errors.join('\n'));
+  assert.equal(validation.signed, false);
+  assert.ok(validation.warnings.some((item) => item.includes('unsigned')));
+});
+test('V3 DSL executes regex, AST, manifest, dependency and config detectors', () => {
+  const files = [
+    file('src/app.ts', 'eval(input); element.innerHTML = html;'),
+    file('tsconfig.json', JSON.stringify({ compilerOptions: { strict: false } })),
+    file('package.json', JSON.stringify({ dependencies: { react: 'latest' } })),
+    file('Dockerfile', 'FROM node:latest'),
+  ];
+  const result = executeV3RulePacks([V3_CORE_RULE_PACK], { files, technologies: ['typescript', 'javascript', 'react', 'docker'] });
+  assert.equal(result.schemaVersion, 3); assert.equal(result.rulesExecuted, 5);
+  for (const kind of ['regex', 'ast', 'manifest', 'dependency', 'config']) assert.ok(result.findings.some((finding) => finding.evidence.some((item) => item.detector === kind)), `missing ${kind}`);
+  assert.ok(result.metrics.every((metric) => metric.durationMs >= 0 && metric.filesVisited <= 25_000));
+});
+test('V3 rules respect technology, module and production scope filters', () => {
+  const files = [file('tests/app.ts', 'eval(input)'), file('src/app.ts', 'eval(input)')];
+  const applicable = executeV3RulePacks([V3_CORE_RULE_PACK], { files, technologies: ['typescript'], modules: ['security'] });
+  assert.equal(applicable.rulesExecuted, 1); assert.deepEqual(applicable.findings.map((item) => item.file), ['src/app.ts']);
+  const irrelevant = executeV3RulePacks([V3_CORE_RULE_PACK], { files, technologies: ['python'], modules: ['security'] });
+  assert.equal(irrelevant.rulesExecuted, 0); assert.equal(irrelevant.findings.length, 0);
+});
+test('V3 graph detects missing dependencies, cycles, conflicts and duplicate ids', () => {
+  const makeRule = (id) => ({ ...structuredClone(V3_CORE_RULE_PACK.rules[0]), id });
+  const missing = makeRule('org.test.missing'); missing.dependsOn = ['org.test.unknown'];
+  assert.equal(analyzeV3RuleGraph([{ ...V3_CORE_RULE_PACK, rules: [missing] }]).missingDependencies.length, 1);
+  const left = makeRule('org.test.left'); const right = makeRule('org.test.right'); left.dependsOn = [right.id]; right.dependsOn = [left.id]; left.conflictsWith = [right.id];
+  const graph = analyzeV3RuleGraph([{ ...V3_CORE_RULE_PACK, rules: [left, right, { ...left }] }]);
+  assert.ok(graph.cycles.length); assert.ok(graph.conflicts.length); assert.ok(graph.duplicates.includes(left.id));
+});
+test('V3 registry lazy-loads only applicable packs and allows explicit organization imports', async () => {
+  const registry = new V3RuleRegistry(); let loads = 0;
+  registry.registerLazyPack({ id: V3_CORE_RULE_PACK.id, version: V3_CORE_RULE_PACK.version, technologies: ['typescript'], modules: V3_CORE_RULE_PACK.modules, load: async () => { loads++; return V3_CORE_RULE_PACK; } });
+  await registry.loadApplicablePacks({ files: [], technologies: ['python'] }); assert.equal(loads, 0);
+  const packs = await registry.loadApplicablePacks({ files: [], technologies: ['typescript'] }); assert.equal(loads, 1); assert.equal(packs.length, 1);
+  const organization = new V3RuleRegistry(); assert.throws(() => organization.importOrganizationPack(JSON.stringify(V3_CORE_RULE_PACK)));
+  organization.importOrganizationPack(JSON.stringify(V3_CORE_RULE_PACK), true); assert.equal(organization.list()[0].source, 'organization');
+});
+test('V3 rule budgets truncate safely and documentation is generated deterministically', () => {
+  const rule = structuredClone(V3_CORE_RULE_PACK.rules[0]); rule.budget = { maxFiles: 1, maxMatches: 1, maxContentBytes: 10, maxMilliseconds: 100 };
+  const result = executeV3RulePacks([{ ...V3_CORE_RULE_PACK, rules: [rule] }], { files: [file('src/a.ts', 'eval(a); eval(b);'), file('src/b.ts', 'eval(c);')], technologies: ['typescript'] });
+  assert.equal(result.metrics[0].truncated, true); assert.ok(result.findings.length <= 1);
+  const docs = generateV3RuleDocumentation(V3_CORE_RULE_PACK); assert.ok(docs.includes('UCE V3 Core Rules') && docs.includes('security.javascript.dynamic-eval'));
+  assert.equal(canonicalV3RulePack(V3_CORE_RULE_PACK), canonicalV3RulePack({ ...V3_CORE_RULE_PACK, signature: { algorithm: 'ed25519', keyId: 'x', digest: `sha256:${'0'.repeat(64)}`, signature: 'x' } }));
+});
+test('V3 built-in packs have a registration boundary outside analyzer core', () => {
+  const analyzerSource = fs.readFileSync(path.join(root, 'src/lib/analyzer/analyzer.ts'), 'utf8');
+  const registrySource = fs.readFileSync(path.join(root, 'src/lib/knowledge/v3-default-packs.ts'), 'utf8');
+  assert.ok(analyzerSource.includes('V3_DEFAULT_RULE_PACKS')); assert.ok(!analyzerSource.includes('V3_CORE_RULE_PACK'));
+  assert.ok(registrySource.includes('V3_CORE_RULE_PACK'));
 });
 test('malformed package manifests do not crash', () => assert.deepEqual(detectRegisteredTechnologies([file('package.json', '{bad')]).filter(x => x.kind !== 'runtime'), []));
 test('multiple workspace technologies coexist', () => {
@@ -430,7 +491,7 @@ test('Phase 5 trust metadata is local-only and scoring weights are transparent',
   const trust = buildTrustMetadata();
   assert.equal(trust.localOnly, true); assert.equal(trust.networkAccessUsed, false); assert.equal(trust.sourceUploaded, false);
   assert.equal(Math.round(Object.values(trust.scoreWeights).reduce((sum, value) => sum + value, 0) * 100), 100);
-  assert.equal(trust.knowledgePacks[0].id, CORE_KNOWLEDGE_PACK.id);
+  assert.equal(trust.knowledgePacks[0].id, CORE_KNOWLEDGE_PACK.id); assert.ok(trust.knowledgePacks.some((pack) => pack.id === V3_CORE_RULE_PACK.id && pack.schemaVersion === 3));
 });
 test('Phase 5 execution budgets prioritize source and label truncation accurately', () => {
   const files = [file('assets/blob.txt', 'x'.repeat(50)), file('package.json', '{"dependencies":{"react":"18"}}'), file('src/app.ts', 'export const app=1')];
@@ -530,5 +591,13 @@ await asyncTest('Phase 5 verifies trusted Ed25519 packs and rejects tampering', 
   assert.equal(verified.trusted, true); assert.equal(verified.valid, true);
   const tampered = await verifyKnowledgePack({ ...signed, description: 'tampered' }, [{ keyId: 'ryzova-test', publisher: signed.publisher, publicKey }]);
   assert.equal(tampered.trusted, false); assert.equal(tampered.valid, false);
+});
+await asyncTest('V3 pack signing verifies trusted publishers and rejects tampering', async () => {
+  const keys = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
+  const signed = await signV3RulePack(V3_CORE_RULE_PACK, 'ryzova-v3-test', keys.privateKey);
+  const publicKey = Buffer.from(await crypto.subtle.exportKey('raw', keys.publicKey)).toString('base64');
+  const trust = [{ keyId: 'ryzova-v3-test', publisher: signed.publisher, publicKey }];
+  const verified = await verifyV3RulePack(signed, trust); assert.equal(verified.valid, true); assert.equal(verified.trusted, true);
+  const tampered = await verifyV3RulePack({ ...signed, description: 'tampered' }, trust); assert.equal(tampered.valid, false); assert.equal(tampered.trusted, false);
 });
 console.log(JSON.stringify({ checks, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

@@ -4,6 +4,11 @@ Knowledge packs are versioned manifests that describe deterministic detection
 rules without granting network or code-execution access. Schema version 1 is
 defined in `schemas/knowledge-pack.schema.json`.
 
+UCE V3 adds executable rule packs with regex, AST-signature, manifest, dependency,
+and configuration detectors. The V1 contract remains supported for backward
+compatibility. See [V3 Rule Platform](V3_RULE_PLATFORM.md) and
+`schemas/v3-rule-pack.schema.json` for the preview contract.
+
 ## Trust model
 
 - Built-in packs ship with UCE and are trusted as part of the application release.

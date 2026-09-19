@@ -1,4 +1,5 @@
 import type { AdditionalLanguage } from './language-knowledge';
+import type { V3ExecutionResult } from '../knowledge/v3-types';
 export type Severity = 'critical' | 'warning' | 'info';
 export type CategoryId = 'runtime' | 'dependencies' | 'configuration' | 'structure' | 'environment' | 'security' | 'deployment' | 'performance';
 export type CategoryStatus = 'good' | 'warning' | 'unknown';
@@ -49,7 +50,7 @@ export interface BrowserCompatibilityFinding { id?: string; feature: string; kin
 export interface BrowserCompatibilityIntelligence { targets: BrowserTarget[]; targetSource?: string; defaultTargetsUsed?: boolean; knowledgeVersion?: string; findings: BrowserCompatibilityFinding[]; score: number; filesScanned: number; featuresChecked: number; }
 export interface TechnologyStack {
   language: Language; languages?: LanguageProfile[]; mixedLanguage?: boolean; primaryLanguage?: Language; secondaryLanguages?: LanguageProfile[];
-  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; technologyDetections?: TechnologyDetection[]; technologyRelationships?: TechnologyRelationship[]; capabilities?: ProjectCapability[]; intelligenceInsights?: IntelligenceInsight[]; extendedIntelligence?: ExtendedIntelligence; knowledgeVersion?: string; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence; browserCompatibility?: BrowserCompatibilityIntelligence;
+  frameworks?: Framework[]; runtimes?: Runtime[]; technologyEvidence?: TechnologyEvidence[]; technologyDetections?: TechnologyDetection[]; technologyRelationships?: TechnologyRelationship[]; capabilities?: ProjectCapability[]; intelligenceInsights?: IntelligenceInsight[]; extendedIntelligence?: ExtendedIntelligence; v3RulePlatform?: V3ExecutionResult; knowledgeVersion?: string; dependencyIntelligence?: DependencyIntelligence; architecture?: ArchitectureIntelligence; codeIntelligence?: CodeIntelligence; securityIntelligence?: SecurityIntelligence; browserCompatibility?: BrowserCompatibilityIntelligence;
   framework: Framework; runtime: Runtime; packageManager: PackageManager; buildTool: BuildTool; frontend: Framework | 'None' | 'Unknown'; backend: Framework | 'None' | 'Unknown'; database: Database; configFiles: string[]; monorepo?: MonorepoTool | 'None'; cloudProvider?: CloudProvider | 'None'; confidence?: DetectionConfidence;
 }
 export type MonorepoTool = 'Nx' | 'Turborepo' | 'Lerna' | 'Rush' | 'pnpm Workspaces' | 'Yarn Workspaces' | 'None';
