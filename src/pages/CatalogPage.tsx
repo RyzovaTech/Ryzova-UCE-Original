@@ -1,5 +1,6 @@
 import { useDeferredValue, useMemo, useState } from 'react';
 import { BookOpen, Boxes, Braces, Bug, Code2, Globe2, Search, ShieldCheck } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,8 +37,10 @@ function CatalogDetail({ item }: { item: CatalogItem }) {
 }
 
 export function CatalogPage() {
+  const { section: routeSection } = useParams<{ section?: string }>();
+  const section: 'all' | CatalogSection = sections.some((item) => item.id === routeSection) ? routeSection as CatalogSection : 'all';
   const [query, setQuery] = useState(''); const deferredQuery = useDeferredValue(query);
-  const [section, setSection] = useState<'all' | CatalogSection>('all'); const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const filtered = useMemo(() => { const needle = deferredQuery.trim().toLowerCase(); return UCE_CATALOG_ITEMS.filter((item) => (section === 'all' || item.section === section) && (!needle || `${item.name} ${item.category} ${item.description} ${item.evidence.join(' ')}`.toLowerCase().includes(needle))); }, [deferredQuery, section]);
   const visible = filtered.slice(0, RESULT_LIMIT); const selected = selectedId ? UCE_CATALOG_ITEMS.find((item) => item.id === selectedId) : undefined;
   return (
@@ -46,7 +49,7 @@ export function CatalogPage() {
         <div className="flex items-start gap-4"><div className="rounded-lg bg-primary/10 p-3 text-primary"><BookOpen className="h-6 w-6" /></div><div><h1 className="text-2xl font-semibold tracking-tight">UCE Catalog</h1><p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">Explore 77 language labels, 639 technology definitions, 105 browser rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities understood by Ryzova UCE™. Catalog entries describe deterministic knowledge—not a guarantee that every project has enough evidence for detection.</p></div></div>
       </section>
       <section aria-label="Catalog coverage" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">{metrics.map(([label, value, Icon]) => <Card key={label}><CardContent className="flex items-center gap-3 p-4"><Icon className="h-5 w-5 text-primary" /><div><p className="text-xl font-semibold">{value}</p><p className="text-xs text-muted-foreground">{label}</p></div></CardContent></Card>)}</section>
-      <div className="space-y-3"><label htmlFor="catalog-search" className="text-sm font-medium">Search UCE knowledge</label><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="catalog-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search React, Python, WebGPU, Docker, SQL injection…" className="pl-9" /></div><div className="flex flex-wrap gap-2" role="group" aria-label="Catalog section">{sections.map((item) => <Button key={item.id} size="sm" variant={section === item.id ? 'default' : 'outline'} onClick={() => setSection(item.id)}>{item.label}</Button>)}</div></div>
+      <div className="space-y-3"><label htmlFor="catalog-search" className="text-sm font-medium">Search UCE knowledge</label><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input id="catalog-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search React, Python, WebGPU, Docker, SQL injection…" className="pl-9" /></div><nav className="flex flex-wrap gap-2" aria-label="Catalog section">{sections.map((item) => <Button key={item.id} size="sm" variant={section === item.id ? 'default' : 'outline'} asChild><Link to={item.id === 'all' ? '/catalog' : `/catalog/${item.id}`}>{item.label}</Link></Button>)}</nav></div>
       <div>
         <section aria-live="polite"><div className="mb-3 flex items-center justify-between"><h2 className="font-semibold">{filtered.length.toLocaleString()} matching entries</h2>{filtered.length > RESULT_LIMIT ? <span className="text-xs text-muted-foreground">Showing first {RESULT_LIMIT}</span> : null}</div>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{visible.map((item) => <button key={item.id} type="button" onClick={() => setSelectedId(item.id)} className="rounded-lg border bg-card p-4 text-left transition-colors hover:border-primary/50 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"><div className="flex items-start justify-between gap-3"><h3 className="font-medium">{item.name}</h3><Badge variant="secondary" className="shrink-0 text-[10px]">{item.category}</Badge></div><p className="mt-2 line-clamp-2 text-sm leading-5 text-muted-foreground">{item.description}</p></button>)}</div>

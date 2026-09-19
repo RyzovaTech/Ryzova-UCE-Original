@@ -26,6 +26,16 @@ const CatalogPage = lazy(() =>
   import("@/pages/CatalogPage").then((m) => ({ default: m.CatalogPage })),
 );
 
+const CATALOG_ROUTE_SEO: Record<string, { title: string; description: string }> = {
+  "/catalog": { title: "UCE Detection Catalog — Ryzova UCE", description: "Explore UCE coverage for 77 languages, 639 software technology definitions, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities." },
+  "/catalog/languages": { title: "77 Programming Languages Detected by UCE", description: "Browse the 77 programming language labels recognized by Ryzova UCE for primary, secondary, and mixed-language project analysis." },
+  "/catalog/technologies": { title: "Frameworks and Technologies Detected by UCE", description: "Browse 639 UCE definitions for frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, and CI/CD systems." },
+  "/catalog/browser": { title: "Browser Compatibility Rules — UCE Catalog", description: "Explore 105 UCE static compatibility rules for JavaScript, CSS, HTML, and Web APIs across desktop and mobile browser targets." },
+  "/catalog/security": { title: "Security Static Analysis Rules — UCE Catalog", description: "Explore 40 evidence-based UCE security review checks across secrets, injection, authentication, authorization, transport, cryptography, and configuration." },
+  "/catalog/architecture": { title: "Software Architecture Detection — UCE Catalog", description: "Explore 22 evidence-based architecture patterns recognized by UCE, including SPA, SSR, APIs, microservices, serverless, desktop, mobile, and event-driven systems." },
+  "/catalog/intelligence": { title: "UCE Project Intelligence Capabilities", description: "Explore 21 UCE intelligence capabilities for projects, code, dependencies, security, browsers, runtimes, platforms, builds, tests, quality, and deployment." },
+};
+
 function PageLoader() {
   return (
     <div className="flex h-[60vh] items-center justify-center">
@@ -37,6 +47,7 @@ function PageLoader() {
 function RouteSeo() {
   const location = useLocation();
   const pathname = location.pathname;
+  const catalogSeo = CATALOG_ROUTE_SEO[pathname];
   const seo =
     pathname === "/"
       ? {
@@ -69,11 +80,10 @@ function RouteSeo() {
                 canonicalPath: "/settings",
                 indexable: false,
               }
-            : pathname === "/catalog"
+            : catalogSeo
               ? {
-                  title: "UCE Detection Catalog — Ryzova UCE",
-                  description: "Explore UCE coverage for 77 languages, 639 software technologies, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities.",
-                  canonicalPath: "/catalog",
+                  ...catalogSeo,
+                  canonicalPath: pathname,
                   indexable: true,
                 }
             : {
@@ -205,6 +215,14 @@ function App() {
           />
           <Route
             path="/catalog"
+            element={
+              <Suspense fallback={<PageLoader />}>
+                <CatalogPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/catalog/:section"
             element={
               <Suspense fallback={<PageLoader />}>
                 <CatalogPage />

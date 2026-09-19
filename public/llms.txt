@@ -27,6 +27,12 @@ UCE analyzes project structure, runtimes, dependencies, configuration, and compa
 - https://uce.ryzova.com/
 - https://uce.ryzova.com/analyze
 - https://uce.ryzova.com/catalog — searchable UCE detection and intelligence catalog
+- https://uce.ryzova.com/catalog/languages — 77 recognized programming and source-language labels
+- https://uce.ryzova.com/catalog/technologies — frameworks, libraries, runtimes, databases, package managers, build, test, cloud, and CI/CD tools
+- https://uce.ryzova.com/catalog/browser — 105 static browser compatibility rules
+- https://uce.ryzova.com/catalog/security — 40 deterministic security review checks
+- https://uce.ryzova.com/catalog/architecture — 22 evidence-based architecture patterns
+- https://uce.ryzova.com/catalog/intelligence — 21 project intelligence modules
 
 ## Source
 - Official repository: https://github.com/RyzovaTech/Ryzova-UCE-Original

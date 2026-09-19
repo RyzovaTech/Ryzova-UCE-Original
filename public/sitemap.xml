@@ -9,4 +9,22 @@
   <url>
     <loc>https://uce.ryzova.com/catalog</loc>
   </url>
+  <url>
+    <loc>https://uce.ryzova.com/catalog/languages</loc>
+  </url>
+  <url>
+    <loc>https://uce.ryzova.com/catalog/technologies</loc>
+  </url>
+  <url>
+    <loc>https://uce.ryzova.com/catalog/browser</loc>
+  </url>
+  <url>
+    <loc>https://uce.ryzova.com/catalog/security</loc>
+  </url>
+  <url>
+    <loc>https://uce.ryzova.com/catalog/architecture</loc>
+  </url>
+  <url>
+    <loc>https://uce.ryzova.com/catalog/intelligence</loc>
+  </url>
 </urlset>

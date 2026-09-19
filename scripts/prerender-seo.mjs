@@ -1,9 +1,64 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, extname, resolve } from "node:path";
+import ts from "typescript";
 
 const distIndex = resolve("dist/index.html");
 const analyzeIndex = resolve("dist/analyze/index.html");
 const catalogIndex = resolve("dist/catalog/index.html");
+
+// Load the catalog's real TypeScript knowledge model so generated SEO pages
+// cannot silently drift away from the product UI or detector registry.
+const nativeRequire = createRequire(import.meta.url);
+const moduleCache = new Map();
+function resolveLocalModule(specifier, parentFile) {
+  const base = specifier.startsWith('@/')
+    ? resolve('src', specifier.slice(2))
+    : resolve(dirname(parentFile), specifier);
+  for (const candidate of [base, `${base}.ts`, `${base}.tsx`, `${base}.js`, resolve(base, 'index.ts')]) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error(`Unable to resolve ${specifier} from ${parentFile}`);
+}
+function loadTypeScriptModule(filePath) {
+  const absolutePath = resolve(filePath);
+  if (moduleCache.has(absolutePath)) return moduleCache.get(absolutePath).exports;
+  const module = { exports: {} };
+  moduleCache.set(absolutePath, module);
+  const output = ts.transpileModule(readFileSync(absolutePath, 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+      esModuleInterop: true,
+    },
+    fileName: absolutePath,
+  }).outputText;
+  const localRequire = (specifier) => {
+    if (specifier.startsWith('.') || specifier.startsWith('@/')) {
+      const resolved = resolveLocalModule(specifier, absolutePath);
+      return ['.ts', '.tsx'].includes(extname(resolved)) ? loadTypeScriptModule(resolved) : nativeRequire(resolved);
+    }
+    return nativeRequire(specifier);
+  };
+  new Function('require', 'module', 'exports', '__filename', '__dirname', output)(
+    localRequire,
+    module,
+    module.exports,
+    absolutePath,
+    dirname(absolutePath),
+  );
+  return module.exports;
+}
+
+const { UCE_CATALOG_ITEMS, UCE_CATALOG_COUNTS } = loadTypeScriptModule('src/lib/catalog.ts');
+const escapeHtml = (value) => String(value)
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
+const serializeJsonLd = (value) => JSON.stringify(value).replaceAll('<', '\\u003c');
 
 const html = await readFile(distIndex, "utf8");
 
@@ -155,7 +210,7 @@ const catalogJsonLd = {
   url: "https://uce.ryzova.com/catalog",
   isPartOf: { "@type": "WebSite", "@id": "https://uce.ryzova.com/#website", name: "Ryzova UCE — Universal Compatibility Engine", url: "https://uce.ryzova.com/" },
   about: { "@id": "https://uce.ryzova.com/#software" },
-  mainEntity: { "@type": "DefinedTermSet", name: "Ryzova UCE detection knowledge", description: "Programming languages, software technologies, architecture patterns, browser compatibility features, security checks, and intelligence modules.", numberOfItems: 904 },
+  mainEntity: { "@type": "DefinedTermSet", name: "Ryzova UCE detection knowledge", description: "Programming languages, software technologies, architecture patterns, browser compatibility features, security checks, and intelligence modules.", numberOfItems: UCE_CATALOG_ITEMS.length },
 };
 catalogHtml = catalogHtml.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/i, `<script type="application/ld+json">${JSON.stringify(catalogJsonLd)}</script>`);
 const catalogFallback = `
@@ -175,6 +230,15 @@ const catalogFallback = `
         <h2>Language and technology detection</h2>
         <p>UCE uses manifests, dependencies, imports, configuration files, source extensions, content signatures, and repository structure to identify project technologies.</p>
         <p>Coverage spans web, mobile, desktop, backend, API, CLI, library, monorepo, AI and machine learning, data science, blockchain, game, infrastructure, serverless, container, database, testing, and deployment ecosystems.</p>
+        <h2>Browse the complete detection indexes</h2>
+        <ul>
+          <li><a href="/catalog/languages">Programming language detection</a></li>
+          <li><a href="/catalog/technologies">Framework, library, runtime, database, and tool detection</a></li>
+          <li><a href="/catalog/browser">Browser compatibility rules</a></li>
+          <li><a href="/catalog/security">Security static-analysis checks</a></li>
+          <li><a href="/catalog/architecture">Architecture pattern detection</a></li>
+          <li><a href="/catalog/intelligence">UCE intelligence modules</a></li>
+        </ul>
         <h2>Compatibility intelligence</h2>
         <p>The catalog documents code, architecture, dependency, runtime, platform, build, testing, performance, accessibility, API, database, environment, deployment, license, documentation, maintainability, and repository analysis.</p>
         <h2>Browser and security knowledge</h2>
@@ -187,4 +251,123 @@ const catalogFallback = `
 catalogHtml = catalogHtml.replace(/\s*<noscript>[\s\S]*?<\/noscript>/i, catalogFallback);
 await mkdir(dirname(catalogIndex), { recursive: true });
 await writeFile(catalogIndex, catalogHtml, "utf8");
-console.log("Generated route-specific SEO HTML: dist/analyze/index.html, dist/catalog/index.html");
+
+const catalogSections = {
+  languages: {
+    title: `Programming Language Detection (${UCE_CATALOG_COUNTS.languages}) — UCE Catalog`,
+    heading: 'Programming Languages Detected by Ryzova UCE',
+    description: `Browse ${UCE_CATALOG_COUNTS.languages} programming and source-language labels recognized by UCE using file extensions, manifests, content signatures, and repository evidence.`,
+    intro: 'UCE can identify primary, secondary, and mixed-language projects. A language result depends on evidence found in the scanned repository and does not imply that UCE compiles or executes that language.',
+  },
+  technologies: {
+    title: `Framework and Technology Detection (${UCE_CATALOG_COUNTS.technologies} definitions) — UCE`,
+    heading: 'Frameworks, Libraries, Runtimes and Tools Detected by UCE',
+    description: `Explore ${UCE_CATALOG_COUNTS.technologies} UCE technology definitions covering frameworks, libraries, runtimes, package managers, build tools, databases, testing, cloud, CI/CD, AI/ML, and more.`,
+    intro: `UCE currently contains ${UCE_CATALOG_COUNTS.technologies} registry definitions. Related definitions are consolidated into unique named catalog profiles, with their evidence combined for clearer results.`,
+  },
+  browser: {
+    title: `Browser Compatibility Rules (${UCE_CATALOG_COUNTS.browser}) — UCE Catalog`,
+    heading: 'Browser Compatibility Features Checked by UCE',
+    description: `Review ${UCE_CATALOG_COUNTS.browser} static browser compatibility rules for JavaScript, CSS, HTML, and Web APIs across desktop and mobile browser targets.`,
+    intro: 'UCE compares detected feature usage with configured browser targets and suggests fallbacks where available. These are static compatibility checks, not runtime browser tests.',
+  },
+  security: {
+    title: `Security Static Analysis Checks (${UCE_CATALOG_COUNTS.security}) — UCE`,
+    heading: 'Security Review Signals Checked by UCE',
+    description: `Explore ${UCE_CATALOG_COUNTS.security} deterministic UCE security checks with evidence, severity, confidence, limitations, and remediation guidance.`,
+    intro: 'UCE security findings are static review signals. They can include false positives and are not automatic proof of an exploitable vulnerability or a replacement for professional security testing.',
+  },
+  architecture: {
+    title: `Software Architecture Detection (${UCE_CATALOG_COUNTS.architecture} patterns) — UCE`,
+    heading: 'Software Architecture Patterns Identified by UCE',
+    description: `Browse ${UCE_CATALOG_COUNTS.architecture} evidence-based architecture classifications, including SPA, SSR, SSG, API, monorepo, serverless, microservices, desktop, mobile, and more.`,
+    intro: 'Architecture classifications combine repository structure, technology relationships, manifests, and configuration evidence. Results are confidence-based and may require developer review.',
+  },
+  intelligence: {
+    title: `Project Intelligence Modules (${UCE_CATALOG_COUNTS.intelligence}) — UCE`,
+    heading: 'Ryzova UCE Project Intelligence Modules',
+    description: `Discover ${UCE_CATALOG_COUNTS.intelligence} UCE analysis modules for project identity, code, dependencies, architecture, runtime, builds, testing, accessibility, security, deployment, and compatibility.`,
+    intro: 'UCE combines normalized evidence from multiple modules into a compatibility report with confidence, limitations, and recommended next actions.',
+  },
+};
+
+const catalogNavigation = Object.entries(catalogSections)
+  .map(([slug, section]) => `<li><a href="/catalog/${slug}">${escapeHtml(section.heading)}</a></li>`)
+  .join('');
+
+for (const [slug, section] of Object.entries(catalogSections)) {
+  const items = UCE_CATALOG_ITEMS.filter((item) => item.section === slug);
+  const groupedItems = new Map();
+  for (const item of items) groupedItems.set(item.category, [...(groupedItems.get(item.category) ?? []), item]);
+  const itemMarkup = [...groupedItems.entries()].map(([category, categoryItems]) => `
+        <section>
+          <h2>${escapeHtml(category)} (${categoryItems.length})</h2>
+          <ul>${categoryItems.map((item) => `
+            <li id="${escapeHtml(item.id)}">
+              <h3>${escapeHtml(item.name)}</h3>
+              <p>${escapeHtml(item.description)}</p>
+              <p><strong>Support:</strong> ${escapeHtml(item.status)}. <strong>Evidence:</strong> ${escapeHtml(item.evidence.join('; ') || 'Project evidence required')}.</p>
+              ${item.recommendation ? `<p><strong>Recommendation:</strong> ${escapeHtml(item.recommendation)}</p>` : ''}
+            </li>`).join('')}
+          </ul>
+        </section>`).join('');
+  const canonicalUrl = `https://uce.ryzova.com/catalog/${slug}`;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: section.heading,
+    description: section.description,
+    url: canonicalUrl,
+    isPartOf: { '@type': 'WebSite', '@id': 'https://uce.ryzova.com/#website', name: 'Ryzova UCE — Universal Compatibility Engine', url: 'https://uce.ryzova.com/' },
+    about: { '@id': 'https://uce.ryzova.com/#software' },
+    mainEntity: {
+      '@type': 'ItemList',
+      numberOfItems: items.length,
+      itemListElement: items.map((item, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        item: {
+          '@type': 'DefinedTerm',
+          name: item.name,
+          description: item.description,
+          termCode: item.id,
+          inDefinedTermSet: 'https://uce.ryzova.com/catalog',
+        },
+      })),
+    },
+  };
+  let sectionHtml = html;
+  const sectionMeta = [
+    [/<title>[^<]*<\/title>/i, `<title>${escapeHtml(section.title)}</title>`],
+    [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="description" content="${escapeHtml(section.description)}" />`],
+    [/<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />'],
+    [/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, `<link rel="canonical" href="${canonicalUrl}" />`],
+    [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:title" content="${escapeHtml(section.title)}" />`],
+    [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="${escapeHtml(section.description)}" />`],
+    [/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:url" content="${canonicalUrl}" />`],
+    [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:title" content="${escapeHtml(section.title)}" />`],
+    [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="${escapeHtml(section.description)}" />`],
+  ];
+  for (const [pattern, replacement] of sectionMeta) sectionHtml = replaceMeta(sectionHtml, pattern, replacement);
+  sectionHtml = sectionHtml.replace(
+    /<script type="application\/ld\+json">[\s\S]*?<\/script>/i,
+    `<script type="application/ld+json">${serializeJsonLd(jsonLd)}</script>`,
+  );
+  sectionHtml = sectionHtml.replace(/\s*<noscript>[\s\S]*?<\/noscript>/i, `
+    <noscript>
+      <main>
+        <nav aria-label="UCE catalog sections"><a href="/catalog">Catalog overview</a><ul>${catalogNavigation}</ul></nav>
+        <h1>${escapeHtml(section.heading)}</h1>
+        <p>${escapeHtml(section.description)}</p>
+        <p>${escapeHtml(section.intro)}</p>
+        <p>This index contains ${items.length} unique named catalog entries generated directly from the same versioned UCE knowledge used by the analyzer.</p>
+        ${itemMarkup}
+        <p><a href="/analyze">Analyze a project with UCE</a></p>
+      </main>
+    </noscript>`);
+  const outputPath = resolve(`dist/catalog/${slug}/index.html`);
+  await mkdir(dirname(outputPath), { recursive: true });
+  await writeFile(outputPath, sectionHtml, 'utf8');
+}
+
+console.log(`Generated route-specific SEO HTML for Analyze, Catalog, and ${Object.keys(catalogSections).length} catalog indexes (${UCE_CATALOG_ITEMS.length} unique entries).`);
