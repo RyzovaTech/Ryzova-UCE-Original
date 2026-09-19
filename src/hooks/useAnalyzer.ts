@@ -4,6 +4,12 @@ import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
 import { markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
 import { getGitHubArchiveUrl, parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
+import {
+  archiveProcessingTimeoutMs,
+  GITHUB_ARCHIVE_TIMEOUT_MS,
+  GITHUB_METADATA_TIMEOUT_MS,
+  MAX_COMPRESSED_ARCHIVE_BYTES,
+} from '@/lib/analyzer/archive-policy';
 import { saveReportToHistory } from '@/lib/storage';
 import type { AnalysisInput, AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
 
@@ -41,17 +47,15 @@ const STAGE_PROGRESS: Record<AnalysisStage, number> = {
   error: 0,
 };
 
-const MAX_ARCHIVE_SIZE = 50 * 1024 * 1024;
-const REMOTE_FETCH_TIMEOUT = 30_000;
 const CANCELLED_MESSAGE = 'Analysis cancelled.';
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit = {}): Promise<Response> {
+async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REMOTE_FETCH_TIMEOUT);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const abortFromCaller = () => controller.abort();
   init.signal?.addEventListener('abort', abortFromCaller, { once: true });
   try {
@@ -157,17 +161,13 @@ export function useAnalyzer() {
   const analyzeArchive = useCallback(
     async (file: File, source: 'upload' | 'github', requestId = startRequest()): Promise<AnalysisResult> => {
       if (requestId !== requestIdRef.current) throw new Error(CANCELLED_MESSAGE);
-      if (file.size > MAX_ARCHIVE_SIZE) {
-        const mb = (file.size / (1024 * 1024)).toFixed(1);
-        const msg = `The uploaded file is ${mb}MB. The maximum supported size is 50MB.`;
-        safeSetState({ ...INITIAL_STATE, stage: 'error', error: msg });
-        runningRef.current = false;
-        return Promise.reject(new Error(msg));
-      }
       timeoutRef.current = setTimeout(() => {
-        safeSetState({ stage: 'error', error: 'Analysis timed out. The file may be too large or the archive may be malformed.', progress: 0 });
+        requestIdRef.current += 1;
+        workerRef.current?.terminate();
+        workerRef.current = null;
+        safeSetState({ stage: 'error', error: 'Analysis exceeded the adaptive processing window. The archive may be malformed or this device may not have enough available memory.', progress: 0 });
         runningRef.current = false;
-      }, 60_000);
+      }, archiveProcessingTimeoutMs(file.size));
 
       safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
       try {
@@ -221,7 +221,7 @@ export function useAnalyzer() {
         const repository = parseGitHubRepositoryUrl(url);
         safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
         remoteAbortRef.current = new AbortController();
-        const metadata = await fetchWithTimeout(repository.metadataUrl, {
+        const metadata = await fetchWithTimeout(repository.metadataUrl, GITHUB_METADATA_TIMEOUT_MS, {
           headers: { Accept: 'application/vnd.github+json' },
           signal: remoteAbortRef.current.signal,
         });
@@ -235,7 +235,7 @@ export function useAnalyzer() {
 
         remoteStep = 'archive';
         remoteAbortRef.current = new AbortController();
-        const res = await fetchWithTimeout(getGitHubArchiveUrl(repository, defaultBranch), { signal: remoteAbortRef.current.signal });
+        const res = await fetchWithTimeout(getGitHubArchiveUrl(repository, defaultBranch), GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
         ensureCurrentRequest(requestId);
         if (!res.ok) {
           const message = res.status === 404
@@ -252,21 +252,19 @@ export function useAnalyzer() {
           throw new Error('GitHub returned an unexpected response instead of a ZIP archive.');
         }
         const contentLength = Number(res.headers.get('content-length') ?? 0);
-        if (contentLength > MAX_ARCHIVE_SIZE) {
-          throw new Error(`The repository archive is ${(contentLength / (1024 * 1024)).toFixed(1)}MB. The maximum supported size is 50MB.`);
-        }
+        if (contentLength > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
         const blob = await res.blob();
         ensureCurrentRequest(requestId);
-        if (blob.size > MAX_ARCHIVE_SIZE) {
-          throw new Error(`The repository archive is ${(blob.size / (1024 * 1024)).toFixed(1)}MB. The maximum supported size is 50MB.`);
-        }
+        if (blob.size > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
         const file = new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
         return await analyzeArchive(file, 'github', requestId);
       } catch (e) {
         clearAnalysisTimeout();
         if (requestId === requestIdRef.current) runningRef.current = false;
         const message = e instanceof DOMException && e.name === 'AbortError'
-          ? `${remoteStep === 'metadata' ? 'GitHub metadata' : 'The GitHub archive relay'} did not respond within 30 seconds. Check your connection and try again.`
+          ? remoteStep === 'metadata'
+            ? 'GitHub metadata did not respond within 30 seconds. Check your connection and try again.'
+            : 'The GitHub archive relay did not finish within 10 minutes. Try again or use ZIP Upload.'
           : e instanceof TypeError && /failed to fetch/i.test(e.message)
             ? remoteStep === 'metadata'
               ? 'Could not contact the GitHub metadata API. Check your connection and try again.'

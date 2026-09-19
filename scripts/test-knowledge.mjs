@@ -55,6 +55,7 @@ const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
 const { UCE_CATALOG_ITEMS } = load('src/lib/catalog.ts');
 const { getGitHubArchiveUrl, parseGitHubRepositoryUrl } = load('src/lib/analyzer/repository.ts');
+const { archiveProcessingTimeoutMs, GITHUB_ARCHIVE_TIMEOUT_MS, MAX_COMPRESSED_ARCHIVE_BYTES } = load('src/lib/analyzer/archive-policy.ts');
 const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
 const pkg = (name, deps) => file(name, JSON.stringify({ dependencies: deps }));
 let checks = 0;
@@ -69,6 +70,16 @@ test('GitHub repository imports use the same-origin archive relay', () => {
   assert.equal(repository.repository, 'Ryzova-UCE-Original');
   assert.equal(getGitHubArchiveUrl(repository, 'release/next'), '/api/github/archive/RyzovaTech/Ryzova-UCE-Original/release/next');
   assert.ok(!getGitHubArchiveUrl(repository, 'main').includes('codeload.github.com'));
+});
+test('large archives use adaptive processing instead of the legacy 50MB cutoff', () => {
+  const fiftyMiB = 50 * 1024 * 1024;
+  assert.ok(MAX_COMPRESSED_ARCHIVE_BYTES > fiftyMiB);
+  assert.ok(archiveProcessingTimeoutMs(500 * 1024 * 1024) > archiveProcessingTimeoutMs(fiftyMiB));
+  assert.ok(GITHUB_ARCHIVE_TIMEOUT_MS >= 10 * 60_000);
+  const hookSource = fs.readFileSync(path.join(root, 'src/hooks/useAnalyzer.ts'), 'utf8');
+  const pageSource = fs.readFileSync(path.join(root, 'src/pages/AnalyzePage.tsx'), 'utf8');
+  assert.ok(!hookSource.includes('MAX_ARCHIVE_SIZE'));
+  assert.ok(!pageSource.includes('ZIP archives up to 50 MB'));
 });
 test('malformed package manifests do not crash', () => assert.deepEqual(detectRegisteredTechnologies([file('package.json', '{bad')]).filter(x => x.kind !== 'runtime'), []));
 test('multiple workspace technologies coexist', () => {

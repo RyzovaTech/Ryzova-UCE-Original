@@ -155,7 +155,7 @@ export function AnalyzePage() {
                   Drag & drop a <code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">.zip</code> archive, or click to browse.
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  ZIP archives up to 50 MB · node_modules, .git, and build output are skipped automatically
+                  No arbitrary 50 MB cutoff · large projects are safely sampled · device memory still applies
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2">

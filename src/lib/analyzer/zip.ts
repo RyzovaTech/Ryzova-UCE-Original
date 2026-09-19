@@ -2,6 +2,7 @@ import JSZip from 'jszip';
 import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
 import type { ProjectFile, ScanStats } from './types';
 import { formatFileSize } from '@/lib/utils';
+import { MAX_COMPRESSED_ARCHIVE_BYTES } from './archive-policy';
 
 export interface ZipReadResult {
   files: ProjectFile[];
@@ -11,10 +12,8 @@ export interface ZipReadResult {
 
 // --- Intelligent limits (no hard 100MB block) ---
 const MAX_FILES = 100_000;
-const MAX_TOTAL_TEXT_CONTENT = 500 * 1024 * 1024; // 500MB total text content
+const MAX_TOTAL_TEXT_CONTENT = 96 * 1024 * 1024; // bounded content; remaining files keep metadata
 const MAX_SINGLE_TEXT_FILE = 2 * 1024 * 1024; // 2MB per text file
-const SKIP_LARGE_FILE_THRESHOLD = 25 * 1024 * 1024; // skip individual files > 25MB entirely
-const MAX_COMPRESSED_SIZE = 2 * 1024 * 1024 * 1024; // 2GB compressed ZIP — hard limit to prevent browser OOM
 const MAX_TOTAL_UNCOMPRESSED = 5 * 1024 * 1024 * 1024; // 5GB total uncompressed — ZIP bomb guard
 const MAX_COMPRESSION_RATIO = 100; // if uncompressed/compressed > 100x, likely a ZIP bomb
 
@@ -189,9 +188,9 @@ export async function readZip(file: File): Promise<ZipReadResult> {
   if (file.size === 0) {
     throw new ZipReadError('The uploaded file is empty.');
   }
-  if (file.size > MAX_COMPRESSED_SIZE) {
+  if (file.size > MAX_COMPRESSED_ARCHIVE_BYTES) {
     throw new ZipReadError(
-      `Archive is too large (${formatFileSize(file.size)}). Maximum supported compressed size is ${formatFileSize(MAX_COMPRESSED_SIZE)}.`
+      `Archive is too large for safe browser processing (${formatFileSize(file.size)}). The browser safety ceiling is ${formatFileSize(MAX_COMPRESSED_ARCHIVE_BYTES)}; use the UCE CLI for larger projects.`
     );
   }
 
@@ -213,12 +212,6 @@ export async function readZip(file: File): Promise<ZipReadResult> {
   const allEntries = Object.values(zip.files).filter((e) => !e.dir);
   const totalFilesFound = allEntries.length;
 
-  if (totalFilesFound > MAX_FILES) {
-    throw new ZipReadError(
-      `Archive contains ${totalFilesFound.toLocaleString()} files. Maximum supported is ${MAX_FILES.toLocaleString()}.`
-    );
-  }
-
   // Classify entries
   const analyzableEntries: JSZip.JSZipObject[] = [];
   let ignoredCount = 0;
@@ -239,16 +232,6 @@ export async function readZip(file: File): Promise<ZipReadResult> {
     if (isBinaryFile(entry.name)) {
       ignoredCount++;
       ignoredCategorySet.add('binary/media files');
-      continue;
-    }
-
-    const size =
-      (entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
-
-    // Skip individual files above threshold
-    if (size > SKIP_LARGE_FILE_THRESHOLD) {
-      ignoredCount++;
-      ignoredCategorySet.add('oversized files (>25MB)');
       continue;
     }
 
@@ -330,6 +313,16 @@ export async function readZip(file: File): Promise<ZipReadResult> {
     return aSize - bSize;
   });
 
+  // Preserve manifests and source evidence while safely sampling very large
+  // repositories instead of rejecting OS trees and monorepos outright.
+  const filesSampled = analyzableEntries.length > MAX_FILES;
+  if (filesSampled) {
+    const sampledOut = analyzableEntries.length - MAX_FILES;
+    analyzableEntries.length = MAX_FILES;
+    ignoredCount += sampledOut;
+    ignoredCategorySet.add(`files beyond ${MAX_FILES.toLocaleString()}-file analysis budget`);
+  }
+
   // --- Phase 3: Read files progressively with memory limits ---
   const files: ProjectFile[] = [];
   let totalTextContent = 0;
@@ -399,9 +392,14 @@ export async function readZip(file: File): Promise<ZipReadResult> {
     filesAnalyzed,
     filesIgnored: ignoredCount,
     ignoredCategories: Array.from(ignoredCategorySet).sort(),
-    sampled: false,
-    truncated: contentTruncated,
-    truncationReason: contentTruncated ? `Text content exceeded the ${formatFileSize(MAX_TOTAL_TEXT_CONTENT)} total or ${formatFileSize(MAX_SINGLE_TEXT_FILE)} per-file read budget.` : undefined,
+    sampled: filesSampled,
+    truncated: filesSampled || contentTruncated,
+    truncationReason: filesSampled || contentTruncated
+      ? [
+        filesSampled ? `Repository exceeded the ${MAX_FILES.toLocaleString()}-file browser analysis budget; high-priority source and manifest files were sampled.` : '',
+        contentTruncated ? `Text content exceeded the ${formatFileSize(MAX_TOTAL_TEXT_CONTENT)} total or ${formatFileSize(MAX_SINGLE_TEXT_FILE)} per-file read budget.` : '',
+      ].filter(Boolean).join(' ')
+      : undefined,
     contentBytesRead: totalTextContent,
     contentByteLimit: MAX_TOTAL_TEXT_CONTENT,
   };
