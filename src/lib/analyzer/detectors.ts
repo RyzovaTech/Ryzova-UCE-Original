@@ -150,7 +150,7 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
 
   const cBytes = byteTotals.get('C') ?? 0;
   const cppBytes = byteTotals.get('C++') ?? 0;
-  if (hasKernelSignatures(files) && cBytes > 100_000 && cBytes > cppBytes) {
+  if (hasKernelSignatures(files) && cBytes > 0 && cBytes >= cppBytes) {
     return 'C';
   }
 
