@@ -46,4 +46,4 @@ For bugs, include:
 
 ## License
 
-By contributing to UCE, you agree that your contributions will be licensed under the Apache License 2.0.
+By contributing to UCE, you agree that your contributions will be licensed under the Mozilla Public License 2.0 (MPL 2.0).

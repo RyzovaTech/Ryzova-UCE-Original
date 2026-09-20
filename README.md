@@ -62,7 +62,7 @@ project.
 
 ## Open source
 
-Ryzova UCE is licensed under the [Apache License 2.0](LICENSE). Contributions, improvements, bug
+Ryzova UCE is licensed under the [Mozilla Public License 2.0 (MPL 2.0)](LICENSE). Contributions, improvements, bug
 reports, and factual documentation updates are welcome.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change. To report a vulnerability,

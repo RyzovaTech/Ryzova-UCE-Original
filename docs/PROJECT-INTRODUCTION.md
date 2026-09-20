@@ -18,7 +18,7 @@ is an engineering report that organizes findings by severity, impact, and recomm
 
 ZIP archives are analyzed locally in the browser. Public repositories are downloaded only after a
 user explicitly provides a repository URL, then analyzed in-browser. Ryzova UCE is open source
-under the Apache License 2.0.
+under the Mozilla Public License 2.0 (MPL 2.0).
 
 ## Technical feature summary
 
@@ -35,7 +35,7 @@ under the Apache License 2.0.
 - Ryzova: https://www.ryzova.com/
 - Official repository: https://github.com/RyzovaTech/Ryzova-UCE-Original
 - RyzovaTech GitHub: https://github.com/RyzovaTech
-- License: Apache License 2.0
+- License: Mozilla Public License 2.0 (MPL 2.0)
 
 ## Suggested factual introduction
 
