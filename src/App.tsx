@@ -99,9 +99,12 @@ function PublicLinksFooter() {
   return (
     <footer className="border-t bg-muted/30">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 py-6 text-sm md:px-8">
-        <Link to="/" className="font-medium text-foreground hover:text-primary">
+        <a
+          href="https://www.ryzova.com/uce"
+          className="font-medium text-foreground hover:text-primary"
+        >
           UCE Home
-        </Link>
+        </a>
         <Link to="/analyze" className="font-medium text-foreground hover:text-primary">
           Analyze a Project
         </Link>
