@@ -6,6 +6,7 @@ import { build as viteBuild } from "vite";
 const distIndex = resolve("dist/index.html");
 const analyzeIndex = resolve("dist/analyze/index.html");
 const catalogIndex = resolve("dist/catalog/index.html");
+const catalogSummaryFile = resolve("dist/catalog-summary.json");
 
 // Bundle the real catalog as a temporary server-side ES module. This keeps SEO
 // synchronized with detector knowledge without evaluating generated code.
@@ -26,6 +27,21 @@ await viteBuild({
 });
 const { UCE_CATALOG_ITEMS, UCE_CATALOG_COUNTS } = await import(pathToFileURL(catalogBundleFile).href);
 await rm(catalogBundleDir, { recursive: true, force: true });
+
+const catalogSummary = {
+  schemaVersion: 1,
+  product: "Ryzova UCE™",
+  catalogUrl: "https://uce.ryzova.com/catalog",
+  counts: {
+    languages: UCE_CATALOG_COUNTS.languages,
+    technologyDetectionDefinitions: UCE_CATALOG_COUNTS.technologies,
+    architecturePatterns: UCE_CATALOG_COUNTS.architecture,
+    browserCompatibilityRules: UCE_CATALOG_COUNTS.browser,
+    securityChecks: UCE_CATALOG_COUNTS.security,
+    intelligenceCapabilities: UCE_CATALOG_COUNTS.intelligence,
+  },
+};
+await writeFile(catalogSummaryFile, JSON.stringify(catalogSummary, null, 2) + "\n", "utf8");
 const escapeHtml = (value) => String(value)
   .replaceAll('&', '&amp;')
   .replaceAll('<', '&lt;')
@@ -165,14 +181,14 @@ await writeFile(analyzeIndex, analyzeHtml, "utf8");
 let catalogHtml = html;
 const catalogMeta = [
   [/<title>[^<]*<\/title>/i, "<title>UCE Detection Catalog — Languages, Technologies and Rules</title>"],
-  [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="description" content="Explore UCE coverage for 77 languages, 639 software technologies, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities." />'],
+  [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="description" content="Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser compatibility rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities." />`],
   [/<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />'],
   [/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/catalog" />'],
   [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="UCE Detection Catalog — Ryzova UCE" />'],
-  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:description" content="Browse 77 languages, 639 technologies, 105 browser rules, 40 security checks, and the transparent intelligence knowledge behind Ryzova UCE." />'],
+  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="Browse ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser rules, ${UCE_CATALOG_COUNTS.security} security checks, and the transparent intelligence knowledge behind Ryzova UCE." />`],
   [/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/catalog" />'],
   [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="UCE Detection Catalog — Ryzova UCE" />'],
-  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:description" content="Explore UCE coverage for 77 languages, 639 technologies, browser compatibility, security, architecture, and project intelligence." />'],
+  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, browser compatibility, security, architecture, and project intelligence." />`],
 ];
 for (const [pattern, replacement] of catalogMeta) catalogHtml = replaceMeta(catalogHtml, pattern, replacement);
 
@@ -180,7 +196,7 @@ const catalogJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "UCE Detection Catalog",
-  description: "A searchable catalog covering 77 programming language labels, 639 software technologies, 105 browser rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities.",
+  description: `A searchable catalog covering ${UCE_CATALOG_COUNTS.languages} programming language labels, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities.`,
   url: "https://uce.ryzova.com/catalog",
   isPartOf: { "@type": "WebSite", "@id": "https://uce.ryzova.com/#website", name: "Ryzova UCE — Universal Compatibility Engine", url: "https://uce.ryzova.com/" },
   about: { "@id": "https://uce.ryzova.com/#software" },
@@ -191,15 +207,15 @@ const catalogFallback = `
     <noscript>
       <main>
         <h1>Ryzova UCE Detection Catalog</h1>
-        <p>Explore UCE coverage for 77 programming language labels, 639 software technology definitions, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities.</p>
+        <p>Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} programming language labels, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser compatibility rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities.</p>
         <h2>Current UCE knowledge coverage</h2>
         <ul>
-          <li>77 programming language labels with primary, secondary, and mixed-language profiling</li>
-          <li>639 frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, CI/CD systems, and related technologies</li>
-          <li>105 JavaScript, CSS, HTML, and Web API browser compatibility rules</li>
-          <li>40 security checks across 13 categories</li>
-          <li>22 evidence-based architecture patterns</li>
-          <li>21 project intelligence capabilities</li>
+          <li>${UCE_CATALOG_COUNTS.languages} programming language labels with primary, secondary, and mixed-language profiling</li>
+          <li>${UCE_CATALOG_COUNTS.technologies} technology detection definitions covering frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, CI/CD systems, and related technologies</li>
+          <li>${UCE_CATALOG_COUNTS.browser} JavaScript, CSS, HTML, and Web API browser compatibility rules</li>
+          <li>${UCE_CATALOG_COUNTS.security} security checks across 13 categories</li>
+          <li>${UCE_CATALOG_COUNTS.architecture} evidence-based architecture patterns</li>
+          <li>${UCE_CATALOG_COUNTS.intelligence} project intelligence capabilities</li>
         </ul>
         <h2>Language and technology detection</h2>
         <p>UCE uses manifests, dependencies, imports, configuration files, source extensions, content signatures, and repository structure to identify project technologies.</p>
