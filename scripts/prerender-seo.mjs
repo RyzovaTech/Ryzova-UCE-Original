@@ -35,6 +35,21 @@ const catalogSummary = {
   counts: {
     languages: UCE_CATALOG_COUNTS.languages,
     technologyDetectionDefinitions: UCE_CATALOG_COUNTS.technologies,
+    uniqueTechnologyNames: UCE_CATALOG_COUNTS.uniqueTechnologies,
+    frameworkDefinitions: UCE_CATALOG_COUNTS.frameworks,
+    runtimeDefinitions: UCE_CATALOG_COUNTS.runtimes,
+    databaseDefinitions: UCE_CATALOG_COUNTS.databases,
+    buildToolDefinitions: UCE_CATALOG_COUNTS.buildTools,
+    packageManagerDefinitions: UCE_CATALOG_COUNTS.packageManagers,
+    libraryDefinitions: UCE_CATALOG_COUNTS.libraries,
+    testingToolDefinitions: UCE_CATALOG_COUNTS.testingTools,
+    lintingToolDefinitions: UCE_CATALOG_COUNTS.lintingTools,
+    stylingToolDefinitions: UCE_CATALOG_COUNTS.stylingTools,
+    authenticationDefinitions: UCE_CATALOG_COUNTS.authenticationTools,
+    ormDefinitions: UCE_CATALOG_COUNTS.orms,
+    ciCdDefinitions: UCE_CATALOG_COUNTS.ciCdTools,
+    cloudPlatformDefinitions: UCE_CATALOG_COUNTS.cloudPlatforms,
+    containerDefinitions: UCE_CATALOG_COUNTS.containers,
     architecturePatterns: UCE_CATALOG_COUNTS.architecture,
     browserCompatibilityRules: UCE_CATALOG_COUNTS.browser,
     securityChecks: UCE_CATALOG_COUNTS.security,
@@ -182,14 +197,14 @@ await writeFile(analyzeIndex, analyzeHtml, "utf8");
 let catalogHtml = html;
 const catalogMeta = [
   [/<title>[^<]*<\/title>/i, "<title>UCE Detection Catalog — Languages, Technologies and Rules</title>"],
-  [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="description" content="Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser compatibility rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities." />`],
+  [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="description" content="Explore ${UCE_CATALOG_COUNTS.languages} language labels and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technologies from ${UCE_CATALOG_COUNTS.technologies} detection definitions, including React, Next.js, Node.js, Python, PostgreSQL and Vite." />`],
   [/<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />'],
   [/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/catalog" />'],
   [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="Ryzova UCE Detection Catalog" />'],
-  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="Browse ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser rules, ${UCE_CATALOG_COUNTS.security} security checks, and the transparent intelligence knowledge behind Ryzova UCE." />`],
+  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="Browse ${UCE_CATALOG_COUNTS.languages} language labels and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technologies from ${UCE_CATALOG_COUNTS.technologies} detection definitions, plus browser, security, architecture and intelligence rules." />`],
   [/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/catalog" />'],
   [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="Ryzova UCE Detection Catalog" />'],
-  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, browser compatibility, security, architecture, and project intelligence." />`],
+  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="Explore ${UCE_CATALOG_COUNTS.languages} language labels, ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technologies, ${UCE_CATALOG_COUNTS.technologies} detection definitions, browser compatibility, security and architecture." />`],
 ];
 for (const [pattern, replacement] of catalogMeta) catalogHtml = replaceMeta(catalogHtml, pattern, replacement);
 
@@ -197,7 +212,7 @@ const catalogJsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
   name: "UCE Detection Catalog",
-  description: `A searchable catalog covering ${UCE_CATALOG_COUNTS.languages} programming language labels, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities.`,
+  description: `A searchable catalog covering ${UCE_CATALOG_COUNTS.languages} language labels and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technology names from ${UCE_CATALOG_COUNTS.technologies} detection definitions, plus ${UCE_CATALOG_COUNTS.browser} browser rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities.`,
   url: "https://uce.ryzova.com/catalog",
   isPartOf: { "@type": "WebSite", "@id": "https://uce.ryzova.com/#website", name: "Ryzova UCE — Universal Compatibility Engine", url: "https://uce.ryzova.com/" },
   about: { "@id": "https://uce.ryzova.com/#software" },
@@ -208,11 +223,11 @@ const catalogFallback = `
     <noscript>
       <main>
         <h1>Ryzova UCE Detection Catalog</h1>
-        <p>Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} programming language labels, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser compatibility rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities.</p>
+        <p>Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} programming and source-language labels and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique named technologies from ${UCE_CATALOG_COUNTS.technologies} detection definitions, plus ${UCE_CATALOG_COUNTS.browser} browser compatibility rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities.</p>
         <h2>Current UCE knowledge coverage</h2>
         <ul>
           <li>${UCE_CATALOG_COUNTS.languages} programming language labels with primary, secondary, and mixed-language profiling</li>
-          <li>${UCE_CATALOG_COUNTS.technologies} technology detection definitions covering frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, CI/CD systems, and related technologies</li>
+          <li>${UCE_CATALOG_COUNTS.technologies} technology detection definitions consolidated into ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique named technology profiles</li>\n          <li>${UCE_CATALOG_COUNTS.frameworks} framework definitions including React, Next.js, Vue, Angular, SvelteKit, Express, Django, FastAPI, Spring Boot, Laravel and Flutter</li>\n          <li>${UCE_CATALOG_COUNTS.runtimes} runtime definitions including Node.js, Bun, Deno, Python, JVM, Go, Rust, Ruby, BEAM, Dart, Swift and .NET</li>\n          <li>${UCE_CATALOG_COUNTS.databases} database definitions including PostgreSQL, MySQL, SQLite, MongoDB, Redis, DynamoDB, Elasticsearch, Supabase and Neo4j</li>\n          <li>${UCE_CATALOG_COUNTS.buildTools} build-tool definitions including Vite, Webpack, Rollup, esbuild, Maven, Gradle, Cargo, CMake and Bazel</li>\n          <li>${UCE_CATALOG_COUNTS.packageManagers} package-manager definitions including npm, pnpm, Yarn, Bun, pip, Poetry, Cargo, Maven, Gradle, Composer and NuGet</li>\n          <li>${UCE_CATALOG_COUNTS.libraries} library definitions including React Native, Expo, Redux, Axios, PyTorch, TensorFlow, NumPy and Pandas</li>\n          <li>${UCE_CATALOG_COUNTS.testingTools} testing-tool definitions including Vitest, Jest and Playwright</li>
           <li>${UCE_CATALOG_COUNTS.browser} JavaScript, CSS, HTML, and Web API browser compatibility rules</li>
           <li>${UCE_CATALOG_COUNTS.security} security checks across 13 categories</li>
           <li>${UCE_CATALOG_COUNTS.architecture} evidence-based architecture patterns</li>
@@ -247,14 +262,14 @@ const catalogSections = {
   languages: {
     title: `Programming Language Detection (${UCE_CATALOG_COUNTS.languages}) — UCE Catalog`,
     heading: 'Programming Languages Detected by Ryzova UCE',
-    description: `Browse ${UCE_CATALOG_COUNTS.languages} programming and source-language labels recognized by UCE using file extensions, manifests, content signatures, and repository evidence.`,
+    description: `Browse ${UCE_CATALOG_COUNTS.languages} language labels including TypeScript, JavaScript, Python, Java, Go, Rust, C++, C#, Kotlin, Swift, PHP, Ruby, HTML, CSS, SQL and more.`,
     intro: 'UCE can identify primary, secondary, and mixed-language projects. A language result depends on evidence found in the scanned repository and does not imply that UCE compiles or executes that language.',
   },
   technologies: {
     title: `Framework and Technology Detection (${UCE_CATALOG_COUNTS.technologies} definitions) — UCE`,
     heading: 'Frameworks, Libraries, Runtimes and Tools Detected by UCE',
-    description: `Explore ${UCE_CATALOG_COUNTS.technologies} UCE technology definitions covering frameworks, libraries, runtimes, package managers, build tools, databases, testing, cloud, CI/CD, AI/ML, and more.`,
-    intro: `UCE currently contains ${UCE_CATALOG_COUNTS.technologies} registry definitions. Related definitions are consolidated into unique named catalog profiles, with their evidence combined for clearer results.`,
+    description: `Explore ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technology names from ${UCE_CATALOG_COUNTS.technologies} UCE detection definitions, including React, Next.js, Node.js, Python, PostgreSQL, Vite, Jest, Docker and more.`,
+    intro: `UCE currently contains ${UCE_CATALOG_COUNTS.technologies} registry definitions consolidated into ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique named profiles: ${UCE_CATALOG_COUNTS.frameworks} framework definitions, ${UCE_CATALOG_COUNTS.runtimes} runtime definitions, ${UCE_CATALOG_COUNTS.databases} database definitions, ${UCE_CATALOG_COUNTS.buildTools} build-tool definitions, ${UCE_CATALOG_COUNTS.packageManagers} package-manager definitions, ${UCE_CATALOG_COUNTS.libraries} library definitions, and ${UCE_CATALOG_COUNTS.testingTools} testing-tool definitions, plus linting, styling, authentication, ORM, CI/CD, cloud, and container coverage.`,
   },
   browser: {
     title: `Browser Compatibility Rules (${UCE_CATALOG_COUNTS.browser}) — UCE Catalog`,

@@ -27,9 +27,9 @@ const CatalogPage = lazy(() =>
 );
 
 const CATALOG_ROUTE_SEO: Record<string, { title: string; description: string }> = {
-  "/catalog": { title: "Ryzova UCE Detection Catalog", description: "Explore UCE coverage for 77 languages, 639 software technology definitions, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities." },
-  "/catalog/languages": { title: "77 Programming Languages Detected by Ryzova UCE", description: "Browse the 77 programming language labels recognized by Ryzova UCE for primary, secondary, and mixed-language project analysis." },
-  "/catalog/technologies": { title: "Frameworks and Technologies Detected by Ryzova UCE", description: "Browse 639 UCE definitions for frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, and CI/CD systems." },
+  "/catalog": { title: "Ryzova UCE Detection Catalog", description: "Explore 77 language labels and 524 unique technologies from 639 detection definitions, including React, Next.js, Node.js, Python, PostgreSQL and Vite, plus browser, security and architecture checks." },
+  "/catalog/languages": { title: "77 Programming Languages Detected by Ryzova UCE", description: "Browse 77 language labels including TypeScript, JavaScript, Python, Java, Go, Rust, C++, C#, Kotlin, Swift, PHP, Ruby, HTML, CSS, SQL and more." },
+  "/catalog/technologies": { title: "Frameworks and Technologies Detected by Ryzova UCE", description: "Browse 524 unique technology names from 639 UCE detection definitions, including 43 framework, 37 runtime, 76 database, 78 build-tool and 94 testing-tool definitions." },
   "/catalog/browser": { title: "Browser Compatibility Rules — Ryzova UCE", description: "Explore 105 UCE static compatibility rules for JavaScript, CSS, HTML, and Web APIs across desktop and mobile browser targets." },
   "/catalog/security": { title: "Security Static Analysis Rules — Ryzova UCE", description: "Explore 40 evidence-based UCE security review checks across secrets, injection, authentication, authorization, transport, cryptography, and configuration." },
   "/catalog/architecture": { title: "Software Architecture Detection — Ryzova UCE", description: "Explore 22 evidence-based architecture patterns recognized by UCE, including SPA, SSR, APIs, microservices, serverless, desktop, mobile, and event-driven systems." },
@@ -53,7 +53,7 @@ function RouteSeo() {
       ? {
           title: "Ryzova UCE — Universal Compatibility Engine",
           description:
-            "Ryzova UCE is an open-source software compatibility analyzer for ZIP projects and public GitHub repositories, using deterministic browser-based checks and clear engineering reports.",
+            "Ryzova UCE analyzes ZIP projects and public GitHub repositories with 77 language labels and 524 unique technologies from 639 deterministic detection definitions.",
           canonicalPath: "/",
           indexable: true,
         }

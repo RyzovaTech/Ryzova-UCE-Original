@@ -71,7 +71,29 @@ export const UCE_CATALOG_ITEMS: readonly CatalogItem[] = [
   ...INTELLIGENCE.map<CatalogItem>(([name, description], index) => ({ id: `intelligence-${index + 1}`, name, section: 'intelligence', category: 'Intelligence module', description, evidence: ['Normalized evidence', 'Confidence and limitations', 'Actionable recommendations'], status: 'Confirmed support', version: '3.5' })),
 ];
 
+const countTechnologyKind = (kind: TechnologyDefinition['kind']) =>
+  TECHNOLOGY_REGISTRY.filter((item) => item.kind === kind).length;
+
 export const UCE_CATALOG_COUNTS = {
-  languages: languages.length, technologies: TECHNOLOGY_REGISTRY.length, architecture: ARCHITECTURES.length,
-  browser: BROWSER_FEATURES.length, security: SECURITY_RULES.length, intelligence: INTELLIGENCE.length,
+  languages: languages.length,
+  technologies: TECHNOLOGY_REGISTRY.length,
+  uniqueTechnologies: technologyCatalogItems.length,
+  frameworks: countTechnologyKind('framework'),
+  runtimes: countTechnologyKind('runtime'),
+  databases: countTechnologyKind('database'),
+  buildTools: countTechnologyKind('build-tool'),
+  packageManagers: countTechnologyKind('package-manager'),
+  libraries: countTechnologyKind('library'),
+  testingTools: countTechnologyKind('testing'),
+  lintingTools: countTechnologyKind('linting'),
+  stylingTools: countTechnologyKind('styling'),
+  authenticationTools: countTechnologyKind('auth'),
+  orms: countTechnologyKind('orm'),
+  ciCdTools: countTechnologyKind('ci-cd'),
+  cloudPlatforms: countTechnologyKind('cloud'),
+  containers: countTechnologyKind('container'),
+  architecture: ARCHITECTURES.length,
+  browser: BROWSER_FEATURES.length,
+  security: SECURITY_RULES.length,
+  intelligence: INTELLIGENCE.length,
 };

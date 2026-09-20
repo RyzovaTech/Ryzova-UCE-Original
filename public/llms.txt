@@ -8,8 +8,16 @@ Ryzova UCE is the official Universal Compatibility Engine from Ryzova. Its canon
 UCE analyzes project structure, runtimes, dependencies, configuration, and compatibility risks in the browser.
 
 ## Detection Coverage
-- 77 programming language labels
-- 639 software technology definitions
+- 77 programming and source-language labels, including TypeScript, JavaScript, Python, Java, Go, Rust, C++, C#, Kotlin, Swift, PHP, Ruby, HTML, CSS, SQL, GraphQL, Bash and PowerShell
+- 639 technology detection definitions consolidated into 524 unique named technology profiles
+- 43 framework definitions, including React, Next.js, Vue, Angular, SvelteKit, Express, NestJS, Django, Flask, FastAPI, Spring Boot, Laravel, Rails and Flutter
+- 37 runtime definitions, including Node.js, Bun, Deno, Python, JVM, Go, Rust, Ruby, BEAM, Dart, Swift and .NET
+- 76 database definitions, including PostgreSQL, MySQL, MariaDB, SQLite, MongoDB, Redis, DynamoDB, Elasticsearch, OpenSearch, Supabase, CockroachDB and Neo4j
+- 78 build-tool definitions, including Vite, Webpack, Rollup, esbuild, Maven, Gradle, Cargo, CMake, Bazel, Xcode and Make
+- 40 package-manager definitions, including npm, pnpm, Yarn, Bun, pip, Poetry, Cargo, Maven, Gradle, Composer, NuGet and CocoaPods
+- 150 library definitions, including React Native, Expo, Redux, Zustand, Axios, PyTorch, TensorFlow, NumPy and Pandas
+- 94 testing-tool definitions, including Vitest, Jest and Playwright
+- 13 linting-tool definitions, 11 styling-tool definitions, 10 authentication definitions, 19 ORM definitions, 26 CI/CD definitions, 41 cloud/platform definitions, and 1 container definition
 - 105 browser compatibility feature rules
 - 40 security checks across 13 categories
 - 22 evidence-based architecture patterns
