@@ -185,10 +185,10 @@ const catalogMeta = [
   [/<meta\s+name="description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="description" content="Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser compatibility rules, ${UCE_CATALOG_COUNTS.security} security checks, ${UCE_CATALOG_COUNTS.architecture} architecture patterns, and ${UCE_CATALOG_COUNTS.intelligence} intelligence capabilities." />`],
   [/<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />'],
   [/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/catalog" />'],
-  [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="UCE Detection Catalog — Ryzova UCE" />'],
+  [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="Ryzova UCE Detection Catalog" />'],
   [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="Browse ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, ${UCE_CATALOG_COUNTS.browser} browser rules, ${UCE_CATALOG_COUNTS.security} security checks, and the transparent intelligence knowledge behind Ryzova UCE." />`],
   [/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/catalog" />'],
-  [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="UCE Detection Catalog — Ryzova UCE" />'],
+  [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="Ryzova UCE Detection Catalog" />'],
   [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="Explore UCE coverage for ${UCE_CATALOG_COUNTS.languages} languages, ${UCE_CATALOG_COUNTS.technologies} technology detection definitions, browser compatibility, security, architecture, and project intelligence." />`],
 ];
 for (const [pattern, replacement] of catalogMeta) catalogHtml = replaceMeta(catalogHtml, pattern, replacement);

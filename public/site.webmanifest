@@ -1,7 +1,7 @@
 {
   "name": "Ryzova UCE — Universal Compatibility Engine",
-  "short_name": "UCE",
-  "description": "An open-source developer tool from Ryzova for software compatibility analysis.",
+  "short_name": "Ryzova UCE",
+  "description": "Ryzova UCE is an open-source software compatibility analyzer for software projects and public GitHub repositories.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#020718",

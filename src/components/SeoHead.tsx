@@ -45,6 +45,8 @@ export function SeoHead({ title, description, canonicalPath, indexable = true }:
     link.href = canonical;
 
     upsertMeta('meta[name="description"]', { name: "description" }, description);
+    upsertMeta('meta[name="author"]', { name: "author" }, "Ryzova");
+    upsertMeta('meta[name="application-name"]', { name: "application-name" }, "Ryzova UCE");
     upsertMeta(
       'meta[name="robots"]',
       { name: "robots" },
@@ -80,7 +82,8 @@ export function SeoHead({ title, description, canonicalPath, indexable = true }:
       isPartOf: {
         "@type": "WebSite",
         "@id": `${SITE_ORIGIN}/#website`,
-        name: "Ryzova UCE — Universal Compatibility Engine",
+        name: "Ryzova UCE",
+        alternateName: "Universal Compatibility Engine",
         url: `${SITE_ORIGIN}/`,
       },
       about: { "@id": `${SITE_ORIGIN}/#software` },

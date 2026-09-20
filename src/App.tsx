@@ -27,13 +27,13 @@ const CatalogPage = lazy(() =>
 );
 
 const CATALOG_ROUTE_SEO: Record<string, { title: string; description: string }> = {
-  "/catalog": { title: "UCE Detection Catalog — Ryzova UCE", description: "Explore UCE coverage for 77 languages, 639 software technology definitions, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities." },
-  "/catalog/languages": { title: "77 Programming Languages Detected by UCE", description: "Browse the 77 programming language labels recognized by Ryzova UCE for primary, secondary, and mixed-language project analysis." },
-  "/catalog/technologies": { title: "Frameworks and Technologies Detected by UCE", description: "Browse 639 UCE definitions for frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, and CI/CD systems." },
-  "/catalog/browser": { title: "Browser Compatibility Rules — UCE Catalog", description: "Explore 105 UCE static compatibility rules for JavaScript, CSS, HTML, and Web APIs across desktop and mobile browser targets." },
-  "/catalog/security": { title: "Security Static Analysis Rules — UCE Catalog", description: "Explore 40 evidence-based UCE security review checks across secrets, injection, authentication, authorization, transport, cryptography, and configuration." },
-  "/catalog/architecture": { title: "Software Architecture Detection — UCE Catalog", description: "Explore 22 evidence-based architecture patterns recognized by UCE, including SPA, SSR, APIs, microservices, serverless, desktop, mobile, and event-driven systems." },
-  "/catalog/intelligence": { title: "UCE Project Intelligence Capabilities", description: "Explore 21 UCE intelligence capabilities for projects, code, dependencies, security, browsers, runtimes, platforms, builds, tests, quality, and deployment." },
+  "/catalog": { title: "Ryzova UCE Detection Catalog", description: "Explore UCE coverage for 77 languages, 639 software technology definitions, 105 browser compatibility rules, 40 security checks, 22 architecture patterns, and 21 intelligence capabilities." },
+  "/catalog/languages": { title: "77 Programming Languages Detected by Ryzova UCE", description: "Browse the 77 programming language labels recognized by Ryzova UCE for primary, secondary, and mixed-language project analysis." },
+  "/catalog/technologies": { title: "Frameworks and Technologies Detected by Ryzova UCE", description: "Browse 639 UCE definitions for frameworks, libraries, runtimes, databases, package managers, build tools, testing tools, cloud platforms, and CI/CD systems." },
+  "/catalog/browser": { title: "Browser Compatibility Rules — Ryzova UCE", description: "Explore 105 UCE static compatibility rules for JavaScript, CSS, HTML, and Web APIs across desktop and mobile browser targets." },
+  "/catalog/security": { title: "Security Static Analysis Rules — Ryzova UCE", description: "Explore 40 evidence-based UCE security review checks across secrets, injection, authentication, authorization, transport, cryptography, and configuration." },
+  "/catalog/architecture": { title: "Software Architecture Detection — Ryzova UCE", description: "Explore 22 evidence-based architecture patterns recognized by UCE, including SPA, SSR, APIs, microservices, serverless, desktop, mobile, and event-driven systems." },
+  "/catalog/intelligence": { title: "Ryzova UCE Project Intelligence Capabilities", description: "Explore 21 UCE intelligence capabilities for projects, code, dependencies, security, browsers, runtimes, platforms, builds, tests, quality, and deployment." },
 };
 
 function PageLoader() {
@@ -53,7 +53,7 @@ function RouteSeo() {
       ? {
           title: "Ryzova UCE — Universal Compatibility Engine",
           description:
-            "Ryzova UCE is the Universal Compatibility Engine, an open-source developer tool from Ryzova for analyzing software projects and identifying compatibility issues.",
+            "Ryzova UCE is an open-source software compatibility analyzer for ZIP projects and public GitHub repositories, using deterministic browser-based checks and clear engineering reports.",
           canonicalPath: "/",
           indexable: true,
         }
