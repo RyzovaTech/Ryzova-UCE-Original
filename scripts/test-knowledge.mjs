@@ -296,7 +296,7 @@ test('security findings include category, confidence and safe evidence', () => {
   assert.ok(result.findings.some(item => item.ruleId === 'SEC001' && item.category === 'secrets' && item.confidence));
   assert.ok(result.findings.some(item => item.ruleId === 'SEC010' && item.category === 'transport'));
   assert.ok(result.findings.every(item => !item.evidence.includes('real-production-secret')));
-  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.0.0');
+  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.0.1');
 });
 test('security placeholders and local HTTP endpoints are suppressed', () => {
   const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const backupApiKey = "fake-api-key-for-testing"; const url = "http://localhost:3000/api";')]);
