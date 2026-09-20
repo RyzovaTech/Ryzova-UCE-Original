@@ -36,6 +36,7 @@ under the Mozilla Public License 2.0 (MPL 2.0).
 - Official repository: https://github.com/RyzovaTech/Ryzova-UCE-Original
 - RyzovaTech GitHub: https://github.com/RyzovaTech
 - License: Mozilla Public License 2.0 (MPL 2.0)
+- Identity: Ryzova UCE™ — Copyright © 2026 Ryzova — Licensed under MPL 2.0
 
 ## Suggested factual introduction
 

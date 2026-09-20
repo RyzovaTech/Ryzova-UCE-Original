@@ -65,6 +65,8 @@ project.
 Ryzova UCE is licensed under the [Mozilla Public License 2.0 (MPL 2.0)](LICENSE). Contributions, improvements, bug
 reports, and factual documentation updates are welcome.
 
+**Ryzova UCE™ — Copyright © 2026 Ryzova — Licensed under MPL 2.0**
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a change. To report a vulnerability,
 follow the private disclosure guidance in [SECURITY.md](SECURITY.md).
 

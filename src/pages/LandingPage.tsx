@@ -448,6 +448,7 @@ export function LandingPage() {
               Ryzova UCE is free and open source, built for developers and teams.
             </p>
             <p className="mt-1 text-muted-foreground">Licensed under Mozilla Public License 2.0 (MPL 2.0).</p>
+            <p className="mt-1 text-xs text-muted-foreground">Ryzova UCE™ — Copyright © 2026 Ryzova — Licensed under MPL 2.0</p>
           </div>
           <Button variant="outline" asChild className="gap-2">
             <a

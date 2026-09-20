@@ -167,6 +167,7 @@ const fallback = `
         <p>Compatibility problems often appear when runtime versions, dependency ranges, lockfiles, build configuration, or environment assumptions do not agree. Finding these signals early can reduce failed installs, confusing build errors, and deployment surprises. UCE provides a compatibility baseline that developers can review before making changes.</p>
         <h2>Open source and local first</h2>
         <p>UCE is released under the Mozilla Public License 2.0 (MPL 2.0). The project is intended to be understandable and inspectable by developers and open-source maintainers. Local project archives stay in the browser during analysis, while remote repository analysis occurs only when a repository is explicitly supplied. Use the analyzer to investigate a project and then review the generated findings in the UCE interface.</p>
+        <p>Ryzova UCE™ — Copyright © 2026 Ryzova — Licensed under MPL 2.0</p>
         <p><a href="/">Return to UCE</a></p>
         <p><a href="https://github.com/RyzovaTech/Ryzova-UCE-Original">View the official Ryzova UCE repository on GitHub</a></p>
         <p><a href="https://www.ryzova.com/">Built by Ryzova™</a></p>
