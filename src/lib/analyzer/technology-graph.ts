@@ -34,10 +34,17 @@ const CAPABILITY_RULES: CapabilityRule[] = [
 
 export const PROJECT_CAPABILITY_COUNT = CAPABILITY_RULES.length;
 
+const AUXILIARY_EVIDENCE_RE = /(^|\/)(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(?:\/|$)/i;
+function isProjectScopedDetection(item: TechnologyDetection): boolean {
+  if (!item.evidence.length) return true;
+  return item.evidence.some((evidence) => !AUXILIARY_EVIDENCE_RE.test(evidence.source.replace(/^\.\//, '')));
+}
+
 export function buildTechnologyGraph(detections: TechnologyDetection[]): { capabilities: ProjectCapability[]; relationships: TechnologyRelationship[] } {
+  const projectDetections = detections.filter(isProjectScopedDetection);
   const capabilities: ProjectCapability[] = [];
   for (const rule of CAPABILITY_RULES) {
-    const matches = detections.filter(rule.matches);
+    const matches = projectDetections.filter(rule.matches);
     if (!matches.length) continue;
     capabilities.push({ id: rule.id, name: rule.name, confidence: Math.max(...matches.map(item => item.confidence)), evidence: matches.slice(0, 6).map(item => item.id) });
   }
@@ -46,7 +53,7 @@ export function buildTechnologyGraph(detections: TechnologyDetection[]): { capab
     orm: 'accesses-with', cloud: 'deploys-to', 'ci-cd': 'automated-by', container: 'packages-with',
     auth: 'authenticates-with', styling: 'styles-with', 'package-manager': 'managed-by',
   };
-  const relationships = detections.flatMap((item): TechnologyRelationship[] => {
+  const relationships = projectDetections.flatMap((item): TechnologyRelationship[] => {
     const type = relationByKind[item.kind];
     if (!type) return [];
     return [{ from: 'project', to: item.id, type, confidence: item.confidence, evidence: item.evidence[0]?.source ?? 'project evidence' }];

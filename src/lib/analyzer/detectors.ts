@@ -24,6 +24,23 @@ function hasRootFile(files: DetectedFile[] | ProjectFile[], name: string): boole
   return files.some((file) => file.path === name);
 }
 
+const AUXILIARY_PROJECT_ROOT_RE = /^(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(?:\/|$)/i;
+
+function isPrimaryProjectPath(path: string): boolean {
+  return !AUXILIARY_PROJECT_ROOT_RE.test(path.replace(/^\.\//, ''));
+}
+
+function hasPrimaryFile(files: DetectedFile[] | ProjectFile[], name: string): boolean {
+  return files.some((file) => isPrimaryProjectPath(file.path) && (file.path === name || file.path.endsWith('/' + name)));
+}
+
+function readPrimaryFileText(files: ProjectFile[], target: string): string | null {
+  const matches = files.filter((file) => !file.isDirectory && isPrimaryProjectPath(file.path) && (file.path === target || file.path.endsWith('/' + target)));
+  if (!matches.length) return null;
+  matches.sort((a, b) => a.path.split('/').length - b.path.split('/').length || a.path.length - b.path.length);
+  return matches[0].content ?? null;
+}
+
 function hasPrefix(files: DetectedFile[] | ProjectFile[], prefix: string): boolean {
   return files.some((f) => {
     const base = f.path.split('/').pop() ?? f.path;
@@ -115,10 +132,12 @@ function tallyLanguageBytes(projectFiles: ProjectFile[]): Map<Language, number> 
 }
 
 function hasKernelSignatures(files: DetectedFile[] | ProjectFile[]): boolean {
-  const paths = files.map((f) => f.path);
-  const has = (p: string) => paths.some((x) => x === p || x.startsWith(p + '/') || x.endsWith('/' + p));
-  return has('Kconfig') || has('Kbuild') || has('kernel') || has('drivers') ||
-    has('arch') || has('include/linux') || has('mm') || has('fs/Kconfig');
+  const paths = files.map((f) => f.path.replace(/^\.\//, ''));
+  const exact = (p: string) => paths.some((x) => x === p);
+  const under = (p: string) => paths.some((x) => x === p || x.startsWith(p + '/'));
+  const rootBuild = exact('Kconfig') && (exact('Kbuild') || exact('Makefile'));
+  const structureSignals = ['arch', 'drivers', 'kernel', 'include/linux', 'mm', 'fs'].filter((path) => under(path)).length;
+  return rootBuild && structureSignals >= 3;
 }
 
 export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[]): Language {
@@ -258,7 +277,8 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
 }
 
 export function detectFramework(files: DetectedFile[], projectFiles: ProjectFile[]): Framework {
-  const pkg = safeJson(readFileText(projectFiles, 'package.json')) ?? {};
+  if (hasKernelSignatures(projectFiles)) return 'Unknown';
+  const pkg = safeJson(readPrimaryFileText(projectFiles, 'package.json') ?? readFileText(projectFiles, 'package.json')) ?? {};
   const deps = { ...(pkg.dependencies as Record<string, string> | undefined), ...(pkg.devDependencies as Record<string, string> | undefined) };
 
   if (hasPrefix(files, 'next.config.')) return 'Next.js';
@@ -372,13 +392,13 @@ export function detectRuntime(files: DetectedFile[], projectFiles: ProjectFile[]
 }
 
 export function detectPackageManager(files: DetectedFile[], projectFiles: ProjectFile[], language: Language): PackageManager {
+  if (hasKernelSignatures(projectFiles)) return 'Unknown';
   if (hasRootFile(files, 'pnpm-lock.yaml')) return 'pnpm';
   if (hasRootFile(files, 'yarn.lock')) return 'yarn';
   if (hasRootFile(files, 'bun.lockb') || hasRootFile(files, 'bun.lock')) return 'bun';
-  if (hasRootFile(files, 'package-lock.json')) return 'npm';
-  if (hasRootFile(files, 'package.json')) return 'npm';
-  if (hasFile(files, 'pyproject.toml')) {
-    const content = readFileText(projectFiles, 'pyproject.toml') ?? '';
+  if (hasRootFile(files, 'package-lock.json') || hasRootFile(files, 'package.json')) return 'npm';
+  if (hasPrimaryFile(files, 'pyproject.toml')) {
+    const content = readPrimaryFileText(projectFiles, 'pyproject.toml') ?? '';
     if (/\[tool\.poetry\]/i.test(content)) return 'poetry';
     if (/\[tool\.pdm\]/i.test(content)) return 'pdm';
     if (/\[tool\.pipenv\]/i.test(content)) return 'pipenv';
@@ -386,23 +406,22 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
     if (/\[tool\.hatch\]/i.test(content)) return 'hatch';
     return 'pip';
   }
-  if (hasFile(files, 'uv.lock')) return 'uv';
-  if (hasFile(files, 'poetry.lock')) return 'poetry';
-  if (hasFile(files, 'pdm.lock')) return 'pdm';
-  if (hasFile(files, 'Pipfile')) return 'pipenv';
-  if (hasFile(files, 'Pipfile.lock')) return 'pipenv';
-  if (hasFile(files, 'requirements.txt') || hasFile(files, 'requirements-dev.txt')) return 'pip';
-  if (hasFile(files, 'Cargo.toml')) return 'cargo';
-  if (hasFile(files, 'go.mod')) return 'go-modules';
-  if (hasFile(files, 'pom.xml')) return 'maven';
-  if (hasFile(files, 'build.gradle') || hasFile(files, 'build.gradle.kts')) return 'gradle';
-  if (hasFile(files, 'composer.json')) return 'composer';
-  if (hasFile(files, 'Gemfile')) return 'bundler';
-  if (hasFile(files, 'mix.exs')) return 'mix';
-  if (hasFile(files, 'pubspec.yaml')) return 'pub';
-  if (hasFile(files, 'Package.swift')) return 'swift-package';
-  if (hasFile(files, 'build.sbt')) return 'sbt';
-  if (hasFile(files, 'packages.config') || projectFiles.some((f) => !f.isDirectory && f.path.toLowerCase().endsWith('.csproj'))) return 'nuget';
+  if (hasPrimaryFile(files, 'uv.lock')) return 'uv';
+  if (hasPrimaryFile(files, 'poetry.lock')) return 'poetry';
+  if (hasPrimaryFile(files, 'pdm.lock')) return 'pdm';
+  if (hasPrimaryFile(files, 'Pipfile') || hasPrimaryFile(files, 'Pipfile.lock')) return 'pipenv';
+  if (hasPrimaryFile(files, 'requirements.txt') || hasPrimaryFile(files, 'requirements-dev.txt')) return 'pip';
+  if (hasPrimaryFile(files, 'Cargo.toml')) return 'cargo';
+  if (hasPrimaryFile(files, 'go.mod')) return 'go-modules';
+  if (hasPrimaryFile(files, 'pom.xml')) return 'maven';
+  if (hasPrimaryFile(files, 'build.gradle') || hasPrimaryFile(files, 'build.gradle.kts')) return 'gradle';
+  if (hasPrimaryFile(files, 'composer.json')) return 'composer';
+  if (hasPrimaryFile(files, 'Gemfile')) return 'bundler';
+  if (hasPrimaryFile(files, 'mix.exs')) return 'mix';
+  if (hasPrimaryFile(files, 'pubspec.yaml')) return 'pub';
+  if (hasPrimaryFile(files, 'Package.swift')) return 'swift-package';
+  if (hasPrimaryFile(files, 'build.sbt')) return 'sbt';
+  if (hasPrimaryFile(files, 'packages.config') || projectFiles.some((f) => !f.isDirectory && isPrimaryProjectPath(f.path) && f.path.toLowerCase().endsWith('.csproj'))) return 'nuget';
   if (language === 'Python') return 'pip';
   if (language === 'Rust') return 'cargo';
   if (language === 'Go') return 'go-modules';
@@ -416,8 +435,8 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
   if (language === 'TypeScript' || language === 'JavaScript') return 'npm';
   return 'Unknown';
 }
-
-export function detectBuildTool(files: DetectedFile[], stack: { framework: Framework; packageManager: PackageManager; language: Language }): BuildTool {
+export function detectBuildTool(files: DetectedFile[], projectFiles: ProjectFile[], stack: { framework: Framework; packageManager: PackageManager; language: Language }): BuildTool {
+  if (hasKernelSignatures(projectFiles) && hasRootFile(files, 'Makefile') && (hasRootFile(files, 'Kbuild') || hasRootFile(files, 'Kconfig'))) return 'Kbuild';
   if (hasPrefix(files, 'vite.config.')) return 'Vite';
   if (hasPrefix(files, 'next.config.')) return 'Next.js';
   if (hasPrefix(files, 'nuxt.config.')) return 'Nuxt';
@@ -425,20 +444,20 @@ export function detectBuildTool(files: DetectedFile[], stack: { framework: Frame
   if (hasPrefix(files, 'remix.config.')) return 'Remix';
   if (hasPrefix(files, 'gatsby.config.')) return 'Gatsby';
   if (hasFile(files, 'angular.json')) return 'Angular CLI';
-  if (hasFile(files, 'Cargo.toml')) return 'Cargo';
-  if (hasFile(files, 'pom.xml')) return 'Maven';
-  if (hasFile(files, 'build.gradle') || hasFile(files, 'build.gradle.kts')) return 'Gradle';
-  if (hasFile(files, 'CMakeLists.txt')) return 'CMake';
-  if (hasFile(files, 'Makefile')) return 'Make';
-  if (hasFile(files, 'Package.swift')) return 'Swift Package Manager';
-  if (hasFile(files, 'mix.exs')) return 'Mix';
-  if (hasFile(files, 'pubspec.yaml')) return 'Pub';
+  if (hasPrimaryFile(files, 'Cargo.toml')) return 'Cargo';
+  if (hasPrimaryFile(files, 'pom.xml')) return 'Maven';
+  if (hasPrimaryFile(files, 'build.gradle') || hasPrimaryFile(files, 'build.gradle.kts')) return 'Gradle';
+  if (hasPrimaryFile(files, 'CMakeLists.txt')) return 'CMake';
+  if (hasPrimaryFile(files, 'Makefile')) return 'Make';
+  if (hasPrimaryFile(files, 'Package.swift')) return 'Swift Package Manager';
+  if (hasPrimaryFile(files, 'mix.exs')) return 'Mix';
+  if (hasPrimaryFile(files, 'pubspec.yaml')) return 'Pub';
   if (hasFile(files, 'turbo.json')) return 'Turbo';
   if (hasPrefix(files, 'webpack.config.')) return 'Webpack';
   if (hasPrefix(files, 'rollup.config.')) return 'Rollup';
   if (hasPrefix(files, 'esbuild.config.')) return 'esbuild';
   if (hasFile(files, 'hardhat.config.js') || hasFile(files, 'hardhat.config.ts')) return 'turbopack';
-  if (hasFile(files, 'pyproject.toml') || hasFile(files, 'requirements.txt') || hasFile(files, 'requirements-dev.txt')) {
+  if (stack.language === 'Python' && (hasPrimaryFile(files, 'pyproject.toml') || hasPrimaryFile(files, 'requirements.txt') || hasPrimaryFile(files, 'requirements-dev.txt'))) {
     if (stack.packageManager === 'poetry') return 'poetry';
     if (stack.packageManager === 'hatch') return 'hatch';
     return 'pip';
@@ -554,7 +573,7 @@ function computeConfidence(
 
   let buildConfidence = 50;
   if (buildTool !== 'Unknown') {
-    const configBased = detectedFiles.some((f) => /vite\.config|next\.config|nuxt\.config|astro\.config|remix\.config|gatsby\.config|angular\.json|webpack\.config|rollup\.config|esbuild\.config|Cargo\.toml|pom\.xml|build\.gradle|CMakeLists\.txt|Makefile|turbo\.json/.test(f.path));
+    const configBased = detectedFiles.some((f) => /vite\.config|next\.config|nuxt\.config|astro\.config|remix\.config|gatsby\.config|angular\.json|webpack\.config|rollup\.config|esbuild\.config|Cargo\.toml|pom\.xml|build\.gradle|CMakeLists\.txt|Makefile|Kbuild|Kconfig|turbo\.json/.test(f.path));
     buildConfidence = configBased ? 98 : 75;
   }
   return { language: languageConfidence, framework: frameworkConfidence, runtime: runtimeConfidence, packageManager: pmConfidence, buildTool: buildConfidence };
@@ -565,28 +584,34 @@ export function detectStack(projectFiles: ProjectFile[], detectedFiles: Detected
   const framework = detectFramework(detectedFiles, projectFiles);
   const runtime = detectRuntime(detectedFiles, projectFiles, { language, framework });
   const packageManager = detectPackageManager(detectedFiles, projectFiles, language);
-  const buildTool = detectBuildTool(detectedFiles, { framework, packageManager, language });
+  const buildTool = detectBuildTool(detectedFiles, projectFiles, { framework, packageManager, language });
   const frontend: Framework | 'None' | 'Unknown' = FRONTEND_FRAMEWORKS.includes(framework) ? framework : 'Unknown';
   const backend: Framework | 'None' | 'Unknown' = BACKEND_FRAMEWORKS.includes(framework) ? framework : 'None';
   const database: TechnologyStack['database'] = (() => {
-    const paths = projectFiles.map((f) => f.path.toLowerCase());
-    const has = (pattern: RegExp) => paths.some((p) => pattern.test(p));
-    const text = projectFiles.filter((f) => !f.isDirectory && f.content).map((f) => f.content ?? '').join('\n');
-    if (has(/supabase|supabase\.toml/) || /supabase/i.test(text)) return 'Supabase';
-    if (has(/firebase|firestore/) || /firebase|firestore/i.test(text)) return 'Firebase';
-    if (has(/redis|ioredis|redis\.conf/)) return 'Redis';
-    if (has(/elasticsearch|elastic\.yml|elastic\.yaml/)) return 'Elasticsearch';
-    if (has(/opensearch/)) return 'OpenSearch';
-    if (has(/postgres|postgresql|pg_/) || /postgres(?:ql)?/i.test(text)) return 'PostgreSQL';
-    if (has(/mysql/) || /mysql/i.test(text)) return 'MySQL';
-    if (has(/mariadb/) || /mariadb/i.test(text)) return 'MariaDB';
-    if (has(/sqlite/) || /sqlite/i.test(text)) return 'SQLite';
-    if (has(/mongodb|mongoose/) || /mongodb/i.test(text)) return 'MongoDB';
-    if (has(/cassandra/) || /cassandra/i.test(text)) return 'Cassandra';
-    if (has(/dynamodb|aws-sdk.*dynamodb/) || /dynamodb/i.test(text)) return 'DynamoDB';
-    if (has(/cockroach/) || /cockroachdb?/i.test(text)) return 'CockroachDB';
-    if (has(/neo4j/) || /neo4j/i.test(text)) return 'Neo4j';
-    if (has(/prisma|schema\.prisma|drizzle|sequelize|typeorm|knex|mikro-orm|alembic|sqlx|golang-migrate|dbmate|gqlgen|hasura|memcached/)) return 'Detected';
+    if (hasKernelSignatures(projectFiles)) return 'Unknown';
+    const evidenceFiles = projectFiles.filter((file) => {
+      if (file.isDirectory || !isPrimaryProjectPath(file.path) || !isProjectEvidenceFile(file)) return false;
+      const path = file.path.toLowerCase();
+      return /(?:^|\/)(?:package\.json|pyproject\.toml|requirements(?:-dev)?\.txt|cargo\.toml|go\.mod|pom\.xml|build\.gradle(?:\.kts)?|composer\.json|gemfile|docker-compose\.ya?ml|compose\.ya?ml|\.env(?:\.[^/]*)?|[^/]*database[^/]*\.(?:json|ya?ml|toml)|schema\.prisma|redis\.conf)$/i.test(path);
+    });
+    const paths = evidenceFiles.map((file) => file.path.toLowerCase());
+    const has = (pattern: RegExp) => paths.some((path) => pattern.test(path));
+    const text = evidenceFiles.map((file) => file.content ?? '').join('\n');
+    if (has(/(?:^|\/)supabase(?:\/|$)|supabase\.toml$/) || /\bsupabase\b/i.test(text)) return 'Supabase';
+    if (has(/(?:^|\/)(?:firebase|firestore)(?:\/|$)/) || /\b(?:firebase|firestore)\b/i.test(text)) return 'Firebase';
+    if (has(/redis\.conf$/) || /\b(?:ioredis|redis:\/\/|REDIS_URL|["']redis["']\s*:)/i.test(text)) return 'Redis';
+    if (/\b(?:@elastic\/elasticsearch|elasticsearch|ELASTICSEARCH_URL)\b/i.test(text)) return 'Elasticsearch';
+    if (/\bopensearch\b/i.test(text)) return 'OpenSearch';
+    if (/\b(?:postgres(?:ql)?|postgres:\/\/|DATABASE_URL[^\n]*postgres|["']pg["']\s*:)/i.test(text)) return 'PostgreSQL';
+    if (/\b(?:mysql2?|mysql:\/\/)/i.test(text)) return 'MySQL';
+    if (/\bmariadb\b/i.test(text)) return 'MariaDB';
+    if (/\b(?:sqlite3?|sqlite:\/\/)/i.test(text)) return 'SQLite';
+    if (/\b(?:mongodb|mongoose|mongodb\+srv:\/\/)/i.test(text)) return 'MongoDB';
+    if (/\bcassandra(?:-driver)?\b/i.test(text)) return 'Cassandra';
+    if (/\b(?:dynamodb|@aws-sdk\/client-dynamodb)\b/i.test(text)) return 'DynamoDB';
+    if (/\bcockroachdb?\b/i.test(text)) return 'CockroachDB';
+    if (/\bneo4j\b/i.test(text)) return 'Neo4j';
+    if (/\b(?:prisma|drizzle|sequelize|typeorm|knex|mikro-orm|alembic|sqlx|golang-migrate|dbmate|hasura|memcached)\b/i.test(text) || has(/schema\.prisma$/)) return 'Detected';
     return 'Unknown';
   })();
   const monorepo = detectMonorepo(detectedFiles, projectFiles);
@@ -597,5 +622,9 @@ export function detectStack(projectFiles: ProjectFile[], detectedFiles: Detected
 
 export function buildSummary(name: string, projectFiles: ProjectFile[], detectedFiles: DetectedFile[], stack: TechnologyStack, scanStats: ScanStats): ProjectSummary {
   const foldersScanned = new Set(projectFiles.filter((f) => f.isDirectory).map((f) => f.path)).size;
-  return { name, framework: stack.framework, language: stack.language, runtime: stack.runtime, packageManager: stack.packageManager, detectedConfigFiles: detectedFiles.map((f) => f.path), filesScanned: projectFiles.filter((f) => !f.isDirectory).length, foldersScanned, scanStats };
+  const filesFound = Math.max(scanStats.filesFound || 0, scanStats.filesAnalyzed || 0);
+  const filesAnalyzed = scanStats.filesAnalyzed || projectFiles.filter((f) => !f.isDirectory).length;
+  const fileCoveragePercent = filesFound > 0 ? Math.min(100, Math.round((filesAnalyzed / filesFound) * 1000) / 10) : 100;
+  const analysisCoverage = { status: (scanStats.sampled || scanStats.truncated) ? 'partial' as const : 'full' as const, filesAnalyzed, filesFound, fileCoveragePercent, reason: scanStats.truncationReason };
+  return { name, framework: stack.framework, language: stack.language, runtime: stack.runtime, packageManager: stack.packageManager, detectedConfigFiles: detectedFiles.map((f) => f.path), filesScanned: projectFiles.filter((f) => !f.isDirectory).length, foldersScanned, scanStats, analysisCoverage };
 }

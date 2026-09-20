@@ -83,6 +83,15 @@ const PRIORITY_SOURCE_EXTENSIONS = [
 ];
 
 // --- High-priority manifest/config basenames (always read content) ---
+const ROOT_IDENTITY_FILES = new Set([
+  'makefile', 'kbuild', 'kconfig', 'cmakelists.txt',
+  'package.json', 'pyproject.toml', 'cargo.toml', 'go.mod', 'pom.xml',
+  'composer.json', 'gemfile', 'mix.exs', 'pubspec.yaml', 'package.swift', 'build.sbt',
+  'readme', 'readme.md', 'readme.txt', 'readme.rst',
+  'license', 'license.md', 'copying', 'maintainers', 'security.md',
+  '.gitignore', '.editorconfig',
+]);
+
 const PRIORITY_FILES = new Set([
   'package.json', 'pyproject.toml', 'requirements.txt', 'requirements-dev.txt',
   'setup.py', 'setup.cfg', 'cargo.toml', 'go.mod', 'pom.xml',
@@ -96,7 +105,10 @@ const PRIORITY_FILES = new Set([
   'astro.config.mjs', 'astro.config.js',
   'dockerfile', 'docker-compose.yml', 'docker-compose.yaml',
   '.env', '.env.example', '.env.local', '.env.production',
-  'makefile', 'cmakelists.txt',
+  'makefile', 'kbuild', 'kconfig', 'cmakelists.txt',
+  'readme', 'readme.md', 'readme.txt', 'readme.rst',
+  'license', 'license.md', 'copying', 'maintainers', 'security.md',
+  '.gitignore', '.editorconfig',
 ]);
 
 export class ZipReadError extends Error {
@@ -127,18 +139,23 @@ function isBinaryFile(path: string): boolean {
   return BINARY_EXTENSIONS.includes(ext);
 }
 
-function isPriorityFile(path: string): boolean {
-  const base = path.split('/').pop()?.toLowerCase() ?? path.toLowerCase();
-  if (PRIORITY_FILES.has(base)) return true;
+function priorityScore(path: string): number {
+  const normalized = path.replace(/^\.\//, '');
+  const parts = normalized.split('/').filter(Boolean);
+  const base = parts[parts.length - 1]?.toLowerCase() ?? normalized.toLowerCase();
+  const depthPenalty = Math.min(parts.length, 20) / 100;
+  if (ROOT_IDENTITY_FILES.has(base)) return depthPenalty;
+  if (PRIORITY_FILES.has(base)) return 1 + depthPenalty;
   const ext = getExtension(path);
-  return PRIORITY_SOURCE_EXTENSIONS.includes(ext);
+  if (PRIORITY_SOURCE_EXTENSIONS.includes(ext)) return 2 + depthPenalty;
+  return 3 + depthPenalty;
 }
 
 const TEXT_BASENAMES = new Set([
   'dockerfile', '.env', '.env.example', '.env.local', '.env.production',
-  'gemfile', 'gemfile.lock', 'rakefile', 'makefile', 'cmakelists.txt',
-  'package.swift', 'license', 'license.md', 'readme.md', 'readme.txt', 'readme.rst',
-  'changelog.md', 'contributing.md', '.nvmrc', '.node-version', '.python-version',
+  'gemfile', 'gemfile.lock', 'rakefile', 'makefile', 'kbuild', 'kconfig', 'cmakelists.txt',
+  'package.swift', 'license', 'license.md', 'copying', 'readme', 'readme.md', 'readme.txt', 'readme.rst',
+  'maintainers', 'security.md', 'changelog.md', 'contributing.md', '.nvmrc', '.node-version', '.python-version',
   '.ruby-version', 'runtime.txt', 'bunfig.toml', 'deno.json', 'deno.jsonc',
   '.gitignore', '.editorconfig', '.prettierrc', '.eslintrc',
   '.babelrc', 'pipfile', 'pipfile.lock', 'requirements.txt', 'requirements-dev.txt',
@@ -305,9 +322,8 @@ export async function readZip(file: File): Promise<ZipReadResult> {
 
   // --- Phase 2: Sort by priority (source files first, then by size ascending) ---
   analyzableEntries.sort((a, b) => {
-    const aPriority = isPriorityFile(a.name) ? 0 : 1;
-    const bPriority = isPriorityFile(b.name) ? 0 : 1;
-    if (aPriority !== bPriority) return aPriority - bPriority;
+    const priorityDelta = priorityScore(a.name) - priorityScore(b.name);
+    if (priorityDelta !== 0) return priorityDelta;
     const aSize = (a as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
     const bSize = (b as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
     return aSize - bSize;

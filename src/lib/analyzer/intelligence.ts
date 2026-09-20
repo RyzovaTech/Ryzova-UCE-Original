@@ -66,6 +66,13 @@ function detectArchitecture(files: ProjectFile[], _detectedFiles: DetectedFile[]
   const hasAny = (parts: string[]) => paths.some((path) => parts.some((part) => path.includes(part)));
   const add = (pattern: ArchitectureType, reason: string) => { if (!patterns.includes(pattern)) patterns.push(pattern); evidence.push(reason); };
 
+  const hasRoot = (name: string) => evidenceFiles.some((file) => file.path === name);
+  const under = (prefix: string) => paths.some((path) => path === prefix || path.startsWith(prefix + '/'));
+  const kernelStructureSignals = ['arch', 'drivers', 'kernel', 'include/linux', 'mm', 'fs'].filter(under);
+  if (hasRoot('Kconfig') && (hasRoot('Kbuild') || hasRoot('Makefile')) && kernelStructureSignals.length >= 3) {
+    return { primary: 'Operating System Kernel', patterns: ['Operating System Kernel'], confidence: 99, evidence: ['Root Kconfig plus Kbuild/Makefile detected.', `Kernel source structure detected: ${kernelStructureSignals.join(', ')}.`, 'Generic application architecture heuristics were suppressed for this kernel project.'] };
+  }
+
   if (stack.monorepo && stack.monorepo !== 'None') add('Monorepo', `${stack.monorepo} workspace configuration detected.`);
   const dependencies = new Set(dependencyMaps(files).map((item) => item.name));
   if (dependencies.has('electron') || dependencies.has('@electron-forge/cli') || hasAny(['electron/', 'electron-builder.'])) add('Desktop App', 'Electron dependency or desktop application markers detected.');

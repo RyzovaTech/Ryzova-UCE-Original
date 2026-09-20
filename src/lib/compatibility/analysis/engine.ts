@@ -131,6 +131,17 @@ function statusFromIssues(issues: Issue[]): CategoryStatus {
   return 'good';
 }
 
+function categoryApplicable(id: CategoryId, ctx: RuleContext): boolean {
+  if (id === 'runtime') return ctx.stack.runtime !== 'Unknown' || (ctx.stack.runtimes ?? []).some((runtime) => runtime !== 'Unknown');
+  if (id === 'dependencies') return ctx.stack.packageManager !== 'Unknown' || (ctx.stack.dependencyIntelligence?.total ?? 0) > 0;
+  if (id === 'environment') return ctx.detectedFiles.some((file) => file.kind === 'environment' || file.kind === 'container');
+  if (id === 'deployment') return (ctx.stack.cloudProvider && ctx.stack.cloudProvider !== 'None') || ctx.detectedFiles.some((file) => ['cloud', 'container', 'helm'].includes(file.kind));
+  if (id === 'configuration') return ctx.detectedFiles.some((file) => ['config', 'manifest', 'environment', 'container'].includes(file.kind));
+  if (id === 'security') return (ctx.stack.securityIntelligence?.filesScanned ?? 0) > 0;
+  if (id === 'performance' || id === 'structure') return ctx.files.some((file) => !file.isDirectory);
+  return true;
+}
+
 function scoreFromIssues(issues: Issue[]): number {
   // Informational advisories are guidance, not compatibility failures.
   const criticalCount = issues.filter((i) => i.severity === 'critical').length;
@@ -148,6 +159,7 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
   const byCategory = new Map<CategoryId, Issue[]>();
   for (const rule of ALL_RULES) {
     if (!isApplicable(rule.id, ctx.stack.language)) continue;
+    if (!categoryApplicable(rule.category, ctx)) continue;
     let issues: Issue[] = [];
     try {
       issues = filterEvidenceAwareFalsePositives(rule.id, rule.run(ctx) ?? [], ctx);
@@ -190,6 +202,7 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
   }
 
   return CATEGORIES.map((cat) => {
+    if (!categoryApplicable(cat.id, ctx)) return { id: cat.id, label: cat.label, status: 'unknown' as const, score: 0, issues: [], summary: 'Not applicable or insufficient evidence for this project.' };
     const issues = deduplicateIssues(byCategory.get(cat.id) ?? []);
     const status = statusFromIssues(issues);
     const compatibilityScore = scoreFromIssues(issues);

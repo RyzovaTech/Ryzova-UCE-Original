@@ -1,6 +1,13 @@
 import type { DetectedFile, Framework, ProjectFile, Runtime, TechnologyDetection, TechnologyStack } from './types';
 import { detectRegisteredTechnologies } from './technology-registry';
 
+const AUXILIARY_EVIDENCE_RE = /(^|\/)(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(?:\/|$)/i;
+
+function hasProjectWideEvidence(item: TechnologyDetection): boolean {
+  if (!item.evidence.length) return true;
+  return item.evidence.some((evidence) => !AUXILIARY_EVIDENCE_RE.test(evidence.source.replace(/^\.\//, '')));
+}
+
 function primaryFirst<T>(values: T[], primary: T | 'Unknown'): T[] {
   const unique = [...new Set(values)];
   if (primary === 'Unknown') return unique;
@@ -17,8 +24,9 @@ export function detectTechnologyProfiles(
   stack: TechnologyStack,
   registryDetections: TechnologyDetection[] = detectRegisteredTechnologies(files),
 ): { frameworks: Framework[]; runtimes: Runtime[] } {
-  const frameworks = registryDetections.filter((item) => item.kind === 'framework').map((item) => item.name as Framework);
-  const runtimes = registryDetections.filter((item) => item.kind === 'runtime').map((item) => item.name as Runtime);
+  const projectDetections = registryDetections.filter(hasProjectWideEvidence);
+  const frameworks = projectDetections.filter((item) => item.kind === 'framework').map((item) => item.name as Framework);
+  const runtimes = projectDetections.filter((item) => item.kind === 'runtime').map((item) => item.name as Runtime);
   return {
     frameworks: primaryFirst(frameworks, stack.framework),
     runtimes: primaryFirst(runtimes, stack.runtime),

@@ -94,6 +94,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.intelligenceInsights?.length) notes.push(`Correlated intelligence: ${stack.intelligenceInsights.length} prioritized cross-engine insight${stack.intelligenceInsights.length === 1 ? '' : 's'}.`);
   if (stack.extendedIntelligence) notes.push(`Phase 3.5 intelligence: ${Object.keys(stack.extendedIntelligence.modules).length} modules; combined static score ${stack.extendedIntelligence.overallScore}%.`);
   if (stack.v3RulePlatform) notes.push(`V3 rule platform: ${stack.v3RulePlatform.rulesExecuted} applicable bootstrap rules executed from ${stack.v3RulePlatform.packIds.join(', ')}; ${stack.v3RulePlatform.findings.length} review signal${stack.v3RulePlatform.findings.length === 1 ? '' : 's'}.`);
+  if (summary.analysisCoverage) notes.push(`Analysis coverage: ${summary.analysisCoverage.status}; ${summary.analysisCoverage.fileCoveragePercent}% of discovered files entered the analysis set.`);
   if (summary.scanStats.truncated) notes.push(`Analysis was truncated or sampled (${summary.scanStats.truncationReason ?? 'configured resource limits'}); absence of findings outside the analyzed content is not guaranteed.`);
   return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories, issues, score, timeline: buildTimeline(), notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source, trust: buildTrustMetadata(input.source) };
 }

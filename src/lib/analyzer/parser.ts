@@ -51,9 +51,11 @@ const KNOWN_FILES: Record<string, { kind: string; purpose: string }> = {
   // Dart / Flutter
   'pubspec.yaml': { kind: 'manifest', purpose: 'Dart pub manifest' },
   'pubspec.lock': { kind: 'lockfile', purpose: 'Dart pub lock' },
-  // C / C++
+  // C / C++ / kernel-style builds
   'CMakeLists.txt': { kind: 'config', purpose: 'CMake build config' },
   'Makefile': { kind: 'config', purpose: 'Make build config' },
+  'Kbuild': { kind: 'config', purpose: 'Kbuild build definition' },
+  'Kconfig': { kind: 'config', purpose: 'Kconfig project configuration' },
   // Swift
   'Package.swift': { kind: 'manifest', purpose: 'Swift package manifest' },
   // Scala
@@ -70,11 +72,14 @@ const KNOWN_FILES: Record<string, { kind: string; purpose: string }> = {
   '.env.local': { kind: 'environment', purpose: 'Local environment variables' },
   '.env': { kind: 'environment', purpose: 'Environment variables' },
   // Docs
+  'README': { kind: 'docs', purpose: 'Project documentation' },
   'README.md': { kind: 'docs', purpose: 'Project documentation' },
   'README.txt': { kind: 'docs', purpose: 'Project documentation' },
   'README.rst': { kind: 'docs', purpose: 'Project documentation' },
   'LICENSE': { kind: 'docs', purpose: 'License file' },
   'LICENSE.md': { kind: 'docs', purpose: 'License file' },
+  'COPYING': { kind: 'docs', purpose: 'License/copying terms' },
+  'MAINTAINERS': { kind: 'docs', purpose: 'Project maintainer metadata' },
   'CHANGELOG.md': { kind: 'docs', purpose: 'Changelog' },
   'CONTRIBUTING.md': { kind: 'docs', purpose: 'Contribution guide' },
   // Misc config

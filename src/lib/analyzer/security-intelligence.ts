@@ -6,6 +6,15 @@ const SOURCE_RE = /(?:Dockerfile|\.(?:tsx?|jsx?|mjs|cjs|py|java|kt|kts|go|rs|php
 const INTERNAL_PATH_RE = /(^|\/)(src\/lib\/analyzer(?:\/|$)|security-intelligence\.|security-knowledge\.|analyzer\.|scripts\/uce-scan\.mjs$)/i;
 function normalizePath(path: string): string { return path.replace(/^\.\//, '').replace(/\\/g, '/'); }
 
+function isCommentContext(source: string, offset: number): boolean {
+  const lineStart = source.lastIndexOf('\n', offset - 1) + 1;
+  const prefix = source.slice(lineStart, offset).trimStart();
+  if (/^(?:\/\/|\*|#)/.test(prefix)) return true;
+  const openBlock = source.lastIndexOf('/*', offset);
+  const closeBlock = source.lastIndexOf('*/', offset);
+  return openBlock > closeBlock;
+}
+
 /** Test, fixture, mock, documentation and sample code is excluded from production-security signals. */
 export function isNonProductionPath(path: string): boolean {
   const scope = classifyProjectFileScope(path);
@@ -29,6 +38,7 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
       const flags = rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`;
       for (const match of source.matchAll(new RegExp(rule.pattern.source, flags))) {
         if (rule.shouldReport && !rule.shouldReport(match)) continue;
+        if (rule.id === 'SEC005' && isCommentContext(source, match.index ?? 0)) continue;
         const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
         if (seen.has(id)) continue; seen.add(id);
         findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation, scope: /(?:Dockerfile|\.github\/|\.(?:json|ya?ml|tf)$)/i.test(normalizedPath) ? 'configuration' : 'production', falsePositivePossible: rule.falsePositivePossible ?? rule.confidence !== 'high', certainty: rule.certainty ?? (rule.confidence === 'high' ? 'confirmed' : rule.confidence === 'medium' ? 'likely' : 'possible') });

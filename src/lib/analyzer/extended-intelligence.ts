@@ -1,7 +1,7 @@
 import type { ExtendedIntelligence, ExtendedIntelligenceModuleId, IntelligenceModuleFinding, IntelligenceModuleResult, ProjectFile, TechnologyStack } from './types';
 import { classifyProjectFileScope } from './project-scope';
 
-const VERSION = '3.5.0';
+const VERSION = '3.5.1';
 const sourceRe = /\.(?:[cm]?[jt]sx?|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|cpp|c|h|vue|svelte)$/i;
 const text = (files: ProjectFile[], pattern: RegExp): string => files.filter((file) => !file.isDirectory && pattern.test(file.path)).map((file) => file.content ?? '').join('\n');
 const paths = (files: ProjectFile[]): string[] => files.filter((file) => !file.isDirectory).map((file) => file.path.replace(/\\/g, '/'));
@@ -51,11 +51,12 @@ function platformModule(files: ProjectFile[]): IntelligenceModuleResult {
 
 function buildModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const evidence: string[] = []; const findings: IntelligenceModuleFinding[] = []; const allPaths = paths(files);
-  const tools: Array<[string, RegExp]> = [['Vite', /vite\.config\./i], ['Webpack', /webpack\.config\./i], ['Rollup', /rollup\.config\./i], ['CMake', /CMakeLists\.txt$/i], ['Gradle', /build\.gradle/i], ['Maven', /pom\.xml$/i], ['Cargo', /Cargo\.toml$/i]];
+  const tools: Array<[string, RegExp]> = [['Kbuild', /(^|\/)Kbuild$|(^|\/)Kconfig$/i], ['Make', /(^|\/)Makefile$/i], ['Vite', /vite\.config\./i], ['Webpack', /webpack\.config\./i], ['Rollup', /rollup\.config\./i], ['CMake', /CMakeLists\.txt$/i], ['Gradle', /build\.gradle/i], ['Maven', /pom\.xml$/i], ['Cargo', /Cargo\.toml$/i]];
   for (const [name, pattern] of tools) if (allPaths.some((path) => pattern.test(path))) { evidence.push(`${name} configuration detected.`); }
   const frontendTools = evidence.filter((item) => /Vite|Webpack|Rollup/.test(item)); if (frontendTools.length > 1) findings.push(finding('BLD001', 'Multiple frontend build systems detected', 'warning', 72, frontendTools.join(' '), 'Confirm whether configurations are intentional or remove obsolete tooling.'));
   const pkg = text(files, /(^|\/)package\.json$/i); if (pkg && !/"build"\s*:/i.test(pkg)) findings.push(finding('BLD002', 'Build command is not declared', 'info', 75, 'package.json has no build script.', 'Add a reproducible build script if the project produces deployable output.'));
-  return result('build', 'Build Intelligence', `Primary build tool: ${stack.buildTool}.`, [`Detected build tool: ${stack.buildTool}`, ...evidence], findings, { tools: evidence.length });
+  const primaryEvidence = stack.buildTool !== 'Unknown' ? [`Detected build tool: ${stack.buildTool}`] : [];
+  return result('build', 'Build Intelligence', `Primary build tool: ${stack.buildTool}.`, [...primaryEvidence, ...evidence], findings, { tools: evidence.length });
 }
 
 function testingModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
@@ -100,7 +101,7 @@ function environmentModule(files: ProjectFile[]): IntelligenceModuleResult {
 }
 
 function licenseModule(files: ProjectFile[]): IntelligenceModuleResult {
-  const allPaths = paths(files); const licenseFile = allPaths.find((path) => /(^|\/)(?:LICENSE|COPYING)(?:\.[^/]*)?$/i.test(path)); const manifests = files.filter((file) => /(^|\/)package\.json$/i.test(file.path) && classifyProjectFileScope(file.path) !== 'fixture'); const licenses = new Set<string>(); for (const file of manifests) try { const value = (JSON.parse(file.content ?? '{}') as { license?: string }).license; if (value) licenses.add(value); } catch { /* invalid handled elsewhere */ }
+  const allPaths = paths(files); const licenseFile = allPaths.find((path) => /(^|\/)(?:LICENSE|COPYING)(?:\.[^/]*)?$/i.test(path)) ?? allPaths.find((path) => /(^|\/)LICENSES\//i.test(path)); const manifests = files.filter((file) => /(^|\/)package\.json$/i.test(file.path) && classifyProjectFileScope(file.path) !== 'fixture'); const licenses = new Set<string>(); for (const file of manifests) try { const value = (JSON.parse(file.content ?? '{}') as { license?: string }).license; if (value) licenses.add(value); } catch { /* invalid handled elsewhere */ }
   const findings: IntelligenceModuleFinding[] = []; if (!licenseFile && licenses.size === 0) findings.push(finding('LIC001', 'Project license is missing', 'warning', 95, 'No license file or package license metadata was found.', 'Add a license file and matching SPDX identifier.')); if ([...licenses].some((value) => /^(?:UNLICENSED|SEE LICENSE)/i.test(value))) findings.push(finding('LIC002', 'Restricted or custom license metadata', 'info', 90, `License metadata: ${[...licenses].join(', ')}`, 'Document redistribution and contribution terms clearly.'));
   return result('license', 'License Intelligence', licenseFile ? `License file: ${licenseFile}` : `${licenses.size} manifest license identifiers.`, [licenseFile, ...licenses].filter(Boolean) as string[], findings, { licenseFile: Boolean(licenseFile), manifestLicenses: licenses.size });
 }
@@ -119,7 +120,7 @@ function maintainabilityModule(files: ProjectFile[], stack: TechnologyStack): In
 }
 
 function repositoryModule(files: ProjectFile[]): IntelligenceModuleResult {
-  const all = paths(files); const checks = { gitignore: all.some((p) => /(^|\/)\.gitignore$/i.test(p)), workflows: all.some((p) => /(^|\/)\.github\/workflows\//i.test(p)), contributing: all.some((p) => /CONTRIBUTING/i.test(p)), codeowners: all.some((p) => /CODEOWNERS$/i.test(p)), issueTemplates: all.some((p) => /\.github\/ISSUE_TEMPLATE/i.test(p)), securityPolicy: all.some((p) => /(^|\/)SECURITY\.md$/i.test(p)) }; const findings: IntelligenceModuleFinding[] = [];
+  const all = paths(files); const checks = { gitignore: all.some((p) => /(^|\/)\.gitignore$/i.test(p)), workflows: all.some((p) => /(^|\/)\.github\/workflows\//i.test(p)), contributing: all.some((p) => /CONTRIBUTING/i.test(p)), codeowners: all.some((p) => /CODEOWNERS$/i.test(p)), issueTemplates: all.some((p) => /\.github\/ISSUE_TEMPLATE/i.test(p)), securityPolicy: all.some((p) => /(^|\/)(?:SECURITY(?:\.[^/]*)?|security-bugs\.(?:md|rst|txt))$/i.test(p)) }; const findings: IntelligenceModuleFinding[] = [];
   if (!checks.gitignore) findings.push(finding('GIT001', '.gitignore is missing', 'warning', 92, 'No .gitignore file was found.', 'Add ignore rules for dependencies, build output, local environment files, and secrets.')); if (!checks.workflows) findings.push(finding('GIT002', 'CI workflow not detected', 'info', 75, 'No GitHub Actions workflow was found in the uploaded tree.', 'Add automated test/build checks or document the external CI system.'));
   return result('repository', 'Git/Repository Intelligence', `${Object.values(checks).filter(Boolean).length}/6 repository health markers detected.`, Object.entries(checks).filter(([, present]) => present).map(([name]) => `${name} detected`), findings, checks);
 }

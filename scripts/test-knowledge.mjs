@@ -53,6 +53,7 @@ const { PHASE5_ACCURACY_FIXTURES } = load('testing/fixtures/phase5/corpus.ts');
 const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
+const { detectTechnologyProfiles } = load('src/lib/analyzer/technology-profiles.ts');
 const { parseFiles } = load('src/lib/analyzer/parser.ts');
 const { UCE_CATALOG_ITEMS } = load('src/lib/catalog.ts');
 const { getGitHubArchiveUrl, parseGitHubRepositoryUrl } = load('src/lib/analyzer/repository.ts');
@@ -184,6 +185,45 @@ test('large JSON payload does not change Node runtime', () => {
   const stack = detectStack(files, parseFiles(files));
   assert.equal(stack.language, 'JavaScript');
   assert.equal(stack.runtime, 'Node.js');
+});
+test('kernel projects prefer root Kbuild evidence over nested Python tooling', () => {
+  const files = [
+    file('Makefile', 'VERSION = 6\n'), file('Kbuild', 'obj-y += kernel/\n'), file('Kconfig', 'mainmenu "Kernel"\n'),
+    file('arch/x86/kernel/setup.c', 'int setup_arch(void) { return 0; }'), file('drivers/net/core.c', 'int driver_init(void) { return 0; }'),
+    file('kernel/sched/core.c', 'int schedule(void) { return 0; }'), file('include/linux/kernel.h', '#define KERNEL 1'), file('mm/page_alloc.c', 'int alloc_page(void) { return 0; }'),
+    file('tools/net/ynl/pyproject.toml', '[build-system]\nrequires=["setuptools"]\n[project]\nname="pyynl"'),
+    file('README', 'Kernel project'), file('COPYING', 'GPL-2.0-only'), file('.gitignore', '*.o'), file('.editorconfig', 'root = true'),
+    file('Documentation/process/security-bugs.rst', 'Security bugs'),
+  ];
+  const parsed = parseFiles(files); const stack = detectStack(files, parsed);
+  assert.equal(stack.language, 'C'); assert.equal(stack.framework, 'Unknown'); assert.equal(stack.runtime, 'Unknown');
+  assert.equal(stack.packageManager, 'Unknown'); assert.equal(stack.buildTool, 'Kbuild'); assert.equal(stack.database, 'Unknown');
+  const intelligence = detectTechnologyIntelligence(files, parsed, stack);
+  assert.equal(intelligence.architecture.primary, 'Operating System Kernel');
+  const extended = detectExtendedIntelligence(files, { ...stack, architecture: intelligence.architecture, technologyDetections: detectRegisteredTechnologies(files), runtimes: [] });
+  assert.equal(extended.modules.license.metrics.licenseFile, true); assert.equal(extended.modules.documentation.metrics.readme, true);
+  assert.equal(extended.modules.repository.metrics.gitignore, true); assert.equal(extended.modules.repository.metrics.securityPolicy, true);
+});
+test('auxiliary tooling detections do not become project-wide runtime relationships', () => {
+  const files = [
+    file('Makefile', 'VERSION = 6\n'), file('Kbuild', 'obj-y += kernel/\n'), file('Kconfig', 'mainmenu "Kernel"\n'),
+    file('arch/x.c', 'int x;'), file('drivers/y.c', 'int y;'), file('kernel/z.c', 'int z;'), file('include/linux/a.h', '#define A 1'),
+    file('tools/net/ynl/pyproject.toml', '[project]\nname="pyynl"'),
+  ];
+  const parsed = parseFiles(files); const stack = detectStack(files, parsed); const detections = detectRegisteredTechnologies(files);
+  const profiles = detectTechnologyProfiles(files, parsed, stack, detections);
+  assert.ok(!profiles.runtimes.includes('Python'));
+  const graph = buildTechnologyGraph(detections);
+  assert.ok(!graph.relationships.some((item) => item.type === 'runs-on' && /python/i.test(item.to)));
+});
+test('security transport and JWT rules require executable context', () => {
+  const falsePositive = detectSecurityIntelligence([
+    file('include/linux/mtd/pismo.h', '/* PISMO memory driver - http://www.pismoworld.org/ */'),
+    file('src/state.py', 'value = buffer.decode()'),
+  ]);
+  assert.ok(!falsePositive.findings.some((item) => item.ruleId === 'SEC005' || item.ruleId === 'SEC024'));
+  const jwt = detectSecurityIntelligence([file('src/auth.py', 'import jwt\nclaims = jwt.decode(token, key)')]);
+  assert.ok(jwt.findings.some((item) => item.ruleId === 'SEC024'));
 });
 function manifest(ecosystem, name) {
   if (ecosystem === 'python') return file('requirements.txt', name + '>=1.0');
@@ -394,7 +434,7 @@ const extendedStack = {
 };
 test('Phase 3.5 exposes every planned intelligence module', () => {
   const intelligence = detectExtendedIntelligence([file('src/app.ts', 'export const app = 1')], extendedStack);
-  assert.equal(Object.keys(intelligence.modules).length, 14); assert.equal(intelligence.version, '3.5.0'); assert.ok(intelligence.overallScore >= 0);
+  assert.equal(Object.keys(intelligence.modules).length, 14); assert.equal(intelligence.version, '3.5.1'); assert.ok(intelligence.overallScore >= 0);
   for (const id of ['project', 'runtime', 'platform', 'build', 'testing', 'performance', 'accessibility', 'api', 'database', 'environment', 'license', 'documentation', 'maintainability', 'repository']) assert.equal(intelligence.modules[id].id, id);
 });
 test('accessibility intelligence finds deterministic HTML and JSX problems', () => {

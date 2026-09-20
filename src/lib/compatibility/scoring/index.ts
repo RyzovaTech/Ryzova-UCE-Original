@@ -12,7 +12,8 @@ export const COMPATIBILITY_SCORE_WEIGHTS = {
 } as const;
 
 export function computeScore(categories: CategoryResult[]): CompatibilityScore {
-  const find = (id: string) => categories.find((c) => c.id === id)?.score ?? 100;
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  const find = (id: keyof typeof COMPATIBILITY_SCORE_WEIGHTS) => byId.get(id)?.score ?? 0;
   const runtime = find('runtime');
   const dependencies = find('dependencies');
   const configuration = find('configuration');
@@ -22,26 +23,10 @@ export function computeScore(categories: CategoryResult[]): CompatibilityScore {
   const deployment = find('deployment');
   const performance = find('performance');
 
-  const overall = Math.round(
-    runtime * COMPATIBILITY_SCORE_WEIGHTS.runtime +
-      dependencies * COMPATIBILITY_SCORE_WEIGHTS.dependencies +
-      configuration * COMPATIBILITY_SCORE_WEIGHTS.configuration +
-      structure * COMPATIBILITY_SCORE_WEIGHTS.structure +
-      environment * COMPATIBILITY_SCORE_WEIGHTS.environment +
-      security * COMPATIBILITY_SCORE_WEIGHTS.security +
-      deployment * COMPATIBILITY_SCORE_WEIGHTS.deployment +
-      performance * COMPATIBILITY_SCORE_WEIGHTS.performance
-  );
+  const applicable = categories.filter((category) => category.status !== 'unknown');
+  const weightTotal = applicable.reduce((sum, category) => sum + (COMPATIBILITY_SCORE_WEIGHTS[category.id] ?? 0), 0);
+  const weighted = applicable.reduce((sum, category) => sum + category.score * (COMPATIBILITY_SCORE_WEIGHTS[category.id] ?? 0), 0);
+  const overall = weightTotal > 0 ? Math.round(weighted / weightTotal) : 0;
 
-  return {
-    runtime,
-    dependencies,
-    configuration,
-    structure,
-    environment,
-    security,
-    deployment,
-    performance,
-    overall,
-  };
+  return { runtime, dependencies, configuration, structure, environment, security, deployment, performance, overall, applicableCategories: applicable.map((category) => category.id) };
 }
