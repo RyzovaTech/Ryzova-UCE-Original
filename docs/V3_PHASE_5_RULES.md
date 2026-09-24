@@ -7,10 +7,13 @@ The four new policies flag unresolved placeholders, Git branch dependencies, flo
 ## Validation evidence
 
 - All 10,000 rules must have unique IDs and detector signatures and pass the V3 pack validator. No bounded regex-only security rule may claim critical severity.
-- Each new Phase 5 rule runs against a generated positive dependency manifest, a pinned-version negative manifest, and an excluded test-scope manifest. These are **3,000 executable fixture assertions for the 1,000 new rules**.
-- The repository suite, schema gate, self-scan and benchmark are checked as separate quality gates. Scan output includes SARIF through the existing CLI.
+- Every built-in V3 rule now runs against a positive, a negative, and an excluded test-scope case: **30,000 executable assertions for 10,000 rules**. The 7,000 single-package dependency cases use fixed version examples; browser, flow, import and regex checks use deterministic generated syntax witnesses. The fixture gate runs in CI.
+- An additional corpus captures root `package.json` dependency declarations from **107 distinct public GitHub repositories**, with the repository name and source blob SHA. The regression suite checks a manually mapped framework dependency against its catalog rule and checks that an unrelated dependency does not trigger it. These are real manifest fragments, not complete source repositories; they chiefly cover the npm ecosystem.
+- The V3 JSON Schema is checked against all 45 built-in packs, including three deliberately invalid examples. The repository suite, schema gate, self-scan and benchmarks run separately.
+- The memory benchmark samples a synthetic 2,641-file project to 350 files with accurate truncation labels and enforces a 384 MiB post-scan Node heap budget plus a 30-second runtime budget. This is a Node simulation, not a Chrome heap profile.
+- SARIF includes V3 findings; the pull-request workflow emits up to 25 inline GitHub annotations with locations and a pointer to the complete SARIF. A local CI-format fixture verifies the emitted annotation.
 - SARIF now includes V3 findings alongside legacy findings. The repository self-scan warning gate allows 80 review signals instead of 50 because V3 signals are now counted; it still requires zero critical findings. Inspect those warnings before treating the scan as security clearance.
 
-## V3 Stable gate is still open
+## Remaining independent release evidence
 
-The Phase 5 inventory milestone is distinct from the V3 Stable release milestone. The prior 9,000 rules do **not** yet have demonstrated positive, negative, and scope fixtures for every rule. The requested minimum of 30,000 such assertions across all 10,000 rules has therefore **not been met**. Browser memory regression runs and live pull-request annotation verification also require release validation. Do not market this inventory milestone as V3 Stable.
+The 30,000 generated cases establish execution coverage, **not detection accuracy**: regex witnesses are derived from the rule definitions and do not independently establish real-world true-positive rates. The 107 real repository manifest fragments validate selected dependency detections, not a full multilingual project scan. The earlier 120-project corpus repeats twelve synthetic scenarios. A real Chrome heap regression during a large scan and a live GitHub pull-request annotation result remain necessary before claiming V3 Stable. Until independently verified, do not market the inventory milestone as a fully validated V3 Stable release.

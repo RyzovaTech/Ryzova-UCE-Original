@@ -116,7 +116,10 @@ function configEvidence(detector: V3ConfigDetector, file: V3ProjectFile, supplie
   if (!detector.files.some((pattern) => globMatch(file.path, pattern))) return [];
   const parsed = supplied?.[file.path] ?? parseJson(file.content ?? '');
   if (detector.path && parsed && compare(atPath(parsed, detector.path), detector.operator, detector.value)) return [{ detector: 'config', file: file.path, detail: `${detector.path} ${detector.operator}` }];
-  if (detector.pattern) { const match = new RegExp(detector.pattern, 'm').exec(file.content ?? ''); if (match) return [{ detector: 'config', file: file.path, line: lineAt(file.content ?? '', match.index), detail: safeDetail(match[0]) }]; }
+  if (detector.pattern) {
+    const match = new RegExp(detector.pattern, 'm').exec(file.content ?? '');
+    return match ? [{ detector: 'config', file: file.path, line: lineAt(file.content ?? '', match.index), detail: safeDetail(match[0]) }] : [];
+  }
   if (!detector.path && compare(file.content, detector.operator, detector.value)) return [{ detector: 'config', file: file.path, detail: `content ${detector.operator}` }];
   return [];
 }
@@ -147,6 +150,18 @@ function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
     const value = parseJson(content) as Record<string, unknown> | undefined;
     for (const group of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
       const entries = value?.[group]; if (entries && typeof entries === 'object') for (const [name, version] of Object.entries(entries)) output.set(name.toLowerCase(), String(version));
+    }
+  } else if (path.endsWith('composer.json')) {
+    const value = parseJson(content) as Record<string, unknown> | undefined;
+    for (const group of ['require', 'require-dev']) {
+      const entries = value?.[group];
+      if (entries && typeof entries === 'object' && !Array.isArray(entries))
+        for (const [name, version] of Object.entries(entries)) if (typeof version === 'string') output.set(name.toLowerCase(), version);
+    }
+  } else if (path.endsWith('package.swift')) {
+    for (const match of content.matchAll(/\.package\s*\(\s*(?:name\s*:\s*["'][^"']+["']\s*,\s*)?url\s*:\s*["']([^"']+)["']\s*,\s*(?:from|exact|branch|revision)\s*:\s*["']([^"']+)["']/g)) {
+      const name = match[1].split('/').pop()?.replace(/\.git$/i, '').toLowerCase();
+      if (name) output.set(name, match[2]);
     }
   } else if (path.endsWith('pom.xml')) {
     for (const match of content.matchAll(/<dependency>[\s\S]*?<groupId>\s*([^<\s]+)\s*<\/groupId>[\s\S]*?<artifactId>\s*([^<\s]+)\s*<\/artifactId>[\s\S]*?(?:<version>\s*([^<\s]+)\s*<\/version>)?[\s\S]*?<\/dependency>/gi)) {

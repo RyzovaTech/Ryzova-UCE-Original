@@ -34,17 +34,27 @@ jobs:
       - name: Knowledge regression tests
         run: npm test
 
+      - name: All V3 rule execution fixtures
+        run: npm run test:v3-fixtures
+
       - name: JSON schema, accessibility, and trust gates
         run: npm run validate:schema
 
       - name: Performance benchmark
         run: npm run benchmark
 
+      - name: V3 sampled-project memory benchmark
+        run: npm run benchmark:v3-memory
+
       - name: Dependency security audit
         run: npm audit --omit=dev
 
       - name: UCE repository self-scan
         run: npm run security:self-scan
+
+      - name: UCE pull request annotations
+        if: github.event_name == 'pull_request'
+        run: npm run uce:ci -- uce-self-scan.json --min-score=80 --max-critical=0 --max-warning=80 --annotations
 
       - name: UCE CI report gate
         run: npm run uce:ci -- testing/fixtures/phase5/ci-pass-report.json --min-score=80 --max-critical=0 --sarif=uce-ci-results.sarif

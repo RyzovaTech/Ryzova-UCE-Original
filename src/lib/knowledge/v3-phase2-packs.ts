@@ -131,7 +131,7 @@ function inventoryRule(definition: TechnologyDefinition): CompiledRule | undefin
     rule: {
       id: `technology.catalog.${definition.id}`, version: V3_PHASE2_KNOWLEDGE_VERSION, module: 'technology',
       title: `${definition.name} evidence`, description: `Confirms deterministic project evidence for ${definition.name}.`,
-      technologies: [definition.id, definition.name.toLowerCase()], scope: ['production', 'configuration'], severity: 'info', confidence: 'confirmed', detectors,
+      technologies: [...new Set([definition.id, definition.name.toLowerCase()])], scope: ['production', 'configuration'], severity: 'info', confidence: 'confirmed', detectors,
       evidenceRequirements: { minimum: 1 }, recommendation: `Use the ${definition.name} evidence when reviewing the complete project technology graph.`,
       references: [], falsePositiveNotes: ['A declared or configured technology may not be exercised by every production path.'],
       budget: { maxFiles: 10_000, maxMatches: 20, maxContentBytes: 8 * 1024 * 1024, maxMilliseconds: 80 }, tags: ['inventory', definition.kind],
@@ -198,7 +198,7 @@ function dependencyRules(): CompiledRule[] {
       rule: {
         id: `dependency.${signal.ecosystem}.${signal.definition.id}.${token}.${policy.id}`, version: V3_PHASE2_KNOWLEDGE_VERSION, module: 'dependency',
         title: `${policy.title}: ${signal.name}`, description: `Checks the declared ${signal.name} version used with ${signal.definition.name}.`,
-        technologies: [signal.definition.id, signal.definition.name.toLowerCase()], scope: ['configuration', 'production'], severity: policy.severity, confidence: 'confirmed',
+        technologies: [...new Set([signal.definition.id, signal.definition.name.toLowerCase()])], scope: ['configuration', 'production'], severity: policy.severity, confidence: 'confirmed',
         detectors: [{ kind: 'dependency', ecosystems: [signal.ecosystem], names: [signal.name], version: policy.pattern }], evidenceRequirements: { minimum: 1 },
         recommendation: policy.recommendation, references: [ecosystemReference(signal.ecosystem)], falsePositiveNotes: ['Private registries and intentionally linked monorepo packages may follow a documented alternative release policy.'],
         budget: { maxFiles: 10_000, maxMatches: 20, maxContentBytes: 8 * 1024 * 1024, maxMilliseconds: 80 }, tags: ['phase2', 'dependency-health', policy.id],

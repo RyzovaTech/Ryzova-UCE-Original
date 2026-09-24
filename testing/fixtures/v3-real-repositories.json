@@ -1,0 +1,1170 @@
+{
+  "schemaVersion": 1,
+  "source": "Public GitHub repositories; selected dependency declarations from root package.json at the recorded Git blob",
+  "capturedAt": "2026-09-24",
+  "fixtures": [
+    {
+      "repository": "primer/react",
+      "branch": "main",
+      "sha": "fe4e0369a09040d014271add1a8276a45e68b88c",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.60.0",
+        "vite": "^8.0.16",
+        "vitest": "^5.0.0"
+      }
+    },
+    {
+      "repository": "untitleduico/react",
+      "branch": "main",
+      "sha": "bc583915406170da7526a681bafe3a5c873d5a6b",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^16.3.0",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+        "tailwindcss": "^4.3.3",
+        "vite": "^8.1.5"
+      }
+    },
+    {
+      "repository": "phosphor-icons/react",
+      "branch": "master",
+      "sha": "029163e3cae2609f243c5abfd9a7465cc7b6e95b",
+      "package": "package.json",
+      "dependencies": {
+        "react": ">= 16.8",
+        "react-dom": ">= 16.8",
+        "vite": "^6.3.5",
+        "vitest": "^3.1.3"
+      }
+    },
+    {
+      "repository": "remix-run/react-router",
+      "branch": "main",
+      "sha": "f78d1b22d39d941c49cd8ef402483a395227f688",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.60.0",
+        "jest": "^30.4.2",
+        "react": "catalog:",
+        "react-dom": "catalog:",
+        "vite": "^7.0.0",
+        "vitest": "^4.1.7"
+      }
+    },
+    {
+      "repository": "streamich/react-use",
+      "branch": "master",
+      "sha": "6b82e7614ad3a10ca777064ad0f3a9b9312daf02",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "26.6.3",
+        "react": "*",
+        "react-dom": "*"
+      }
+    },
+    {
+      "repository": "reactive-resume/reactive-resume",
+      "branch": "main",
+      "sha": "c95467ea6d0565f8d50c8fc87c89b39cd110cc2d",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.63.0",
+        "vitest": "^5.0.1"
+      }
+    },
+    {
+      "repository": "marmelab/react-admin",
+      "branch": "master",
+      "sha": "b1be66341d65d121d94d10416c3fd3545a9a5186",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^29.5.0",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "vite": "^8.1.5"
+      }
+    },
+    {
+      "repository": "react-navigation/react-navigation",
+      "branch": "main",
+      "sha": "8d659239f53fa6a41f90c08d5618a98a960373ae",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "~30.4.2"
+      }
+    },
+    {
+      "repository": "JedWatson/react-select",
+      "branch": "master",
+      "sha": "f09b73ef48257ba9088e26c73228a80c1895c0fb",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^25.1.0"
+      }
+    },
+    {
+      "repository": "reduxjs/react-redux",
+      "branch": "master",
+      "sha": "3b98162863ec0730337803df62510a4057ef77e5",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^18.0 || ^19",
+        "react-dom": "^19.2.8",
+        "vite": "^8.2.2",
+        "vitest": "^4.1.11"
+      }
+    },
+    {
+      "repository": "react-bootstrap/react-bootstrap",
+      "branch": "master",
+      "sha": "0f5890a46eee424e4beae067457db58f53a46807",
+      "package": "package.json",
+      "dependencies": {
+        "react": ">=18.3.1",
+        "react-dom": ">=18.3.1",
+        "vitest": "^4.1.5"
+      }
+    },
+    {
+      "repository": "kriasoft/react-starter-kit",
+      "branch": "main",
+      "sha": "57d6135e244739a54775d76d6e8da59a4f48495b",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^19.3.0",
+        "vite": "~8.3.0",
+        "vitest": "~5.0.0"
+      }
+    },
+    {
+      "repository": "react-hook-form/react-hook-form",
+      "branch": "master",
+      "sha": "a5f31823cb3cf714943a10680a9073faf6143843",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.61.1",
+        "jest": "^30.4.2",
+        "react": "^16.8.0 || ^17 || ^18 || ^19",
+        "react-dom": "^19.2.7"
+      }
+    },
+    {
+      "repository": "react-native-maps/react-native-maps",
+      "branch": "master",
+      "sha": "54545f0e96a70c6f66d94f46f8245b2c20a75b45",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^29.6.3",
+        "react": ">= 18.3.1",
+        "react-native": ">= 0.76.0"
+      }
+    },
+    {
+      "repository": "software-mansion/react-native-svg",
+      "branch": "main",
+      "sha": "f6899196f3971b270565209e2aae8214632eb0d0",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^28.1.0",
+        "react": "*",
+        "react-native": "*"
+      }
+    },
+    {
+      "repository": "electron-react-boilerplate/electron-react-boilerplate",
+      "branch": "main",
+      "sha": "f0070560ea3efb51b40f53c5419dfef70a80b8cb",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "electron": "^44.4.0",
+        "jest": "^30.5.1",
+        "vite": "^7.3.6"
+      }
+    },
+    {
+      "repository": "RocketChat/Rocket.Chat.ReactNative",
+      "branch": "develop",
+      "sha": "a1f63135872199a474aab9e672ce46087f00bc22",
+      "package": "package.json",
+      "dependencies": {
+        "react": "19.1.0",
+        "react-native": "0.81.5",
+        "jest": "^29.7.0",
+        "react-dom": "19.1.0"
+      }
+    },
+    {
+      "repository": "ant-design/ant-design",
+      "branch": "master",
+      "sha": "a95ca1623be6ea957aecf6be222c56dde86cad15",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "30.5.2",
+        "react": ">=18.0.0",
+        "react-dom": ">=18.0.0",
+        "vite": "^8.0.16",
+        "vitest": "^4.1.8"
+      }
+    },
+    {
+      "repository": "epicweb-dev/react-fundamentals",
+      "branch": "main",
+      "sha": "5e70be2af351d3f6ce7bf2b38b5d68b091cba69a",
+      "package": "package.json",
+      "dependencies": {
+        "react": "19.2.0",
+        "react-dom": "19.2.0"
+      }
+    },
+    {
+      "repository": "react-grid-layout/react-grid-layout",
+      "branch": "master",
+      "sha": "4e04a42e58fd1f5931ea41f1d7cdc3b557e1d943",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.62.0",
+        "jest": "^30.2.0",
+        "react": ">= 16.3.0",
+        "react-dom": ">= 16.3.0"
+      }
+    },
+    {
+      "repository": "pmndrs/react-three-fiber",
+      "branch": "master",
+      "sha": "5ede7c2bfab416116d7173bf0794eab795f8d245",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^29.7.0",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "react-native": "0.69.3",
+        "vite": "^6.4.1"
+      }
+    },
+    {
+      "repository": "i18next/next-i18next",
+      "branch": "master",
+      "sha": "5e50856dd62e91d846936490031ccecb41bb0a48",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^30.4.2",
+        "next": ">= 14.1.0",
+        "react": ">= 18.0.0",
+        "react-dom": "^19.2.8"
+      }
+    },
+    {
+      "repository": "beilunyang/moemail",
+      "branch": "master",
+      "sha": "7710d890732cd1479c1023cdc86bd7363ba7b6f6",
+      "package": "package.json",
+      "dependencies": {
+        "next": "15.1.1",
+        "react": "19.0.0",
+        "react-dom": "19.0.0",
+        "tailwindcss": "^3.4.1"
+      }
+    },
+    {
+      "repository": "transitive-bullshit/nextjs-notion-starter-kit",
+      "branch": "main",
+      "sha": "0f998988b4deb2b3703fd371269339edbb322eb1",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^16.3.4",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8"
+      }
+    },
+    {
+      "repository": "michaelshimeles/nextjs-starter-kit",
+      "branch": "main",
+      "sha": "1aa9671b04f58ba3350b30fa50d569f3d34f55b1",
+      "package": "package.json",
+      "dependencies": {
+        "next": "15.3.8",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "tailwindcss": "^4.1.7"
+      }
+    },
+    {
+      "repository": "timlrx/tailwind-nextjs-starter-blog",
+      "branch": "main",
+      "sha": "deaa2aed2dbf192cfd596a55e72dc062e912a022",
+      "package": "package.json",
+      "dependencies": {
+        "next": "15.5.12",
+        "react": "19.2.4",
+        "react-dom": "19.2.4",
+        "tailwindcss": "^4.1.18"
+      }
+    },
+    {
+      "repository": "vercel/nextjs-subscription-payments",
+      "branch": "main",
+      "sha": "a68b35c79465a66d809c971f9445d1bd4fdc4ccf",
+      "package": "package.json",
+      "dependencies": {
+        "next": "14.2.3",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "tailwindcss": "^3.4.4"
+      }
+    },
+    {
+      "repository": "nobruf/shadcn-landing-page",
+      "branch": "main",
+      "sha": "f1dbbf9a371e22bb073e6c9978ad6498f0957440",
+      "package": "package.json",
+      "dependencies": {
+        "next": "14.2.3",
+        "react": "^18",
+        "react-dom": "^18",
+        "tailwindcss": "^3.4.1"
+      }
+    },
+    {
+      "repository": "joschan21/nextjs-realtime-chat",
+      "branch": "master",
+      "sha": "bf29a0b8a38ef62fc67202545f6a6733c3dacd16",
+      "package": "package.json",
+      "dependencies": {
+        "next": "13.2.4",
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
+        "tailwindcss": "^3.3.1"
+      }
+    },
+    {
+      "repository": "medusajs/nextjs-starter-medusa",
+      "branch": "main",
+      "sha": "79237f6066d05fe07405808d3fbb6f8d1ef1a6a4",
+      "package": "package.json",
+      "dependencies": {
+        "next": "15.3.9",
+        "react": "19.0.5",
+        "react-dom": "19.0.5",
+        "tailwindcss": "^3.0.23"
+      }
+    },
+    {
+      "repository": "NextJSTemplates/startup-nextjs",
+      "branch": "main",
+      "sha": "059e3bf4c7e88cf1e5fa648690222b52917d6b23",
+      "package": "package.json",
+      "dependencies": {
+        "next": "16.0.10",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+        "tailwindcss": "^4.1.3"
+      }
+    },
+    {
+      "repository": "muxinc/next-video",
+      "branch": "main",
+      "sha": "d67ac2e7f701dd72b8c680902f69d3e087f24e64",
+      "package": "package.json",
+      "dependencies": {
+        "next": ">=12.0.0",
+        "react": "^17.0.2 || ^17.0.0-0 || ^18 || ^18.0.0-0 || ^19 || ^19.0.0-0",
+        "react-dom": "^17.0.2 || ^17.0.2-0 || ^18 || ^18.0.0-0 || ^19 || ^19.0.0-0"
+      }
+    },
+    {
+      "repository": "TailAdmin/free-nextjs-admin-dashboard",
+      "branch": "main",
+      "sha": "72c0e6b7fd29c683fe827019d25bbaf9f43d2938",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^16.3.4",
+        "react": "^19.2.8",
+        "react-dom": "^19.2.8",
+        "tailwindcss": "^4.1.17"
+      }
+    },
+    {
+      "repository": "langchain-ai/langchain-nextjs-template",
+      "branch": "main",
+      "sha": "0737f1e984b7f0392fd9a06262b8f7edbc5c8d40",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^16.3.4",
+        "react": "^19.3.0",
+        "react-dom": "^19.2.8",
+        "tailwindcss": "4.3.3"
+      }
+    },
+    {
+      "repository": "ShenSeanChen/launch-mvp-stripe-nextjs-supabase",
+      "branch": "main",
+      "sha": "ed6878cb297044bac2428f601688c5c15fdba9ec",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^15.5.9",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "tailwindcss": "^3.4.1"
+      }
+    },
+    {
+      "repository": "theodorusclarence/ts-nextjs-tailwind-starter",
+      "branch": "main",
+      "sha": "429309fa6405ee233a9ce1efd5092a20aa018bc6",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^15.4.3",
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "jest": "^27.5.1",
+        "tailwindcss": "^4.1.11"
+      }
+    },
+    {
+      "repository": "auth0/nextjs-auth0",
+      "branch": "main",
+      "sha": "9386ec9521d5bbd5a55c02acfd07c073df4a7ba4",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.48.2",
+        "next": "^14.2.35 || ~15.0.7 || ~15.1.11 || ~15.2.8 || ~15.3.8 || ~15.4.10 || ~15.5.9 || ^16.0.10",
+        "vite": "^6.4.2",
+        "vitest": "^4.1.11",
+        "react": "^18.0.0 || ~19.0.1 ||  ~19.1.2 || ^19.2.1",
+        "react-dom": "^18.0.0 || ~19.0.1 || ~19.1.2 || ^19.2.1"
+      }
+    },
+    {
+      "repository": "bagisto/nextjs-commerce",
+      "branch": "main",
+      "sha": "d0f745b0a508a49d33209a6255007a63e525b080",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^16.2.9",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "tailwindcss": "^4"
+      }
+    },
+    {
+      "repository": "vercel/nextjs-postgres-nextauth-tailwindcss-template",
+      "branch": "main",
+      "sha": "ba55287f5c963ffaf0a46ed3e9a07f2e15d60ca5",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^15.1.9",
+        "react": "19.0.0",
+        "react-dom": "19.0.0",
+        "tailwindcss": "^3.4.17"
+      }
+    },
+    {
+      "repository": "supabase-community/nextjs-openai-doc-search",
+      "branch": "main",
+      "sha": "efaed2bd104a29cf3406b06d09e014ca8581f46b",
+      "package": "package.json",
+      "dependencies": {
+        "next": "13.2.4",
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
+        "tailwindcss": "^3.2.7"
+      }
+    },
+    {
+      "repository": "jakobhoeg/nextjs-ollama-llm-ui",
+      "branch": "master",
+      "sha": "cc4d76673e3248b3d96fa7f978b05f3c03a993ef",
+      "package": "package.json",
+      "dependencies": {
+        "next": "^14.2.13",
+        "react": "^18.3.1",
+        "react-dom": "^18.3.1",
+        "tailwindcss": "^3.4.12"
+      }
+    },
+    {
+      "repository": "mlynch/nextjs-tailwind-ionic-capacitor-starter",
+      "branch": "main",
+      "sha": "5b16495f6d49e0cced267c30edffed77ee778207",
+      "package": "package.json",
+      "dependencies": {
+        "next": "14.2.32",
+        "react": "18.2.0",
+        "react-dom": "18.2.0",
+        "tailwindcss": "3.4.1"
+      }
+    },
+    {
+      "repository": "vuejs/vue",
+      "branch": "main",
+      "sha": "52308153a894e446a0552e929f02b02084b531d3",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^1.0.4"
+      }
+    },
+    {
+      "repository": "vuetifyjs/vuetify",
+      "branch": "master",
+      "sha": "b91ce8e84e0291d3e206c928aae69b323ae75297",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "catalog:",
+        "vue": "catalog:"
+      }
+    },
+    {
+      "repository": "vueuse/vueuse",
+      "branch": "main",
+      "sha": "6f89c235d756df12708d2554b8ee577bacc1e9f4",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "catalog:dev",
+        "vitest": "catalog:test",
+        "vue": "catalog:dev"
+      }
+    },
+    {
+      "repository": "nuxt/nuxt",
+      "branch": "main",
+      "sha": "df7d3a3ca816ddd7785f78ce42a9a29192684a27",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "catalog:dev",
+        "nuxt": "workspace:*",
+        "vite": "catalog:vite",
+        "vitest": "catalog:dev",
+        "vue": "catalog:app-runtime"
+      }
+    },
+    {
+      "repository": "buqiyuan/vue3-antdv-admin",
+      "branch": "main",
+      "sha": "fde62061419ad5a8abbb54044beb5b0871bf1d6b",
+      "package": "package.json",
+      "dependencies": {
+        "vue": "~3.5.14",
+        "vite": "~6.3.5"
+      }
+    },
+    {
+      "repository": "cuixiaorui/mini-vue",
+      "branch": "master",
+      "sha": "4328f5b02d11b837830ba9f8a866fa2e79c03117",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^0.22.1"
+      }
+    },
+    {
+      "repository": "buqiyuan/vite-vue3-lowcode",
+      "branch": "main",
+      "sha": "0a5d9ca1c635baaef9ba8fdc37b5ab0663819d42",
+      "package": "package.json",
+      "dependencies": {
+        "vue": "3.2.37",
+        "vite": "2.9.14"
+      }
+    },
+    {
+      "repository": "ecomfe/vue-echarts",
+      "branch": "main",
+      "sha": "195276af7291db4de9d24111774d3e7efadba6d5",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "8.3.0",
+        "vitest": "^5.0.0",
+        "vue": "^3.3.0"
+      }
+    },
+    {
+      "repository": "intlify/vue-i18n",
+      "branch": "master",
+      "sha": "085b5f684ee0d6b83365edb26972ba46fe3a26f3",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^4.0.18",
+        "vue": "3.5.42"
+      }
+    },
+    {
+      "repository": "logaretm/vee-validate",
+      "branch": "main",
+      "sha": "bda521886d11d9b49192774d6a71bb500d5ede1a",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^1.6.0",
+        "vue": "^3.4.26"
+      }
+    },
+    {
+      "repository": "vuejs/vitepress",
+      "branch": "main",
+      "sha": "c11ff853c088221aee85f176ba0461a8202ee8dd",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "^8.3.0",
+        "vue": "^3.5.42",
+        "vitest": "^5.0.0"
+      }
+    },
+    {
+      "repository": "LokerL/tts-vue",
+      "branch": "main",
+      "sha": "670c1dc7faf138bfd6947bf9d5de7f3c312715cb",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "19.1.9",
+        "vite": "2.9.13",
+        "vue": "3.2.37"
+      }
+    },
+    {
+      "repository": "unovue/shadcn-vue",
+      "branch": "dev",
+      "sha": "1dd15020b91b898749199cae19a96e027d05d55e",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^4.1.11"
+      }
+    },
+    {
+      "repository": "vuejs/vue-loader",
+      "branch": "main",
+      "sha": "b36e30b003ef9d6ea326f08e5075df85b9f73e5d",
+      "package": "package.json",
+      "dependencies": {
+        "jest": "^26.4.1",
+        "vue": "^3.4.3"
+      }
+    },
+    {
+      "repository": "vue-zone/vue3-vant-mobile",
+      "branch": "main",
+      "sha": "523ad6c2dd1e42af8ac45e0370fcf0547c8daabb",
+      "package": "package.json",
+      "dependencies": {
+        "vue": "^3.5.40",
+        "vite": "^8.2.0"
+      }
+    },
+    {
+      "repository": "apertureless/vue-chartjs",
+      "branch": "main",
+      "sha": "1ec96344480c5641317893b08bb28be7317ff80c",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "vite": "^4.0.2",
+        "vitest": "^0.31.0",
+        "vue": "^3.0.0-0 || ^2.7.0"
+      }
+    },
+    {
+      "repository": "Akryum/vue-virtual-scroller",
+      "branch": "master",
+      "sha": "57d49120e7db42e3db5505a0665111033d60bdd8",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "1.58.2",
+        "vue": "^3.5.0"
+      }
+    },
+    {
+      "repository": "element-plus/element-plus",
+      "branch": "dev",
+      "sha": "9e89e28805a24e9f1e7d91e01b94ec70f751adea",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^5.0.1",
+        "vue": "catalog:"
+      }
+    },
+    {
+      "repository": "mutoe/vue3-realworld-example-app",
+      "branch": "main",
+      "sha": "5de6e49e1423ecce822ed73722f7e9cef3ef3728",
+      "package": "package.json",
+      "dependencies": {
+        "vue": "^3.5.32",
+        "@playwright/test": "1.55.1",
+        "vite": "^8.0.8",
+        "vitest": "^4.1.4"
+      }
+    },
+    {
+      "repository": "vuejs/router",
+      "branch": "main",
+      "sha": "f30a5014fd12eaca031e88276d882c3286ec8cc6",
+      "package": "package.json",
+      "dependencies": {
+        "vitest": "^4.1.10"
+      }
+    },
+    {
+      "repository": "vuejs/test-utils",
+      "branch": "main",
+      "sha": "4e360642d2e07481129c7a832e88d5182002784b",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "8.3.0",
+        "vitest": "5.0.1",
+        "vue": "3.x"
+      }
+    },
+    {
+      "repository": "vuejs/petite-vue",
+      "branch": "main",
+      "sha": "245c23ac8113eeaeba952cf794da34937ab08dda",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "^2.7.12"
+      }
+    },
+    {
+      "repository": "vuejs/devtools-v6",
+      "branch": "main",
+      "sha": "0850c64993df4972ad2e1bf9785fd6c1240e8d1a",
+      "package": "package.json",
+      "dependencies": {
+        "tailwindcss": "npm:@tailwindcss/postcss7-compat"
+      }
+    },
+    {
+      "repository": "lzxb/vue-demo",
+      "branch": "master",
+      "sha": "8055360641040c428f6e86321c2e3ab52ff15a39",
+      "package": "package.json",
+      "dependencies": {
+        "vue": "2.7.16",
+        "express": "^4.21.2"
+      }
+    },
+    {
+      "repository": "mihomo-party-org/clash-party",
+      "branch": "smart_core",
+      "sha": "6f4d52352a974ca467e3d3dcbff1716488338b4b",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^5.2.1",
+        "electron": "^43.7.3",
+        "react": "^19.3.0",
+        "react-dom": "^19.3.0",
+        "tailwindcss": "^4.3.3",
+        "vite": "^7.3.6",
+        "vitest": "4.1.10"
+      }
+    },
+    {
+      "repository": "electron/fiddle",
+      "branch": "main",
+      "sha": "a42ebd8dd2e55e150cc76e78e00cfe929949c396",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^16.14.0",
+        "react-dom": "^16.14.0",
+        "electron": "^42.3.3",
+        "vite": "^8.2.2",
+        "vitest": "^5.0.1"
+      }
+    },
+    {
+      "repository": "belnadris/angular-electron",
+      "branch": "main",
+      "sha": "cdbb2a671de816c7bfe1b577318a2ab6ac24d89a",
+      "package": "package.json",
+      "dependencies": {
+        "@angular/core": "22.1.4",
+        "@playwright/test": "1.62.1",
+        "electron": "44.1.1",
+        "vitest": "4.1.11"
+      }
+    },
+    {
+      "repository": "electron-vite/electron-vite-react",
+      "branch": "main",
+      "sha": "7ea03cff5295893706d066c4a08ddc37afebf44a",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.60.0",
+        "electron": "^42.1.0",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "tailwindcss": "^4.3.0",
+        "vite": "^8.0.16",
+        "vitest": "^4.1.8"
+      }
+    },
+    {
+      "repository": "electron/forge",
+      "branch": "main",
+      "sha": "ed9046fc9bcfea2b5c1b2765c561bbb1e5ed9219",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "^44.4.3",
+        "vitest": "catalog:"
+      }
+    },
+    {
+      "repository": "lyswhut/lx-music-desktop",
+      "branch": "master",
+      "sha": "9fa1f0ceeebc50ab902808acf55bf71b24e4ccc1",
+      "package": "package.json",
+      "dependencies": {
+        "vue": "~3.3.13",
+        "electron": "42.11.6"
+      }
+    },
+    {
+      "repository": "Automattic/simplenote-electron",
+      "branch": "trunk",
+      "sha": "77158e9154348066444addba8bd6ed26c6d8f82e",
+      "package": "package.json",
+      "dependencies": {
+        "react": "18.3.1",
+        "react-dom": "18.3.1",
+        "electron": "34.1.1",
+        "jest": "29.7.0"
+      }
+    },
+    {
+      "repository": "electron-vite/electron-vite-vue",
+      "branch": "main",
+      "sha": "8b22b4d4ab6a4f35681edb8a19bff45aff450cc1",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "^42.1.0",
+        "vite": "^8.0.16",
+        "vue": "^3.5.35"
+      }
+    },
+    {
+      "repository": "RocketChat/Rocket.Chat.Electron",
+      "branch": "dev",
+      "sha": "9910e23f1e4716e01b9d0af1b68fdc035e053ab2",
+      "package": "package.json",
+      "dependencies": {
+        "react": "~19.2.7",
+        "react-dom": "~19.2.7",
+        "electron": "42.5.0",
+        "jest": "~29.7.0"
+      }
+    },
+    {
+      "repository": "vladimiry/ElectronMail",
+      "branch": "master",
+      "sha": "432d5d5686f188f97a943a211b785484077a7f69",
+      "package": "package.json",
+      "dependencies": {
+        "@angular/core": "22.1.7",
+        "@playwright/test": "1.63.0",
+        "electron": "44.4.3"
+      }
+    },
+    {
+      "repository": "alex8088/electron-vite",
+      "branch": "master",
+      "sha": "f64245207e8a364fca43eae85cccc2ffd71ee0ea",
+      "package": "package.json",
+      "dependencies": {
+        "vite": "^6.0.0 || ^7.0.0 || ^8.0.0"
+      }
+    },
+    {
+      "repository": "nteract/archived-desktop-app",
+      "branch": "main",
+      "sha": "51169973ec55b1199a9715d101f65aadc8ce0444",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "11.5.0",
+        "jest": "^26.0.0",
+        "react": "16.14.0",
+        "react-dom": "16.14.0"
+      }
+    },
+    {
+      "repository": "jitsi/jitsi-meet-electron",
+      "branch": "master",
+      "sha": "57df070a6d8ddf2b820cd9239f34ea100ece9b0b",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "^43.3.0",
+        "react": "^17.0.2",
+        "react-dom": "^17.0.2"
+      }
+    },
+    {
+      "repository": "microsoft/vscode",
+      "branch": "main",
+      "sha": "3ce9196fa80073454ea580bd5c41b6ee4acf7f16",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.61.1"
+      }
+    },
+    {
+      "repository": "cawa-93/vite-electron-builder",
+      "branch": "main",
+      "sha": "bf517c1b23cb6e54d0aba5f53d8d7177d6b60e65",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "1.58.2",
+        "electron": "41.0.3"
+      }
+    },
+    {
+      "repository": "jupyterlab/jupyterlab-desktop",
+      "branch": "master",
+      "sha": "9da0ed4225d77a80737f5b9bf37151b56b45b783",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.61.0",
+        "electron": "^42.4.0",
+        "vitest": "^4.1.9"
+      }
+    },
+    {
+      "repository": "tal-tech/electron-playground",
+      "branch": "master",
+      "sha": "d5005641fd2f1c2a0b527b8aeb196a35a2e94c99",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^16.13.1",
+        "react-dom": "^16.13.1",
+        "electron": "^10.1.6"
+      }
+    },
+    {
+      "repository": "electron/electron-quick-start-typescript",
+      "branch": "main",
+      "sha": "e7f224c98f8bd009f0d9569ff12d84a07a4b2828",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "^28.1.0"
+      }
+    },
+    {
+      "repository": "electron/devtron",
+      "branch": "main",
+      "sha": "4cfba447f2d4cf1888ca227041e09f7a7652d1e0",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^19.1.0",
+        "react-dom": "^19.1.0",
+        "electron": "^43.4.0",
+        "tailwindcss": "^3.4.17"
+      }
+    },
+    {
+      "repository": "MarshallOfSound/electron-devtools-installer",
+      "branch": "main",
+      "sha": "dcf1d94dfb08b494f30dc307d60046a7b1dd7676",
+      "package": "package.json",
+      "dependencies": {
+        "electron": "36.0.0"
+      }
+    },
+    {
+      "repository": "desktop/desktop",
+      "branch": "development",
+      "sha": "ecf08e0eb5218d78e897ae0f193bab96341ab852",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "^1.58.2",
+        "electron": "44.1.1"
+      }
+    },
+    {
+      "repository": "mrvautin/expressCart",
+      "branch": "master",
+      "sha": "ecdb41069f18e077c1f5aefe20e7182e79e5d236",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^4.17.1"
+      }
+    },
+    {
+      "repository": "parse-community/parse-server",
+      "branch": "alpha",
+      "sha": "44e6ad8de07537c4c2d5e6d5553af5a2f11f2c34",
+      "package": "package.json",
+      "dependencies": {
+        "express": "5.2.1"
+      }
+    },
+    {
+      "repository": "hagopj13/node-express-boilerplate",
+      "branch": "master",
+      "sha": "2f4e6ac1c15bb43d37b302f2021272dfde80ae2c",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^4.17.1",
+        "jest": "^26.0.1"
+      }
+    },
+    {
+      "repository": "mongo-express/mongo-express",
+      "branch": "master",
+      "sha": "a9df1ab3dfd644df24084fa5244fb49c0c4087ce",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^5.2.1"
+      }
+    },
+    {
+      "repository": "CodeGenieApp/serverless-express",
+      "branch": "mainline",
+      "sha": "c21905a1dbf8b6718c1a29419a2c832901271a02",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^5.0.1",
+        "jest": "^29.7.0"
+      }
+    },
+    {
+      "repository": "madhums/node-express-mongoose-demo",
+      "branch": "main",
+      "sha": "8253dfd1d401ce795b1643123dc60a983426e16e",
+      "package": "package.json",
+      "dependencies": {
+        "express": "~4.19.2"
+      }
+    },
+    {
+      "repository": "expressjs/session",
+      "branch": "master",
+      "sha": "36387796a0ef10051a854334f02e5f756b6e5405",
+      "package": "package.json",
+      "dependencies": {
+        "express": "4.17.3"
+      }
+    },
+    {
+      "repository": "mandatoryprogrammer/xsshunter-express",
+      "branch": "main",
+      "sha": "a99ae0aa46ca399942f31405a72f80ea5ff49b7f",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^4.17.1"
+      }
+    },
+    {
+      "repository": "mdn/express-locallibrary-tutorial",
+      "branch": "main",
+      "sha": "ec5be0615d0173e4f93c8414cdfafec94bdb3807",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^5.1.0"
+      }
+    },
+    {
+      "repository": "parse-community/parse-server-example",
+      "branch": "master",
+      "sha": "f655dbec6ee0163c686e9442ca577fde49e63b46",
+      "package": "package.json",
+      "dependencies": {
+        "express": "5.2.1"
+      }
+    },
+    {
+      "repository": "danielfsousa/express-rest-boilerplate",
+      "branch": "main",
+      "sha": "7cffcf27024b2a88862243dcb75ce65b303b8186",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^4.15.2"
+      }
+    },
+    {
+      "repository": "ExpressGateway/express-gateway",
+      "branch": "master",
+      "sha": "cf70ed37dc509b16cf5e85087f77b146f6c9cff7",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^4.17.1"
+      }
+    },
+    {
+      "repository": "icebob/vue-express-mongo-boilerplate",
+      "branch": "master",
+      "sha": "1c146c36fb68e82c3daf2bfef0b67f6c4eaacdc3",
+      "package": "package.json",
+      "dependencies": {
+        "express": "4.16.3",
+        "vue": "2.5.17"
+      }
+    },
+    {
+      "repository": "btford/angular-express-seed",
+      "branch": "master",
+      "sha": "4b627f3e82156c8d422970f4392fb2cf8fd4b9b0",
+      "package": "package.json",
+      "dependencies": {
+        "express": "~4.1.1"
+      }
+    },
+    {
+      "repository": "richardgirges/express-fileupload",
+      "branch": "master",
+      "sha": "add32999487a654e332eaa2bf4cbb846c81858e1",
+      "package": "package.json",
+      "dependencies": {
+        "express": "^4.21.2"
+      }
+    },
+    {
+      "repository": "madhums/node-express-mongoose",
+      "branch": "master",
+      "sha": "90a550d7dad95185b5901f9515f55bc18a86218d",
+      "package": "package.json",
+      "dependencies": {
+        "express": "~4.19.2"
+      }
+    },
+    {
+      "repository": "reactjs/express-react-views",
+      "branch": "master",
+      "sha": "9644d90e15eeb1e3d5d447ae33c4870e8985a6bf",
+      "package": "package.json",
+      "dependencies": {
+        "react": "^0.14.0 || ^15.0.0 || ^16.0.0",
+        "react-dom": "^0.14.0 || ^15.0.0 || ^16.0.0"
+      }
+    },
+    {
+      "repository": "huntabyte/shadcn-svelte",
+      "branch": "main",
+      "sha": "36f7a969fae57be8318a4d65f96c34aeefdfde2c",
+      "package": "package.json",
+      "dependencies": {
+        "svelte": "^5.54.0"
+      }
+    },
+    {
+      "repository": "huntabyte/bits-ui",
+      "branch": "main",
+      "sha": "98966adb12bff1e34d0f4c56464e4006ea121405",
+      "package": "package.json",
+      "dependencies": {
+        "svelte": "catalog:"
+      }
+    },
+    {
+      "repository": "carbon-design-system/carbon-components-svelte",
+      "branch": "master",
+      "sha": "5285946437fa04fb76de40af273789a756834bea",
+      "package": "package.json",
+      "dependencies": {
+        "@playwright/test": "1.63.0",
+        "svelte": "^5.57.0",
+        "vite": "^8.3.0",
+        "vitest": "^5.0.0"
+      }
+    }
+  ]
+}
