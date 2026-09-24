@@ -69,7 +69,7 @@ function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3
     if (stop(state, budget, started) || state.filesVisited >= budget.maxFiles) { state.truncated = true; break; }
     if (file.isDirectory || !file.content || !rule.scope.includes(classifyProjectFileScope(file.path))) continue;
     state.filesVisited++; state.contentBytes += file.content.length;
-    const found = detector.kind === 'regex' ? regexEvidence(detector, file)
+    const found = detector.kind === 'regex' ? regexEvidence(detector, file, budget.maxMatches - state.matches)
       : detector.kind === 'ast' ? astEvidence(detector, file)
         : detector.kind === 'manifest' ? manifestEvidence(detector, file, context.manifests)
           : configEvidence(detector, file, context.manifests);
@@ -78,12 +78,13 @@ function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3
   return evidence;
 }
 
-function regexEvidence(detector: V3RegexDetector, file: V3ProjectFile): V3RuleEvidence[] {
+function regexEvidence(detector: V3RegexDetector, file: V3ProjectFile, limit: number): V3RuleEvidence[] {
   const path = normalizeProjectPath(file.path);
   if (!detector.include.some((glob) => globMatch(path, glob)) || detector.exclude?.some((glob) => globMatch(path, glob))) return [];
   const regex = new RegExp(detector.pattern, uniqueFlags(`${detector.flags ?? ''}g`)); const evidence: V3RuleEvidence[] = []; let match: RegExpExecArray | null;
   while ((match = regex.exec(file.content ?? ''))) {
     evidence.push({ detector: 'regex', file: path, line: lineAt(file.content ?? '', match.index), detail: safeDetail(match[0]) });
+    if (evidence.length >= limit) break;
     if (!match[0].length) regex.lastIndex++;
   }
   return evidence;
@@ -135,7 +136,10 @@ function dependencyEvidence(detector: V3DependencyDetector, files: V3ProjectFile
   return output;
 }
 
+const parsedDependencies = new WeakMap<V3ProjectFile, { content: string | undefined; entries: Map<string, string> }>();
 function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
+  const cached = parsedDependencies.get(file);
+  if (cached && cached.content === file.content) return cached.entries;
   const path = file.path.toLowerCase(); const output = new Map<string, string>(); const content = file.content ?? '';
   if (path.endsWith('package.json')) {
     const value = parseJson(content) as Record<string, unknown> | undefined;
@@ -165,9 +169,26 @@ function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
       if (typeof item === 'string') output.set(item.toLowerCase(), 'declared');
       else if (item.name) output.set(item.name.toLowerCase(), item.version ?? item['version>='] ?? 'declared');
     }
-  } else if (/(requirements[^/]*\.txt|go\.mod|cargo\.toml|pyproject\.toml|composer\.json|gemfile)$/i.test(path)) {
+  } else if (path.endsWith('pubspec.yaml')) {
+    let inDependencies = false;
+    for (const line of content.split(/\r?\n/)) {
+      if (/^[^\s#][^:]*:/.test(line)) inDependencies = /^(?:dependencies|dev_dependencies):/.test(line);
+      if (!inDependencies) continue;
+      const match = /^ {2}([A-Za-z][\w-]*):\s*(?:['"]?([^\s#'"{}]+)['"]?)?/.exec(line);
+      if (match) output.set(match[1].toLowerCase(), match[2] ?? 'declared');
+    }
+  } else if (path.endsWith('cargo.toml')) {
+    let inDependencies = false;
+    for (const line of content.split(/\r?\n/)) {
+      if (/^\[/.test(line)) inDependencies = /^\[(?:dev-|build-)?dependencies(?:\.|\])/.test(line) || /^\[target\..*\.dependencies\]/.test(line);
+      if (!inDependencies) continue;
+      const match = /^\s*([\w-]+)\s*=\s*(?:["']([^"']+)["']|\{[^\n]*version\s*=\s*["']([^"']+)["'])/.exec(line);
+      if (match) output.set(match[1].toLowerCase(), match[2] ?? match[3]);
+    }
+  } else if (/(requirements[^/]*\.txt|go\.mod|pyproject\.toml|composer\.json|gemfile)$/i.test(path)) {
     for (const line of content.split(/\r?\n/)) { const match = /^\s*['"]?([@\w./-]+)['"]?\s*(?:[=~^<>! ]+|\/v)([^\s,'"]+)?/.exec(line); if (match) output.set(match[1].toLowerCase(), match[2] ?? 'declared'); }
   }
+  parsedDependencies.set(file, { content: file.content, entries: output });
   return output;
 }
 function dependencyEcosystem(path: string): V3DependencyDetector['ecosystems'][number] | undefined {

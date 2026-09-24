@@ -61,6 +61,7 @@ const { archiveProcessingTimeoutMs, GITHUB_ARCHIVE_TIMEOUT_MS, MAX_COMPRESSED_AR
 const { V3_CORE_RULE_PACK } = load('src/lib/knowledge/v3-core-pack.ts');
 const { V3_DEFAULT_RULE_PACKS } = load('src/lib/knowledge/v3-default-packs.ts');
 const { V3_PHASE2_RULE_COUNT, V3_PHASE2_RULE_PACKS, V3_PHASE2_RULE_TARGET, V3_TOTAL_CORE_RULE_TARGET } = load('src/lib/knowledge/v3-phase2-packs.ts');
+const { V3_PHASE3_RULE_PACKS, V3_PHASE3_RULE_COUNT, V3_PHASE3_TARGET, V3_PHASE3_TOTAL_TARGET } = load('src/lib/knowledge/v3-phase3-packs.ts');
 const { validateV3RulePack, analyzeV3RuleGraph } = load('src/lib/knowledge/v3-validator.ts');
 const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
 const { V3RuleRegistry } = load('src/lib/knowledge/v3-registry.ts');
@@ -147,15 +148,47 @@ test('V3 built-in packs have a registration boundary outside analyzer core', () 
 });
 test('V3 Phase 2 publishes exactly 3,000 validated core rules', () => {
   assert.equal(V3_PHASE2_RULE_COUNT, V3_PHASE2_RULE_TARGET);
-  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((total, pack) => total + pack.rules.length, 0), V3_TOTAL_CORE_RULE_TARGET);
-  for (const pack of V3_DEFAULT_RULE_PACKS) {
+  assert.equal([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS].reduce((total, pack) => total + pack.rules.length, 0), V3_TOTAL_CORE_RULE_TARGET);
+  for (const pack of [V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS]) {
     const validation = validateV3RulePack(pack);
     assert.equal(validation.valid, true, `${pack.id}:\n${validation.errors.join('\n')}`);
   }
-  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  const graph = analyzeV3RuleGraph([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS]);
   assert.deepEqual(graph.duplicates, []); assert.deepEqual(graph.missingDependencies, []);
   assert.deepEqual(graph.cycles, []); assert.deepEqual(graph.conflicts, []);
-  assert.equal(new Set(V3_DEFAULT_RULE_PACKS.flatMap(pack => pack.rules.map(rule => rule.id))).size, V3_TOTAL_CORE_RULE_TARGET);
+  assert.equal(new Set([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS].flatMap(pack => pack.rules.map(rule => rule.id))).size, V3_TOTAL_CORE_RULE_TARGET);
+});
+test('V3 Phase 3 adds exactly 3,500 unique validated rules in 13 deep ecosystem packs', () => {
+  assert.equal(V3_PHASE3_RULE_COUNT, V3_PHASE3_TARGET);
+  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((n, pack) => n + pack.rules.length, 0), V3_PHASE3_TOTAL_TARGET);
+  assert.equal(V3_PHASE3_RULE_PACKS.length, 13);
+  for (const pack of V3_PHASE3_RULE_PACKS) {
+    assert.ok(pack.rules.length, `empty pack ${pack.id}`);
+    const validation = validateV3RulePack(pack);
+    assert.equal(validation.valid, true, `${pack.id}: ${validation.errors.join('; ')}`);
+  }
+  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  assert.deepEqual(graph.duplicates, []); assert.deepEqual(graph.missingDependencies, []);
+  assert.deepEqual(graph.conflicts, []); assert.deepEqual(graph.cycles, []);
+});
+test('V3 Phase 3 compatibility signals include real evidence and avoid stable versions', () => {
+  const files = [pkg('package.json', { 'react-native': 'canary', electron: '^30.1.0' }), file('pubspec.yaml', 'name: example\ndependencies:\n  flutter: any\n  riverpod: latest\n'), file('Cargo.toml', '[dependencies]\ntauri = "latest"\n'), file('manifest.json', '{"manifest_version": 2}')];
+  const result = executeV3RulePacks(V3_PHASE3_RULE_PACKS, { files, technologies: ['react-native', 'electron', 'flutter', 'riverpod', 'tauri', 'browser-extension'] });
+  assert.ok(result.findings.some(f => f.ruleId.includes('react-native') && f.file === 'package.json'));
+  assert.ok(result.findings.some(f => f.file === 'pubspec.yaml' && f.ruleId.includes('riverpod')));
+  assert.ok(result.findings.some(f => f.file === 'Cargo.toml' && f.ruleId.includes('tauri')));
+  assert.ok(result.findings.some(f => f.ruleId.endsWith('migration.manifest-v2')));
+  assert.ok(!result.findings.some(f => f.file === 'package.json' && f.ruleId.includes('electron')));
+  assert.ok(result.findings.every(f => f.confidence === 'review-required'));
+  const negative = executeV3RulePacks(V3_PHASE3_RULE_PACKS, { files: [file('tests/manifest.json', '{"manifest_version": 2}'), pkg('package.json', { electron: '^30.1.0' })], technologies: ['electron', 'browser-extension'] });
+  assert.ok(!negative.findings.length);
+});
+test('V3 Phase 3 migration signatures detect legacy platform syntax without claiming exploitability', () => {
+  const files = [file('lib/main.dart', 'RaisedButton(onPressed: go);'), file('src/main.js', "const old = require('electron').remote;"), file('deploy.yaml', 'apiVersion: apps/v1beta1\nkind: Deployment'), file('serverless.yml', 'provider:\n  runtime: nodejs12.x')];
+  const result = executeV3RulePacks(V3_PHASE3_RULE_PACKS, { files, technologies: ['flutter', 'electron', 'kubernetes', 'serverless'] });
+  for (const id of ['flutter-raised-button', 'electron-remote', 'deployment-v1beta1', 'lambda-node12'])
+    assert.ok(result.findings.some(f => f.ruleId.endsWith(`migration.${id}`)), `missing ${id}`);
+  assert.ok(result.findings.filter(f => f.ruleId.includes('.migration.')).every(f => f.confidence === 'review-required' && f.evidence.length));
 });
 test('V3 Phase 2 covers every promised core ecosystem and intelligence boundary', () => {
   const rules = V3_PHASE2_RULE_PACKS.flatMap(pack => pack.rules);

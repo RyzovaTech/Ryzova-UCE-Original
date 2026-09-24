@@ -6,15 +6,15 @@ import ts from 'typescript';
 
 const root = path.resolve(import.meta.dirname, '..');
 const nativeRequire = createRequire(import.meta.url);
-function loadPhase2Packs() {
+function loadRulePacks() {
   const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'uce-rule-docs-'));
   try {
     fs.writeFileSync(path.join(temporary, 'package.json'), '{"type":"commonjs"}');
-    const entry = path.join(root, 'src/lib/knowledge/v3-phase2-packs.ts');
-    const program = ts.createProgram([entry], { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, moduleResolution: ts.ModuleResolutionKind.Node10, rootDir: root, outDir: temporary, esModuleInterop: true, skipLibCheck: true });
+    const entries = ['v3-phase2-packs.ts', 'v3-phase3-packs.ts'].map(name => path.join(root, 'src/lib/knowledge', name));
+    const program = ts.createProgram(entries, { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, moduleResolution: ts.ModuleResolutionKind.Node10, rootDir: root, outDir: temporary, esModuleInterop: true, skipLibCheck: true });
     const emit = program.emit();
     if (emit.emitSkipped) throw new Error('Unable to compile the trusted Phase 2 rule catalog for documentation.');
-    return nativeRequire(path.join(temporary, 'src/lib/knowledge/v3-phase2-packs.js'));
+    return { ...nativeRequire(path.join(temporary, 'src/lib/knowledge/v3-phase2-packs.js')), ...nativeRequire(path.join(temporary, 'src/lib/knowledge/v3-phase3-packs.js')) };
   } finally {
     fs.rmSync(temporary, { recursive: true, force: true });
   }
@@ -30,7 +30,7 @@ for (const rule of [...pack.rules].sort((left, right) => left.id.localeCompare(r
 const output = path.join(root, 'docs', 'generated', 'V3_CORE_RULES.md'); fs.mkdirSync(path.dirname(output), { recursive: true });
 fs.writeFileSync(output, `${lines.join('\n').trim()}\n`);
 
-const { V3_PHASE2_RULE_PACKS, V3_PHASE2_RULE_COUNT, V3_TOTAL_CORE_RULE_TARGET } = loadPhase2Packs();
+const { V3_PHASE2_RULE_PACKS, V3_PHASE2_RULE_COUNT, V3_TOTAL_CORE_RULE_TARGET, V3_PHASE3_RULE_PACKS, V3_PHASE3_RULE_COUNT, V3_PHASE3_TOTAL_TARGET } = loadRulePacks();
 const phase2Lines = [
   '# UCE V3 Phase 2 Rule Catalog', '',
   'Generated index for the first 3,000 validated V3 core rules. Runtime packs are compiled from versioned, reviewable knowledge definitions; this document is an index rather than executable input.', '',
@@ -45,4 +45,18 @@ phase2Lines.push('', '## Rule index', '', '| Rule ID | Pack | Module | Severity 
 for (const item of V3_PHASE2_RULE_PACKS) for (const rule of [...item.rules].sort((left, right) => left.id.localeCompare(right.id))) phase2Lines.push(`| \`${rule.id}\` | \`${item.id}\` | ${rule.module} | ${rule.severity} | ${rule.confidence} |`);
 const phase2Output = path.join(root, 'docs', 'generated', 'V3_PHASE2_RULES.md');
 fs.writeFileSync(phase2Output, `${phase2Lines.join('\n').trim()}\n`);
-console.log(JSON.stringify({ outputs: [path.relative(root, output), path.relative(root, phase2Output)], rules: V3_TOTAL_CORE_RULE_TARGET, phase2Packs: V3_PHASE2_RULE_PACKS.length }));
+const phase3Lines = [
+  '# UCE V3 Phase 3 Rule Catalog', '',
+  'Generated from the executable deep ecosystem packs. A rule is a bounded static check, not a certified vulnerability or a promise of runtime compatibility.', '',
+  `- Phase 3 rules: ${V3_PHASE3_RULE_COUNT.toLocaleString('en-US')}`,
+  `- Total V3 inventory: ${V3_PHASE3_TOTAL_TARGET.toLocaleString('en-US')}`,
+  `- Phase 3 packs: ${V3_PHASE3_RULE_PACKS.length}`, '',
+  '| Pack | Rules | Modules |', '| --- | ---: | --- |',
+];
+for (const pack of V3_PHASE3_RULE_PACKS) phase3Lines.push(`| \`${pack.id}\` | ${pack.rules.length} | ${pack.modules.join(', ')} |`);
+phase3Lines.push('', '## Rule index', '', '| Rule ID | Pack | Module | Severity | Confidence |', '| --- | --- | --- | --- | --- |');
+for (const pack of V3_PHASE3_RULE_PACKS) for (const rule of [...pack.rules].sort((a, b) => a.id.localeCompare(b.id)))
+  phase3Lines.push(`| \`${rule.id}\` | \`${pack.id}\` | ${rule.module} | ${rule.severity} | ${rule.confidence} |`);
+const phase3Output = path.join(root, 'docs', 'generated', 'V3_PHASE3_RULES.md');
+fs.writeFileSync(phase3Output, `${phase3Lines.join('\n').trim()}\n`);
+console.log(JSON.stringify({ outputs: [path.relative(root, output), path.relative(root, phase2Output), path.relative(root, phase3Output)], rules: V3_PHASE3_TOTAL_TARGET, phase3Packs: V3_PHASE3_RULE_PACKS.length }));
