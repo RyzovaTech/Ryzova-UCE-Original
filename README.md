@@ -20,6 +20,9 @@ tested, or deployed reliably. Its deterministic analysis covers:
 - Findings organized by severity, impact, and recommended next steps
 - Browser, security, architecture, API, database, testing, accessibility, performance, license,
   documentation, repository, deployment, and platform intelligence
+- 3,000 validated V3 core rules with unique IDs, bounded execution, confidence labels, and
+  ecosystem-focused packs for JavaScript/TypeScript, Python, JVM, C/C++, .NET, Go, Rust, PHP,
+  web platforms, cloud/CI, API/data protocols, and accessibility
 
 ## How it works
 
@@ -51,7 +54,8 @@ output to code scanning for pull-request annotations.
 UCE knowledge packs use a versioned JSON schema, documented permissions, optional Ed25519
 publisher signatures, and declarative detector rules. Organization packs require explicit approval;
 pack rules are data and are not executed as arbitrary JavaScript. See
-[Knowledge packs](docs/KNOWLEDGE_PACKS.md), the [V3 rule-platform preview](docs/V3_RULE_PLATFORM.md), [Phase 5 completion](docs/PHASE_5_COMPLETE.md), and the
+[Knowledge packs](docs/KNOWLEDGE_PACKS.md), the [V3 rule platform](docs/V3_RULE_PLATFORM.md),
+the [first 3,000 V3 core rules](docs/V3_PHASE_2_CORE_RULES.md), [Phase 5 completion](docs/PHASE_5_COMPLETE.md), and the
 [five-phase major completion baseline](docs/ROADMAP_COMPLETION.md).
 
 ## Who it is for

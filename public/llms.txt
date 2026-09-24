@@ -3,11 +3,13 @@
 > Ryzova UCE (Universal Compatibility Engine) is an open-source software compatibility analyzer from Ryzova for ZIP projects and public GitHub repositories.
 
 Ryzova UCE is the official Universal Compatibility Engine from Ryzova. Its canonical website is https://uce.ryzova.com/ and its official source repository is https://github.com/RyzovaTech/Ryzova-UCE-Original. It uses deterministic, browser-based checks rather than AI-generated analysis.
+UCE V3 includes 3,000 validated core rules with unique IDs, confidence labels, bounded execution, evidence, recommendations, and false-positive guidance.
 
 ## Product
 UCE analyzes project structure, runtimes, dependencies, configuration, and compatibility risks in the browser.
 
 ## Detection Coverage
+- 3,000 validated V3 core rules across 14 built-in packs
 - 77 programming and source-language labels, including TypeScript, JavaScript, Python, Java, Go, Rust, C++, C#, Kotlin, Swift, PHP, Ruby, HTML, CSS, SQL, GraphQL, Bash and PowerShell
 - 639 technology detection definitions consolidated into 524 unique named technology profiles
 - 43 framework definitions, including React, Next.js, Vue, Angular, SvelteKit, Express, NestJS, Django, Flask, FastAPI, Spring Boot, Laravel, Rails and Flutter

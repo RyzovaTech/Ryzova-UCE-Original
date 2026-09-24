@@ -34,7 +34,7 @@ export interface V3ManifestDetector {
 }
 export interface V3DependencyDetector {
   kind: 'dependency';
-  ecosystems: Array<'npm' | 'python' | 'cargo' | 'go' | 'maven' | 'gradle' | 'composer' | 'nuget' | 'ruby' | 'dart' | 'swift' | 'mix'>;
+  ecosystems: Array<'npm' | 'python' | 'cargo' | 'go' | 'maven' | 'gradle' | 'composer' | 'nuget' | 'conan' | 'vcpkg' | 'ruby' | 'dart' | 'swift' | 'mix'>;
   names: string[];
   version?: string;
 }

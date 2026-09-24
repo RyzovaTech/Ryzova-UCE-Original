@@ -18,6 +18,21 @@ Five declarative detector adapters are available: regex, AST signature, manifest
 dependency, and configuration. AST signatures are deliberately static and bounded;
 future parser adapters can implement the same contract without changing rule packs.
 
+## Phase 2 core inventory
+
+UCE ships 3,000 schema-v3 core rules: five detector-adapter bootstrap rules plus
+2,995 Phase 2 rules compiled into ecosystem-focused packs. The Phase 2 set covers
+JavaScript/TypeScript, Python, JVM, native C/C++, .NET, Go, Rust, PHP, web
+frameworks and APIs, dependency health, Docker/cloud/CI configuration, API/data
+boundaries, and accessibility fundamentals.
+
+The build and test gates require exactly 3,000 unique IDs, validate every pack,
+reject duplicate detector signatures and graph conflicts, and execute positive,
+negative, and non-production-scope fixtures. Static security matches use
+`review-required` confidence unless stronger evidence is available; they are not
+presented as proof of exploitability. See the generated
+[Phase 2 rule catalog](generated/V3_PHASE2_RULES.md).
+
 ## Safety and trust
 
 Rules never execute scanned project code and cannot request network access. Every

@@ -59,6 +59,8 @@ const { UCE_CATALOG_ITEMS } = load('src/lib/catalog.ts');
 const { getGitHubArchiveUrl, parseGitHubRepositoryUrl } = load('src/lib/analyzer/repository.ts');
 const { archiveProcessingTimeoutMs, GITHUB_ARCHIVE_TIMEOUT_MS, MAX_COMPRESSED_ARCHIVE_BYTES } = load('src/lib/analyzer/archive-policy.ts');
 const { V3_CORE_RULE_PACK } = load('src/lib/knowledge/v3-core-pack.ts');
+const { V3_DEFAULT_RULE_PACKS } = load('src/lib/knowledge/v3-default-packs.ts');
+const { V3_PHASE2_RULE_COUNT, V3_PHASE2_RULE_PACKS, V3_PHASE2_RULE_TARGET, V3_TOTAL_CORE_RULE_TARGET } = load('src/lib/knowledge/v3-phase2-packs.ts');
 const { validateV3RulePack, analyzeV3RuleGraph } = load('src/lib/knowledge/v3-validator.ts');
 const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
 const { V3RuleRegistry } = load('src/lib/knowledge/v3-registry.ts');
@@ -142,6 +144,53 @@ test('V3 built-in packs have a registration boundary outside analyzer core', () 
   const registrySource = fs.readFileSync(path.join(root, 'src/lib/knowledge/v3-default-packs.ts'), 'utf8');
   assert.ok(analyzerSource.includes('V3_DEFAULT_RULE_PACKS')); assert.ok(!analyzerSource.includes('V3_CORE_RULE_PACK'));
   assert.ok(registrySource.includes('V3_CORE_RULE_PACK'));
+});
+test('V3 Phase 2 publishes exactly 3,000 validated core rules', () => {
+  assert.equal(V3_PHASE2_RULE_COUNT, V3_PHASE2_RULE_TARGET);
+  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((total, pack) => total + pack.rules.length, 0), V3_TOTAL_CORE_RULE_TARGET);
+  for (const pack of V3_DEFAULT_RULE_PACKS) {
+    const validation = validateV3RulePack(pack);
+    assert.equal(validation.valid, true, `${pack.id}:\n${validation.errors.join('\n')}`);
+  }
+  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  assert.deepEqual(graph.duplicates, []); assert.deepEqual(graph.missingDependencies, []);
+  assert.deepEqual(graph.cycles, []); assert.deepEqual(graph.conflicts, []);
+  assert.equal(new Set(V3_DEFAULT_RULE_PACKS.flatMap(pack => pack.rules.map(rule => rule.id))).size, V3_TOTAL_CORE_RULE_TARGET);
+});
+test('V3 Phase 2 covers every promised core ecosystem and intelligence boundary', () => {
+  const rules = V3_PHASE2_RULE_PACKS.flatMap(pack => pack.rules);
+  const technologies = new Set(rules.flatMap(rule => rule.technologies.map(item => item.toLowerCase())));
+  for (const technology of ['javascript', 'typescript', 'python', 'java', 'kotlin', 'c', 'c++', 'c#', 'go', 'rust', 'php', 'react', 'next.js', 'vue', 'angular', 'svelte', 'node.js', 'jvm', '.net', 'html', 'docker', 'github-actions']) {
+    assert.ok(technologies.has(technology), `missing Phase 2 technology: ${technology}`);
+  }
+  const modules = new Set(rules.map(rule => rule.module));
+  for (const module of ['technology', 'dependency', 'security', 'browser', 'api', 'deployment', 'accessibility']) assert.ok(modules.has(module), `missing Phase 2 module: ${module}`);
+  assert.ok(V3_PHASE2_RULE_PACKS.length >= 10);
+});
+test('V3 Phase 2 fixtures separate evidence from vulnerability claims', () => {
+  const files = [file('src/server.py', 'result = pickle.loads(payload)'), file('tests/server.py', 'eval(test_input)'), pkg('package.json', { react: 'latest' })];
+  const result = executeV3RulePacks(V3_PHASE2_RULE_PACKS, { files, technologies: ['python', 'react'] });
+  const pickle = result.findings.find(item => item.ruleId.includes('python-sensitive-api.pickle-loads'));
+  assert.ok(pickle); assert.equal(pickle.confidence, 'review-required'); assert.equal(pickle.file, 'src/server.py');
+  assert.ok(!result.findings.some(item => item.file === 'tests/server.py'));
+  assert.ok(result.findings.some(item => item.ruleId.endsWith('.mutable') && item.file === 'package.json'));
+  const pinned = executeV3RulePacks(V3_PHASE2_RULE_PACKS, { files: [pkg('package.json', { react: '^18.3.1' })], technologies: ['react'] });
+  assert.ok(!pinned.findings.some(item => item.ruleId.endsWith('.mutable')));
+});
+test('V3 Phase 2 parses JVM, NuGet and native dependency manifests', () => {
+  const files = [
+    file('pom.xml', '<project><dependencies><dependency><groupId>org.springframework</groupId><artifactId>spring-core</artifactId><version>latest</version></dependency></dependencies></project>'),
+    file('App.csproj', '<Project><ItemGroup><PackageReference Include="Newtonsoft.Json" Version="latest" /></ItemGroup></Project>'),
+    file('vcpkg.json', JSON.stringify({ dependencies: [{ name: 'boost', version: 'latest' }] })),
+  ];
+  const result = executeV3RulePacks(V3_PHASE2_RULE_PACKS, { files, technologies: ['jvm', 'dotnet', 'native-c-cpp'] });
+  for (const manifest of ['pom.xml', 'App.csproj', 'vcpkg.json']) assert.ok(result.findings.some(item => item.file === manifest && item.ruleId.endsWith('.mutable')), `missing mutable dependency evidence for ${manifest}`);
+});
+test('V3 Phase 2 generated catalog matches the executable inventory', () => {
+  const catalog = fs.readFileSync(path.join(root, 'docs/generated/V3_PHASE2_RULES.md'), 'utf8');
+  assert.ok(catalog.includes('- Total core inventory: 3,000'));
+  for (const pack of V3_PHASE2_RULE_PACKS) assert.ok(catalog.includes(`\`${pack.id}\``), `generated catalog missing ${pack.id}`);
+  assert.equal((catalog.match(/^\| `(?:technology|dependency|security|browser|api|deployment|accessibility)\./gm) ?? []).length, V3_PHASE2_RULE_COUNT);
 });
 test('malformed package manifests do not crash', () => assert.deepEqual(detectRegisteredTechnologies([file('package.json', '{bad')]).filter(x => x.kind !== 'runtime'), []));
 test('multiple workspace technologies coexist', () => {

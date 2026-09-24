@@ -142,6 +142,29 @@ function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
     for (const group of ['dependencies','devDependencies','peerDependencies','optionalDependencies']) {
       const entries = value?.[group]; if (entries && typeof entries === 'object') for (const [name, version] of Object.entries(entries)) output.set(name.toLowerCase(), String(version));
     }
+  } else if (path.endsWith('pom.xml')) {
+    for (const match of content.matchAll(/<dependency>[\s\S]*?<groupId>\s*([^<\s]+)\s*<\/groupId>[\s\S]*?<artifactId>\s*([^<\s]+)\s*<\/artifactId>[\s\S]*?(?:<version>\s*([^<\s]+)\s*<\/version>)?[\s\S]*?<\/dependency>/gi)) {
+      const coordinate = `${match[1]}:${match[2]}`.toLowerCase(); output.set(coordinate, match[3] ?? 'declared'); output.set(match[2].toLowerCase(), match[3] ?? 'declared');
+    }
+  } else if (/build\.gradle(?:\.kts)?$/i.test(path)) {
+    for (const match of content.matchAll(/(?:implementation|api|compileOnly|runtimeOnly|testImplementation|kapt)\s*\(?\s*["']([^:"']+):([^:"']+):([^"']+)["']/g)) {
+      output.set(`${match[1]}:${match[2]}`.toLowerCase(), match[3]); output.set(match[2].toLowerCase(), match[3]);
+    }
+  } else if (path.endsWith('packages.config')) {
+    for (const match of content.matchAll(/<package\s+[^>]*id=["']([^"']+)["'][^>]*version=["']([^"']+)["']/gi)) output.set(match[1].toLowerCase(), match[2]);
+  } else if (/\.(?:cs|fs|vb)proj$/i.test(path)) {
+    for (const match of content.matchAll(/<PackageReference\b([^>]*)>/gi)) {
+      const attributes = match[1]; const name = /\bInclude=["']([^"']+)["']/i.exec(attributes)?.[1]; const version = /\bVersion=["']([^"']+)["']/i.exec(attributes)?.[1];
+      if (name) output.set(name.toLowerCase(), version ?? 'declared');
+    }
+  } else if (/conanfile\.(?:txt|py)$/i.test(path)) {
+    for (const match of content.matchAll(/^\s*([A-Za-z0-9_.+-]+)\/([^@\s#]+)/gm)) output.set(match[1].toLowerCase(), match[2]);
+  } else if (path.endsWith('vcpkg.json')) {
+    const value = parseJson(content) as { dependencies?: Array<string | { name?: string; version?: string; 'version>='?: string }> } | undefined;
+    for (const item of value?.dependencies ?? []) {
+      if (typeof item === 'string') output.set(item.toLowerCase(), 'declared');
+      else if (item.name) output.set(item.name.toLowerCase(), item.version ?? item['version>='] ?? 'declared');
+    }
   } else if (/(requirements[^/]*\.txt|go\.mod|cargo\.toml|pyproject\.toml|composer\.json|gemfile)$/i.test(path)) {
     for (const line of content.split(/\r?\n/)) { const match = /^\s*['"]?([@\w./-]+)['"]?\s*(?:[=~^<>! ]+|\/v)([^\s,'"]+)?/.exec(line); if (match) output.set(match[1].toLowerCase(), match[2] ?? 'declared'); }
   }
@@ -154,6 +177,7 @@ function dependencyEcosystem(path: string): V3DependencyDetector['ecosystems'][n
   if (lower.endsWith('cargo.toml')) return 'cargo'; if (lower.endsWith('go.mod')) return 'go';
   if (lower.endsWith('pom.xml')) return 'maven'; if (/build\.gradle(?:\.kts)?$/.test(lower)) return 'gradle';
   if (lower.endsWith('composer.json')) return 'composer'; if (lower.endsWith('packages.config')) return 'nuget';
+  if (/\.(?:cs|fs|vb)proj$/.test(lower)) return 'nuget'; if (/conanfile\.(?:txt|py)$/.test(lower)) return 'conan'; if (lower.endsWith('vcpkg.json')) return 'vcpkg';
   if (/gemfile$/.test(lower)) return 'ruby'; if (lower.endsWith('pubspec.yaml')) return 'dart';
   if (lower.endsWith('package.swift')) return 'swift'; if (lower.endsWith('mix.exs')) return 'mix';
   return undefined;

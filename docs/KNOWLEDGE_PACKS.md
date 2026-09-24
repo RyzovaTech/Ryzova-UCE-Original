@@ -9,6 +9,12 @@ and configuration detectors. The V1 contract remains supported for backward
 compatibility. See [V3 Rule Platform](V3_RULE_PLATFORM.md) and
 `schemas/v3-rule-pack.schema.json` for the preview contract.
 
+The built-in V3 inventory contains 3,000 validated core rules across ecosystem
+technology evidence, dependency health, security-sensitive APIs, browser/Web API
+boundaries, cloud and CI configuration, API/data protocols, and accessibility.
+The generated [V3 Phase 2 catalog](generated/V3_PHASE2_RULES.md) lists every rule ID,
+pack, module, severity, and confidence level.
+
 ## Trust model
 
 - Built-in packs ship with UCE and are trusted as part of the application release.
