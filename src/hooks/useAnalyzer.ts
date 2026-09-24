@@ -127,7 +127,7 @@ export function useAnalyzer() {
     async (files: import('@/lib/analyzer/types').ProjectFile[], name: string, source: 'upload' | 'demo' | 'github', scanStats: import('@/lib/analyzer/types').ScanStats, requestId: number): Promise<AnalysisResult> => {
       ensureCurrentRequest(requestId);
       try {
-        safeSetState((s) => ({ ...s, stage: 'reading', progress: STAGE_PROGRESS.reading, error: null, cacheHit: false, canResume: false, message: 'Preparing a bounded, deterministic analysis input.' }));
+        safeSetState((s) => ({ ...s, stage: 'reading', progress: 39, error: null, cacheHit: false, canResume: false, message: 'Preparing a bounded, deterministic analysis input.' }));
         await delay(0);
         const prepared = prepareAnalysisInput({ files, fileName: name, source, scanStats });
         resumableRef.current = prepared.input;
@@ -169,9 +169,14 @@ export function useAnalyzer() {
         runningRef.current = false;
       }, archiveProcessingTimeoutMs(file.size));
 
-      safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
+      safeSetState((s) => ({ ...s, stage: 'reading', progress: 15, error: null, message: 'Opening ZIP archive and indexing file names.' }));
       try {
-        const { files, name, scanStats } = await readZip(file);
+        const { files, name, scanStats } = await readZip(file, (done, total) => {
+          if (requestId === requestIdRef.current) safeSetState((s) => ({
+            ...s, stage: 'reading', progress: 20 + Math.floor(19 * done / Math.max(total, 1)),
+            message: `Reading selected files: ${done.toLocaleString()} / ${total.toLocaleString()}.`,
+          }));
+        });
         if (files.length === 0) {
           runningRef.current = false;
           clearAnalysisTimeout();
@@ -253,7 +258,15 @@ export function useAnalyzer() {
         }
         const contentLength = Number(res.headers.get('content-length') ?? 0);
         if (contentLength > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
-        const blob = await res.blob();
+        const startedAt = Date.now();
+        safeSetState((s) => ({ ...s, message: 'Downloading the repository archive. Large repositories may take several minutes.' }));
+        const ticker = setInterval(() => {
+          if (requestId === requestIdRef.current) safeSetState((s) => ({
+            ...s, message: `Downloading repository archive (${Math.floor((Date.now() - startedAt) / 1000)}s elapsed${contentLength > 0 ? `; expected ${(contentLength / 1024 / 1024).toFixed(0)} MiB` : ''}).`,
+          }));
+        }, 10_000);
+        let blob: Blob;
+        try { blob = await res.blob(); } finally { clearInterval(ticker); }
         ensureCurrentRequest(requestId);
         if (blob.size > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
         const file = new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
