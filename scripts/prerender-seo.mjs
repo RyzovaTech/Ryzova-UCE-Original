@@ -28,6 +28,32 @@ await viteBuild({
 const { UCE_CATALOG_ITEMS, UCE_CATALOG_COUNTS } = await import(pathToFileURL(catalogBundleFile).href);
 await rm(catalogBundleDir, { recursive: true, force: true });
 
+// Bundle the built-in V3 rule registry separately so the public summary reflects
+// the executable rule inventory without pulling 10,000 rules into the client catalog.
+const v3BundleDir = resolve('dist/.v3-seo');
+const v3BundleFile = resolve(v3BundleDir, 'v3-default-packs.mjs');
+await viteBuild({
+  configFile: false,
+  logLevel: 'silent',
+  resolve: { alias: { '@': resolve('src') } },
+  build: {
+    ssr: resolve('src/lib/knowledge/v3-default-packs.ts'),
+    outDir: v3BundleDir,
+    emptyOutDir: true,
+    copyPublicDir: false,
+    minify: false,
+    rollupOptions: { output: { entryFileNames: 'v3-default-packs.mjs' } },
+  },
+});
+const { V3_DEFAULT_RULE_PACKS } = await import(pathToFileURL(v3BundleFile).href);
+await rm(v3BundleDir, { recursive: true, force: true });
+
+const v3ActiveRules = V3_DEFAULT_RULE_PACKS.reduce(
+  (total, pack) => total + pack.rules.length,
+  0,
+);
+const v3RulePacks = V3_DEFAULT_RULE_PACKS.length;
+
 const catalogSummary = {
   schemaVersion: 1,
   product: "Ryzova UCE™",
@@ -54,6 +80,8 @@ const catalogSummary = {
     browserCompatibilityRules: UCE_CATALOG_COUNTS.browser,
     securityChecks: UCE_CATALOG_COUNTS.security,
     intelligenceCapabilities: UCE_CATALOG_COUNTS.intelligence,
+    v3ActiveRules,
+    v3RulePacks,
   },
 };
 await writeFile(catalogSummaryFile, JSON.stringify(catalogSummary, null, 2) + "\n", "utf8");
