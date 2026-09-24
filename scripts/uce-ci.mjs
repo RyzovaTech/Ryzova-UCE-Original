@@ -5,7 +5,7 @@ import path from 'node:path';
 const args = process.argv.slice(2);
 const input = args.find((item) => !item.startsWith('--'));
 if (!input || args.includes('--help')) {
-  console.log('Usage: npm run uce:ci -- <report.json> [--min-score=70] [--max-critical=0] [--max-warning=50] [--sarif=results.sarif]');
+  console.log('Usage: npm run uce:ci -- <report.json> [--min-score=70] [--max-critical=0] [--max-warning=50] [--sarif=results.sarif] [--annotations]');
   process.exit(input ? 0 : 2);
 }
 
@@ -43,6 +43,7 @@ if (warning > maxWarning) failures.push(`Warning findings ${warning} exceed ${ma
 
 const sarifPath = option('sarif', '');
 if (sarifPath) fs.writeFileSync(path.resolve(sarifPath), JSON.stringify(toSarif(report, findings), null, 2));
+if (args.includes('--annotations') && process.env.GITHUB_ACTIONS === 'true') emitAnnotations(findings);
 
 console.log(JSON.stringify({ schemaVersion: 1, reportId: report.id, project: report.summary.name, score: report.score.overall, critical, warning, status: failures.length ? 'failed' : 'passed' }));
 if (failures.length) { for (const failure of failures) console.error(`[UCE CI] ${failure}`); process.exit(1); }
@@ -70,6 +71,26 @@ function collectFindings(value) {
     recommendation: item.recommendation, module: item.module,
   });
   return result;
+}
+
+function emitAnnotations(findings) {
+  const unique = new Set(); let emitted = 0;
+  const escape = value => String(value).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  const property = value => escape(value).replace(/:/g, '%3A').replace(/,/g, '%2C');
+  for (const item of findings) {
+    const location = String(item.file ?? '').replace(/\\/g, '/');
+    if (!location || location === 'Project-wide' || location.startsWith('/') ||
+      /^[a-zA-Z]:/.test(location) || location.split('/').includes('..')) continue;
+    const key = [item.ruleId, location, item.line ?? ''].join('|');
+    if (unique.has(key)) continue; unique.add(key);
+    if (emitted >= 25) break;
+    const level = item.severity === 'critical' ? 'error' : item.severity === 'warning' ? 'warning' : 'notice';
+    const line = Number.isInteger(item.line) && item.line > 0 ? ',line=' + item.line : '';
+    console.log('::' + level + ' file=' + property(location) + line + ',title=' + property(item.ruleId) + '::' +
+      escape((item.title + '. ' + item.recommendation).slice(0, 350)));
+    emitted++;
+  }
+  if (unique.size > emitted) console.log('::notice::UCE limited inline annotations to 25; consult the uploaded SARIF for the complete results.');
 }
 
 function toSarif(value, findings) {

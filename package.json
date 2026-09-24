@@ -8,12 +8,14 @@
   },
   "scripts": {
     "test": "node scripts/test-knowledge.mjs",
+    "test:v3-fixtures": "node testing/v3/v3-rule-fixtures.mjs",
     "test:integration": "node scripts/test-knowledge.mjs",
     "test:fixtures": "node scripts/test-knowledge.mjs",
     "test:accessibility": "node scripts/phase5-gates.mjs",
     "test:browser": "npm run build",
-    "validate:schema": "node scripts/phase5-gates.mjs",
+    "validate:schema": "node scripts/phase5-gates.mjs && node testing/v3/v3-schema-check.mjs",
     "benchmark": "node scripts/benchmark.mjs",
+    "benchmark:v3-memory": "node --max-old-space-size=512 testing/v3/benchmark-v3-memory.mjs",
     "docs:rules": "node scripts/generate-rule-docs.mjs",
     "security:self-scan": "node scripts/uce-scan.mjs . --output=uce-self-scan.json && node scripts/uce-ci.mjs uce-self-scan.json --min-score=80 --max-critical=0 --max-warning=80 --sarif=uce-self-scan.sarif",
     "uce:ci": "node scripts/uce-ci.mjs",
@@ -75,6 +77,7 @@
     "vaul": "^0.9.1"
   },
   "devDependencies": {
+    "@eslint-community/regexpp": "^4.12.2",
     "@eslint/js": "^9.13.0",
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",

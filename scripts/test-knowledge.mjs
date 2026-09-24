@@ -52,6 +52,7 @@ const { prepareAnalysisInput, fingerprintAnalysisInput, diffAnalysisInputs } = l
 const { validateDetectorRule, runDetectorRules } = load('src/lib/knowledge/sdk.ts');
 const { canonicalKnowledgePack, verifyKnowledgePack } = load('src/lib/knowledge/signatures.ts');
 const { PHASE5_ACCURACY_FIXTURES } = load('testing/fixtures/phase5/corpus.ts');
+const REAL_REPOSITORY_MANIFESTS = JSON.parse(fs.readFileSync(path.join(root, 'testing/fixtures/v3-real-repositories.json'), 'utf8'));
 const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
@@ -80,6 +81,30 @@ async function asyncTest(name, run) { await run(); checks++; console.log('PASS '
 
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
+test('107 distinct real repository manifest snapshots detect their declared frameworks', () => {
+  const expectations = new Map([
+    ['next', 'nextjs'], ['react', 'react'], ['vue', 'vue'], ['electron', 'electron'],
+    ['express', 'express'], ['@angular/core', 'angular'], ['svelte', 'svelte'],
+    ['vite', 'vite'], ['vitest', 'vitest'], ['jest', 'jest'], ['@playwright/test', 'playwright'],
+    ['tailwindcss', 'tailwind'],
+  ]);
+  const inventory = new Map(V3_PHASE2_RULE_PACKS.flatMap(pack => pack.rules).map(rule => [rule.id, rule]));
+  assert.ok(REAL_REPOSITORY_MANIFESTS.fixtures.length >= 100);
+  assert.equal(new Set(REAL_REPOSITORY_MANIFESTS.fixtures.map(item => item.repository)).size, REAL_REPOSITORY_MANIFESTS.fixtures.length);
+  for (const fixture of REAL_REPOSITORY_MANIFESTS.fixtures) {
+    assert.match(fixture.sha, /^[a-f0-9]{40}$/);
+    const expected = [...expectations].find(([name, id]) => Object.hasOwn(fixture.dependencies, name) && inventory.has(`technology.catalog.${id}`));
+    assert.ok(expected, `${fixture.repository}: no independently mapped technology`);
+    const [dependency, id] = expected;
+    const rule = inventory.get(`technology.catalog.${id}`);
+    const selected = { ...V3_PHASE2_RULE_PACKS[0], modules: [rule.module], technologies: rule.technologies, rules: [rule] };
+    const scan = (dependencies) => executeV3RulePacks([selected], {
+      files: [pkg('package.json', dependencies)], technologies: rule.technologies,
+    }).findings.some(finding => finding.ruleId === rule.id);
+    assert.ok(scan({ [dependency]: fixture.dependencies[dependency] }), `${fixture.repository}: expected ${id}`);
+    assert.equal(scan({ 'unrelated-fixture-package': '1.0.0' }), false, `${fixture.repository}: unrelated dependency matched ${id}`);
+  }
+});
 test('GitHub repository imports use the same-origin archive relay', () => {
   const repository = parseGitHubRepositoryUrl('https://github.com/RyzovaTech/Ryzova-UCE-Original');
   assert.equal(repository.owner, 'RyzovaTech');
@@ -114,6 +139,12 @@ test('V3 DSL executes regex, AST, manifest, dependency and config detectors', ()
   assert.equal(result.schemaVersion, 3); assert.equal(result.rulesExecuted, 5);
   for (const kind of ['regex', 'ast', 'manifest', 'dependency', 'config']) assert.ok(result.findings.some((finding) => finding.evidence.some((item) => item.detector === kind)), `missing ${kind}`);
   assert.ok(result.metrics.every((metric) => metric.durationMs >= 0 && metric.filesVisited <= 25_000));
+});
+test('V3 config patterns do not match unrelated non-empty files', () => {
+  const rule = V3_PHASE2_RULE_PACKS.flatMap(pack => pack.rules).find(item => item.id === 'technology.catalog.django');
+  const pack = { ...V3_PHASE2_RULE_PACKS[0], modules: [rule.module], technologies: rule.technologies, rules: [rule] };
+  const result = executeV3RulePacks([pack], { files: [file('requirements.txt', 'flask==1.2.3\n')], technologies: rule.technologies });
+  assert.deepEqual(result.findings, []);
 });
 test('V3 rules respect technology, module and production scope filters', () => {
   const files = [file('tests/app.ts', 'eval(input)'), file('src/app.ts', 'eval(input)')];
@@ -252,6 +283,11 @@ test('CI SARIF exports rule-level evidence and physical source locations', () =>
     assert.ok(results.some(item => item.ruleId === report.stack.v3RulePlatform.findings[0].ruleId &&
       item.locations[0].physicalLocation.artifactLocation.uri === 'src/package.json' &&
       item.locations[0].physicalLocation.region.startLine === 4));
+    const annotations = spawnSync(process.execPath, [path.join(root, 'scripts/uce-ci.mjs'), input, '--annotations'],
+      { encoding: 'utf8', env: { ...process.env, GITHUB_ACTIONS: 'true' } });
+    assert.equal(annotations.status, 0, annotations.stderr);
+    assert.ok(annotations.stdout.includes('::warning file=src/package.json,line=4,title=' +
+      report.stack.v3RulePlatform.findings[0].ruleId + '::'));
   } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 test('V3 correlations require related browser target, lockfile, flow and real import evidence', () => {
