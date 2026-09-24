@@ -21,6 +21,8 @@ function load(file) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   });
   const requireLocal = (specifier) => {
+    if (specifier === 'jszip') return { default: nativeRequire('jszip') };
+    if (specifier.startsWith('@/')) return load(path.resolve(root, 'src', specifier.slice(2)) + '.ts');
     if (!specifier.startsWith('.')) return nativeRequire(specifier);
     const target = path.resolve(path.dirname(resolved), specifier);
     return load(path.extname(target) ? target : target + '.ts');
@@ -70,6 +72,7 @@ const { V3_PHASE5_RULE_PACKS, V3_PHASE5_RULE_COUNT, V3_PHASE5_RULE_TARGET, V3_PH
 const { validateV3RulePack, analyzeV3RuleGraph, detectorSignature } = load('src/lib/knowledge/v3-validator.ts');
 const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
 const { V3RuleRegistry } = load('src/lib/knowledge/v3-registry.ts');
+const { readZip } = load('src/lib/analyzer/zip.ts');
 const { canonicalV3RulePack, signV3RulePack, verifyV3RulePack } = load('src/lib/knowledge/v3-signatures.ts');
 const { generateV3RuleDocumentation } = load('src/lib/knowledge/v3-docs.ts');
 const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
@@ -921,5 +924,23 @@ await asyncTest('V3 pack signing verifies trusted publishers and rejects tamperi
   const trust = [{ keyId: 'ryzova-v3-test', publisher: signed.publisher, publicKey }];
   const verified = await verifyV3RulePack(signed, trust); assert.equal(verified.valid, true); assert.equal(verified.trusted, true);
   const tampered = await verifyV3RulePack({ ...signed, description: 'tampered' }, trust); assert.equal(tampered.valid, false); assert.equal(tampered.trusted, false);
+});
+await asyncTest('large ZIP extraction samples at the analysis budget and reports reading progress', async () => {
+  const JSZip = nativeRequire('jszip');
+  const zip = new JSZip();
+  zip.file('linux-main/Makefile', 'VERSION = 6\n');
+  for (let index = 0; index < 25_100; index++) zip.file(`linux-main/src/part-${String(index).padStart(5, '0')}.c`, 'int main(void) { return 0; }');
+  const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
+  const updates = [];
+  // JSZip consumes Uint8Array directly in Node; browsers pass the File object.
+  const archive = Object.assign(bytes, { name: 'linux.zip', size: bytes.byteLength });
+  const result = await readZip(archive, (read, total) => updates.push([read, total]));
+  assert.equal(result.scanStats.filesFound, 25_101);
+  assert.equal(result.scanStats.filesAnalyzed, 25_000);
+  assert.equal(result.scanStats.sampled, true);
+  assert.equal(result.scanStats.truncated, true);
+  assert.equal(result.scanStats.filesIgnored, 101);
+  assert.ok(result.files.some(item => item.path === 'Makefile'));
+  assert.deepEqual(updates.at(-1), [25_000, 25_000]);
 });
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

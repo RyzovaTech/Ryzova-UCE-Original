@@ -3,6 +3,7 @@ import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
 import type { ProjectFile, ScanStats } from './types';
 import { formatFileSize } from '@/lib/utils';
 import { MAX_COMPRESSED_ARCHIVE_BYTES } from './archive-policy';
+import { DEFAULT_ANALYSIS_BUDGET } from './execution';
 
 export interface ZipReadResult {
   files: ProjectFile[];
@@ -11,7 +12,7 @@ export interface ZipReadResult {
 }
 
 // --- Intelligent limits (no hard 100MB block) ---
-const MAX_FILES = 100_000;
+const MAX_FILES = DEFAULT_ANALYSIS_BUDGET.maxFiles;
 const MAX_TOTAL_TEXT_CONTENT = 96 * 1024 * 1024; // bounded content; remaining files keep metadata
 const MAX_SINGLE_TEXT_FILE = 2 * 1024 * 1024; // 2MB per text file
 const MAX_TOTAL_UNCOMPRESSED = 5 * 1024 * 1024 * 1024; // 5GB total uncompressed — ZIP bomb guard
@@ -198,7 +199,7 @@ function commonArchiveRoot(files: ProjectFile[]): string | null {
   return files.every((file) => file.path.startsWith(`${root}/`)) ? root : null;
 }
 
-export async function readZip(file: File): Promise<ZipReadResult> {
+export async function readZip(file: File, onProgress?: (filesRead: number, filesSelected: number) => void): Promise<ZipReadResult> {
   if (!file.name.toLowerCase().endsWith('.zip')) {
     throw new ZipReadError('Unsupported file type. Please upload a .zip archive.');
   }
@@ -355,6 +356,7 @@ export async function readZip(file: File): Promise<ZipReadResult> {
       files.push({ path: entry.name, size, isDirectory: false });
       contentTruncated = true;
       filesAnalyzed++;
+      if (filesAnalyzed % 250 === 0) onProgress?.(filesAnalyzed, analyzableEntries.length);
       continue;
     }
 
@@ -380,7 +382,9 @@ export async function readZip(file: File): Promise<ZipReadResult> {
 
     files.push({ path: entry.name, size, isDirectory: false, content });
     filesAnalyzed++;
+    if (filesAnalyzed % 250 === 0) onProgress?.(filesAnalyzed, analyzableEntries.length);
   }
+  onProgress?.(filesAnalyzed, analyzableEntries.length);
 
   // Analyze the project itself, rather than the arbitrary archive wrapper directory.
   const archiveRoot = commonArchiveRoot(files);
