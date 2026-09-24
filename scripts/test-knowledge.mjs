@@ -62,6 +62,7 @@ const { V3_CORE_RULE_PACK } = load('src/lib/knowledge/v3-core-pack.ts');
 const { V3_DEFAULT_RULE_PACKS } = load('src/lib/knowledge/v3-default-packs.ts');
 const { V3_PHASE2_RULE_COUNT, V3_PHASE2_RULE_PACKS, V3_PHASE2_RULE_TARGET, V3_TOTAL_CORE_RULE_TARGET } = load('src/lib/knowledge/v3-phase2-packs.ts');
 const { V3_PHASE3_RULE_PACKS, V3_PHASE3_RULE_COUNT, V3_PHASE3_TARGET, V3_PHASE3_TOTAL_TARGET } = load('src/lib/knowledge/v3-phase3-packs.ts');
+const { V3_PHASE4_RULE_PACKS, V3_PHASE4_RULE_COUNT, V3_PHASE4_RULE_TARGET, V3_PHASE4_TOTAL_TARGET } = load('src/lib/knowledge/v3-phase4-packs.ts');
 const { validateV3RulePack, analyzeV3RuleGraph } = load('src/lib/knowledge/v3-validator.ts');
 const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
 const { V3RuleRegistry } = load('src/lib/knowledge/v3-registry.ts');
@@ -160,16 +161,83 @@ test('V3 Phase 2 publishes exactly 3,000 validated core rules', () => {
 });
 test('V3 Phase 3 adds exactly 3,500 unique validated rules in 13 deep ecosystem packs', () => {
   assert.equal(V3_PHASE3_RULE_COUNT, V3_PHASE3_TARGET);
-  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((n, pack) => n + pack.rules.length, 0), V3_PHASE3_TOTAL_TARGET);
+  assert.equal([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS, ...V3_PHASE3_RULE_PACKS].reduce((n, pack) => n + pack.rules.length, 0), V3_PHASE3_TOTAL_TARGET);
   assert.equal(V3_PHASE3_RULE_PACKS.length, 13);
   for (const pack of V3_PHASE3_RULE_PACKS) {
     assert.ok(pack.rules.length, `empty pack ${pack.id}`);
     const validation = validateV3RulePack(pack);
     assert.equal(validation.valid, true, `${pack.id}: ${validation.errors.join('; ')}`);
   }
-  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  const graph = analyzeV3RuleGraph([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS, ...V3_PHASE3_RULE_PACKS]);
   assert.deepEqual(graph.duplicates, []); assert.deepEqual(graph.missingDependencies, []);
   assert.deepEqual(graph.conflicts, []); assert.deepEqual(graph.cycles, []);
+});
+test('V3 Phase 4 publishes 9,000 unique executable rules across evidence-linked packs', () => {
+  assert.equal(V3_PHASE4_RULE_COUNT, V3_PHASE4_RULE_TARGET);
+  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((total, pack) => total + pack.rules.length, 0), V3_PHASE4_TOTAL_TARGET);
+  assert.equal(V3_PHASE4_RULE_PACKS.length, 5);
+  for (const pack of V3_PHASE4_RULE_PACKS) {
+    const validation = validateV3RulePack(pack);
+    assert.equal(validation.valid, true, pack.id + ': ' + validation.errors.slice(0, 3).join('; '));
+  }
+  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  assert.deepEqual(graph.duplicates, []); assert.deepEqual(graph.missingDependencies, []);
+  assert.deepEqual(graph.cycles, []); assert.deepEqual(graph.conflicts, []);
+  assert.ok(V3_PHASE4_RULE_PACKS.flatMap(pack => pack.rules).every(item => item.severity !== 'critical' && item.detectors.every(detector => detector.kind === 'correlation')));
+});
+test('V3 correlations require related browser target, lockfile, flow and real import evidence', () => {
+  const selected = V3_PHASE4_RULE_PACKS.map(pack => ({ ...pack, rules: pack.rules.filter(item =>
+    /browser-target.*css-has.*firefox|manifest-lockfile.*react-|value-flow.*javascript-0-0-|import-boundary.*src-components-src-server-/.test(item.id)) })).filter(pack => pack.rules.length);
+  const files = [
+    file('.browserslistrc', 'Firefox 100'), file('src/site.css', 'article:has(img) { color: red }'),
+    pkg('package.json', { react: '18.3.1' }), file('package-lock.json', '{"packages":{"node_modules/react":{"version":"17.0.2"}}}'),
+    file('src/components/client.ts', "import secrets from '../server/secrets';\nconst value = req.query.id;\neval(value);"),
+    file('src/server/secrets.ts', 'export default "test";'),
+  ];
+  const actual = executeV3RulePacks(selected, { files, technologies: ['javascript', 'typescript', 'react'] });
+  for (const group of ['browser-target', 'manifest-lockfile', 'value-flow', 'import-boundary'])
+    assert.ok(actual.findings.some(item => item.ruleId.includes(group)), 'missing ' + group);
+  assert.ok(actual.findings.some(item => item.evidence.some(evidence => evidence.relatedFile === 'package-lock.json')));
+  assert.ok(actual.findings.every(item => item.confidence === 'review-required' && item.severity !== 'critical'));
+  const negative = executeV3RulePacks(selected, { files: [
+    file('tests/site.css', 'article:has(img) {}'), pkg('package.json', { react: '18.3.1' }),
+    file('package-lock.json', '{"packages":{"node_modules/react":{"version":"18.3.1"}}}'),
+    file('src/components/client.ts', 'const value = "safe"; eval(value);'),
+    file('src/server/secrets.ts', 'export default "test";'),
+  ], technologies: ['javascript', 'typescript', 'react'] });
+  assert.equal(negative.findings.length, 0);
+});
+test('V3 refuses raw regex critical security claims', () => {
+  const unsafe = structuredClone(V3_CORE_RULE_PACK.rules[0]);
+  unsafe.severity = 'critical';
+  assert.equal(validateV3RulePack({ ...V3_CORE_RULE_PACK, rules: [unsafe] }).valid, false);
+  const flow = structuredClone(V3_PHASE4_RULE_PACKS.find(pack => pack.id.endsWith('.value-flow')).rules[0]);
+  flow.severity = 'critical'; flow.confidence = 'confirmed';
+  assert.equal(validateV3RulePack({ ...V3_PHASE4_RULE_PACKS.find(pack => pack.id.endsWith('.value-flow')), rules: [flow] }).valid, false);
+});
+test('V3 flow avoids reassigned variables and separate test-scope code', () => {
+  const flowPack = V3_PHASE4_RULE_PACKS.find(pack => pack.id.endsWith('.value-flow'));
+  const rule = flowPack.rules.find(item => item.id.includes('javascript-0-0-'));
+  const only = { ...flowPack, rules: [rule] };
+  const findings = executeV3RulePacks([only], { files: [
+    file('src/reassigned.ts', 'const value = req.query.id; value = "fixed"; eval(value);'),
+    file('tests/unsafe.ts', 'const value = req.query.id; eval(value);'),
+    file('src/unrelated.ts', 'const value = "safe"; eval(value);'),
+  ], technologies: ['typescript'] }).findings;
+  assert.deepEqual(findings, []);
+});
+test('V3 value-path rules recognize Python and PHP assignment boundaries', () => {
+  const pack = V3_PHASE4_RULE_PACKS.find(item => item.id.endsWith('.value-flow'));
+  const selected = { ...pack, rules: pack.rules.filter(item => /(?:python|php)-0-0-/.test(item.id)) };
+  assert.equal(selected.rules.length, 2);
+  const findings = executeV3RulePacks([selected], {
+    files: [file('src/app.py', "user = request.args.get('name')\neval(user)\n"),
+      file('src/app.php', "$user = $_GET['name'];\neval($user);\n")],
+    technologies: ['python', 'php'],
+  }).findings;
+  assert.ok(findings.some(item => item.file === 'src/app.py'));
+  assert.ok(findings.some(item => item.file === 'src/app.php'));
+  assert.ok(findings.every(item => item.severity === 'warning' && item.confidence === 'review-required'));
 });
 test('V3 Phase 3 compatibility signals include real evidence and avoid stable versions', () => {
   const files = [pkg('package.json', { 'react-native': 'canary', electron: '^30.1.0' }), file('pubspec.yaml', 'name: example\ndependencies:\n  flutter: any\n  riverpod: latest\n'), file('Cargo.toml', '[dependencies]\ntauri = "latest"\n'), file('manifest.json', '{"manifest_version": 2}')];
@@ -372,13 +440,14 @@ test('browser intelligence excludes test, fixture and generated code', () => {
 });
 test('security registry is valid and expands Phase 3 coverage', () => {
   assert.deepEqual(validateSecurityRules(), []); assert.ok(SECURITY_RULES.length >= 20);
+  assert.ok(validateSecurityRules([{ ...SECURITY_RULES[0], id: 'SEC099', severity: 'critical' }]).some(error => error.includes('Regex-only')));
 });
 test('security findings include category, confidence and safe evidence', () => {
   const result = detectSecurityIntelligence([file('src/server.ts', 'const password = "real-production-secret";\nconst agent = { rejectUnauthorized: false };')]);
   assert.ok(result.findings.some(item => item.ruleId === 'SEC001' && item.category === 'secrets' && item.confidence));
   assert.ok(result.findings.some(item => item.ruleId === 'SEC010' && item.category === 'transport'));
   assert.ok(result.findings.every(item => !item.evidence.includes('real-production-secret')));
-  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.0.1');
+  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.1.0');
 });
 test('security placeholders and local HTTP endpoints are suppressed', () => {
   const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const backupApiKey = "fake-api-key-for-testing"; const url = "http://localhost:3000/api";')]);
@@ -392,7 +461,7 @@ test('private-key generation markers are not treated as embedded private keys', 
   const generated = 'return `-----BEGIN OPENSSH PRIVATE KEY-----\\n${lines.join("\\n")}\\n-----END OPENSSH PRIVATE KEY-----\\n`;';
   assert.ok(!detectSecurityIntelligence([file('src/keys.ts', generated)]).findings.some(item => item.ruleId === 'SEC008'));
   const embedded = 'const key = `-----BEGIN PRIVATE KEY-----\nQUJDREVGR0hJSktMTU5PUA==\nUVJTVFVWV1hZWjEyMzQ1Ng==\n-----END PRIVATE KEY-----`;';
-  assert.ok(detectSecurityIntelligence([file('src/leaked.ts', embedded)]).findings.some(item => item.ruleId === 'SEC008' && item.severity === 'critical'));
+  assert.ok(detectSecurityIntelligence([file('src/leaked.ts', embedded)]).findings.some(item => item.ruleId === 'SEC008' && item.severity === 'warning' && item.certainty === 'review-required'));
 });
 test('security rules are language scoped', () => {
   const result = detectSecurityIntelligence([file('src/app.py', 'eval(data)\nconst x = { rejectUnauthorized: false }')]);
@@ -451,7 +520,7 @@ test('mobile browser targets remain distinct and findings state static-check lim
 test('security configuration rules include scope and false-positive metadata', () => {
   const result = detectSecurityIntelligence([file('deploy.yaml', 'securityContext:\n  privileged: true')]);
   const finding = result.findings.find(item => item.ruleId === 'SEC032');
-  assert.equal(finding.scope, 'configuration'); assert.equal(finding.certainty, 'confirmed'); assert.equal(finding.falsePositivePossible, false);
+  assert.equal(finding.scope, 'configuration'); assert.equal(finding.certainty, 'review-required'); assert.equal(finding.falsePositivePossible, true);
 });
 test('incremental manifests distinguish reusable and changed files', () => {
   const make = (files) => ({ fileName: 'project', files, source: 'upload', scanStats: { filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, foldersFound: 0, projectSize: 1, zipSize: 1, scanTime: 1, memoryUsed: 1, truncated: false } });
@@ -558,6 +627,19 @@ const workspaceReport = (id, issueTitles, score = 80, createdAt = '2026-01-01T00
   stack: { language: 'TypeScript', framework: 'React', runtime: 'Node.js', packageManager: 'pnpm', buildTool: 'Vite', frontend: 'React', backend: 'None', database: 'Unknown', configFiles: [], securityIntelligence: { score: 50, filesScanned: 1, rulesExecuted: 1, findings: [{ id: 'secret', ruleId: 'SEC001', title: 'Secret signal', category: 'secrets', confidence: 'high', severity: 'critical', file: 'src/a.ts', line: 1, evidence: 'safe evidence', recommendation: 'Review secret' }] }, browserCompatibility: { targets: [], score: 80, filesScanned: 1, featuresChecked: 1, findings: [{ id: 'webgpu', feature: 'WebGPU', kind: 'web-api', file: 'src/a.ts', line: 2, status: 'unsupported', affectedBrowsers: ['Safari'], recommendation: 'Add fallback' }] } },
   issues: issueTitles.map((title, index) => ({ id: `${id}-${index}`, title, category: 'runtime', severity: index ? 'warning' : 'critical', description: title, reason: 'evidence', recommendation: `Fix ${title}`, affectedFile: `src/${index}.ts` })),
   categories: [{ id: 'runtime', label: 'Runtime', status: 'warning', score, issues: [], summary: 'runtime' }], score: { runtime: score, dependencies: score, configuration: score, structure: score, environment: score, security: score, deployment: score, performance: score, overall: score }, detectedFiles: [], timeline: [], notes: [],
+});
+test('Phase 4 evidence-linked findings appear in Issue Center and retain related files', () => {
+  const report = workspaceReport('correlation', []);
+  const selected = V3_PHASE4_RULE_PACKS.map(pack => ({ ...pack, rules: pack.rules.filter(item => /manifest-lockfile.*react-/.test(item.id)) })).filter(pack => pack.rules.length);
+  report.stack.v3RulePlatform = executeV3RulePacks(selected, {
+    files: [pkg('package.json', { react: '18.3.1' }), file('package-lock.json', '{"packages":{"node_modules/react":{"version":"17.0.2"}}}')],
+    technologies: ['react'],
+  });
+  const item = collectWorkspaceFindings(report).find(finding => finding.module === 'v3/dependency');
+  assert.ok(item);
+  assert.ok(item.evidence.includes('package-lock.json'));
+  assert.equal(item.severity, 'warning');
+  assert.equal(item.confidence, 'review-required');
 });
 test('Phase 4 workspace unifies compatibility and intelligence findings', () => {
   const report = workspaceReport('one', ['Runtime mismatch']);

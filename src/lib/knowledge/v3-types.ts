@@ -8,7 +8,7 @@ export type V3RuleModule =
 export type V3RuleSeverity = 'critical' | 'warning' | 'info';
 export type V3RuleConfidence = 'confirmed' | 'likely' | 'possible' | 'review-required';
 export type V3RuleScope = 'production' | 'test' | 'fixture' | 'generated' | 'vendor' | 'documentation' | 'configuration';
-export type V3DetectorKind = 'regex' | 'ast' | 'manifest' | 'dependency' | 'config';
+export type V3DetectorKind = 'regex' | 'ast' | 'manifest' | 'dependency' | 'config' | 'correlation';
 export type V3Operator = 'exists' | 'equals' | 'not-equals' | 'contains' | 'matches';
 
 export interface V3RegexDetector {
@@ -46,7 +46,14 @@ export interface V3ConfigDetector {
   value?: string;
   pattern?: string;
 }
-export type V3Detector = V3RegexDetector | V3AstDetector | V3ManifestDetector | V3DependencyDetector | V3ConfigDetector;
+/** Correlation checks join independently observed facts; none claim complete program analysis. */
+export type V3CorrelationDetector =
+  | { kind: 'correlation'; mode: 'flow'; include: string[]; sourcePattern: string; sinkPattern: string; maxLineDistance?: number }
+  | { kind: 'correlation'; mode: 'browser-target'; featureId: string; browser: string }
+  | { kind: 'correlation'; mode: 'lockfile-version'; packageName: string }
+  | { kind: 'correlation'; mode: 'import-boundary'; include: string[]; target: string[] }
+  | { kind: 'correlation'; mode: 'paired-evidence'; first: { include: string[]; pattern: string }; second: { include: string[]; pattern: string }; relation: 'same-file' | 'same-workspace' };
+export type V3Detector = V3RegexDetector | V3AstDetector | V3ManifestDetector | V3DependencyDetector | V3ConfigDetector | V3CorrelationDetector;
 
 export interface V3EvidenceRequirements {
   minimum: number;
@@ -104,7 +111,7 @@ export interface V3ExecutionContext {
   modules?: V3RuleModule[];
   manifests?: Record<string, unknown>;
 }
-export interface V3RuleEvidence { detector: V3DetectorKind; file: string; line?: number; detail: string; }
+export interface V3RuleEvidence { detector: V3DetectorKind; file: string; line?: number; detail: string; relatedFile?: string; relatedLine?: number; }
 export interface V3RuleFinding {
   ruleId: string;
   packId: string;

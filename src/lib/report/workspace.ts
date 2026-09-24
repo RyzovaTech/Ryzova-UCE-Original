@@ -104,6 +104,19 @@ export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFindi
     });
   }
 
+  for (const item of report.stack.v3RulePlatform?.findings ?? []) {
+    if (!item.packId.includes('.v3-phase4.')) continue;
+    findings.push({
+      id: 'v3:' + item.ruleId + ':' + item.file + ':' + (item.line ?? 0),
+      title: item.title, severity: item.severity, module: 'v3/' + item.module,
+      file: item.file, line: item.line,
+      description: 'Evidence-linked static review signal; runtime behavior and impact are not proven.',
+      evidence: item.evidence.map(evidence => evidence.detail + (evidence.relatedFile ? ' (related: ' + evidence.relatedFile + (evidence.relatedLine ? ':' + evidence.relatedLine : '') + ')' : '')).join('; '),
+      recommendation: item.recommendation, ruleId: item.ruleId, confidence: item.confidence,
+      falsePositivePossible: true,
+    });
+  }
+
   const seen = new Set<string>();
   return findings.filter((item) => {
     const key = findingFingerprint(item);
@@ -146,7 +159,7 @@ export function compareReports(current: AnalysisResult, baseline: AnalysisResult
 }
 
 export function findingFingerprint(finding: WorkspaceFinding): string {
-  return [finding.module, normalize(finding.title), normalize(finding.file), finding.line ?? 0].join('|');
+  return [finding.module, finding.module.startsWith('v3/') ? finding.ruleId : normalize(finding.title), normalize(finding.file), finding.line ?? 0].join('|');
 }
 
 export function compatibleProjectReports(current: AnalysisResult, reports: AnalysisResult[]): AnalysisResult[] {

@@ -9,7 +9,7 @@ UCE V3 includes 6,500 schema-validated rules with unique IDs, confidence labels,
 UCE analyzes project structure, runtimes, dependencies, configuration, and compatibility risks in the browser.
 
 ## Detection Coverage
-- 6,500 schema-validated V3 rules across 27 built-in packs
+- 9,000 schema-validated V3 rules across 32 built-in packs
 - 77 programming and source-language labels, including TypeScript, JavaScript, Python, Java, Go, Rust, C++, C#, Kotlin, Swift, PHP, Ruby, HTML, CSS, SQL, GraphQL, Bash and PowerShell
 - 639 technology detection definitions consolidated into 524 unique named technology profiles
 - 43 framework definitions, including React, Next.js, Vue, Angular, SvelteKit, Express, NestJS, Django, Flask, FastAPI, Spring Boot, Laravel, Rails and Flutter

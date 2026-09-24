@@ -1,4 +1,5 @@
 import { classifyProjectFileScope, normalizeProjectPath } from '../analyzer/project-scope';
+import { correlationEvidence } from './v3-correlations';
 import { V3_RULE_SCHEMA_VERSION } from './v3-types';
 import { analyzeV3RuleGraph, validateV3RulePack } from './v3-validator';
 import type {
@@ -63,6 +64,7 @@ function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext):
 }
 
 function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3Rule, budget: V3RuleBudget, state: MutableState, started: number): V3RuleEvidence[] {
+  if (detector.kind === 'correlation') return correlationEvidence(detector, context, rule, budget, state, started);
   if (detector.kind === 'dependency') return dependencyEvidence(detector, context.files, rule, budget, state, started);
   const evidence: V3RuleEvidence[] = [];
   for (const file of context.files) {

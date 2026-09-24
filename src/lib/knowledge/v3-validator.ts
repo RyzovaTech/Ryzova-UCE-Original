@@ -51,6 +51,8 @@ export function validateV3Rule(rule: V3Rule): string[] {
   if (!stringArray(rule.technologies) || !rule.technologies.length) errors.push('technologies must not be empty.');
   if (!Array.isArray(rule.scope) || !rule.scope.length || rule.scope.some((scope) => !SCOPES.has(scope))) errors.push('scope is empty or invalid.');
   if (!['critical','warning','info'].includes(rule.severity)) errors.push('severity is invalid.');
+  if (rule.module === 'security' && rule.severity === 'critical')
+    errors.push('critical security findings require proven semantic data flow, which the current bounded static detectors cannot establish.');
   if (!CONFIDENCE.has(rule.confidence)) errors.push('confidence is invalid.');
   if (!Array.isArray(rule.detectors) || !rule.detectors.length) errors.push('at least one detector is required.');
   else rule.detectors.forEach((detector, index) => errors.push(...validateDetector(detector).map((error) => `detector ${index}: ${error}`)));
@@ -89,7 +91,22 @@ export function detectorSignature(rule: V3Rule): string {
 
 function validateDetector(detector: V3Detector): string[] {
   const errors: string[] = [];
-  if (!['regex','ast','manifest','dependency','config'].includes(detector.kind)) return ['kind is unsupported.'];
+  if (!['regex','ast','manifest','dependency','config','correlation'].includes(detector.kind)) return ['kind is unsupported.'];
+  if (detector.kind === 'correlation') {
+    if (!['flow', 'browser-target', 'lockfile-version', 'import-boundary', 'paired-evidence'].includes(detector.mode)) errors.push('correlation mode is unsupported.');
+    if (detector.mode === 'flow') {
+      if (!detector.include?.length || !detector.sourcePattern?.includes('(') || !detector.sinkPattern?.includes('{{variable}}')) errors.push('flow requires file scope, captured variable and sink variable placeholder.');
+      for (const pattern of [detector.sourcePattern, detector.sinkPattern?.replace(/\{\{variable\}\}/g, 'value')]) try { new RegExp(pattern); } catch { errors.push('flow pattern is invalid.'); }
+      if (detector.maxLineDistance !== undefined && (!Number.isInteger(detector.maxLineDistance) || detector.maxLineDistance < 1 || detector.maxLineDistance > 100)) errors.push('flow distance must be between 1 and 100 lines.');
+    }
+    if (detector.mode === 'browser-target' && (!text(detector.featureId) || !text(detector.browser))) errors.push('browser correlation needs feature and browser.');
+    if (detector.mode === 'lockfile-version' && !text(detector.packageName)) errors.push('lockfile correlation needs a package name.');
+    if (detector.mode === 'import-boundary' && (!detector.include?.length || !detector.target?.length)) errors.push('import boundary needs origin and target paths.');
+    if (detector.mode === 'paired-evidence') {
+      if (!detector.first?.include?.length || !detector.second?.include?.length || !['same-file', 'same-workspace'].includes(detector.relation)) errors.push('paired evidence needs two path patterns and a relation.');
+      for (const pattern of [detector.first?.pattern, detector.second?.pattern]) try { new RegExp(pattern); } catch { errors.push('paired evidence pattern is invalid.'); }
+    }
+  }
   if (detector.kind === 'regex') {
     if (!detector.include?.length || detector.include.some((item) => unsafePath(item))) errors.push('include globs must be bounded project-relative patterns.');
     if (!detector.pattern || detector.pattern.length > MAX_PATTERN) errors.push(`pattern must be 1-${MAX_PATTERN} characters.`);
