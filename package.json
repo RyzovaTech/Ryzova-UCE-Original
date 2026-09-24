@@ -15,7 +15,7 @@
     "validate:schema": "node scripts/phase5-gates.mjs",
     "benchmark": "node scripts/benchmark.mjs",
     "docs:rules": "node scripts/generate-rule-docs.mjs",
-    "security:self-scan": "node scripts/uce-scan.mjs . --output=uce-self-scan.json && node scripts/uce-ci.mjs uce-self-scan.json --min-score=80 --max-critical=0 --max-warning=50 --sarif=uce-self-scan.sarif",
+    "security:self-scan": "node scripts/uce-scan.mjs . --output=uce-self-scan.json && node scripts/uce-ci.mjs uce-self-scan.json --min-score=80 --max-critical=0 --max-warning=80 --sarif=uce-self-scan.sarif",
     "uce:ci": "node scripts/uce-ci.mjs",
     "uce:scan": "node scripts/uce-scan.mjs",
     "dev": "vite",

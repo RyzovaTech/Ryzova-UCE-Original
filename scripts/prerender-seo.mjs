@@ -201,10 +201,10 @@ const catalogMeta = [
   [/<meta\s+name="robots"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="robots" content="index, follow" />'],
   [/<link\s+rel="canonical"\s+href="[^"]*"\s*\/?\s*>/i, '<link rel="canonical" href="https://uce.ryzova.com/catalog" />'],
   [/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:title" content="Ryzova UCE Detection Catalog" />'],
-  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="Browse 9,000 schema-validated V3 rules, ${UCE_CATALOG_COUNTS.languages} language labels, and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technologies with transparent deterministic analysis." />`],
+  [/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta property="og:description" content="Browse 10,000 schema-validated V3 rules, ${UCE_CATALOG_COUNTS.languages} language labels, and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique technologies with transparent deterministic analysis." />`],
   [/<meta\s+property="og:url"\s+content="[^"]*"\s*\/?\s*>/i, '<meta property="og:url" content="https://uce.ryzova.com/catalog" />'],
   [/<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?\s*>/i, '<meta name="twitter:title" content="Ryzova UCE Detection Catalog" />'],
-  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="Explore 9,000 schema-validated V3 rules for languages, technologies, browser compatibility, security, architecture, APIs, cloud and accessibility." />`],
+  [/<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?\s*>/i, `<meta name="twitter:description" content="Explore 10,000 schema-validated V3 rules for languages, technologies, browser compatibility, security, architecture, APIs, cloud and accessibility." />`],
 ];
 for (const [pattern, replacement] of catalogMeta) catalogHtml = replaceMeta(catalogHtml, pattern, replacement);
 
@@ -223,7 +223,7 @@ const catalogFallback = `
     <noscript>
       <main>
         <h1>Ryzova UCE Detection Catalog</h1>
-        <p>Explore 9,000 schema-validated V3 rules, ${UCE_CATALOG_COUNTS.languages} programming and source-language labels, and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique named technologies from ${UCE_CATALOG_COUNTS.technologies} detection definitions, plus browser, security, architecture, API, cloud, and accessibility intelligence.</p>
+        <p>Explore 10,000 schema-validated V3 rules, ${UCE_CATALOG_COUNTS.languages} programming and source-language labels, and ${UCE_CATALOG_COUNTS.uniqueTechnologies} unique named technologies from ${UCE_CATALOG_COUNTS.technologies} detection definitions, plus browser, security, architecture, API, cloud, and accessibility intelligence.</p>
         <h2>Current UCE knowledge coverage</h2>
         <ul>
           <li>${UCE_CATALOG_COUNTS.languages} programming language labels with primary, secondary, and mixed-language profiling</li>

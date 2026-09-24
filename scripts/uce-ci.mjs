@@ -63,6 +63,12 @@ function collectFindings(value) {
   const result = (value.issues ?? []).map((item) => ({ id: item.id, ruleId: `compatibility.${item.category}`, title: item.title, severity: item.severity, file: item.affectedFile, line: undefined, message: item.description, recommendation: item.recommendation, module: item.category }));
   for (const item of value.stack?.securityIntelligence?.findings ?? []) result.push({ id: `security:${item.id}`, ruleId: item.ruleId ?? 'security.unknown', title: item.title, severity: item.severity, file: item.file, line: item.line, message: item.evidence, recommendation: item.recommendation, module: 'security' });
   for (const module of Object.values(value.stack?.extendedIntelligence?.modules ?? {})) for (const item of module.findings ?? []) result.push({ id: `${module.id}:${item.id}`, ruleId: item.id, title: item.title, severity: item.severity, file: item.file, line: item.line, message: item.evidence, recommendation: item.recommendation, module: module.id });
+  for (const item of value.stack?.v3RulePlatform?.findings ?? []) result.push({
+    id: 'v3:' + item.ruleId + ':' + item.file, ruleId: item.ruleId, title: item.title,
+    severity: item.severity, file: item.file, line: item.line,
+    message: (item.evidence ?? []).map(evidence => evidence.detail).filter(Boolean).join('; ') || item.title,
+    recommendation: item.recommendation, module: item.module,
+  });
   return result;
 }
 

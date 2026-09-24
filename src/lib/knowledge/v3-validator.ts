@@ -116,6 +116,7 @@ function validateDetector(detector: V3Detector): string[] {
   if (detector.kind === 'ast' && (!detector.languages?.length || !detector.names?.length)) errors.push('AST detector requires languages and names.');
   if (detector.kind === 'manifest' && (!detector.files?.length || !text(detector.path))) errors.push('manifest detector requires files and path.');
   if (detector.kind === 'dependency' && (!detector.ecosystems?.length || !detector.names?.length)) errors.push('dependency detector requires ecosystems and names.');
+  if (detector.kind === 'dependency' && detector.version !== undefined) try { new RegExp(detector.version); } catch { errors.push('dependency version pattern is invalid.'); }
   if (detector.kind === 'config' && !detector.files?.length) errors.push('config detector requires files.');
   return errors;
 }

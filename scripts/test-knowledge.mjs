@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { spawnSync } from 'node:child_process';
 import ts from 'typescript';
 
 // Transpile only local trusted test modules in memory; never execute scanned code.
@@ -63,7 +65,8 @@ const { V3_DEFAULT_RULE_PACKS } = load('src/lib/knowledge/v3-default-packs.ts');
 const { V3_PHASE2_RULE_COUNT, V3_PHASE2_RULE_PACKS, V3_PHASE2_RULE_TARGET, V3_TOTAL_CORE_RULE_TARGET } = load('src/lib/knowledge/v3-phase2-packs.ts');
 const { V3_PHASE3_RULE_PACKS, V3_PHASE3_RULE_COUNT, V3_PHASE3_TARGET, V3_PHASE3_TOTAL_TARGET } = load('src/lib/knowledge/v3-phase3-packs.ts');
 const { V3_PHASE4_RULE_PACKS, V3_PHASE4_RULE_COUNT, V3_PHASE4_RULE_TARGET, V3_PHASE4_TOTAL_TARGET } = load('src/lib/knowledge/v3-phase4-packs.ts');
-const { validateV3RulePack, analyzeV3RuleGraph } = load('src/lib/knowledge/v3-validator.ts');
+const { V3_PHASE5_RULE_PACKS, V3_PHASE5_RULE_COUNT, V3_PHASE5_RULE_TARGET, V3_PHASE5_TOTAL_TARGET, V3_PHASE5_POLICIES } = load('src/lib/knowledge/v3-phase5-packs.ts');
+const { validateV3RulePack, analyzeV3RuleGraph, detectorSignature } = load('src/lib/knowledge/v3-validator.ts');
 const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
 const { V3RuleRegistry } = load('src/lib/knowledge/v3-registry.ts');
 const { canonicalV3RulePack, signV3RulePack, verifyV3RulePack } = load('src/lib/knowledge/v3-signatures.ts');
@@ -71,6 +74,7 @@ const { generateV3RuleDocumentation } = load('src/lib/knowledge/v3-docs.ts');
 const file = (name, content = '') => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
 const pkg = (name, deps) => file(name, JSON.stringify({ dependencies: deps }));
 let checks = 0;
+let phase5FixtureAssertions = 0;
 function test(name, run) { run(); checks++; console.log('PASS ' + name); }
 async function asyncTest(name, run) { await run(); checks++; console.log('PASS ' + name); }
 
@@ -174,16 +178,81 @@ test('V3 Phase 3 adds exactly 3,500 unique validated rules in 13 deep ecosystem 
 });
 test('V3 Phase 4 publishes 9,000 unique executable rules across evidence-linked packs', () => {
   assert.equal(V3_PHASE4_RULE_COUNT, V3_PHASE4_RULE_TARGET);
-  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((total, pack) => total + pack.rules.length, 0), V3_PHASE4_TOTAL_TARGET);
+  assert.equal([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS, ...V3_PHASE3_RULE_PACKS, ...V3_PHASE4_RULE_PACKS].reduce((total, pack) => total + pack.rules.length, 0), V3_PHASE4_TOTAL_TARGET);
   assert.equal(V3_PHASE4_RULE_PACKS.length, 5);
   for (const pack of V3_PHASE4_RULE_PACKS) {
     const validation = validateV3RulePack(pack);
     assert.equal(validation.valid, true, pack.id + ': ' + validation.errors.slice(0, 3).join('; '));
   }
-  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  const graph = analyzeV3RuleGraph([V3_CORE_RULE_PACK, ...V3_PHASE2_RULE_PACKS, ...V3_PHASE3_RULE_PACKS, ...V3_PHASE4_RULE_PACKS]);
   assert.deepEqual(graph.duplicates, []); assert.deepEqual(graph.missingDependencies, []);
   assert.deepEqual(graph.cycles, []); assert.deepEqual(graph.conflicts, []);
   assert.ok(V3_PHASE4_RULE_PACKS.flatMap(pack => pack.rules).every(item => item.severity !== 'critical' && item.detectors.every(detector => detector.kind === 'correlation')));
+});
+test('V3 Phase 5 adds 1,000 unique review rules without colliding with previous signatures', () => {
+  assert.equal(V3_PHASE5_RULE_COUNT, V3_PHASE5_RULE_TARGET);
+  assert.equal(V3_DEFAULT_RULE_PACKS.reduce((n, pack) => n + pack.rules.length, 0), V3_PHASE5_TOTAL_TARGET);
+  for (const pack of V3_PHASE5_RULE_PACKS) {
+    const result = validateV3RulePack(pack);
+    assert.equal(result.valid, true, pack.id + ': ' + result.errors.slice(0, 3).join('; '));
+  }
+  const graph = analyzeV3RuleGraph(V3_DEFAULT_RULE_PACKS);
+  assert.deepEqual(graph.duplicates, []);
+  assert.deepEqual(graph.missingDependencies, []);
+  assert.deepEqual(graph.cycles, []);
+  assert.deepEqual(graph.conflicts, []);
+  const signatures = new Map();
+  for (const rule of V3_DEFAULT_RULE_PACKS.flatMap(pack => pack.rules)) {
+    const signature = detectorSignature(rule);
+    assert.equal(signatures.has(signature), false, rule.id + ' duplicates ' + signatures.get(signature));
+    signatures.set(signature, rule.id);
+  }
+  assert.equal(signatures.size, V3_PHASE5_TOTAL_TARGET);
+  const invalid = structuredClone(V3_PHASE5_RULE_PACKS[0].rules[0]);
+  invalid.detectors[0].version = '*broken';
+  assert.equal(validateV3RulePack({ ...V3_PHASE5_RULE_PACKS[0], rules: [invalid] }).valid, false);
+});
+test('every new Phase 5 rule has a positive, negative and excluded-scope executable fixture', () => {
+  const all = V3_PHASE5_RULE_PACKS.flatMap(pack => pack.rules);
+  for (const policy of V3_PHASE5_POLICIES) {
+    const selected = all.filter(rule => rule.tags.includes(policy.id));
+    const pack = { ...V3_PHASE5_RULE_PACKS[0], id: 'com.ryzova.uce.fixture.' + policy.id, rules: selected,
+      technologies: [...new Set(selected.flatMap(rule => rule.technologies))] };
+    const values = Object.fromEntries(selected.map(rule => [rule.detectors[0].names[0], policy.example]));
+    const technologies = pack.technologies;
+    const positive = executeV3RulePacks([pack], { files: [pkg('package.json', values)], technologies });
+    const negative = executeV3RulePacks([pack], { files: [pkg('package.json', Object.fromEntries(Object.keys(values).map(name => [name, '1.2.3'])))], technologies });
+    const excluded = executeV3RulePacks([pack], { files: [pkg('tests/package.json', values)], technologies });
+    const found = new Set(positive.findings.map(item => item.ruleId));
+    const unexpected = new Set(negative.findings.map(item => item.ruleId));
+    const wronglyScoped = new Set(excluded.findings.map(item => item.ruleId));
+    for (const rule of selected) {
+      assert.ok(found.has(rule.id), 'positive: ' + rule.id); phase5FixtureAssertions++;
+      assert.ok(!unexpected.has(rule.id), 'negative: ' + rule.id); phase5FixtureAssertions++;
+      assert.ok(!wronglyScoped.has(rule.id), 'scope: ' + rule.id); phase5FixtureAssertions++;
+    }
+  }
+  assert.equal(phase5FixtureAssertions, V3_PHASE5_RULE_TARGET * 3);
+});
+test('CI SARIF exports rule-level evidence and physical source locations', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'uce-v3-sarif-'));
+  try {
+    const report = JSON.parse(fs.readFileSync(path.join(root, 'testing/fixtures/phase5/ci-pass-report.json'), 'utf8'));
+    report.stack.v3RulePlatform = { findings: [{
+      ruleId: V3_PHASE5_RULE_PACKS[0].rules[0].id, packId: V3_PHASE5_RULE_PACKS[0].id,
+      title: 'Version review', module: 'dependency', severity: 'warning', confidence: 'review-required',
+      file: 'src/package.json', line: 4, evidence: [{ detector: 'dependency', file: 'src/package.json', line: 4, detail: 'version TODO' }],
+      recommendation: 'Pin the version.', falsePositiveNotes: [],
+    }] };
+    const input = path.join(directory, 'report.json'); const output = path.join(directory, 'results.sarif');
+    fs.writeFileSync(input, JSON.stringify(report));
+    const run = spawnSync(process.execPath, [path.join(root, 'scripts/uce-ci.mjs'), input, '--sarif=' + output], { encoding: 'utf8' });
+    assert.equal(run.status, 0, run.stderr);
+    const results = JSON.parse(fs.readFileSync(output, 'utf8')).runs[0].results;
+    assert.ok(results.some(item => item.ruleId === report.stack.v3RulePlatform.findings[0].ruleId &&
+      item.locations[0].physicalLocation.artifactLocation.uri === 'src/package.json' &&
+      item.locations[0].physicalLocation.region.startLine === 4));
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
 });
 test('V3 correlations require related browser target, lockfile, flow and real import evidence', () => {
   const selected = V3_PHASE4_RULE_PACKS.map(pack => ({ ...pack, rules: pack.rules.filter(item =>
@@ -641,6 +710,19 @@ test('Phase 4 evidence-linked findings appear in Issue Center and retain related
   assert.equal(item.severity, 'warning');
   assert.equal(item.confidence, 'review-required');
 });
+test('Phase 5 package policy findings appear in Issue Center with their rule IDs', () => {
+  const report = workspaceReport('phase5-policy', []);
+  const selected = { ...V3_PHASE5_RULE_PACKS[0], rules: [V3_PHASE5_RULE_PACKS[0].rules[0]] };
+  const name = selected.rules[0].detectors[0].names[0];
+  const policy = V3_PHASE5_POLICIES.find(item => item.id === selected.rules[0].tags.at(-1));
+  report.stack.v3RulePlatform = executeV3RulePacks([selected], {
+    files: [pkg('package.json', { [name]: policy.example })], technologies: selected.rules[0].technologies,
+  });
+  const finding = collectWorkspaceFindings(report).find(item => item.ruleId === selected.rules[0].id);
+  assert.ok(finding);
+  assert.equal(finding.file, 'package.json');
+  assert.equal(finding.severity, 'warning');
+});
 test('Phase 4 workspace unifies compatibility and intelligence findings', () => {
   const report = workspaceReport('one', ['Runtime mismatch']);
   report.issues.push({ id: 'security-intelligence-SEC001', title: 'Secret signal', category: 'security', severity: 'critical', description: 'duplicate bridge', reason: 'evidence', recommendation: 'Review secret', affectedFile: 'src/a.ts' });
@@ -804,4 +886,4 @@ await asyncTest('V3 pack signing verifies trusted publishers and rejects tamperi
   const verified = await verifyV3RulePack(signed, trust); assert.equal(verified.valid, true); assert.equal(verified.trusted, true);
   const tampered = await verifyV3RulePack({ ...signed, description: 'tampered' }, trust); assert.equal(tampered.valid, false); assert.equal(tampered.trusted, false);
 });
-console.log(JSON.stringify({ checks, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));
+console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

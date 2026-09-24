@@ -105,7 +105,7 @@ export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFindi
   }
 
   for (const item of report.stack.v3RulePlatform?.findings ?? []) {
-    if (!item.packId.includes('.v3-phase4.')) continue;
+    if (!item.packId.includes('.v3-phase4.') && !item.packId.includes('.v3-phase5.')) continue;
     findings.push({
       id: 'v3:' + item.ruleId + ':' + item.file + ':' + (item.line ?? 0),
       title: item.title, severity: item.severity, module: 'v3/' + item.module,
