@@ -1,7 +1,7 @@
 import type { AnalysisInput, AnalysisResult, AnalysisStage, ProjectFile } from './types';
 
 // Rules and report version changed; never reuse cached V2 findings in a V3 scan.
-export const ANALYSIS_CACHE_VERSION = 3;
+export const ANALYSIS_CACHE_VERSION = 4;
 export const DEFAULT_ANALYSIS_BUDGET = Object.freeze({
   maxFiles: 25_000,
   maxContentBytes: 96 * 1024 * 1024,

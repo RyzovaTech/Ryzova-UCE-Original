@@ -17,6 +17,41 @@ export function maskPythonText(source: string): string {
   return output;
 }
 
+/** Preserve executable literals while hiding comments and triple-quoted prose. */
+export function maskPythonProse(source: string): string {
+  let output = ''; let quote = ''; let triple = false; let comment = false;
+  for (let i = 0; i < source.length; i++) {
+    const c = source[i];
+    if (comment) { output += c === '\n' ? '\n' : ' '; if (c === '\n') comment = false; continue; }
+    if (quote) {
+      if (c === '\\') { output += triple ? ' ' : c; if (i + 1 < source.length) { const next = source[++i]; output += triple && next !== '\n' ? ' ' : next; } continue; }
+      if (triple && source.slice(i, i + 3) === quote.repeat(3)) { output += '   '; i += 2; quote = ''; triple = false; continue; }
+      if (!triple && c === quote) quote = '';
+      output += triple && c !== '\n' ? ' ' : c; continue;
+    }
+    if (c === '#') { comment = true; output += ' '; }
+    else if (c === '"' || c === "'") { quote = c; triple = source.slice(i, i + 3) === c.repeat(3); output += triple ? '   ' : c; if (triple) i += 2; }
+    else output += c;
+  }
+  return output;
+}
+
+/** Imports inside a TYPE_CHECKING block are only evaluated by type checkers. */
+export function isTypeCheckingImport(source: string, offset: number): boolean {
+  const preceding = source.slice(0, offset).split('\n');
+  preceding.pop();
+  const indent = source.slice(offset).match(/^[ \t]*/)?.[0].length ?? 0;
+  if (indent === 0) return false;
+  for (let index = preceding.length - 1; index >= 0; index--) {
+    const line = preceding[index];
+    if (!line.trim() || line.trimStart().startsWith('#')) continue;
+    const outerIndent = line.match(/^[ \t]*/)?.[0].length ?? 0;
+    if (outerIndent >= indent) continue;
+    return /^\s*if\s+(?:(?:t|typing)\.)?TYPE_CHECKING\s*:/.test(line);
+  }
+  return false;
+}
+
 export interface PythonDependency { name: string; version: string; type: 'runtime' | 'development' | 'optional' }
 export function pythonDependencies(source: string): PythonDependency[] {
   const output: PythonDependency[] = [];

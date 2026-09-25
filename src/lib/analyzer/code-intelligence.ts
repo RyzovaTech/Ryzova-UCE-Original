@@ -1,4 +1,4 @@
-import { maskPythonText } from './python-evidence';
+import { isTypeCheckingImport, maskPythonText } from './python-evidence';
 import type { ApiEndpoint, CallRelationship, CodeIntelligence, CodeSymbol, ComplexitySignal, DependencyEdge, DuplicateCodeSignal, ModuleBoundarySignal, ProjectFile } from './types';
 import { API_ROUTE_RULES } from './api-knowledge';
 import { isProjectEvidenceFile } from './project-scope';
@@ -27,7 +27,38 @@ function normalizeTarget(from: string, target: string, files: ProjectFile[]): st
   return files.find((file) => candidates.includes(file.path) && !file.isDirectory)?.path;
 }
 function areaFor(file: string): string { const lower = file.toLowerCase(); if (/\b(api|route|routes|controller|controllers|server)\b/.test(lower)) return 'API'; if (/\b(component|components|pages|views|ui)\b/.test(lower)) return 'Frontend'; if (/\b(test|tests|spec|__tests__)\b/.test(lower)) return 'Testing'; if (/\b(config|configs|configuration)\b/.test(lower)) return 'Configuration'; if (/\b(lib|utils|utility|helpers|shared)\b/.test(lower)) return 'Shared'; if (/\b(service|services|domain|repository|repositories|backend)\b/.test(lower)) return 'Backend'; return 'Core'; }
-function findCycles(edges: DependencyEdge[]): string[][] { const graph = new Map<string, string[]>(); for (const edge of edges) { if (!graph.has(edge.from)) graph.set(edge.from, []); if (!graph.has(edge.to)) graph.set(edge.to, []); const targets = graph.get(edge.from)!; if (!targets.includes(edge.to)) targets.push(edge.to); } const cycles: string[][] = []; const seen = new Set<string>(); const visit = (start: string, node: string, path: string[]) => { for (const target of graph.get(node) ?? []) { if (target === start && path.length > 1) { const cycle = [...path]; const key = [...cycle].sort().join('|'); if (!seen.has(key)) { seen.add(key); cycles.push(cycle); } } else if (!path.includes(target) && path.length < 8) visit(start, target, [...path, target]); } }; for (const node of graph.keys()) visit(node, node, [node]); return cycles.slice(0, 20); }
+function findCycles(edges: DependencyEdge[]): string[][] {
+  const graph = new Map<string, Set<string>>(); const reverse = new Map<string, Set<string>>();
+  for (const edge of edges) {
+    (graph.get(edge.from) ?? graph.set(edge.from, new Set()).get(edge.from)!).add(edge.to);
+    if (!graph.has(edge.to)) graph.set(edge.to, new Set());
+    (reverse.get(edge.to) ?? reverse.set(edge.to, new Set()).get(edge.to)!).add(edge.from);
+    if (!reverse.has(edge.from)) reverse.set(edge.from, new Set());
+  }
+  const visited = new Set<string>(); const finished: string[] = [];
+  for (const start of graph.keys()) {
+    if (visited.has(start)) continue;
+    visited.add(start);
+    const stack: Array<{ node: string; neighbors: string[]; next: number }> = [{ node: start, neighbors: [...graph.get(start)!], next: 0 }];
+    while (stack.length) {
+      const current = stack[stack.length - 1];
+      if (current.next === current.neighbors.length) { finished.push(current.node); stack.pop(); continue; }
+      const next = current.neighbors[current.next++];
+      if (!visited.has(next)) { visited.add(next); stack.push({ node: next, neighbors: [...(graph.get(next) ?? [])], next: 0 }); }
+    }
+  }
+  visited.clear(); const groups: string[][] = [];
+  for (const start of finished.reverse()) {
+    if (visited.has(start)) continue;
+    visited.add(start); const members: string[] = []; const pending = [start];
+    while (pending.length) {
+      const node = pending.pop()!; members.push(node);
+      for (const from of reverse.get(node) ?? []) if (!visited.has(from)) { visited.add(from); pending.push(from); }
+    }
+    if (members.length > 1 || (graph.get(start)?.has(start))) groups.push(members.sort());
+  }
+  return groups.slice(0, 20);
+}
 export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
   const sourceFiles = files.filter(isSource); const symbols: CodeSymbol[] = []; const dependencyEdges: DependencyEdge[] = []; const apiEndpoints: ApiEndpoint[] = []; const architectureAreas: Record<string, string[]> = {}; const largeFiles: Array<{ file: string; lines: number }> = []; const largeFunctions: Array<{ file: string; name: string; line: number; lines?: number }> = []; const largeClasses: Array<{ file: string; name: string; line: number; lines: number }> = []; const complexity: ComplexitySignal[] = []; let todoCount = 0; let fixmeCount = 0;
   for (const file of sourceFiles) {
@@ -36,6 +67,7 @@ export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
     IMPORT_RE.lastIndex = 0; let importMatch: RegExpExecArray | null; while ((importMatch = IMPORT_RE.exec(source))) { const target = normalizeTarget(file.path, importMatch[2], files); if (target) dependencyEdges.push({ from: file.path, to: target, kind: source.slice(importMatch.index, importMatch.index + 10).includes('require') ? 'require' : source.slice(importMatch.index, importMatch.index + 10).includes('import(') ? 'dynamic-import' : 'import' }); }
     if (/\.py$/i.test(file.path)) {
       for (const match of source.matchAll(/^[ \t]*(?:from[ \t]+([.\w]+)[ \t]+import[ \t]+([^\n]+)|import[ \t]+([\w.]+))/gm)) {
+        if (isTypeCheckingImport(source, match.index)) continue;
         const module = match[1] ?? match[3];
         const dots = /^\.+/.exec(module)?.[0].length ?? 0;
         const base = file.path.split('/').slice(0, -1);
