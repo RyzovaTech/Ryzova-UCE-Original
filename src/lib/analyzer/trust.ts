@@ -9,7 +9,7 @@ export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' = 'uploa
     localOnly: !networkAccessUsed,
     networkAccessUsed,
     sourceUploaded: false,
-    scoringFormula: 'Weighted arithmetic mean of eight compatibility category scores, rounded to the nearest integer.',
+    scoringFormula: 'Weighted mean of applicable compatibility categories, with weights renormalized over those categories and rounded to the nearest integer.',
     scoreWeights: { ...COMPATIBILITY_SCORE_WEIGHTS },
     knowledgePacks: [
       { id: CORE_KNOWLEDGE_PACK.id, version: CORE_KNOWLEDGE_PACK.version, schemaVersion: CORE_KNOWLEDGE_PACK.schemaVersion, signed: Boolean(CORE_KNOWLEDGE_PACK.signature) },

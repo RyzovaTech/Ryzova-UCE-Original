@@ -1,3 +1,4 @@
+import { pythonVersionRequirement } from './python-evidence';
 import type { ExtendedIntelligence, ExtendedIntelligenceModuleId, IntelligenceModuleFinding, IntelligenceModuleResult, ProjectFile, TechnologyStack } from './types';
 import { classifyProjectFileScope } from './project-scope';
 
@@ -37,7 +38,13 @@ function runtimeModule(files: ProjectFile[], stack: TechnologyStack): Intelligen
   const pkg = text(files, /(^|\/)package\.json$/i); const nodeVersion = text(files, /(^|\/)(?:\.nvmrc|\.node-version)$/i).trim(); let engine = '';
   try { const data = JSON.parse(pkg) as { engines?: { node?: string } }; engine = data.engines?.node ?? ''; } catch { /* invalid handled elsewhere */ }
   if ((stack.runtimes ?? []).includes('Node.js') || stack.runtime === 'Node.js') { if (!engine && !nodeVersion) findings.push(finding('RUN001', 'Node.js version is not pinned', 'warning', 90, 'No engines.node, .nvmrc, or .node-version declaration was found.', 'Declare the supported Node.js version range.')); else evidence.push(`Node version declaration: ${engine || nodeVersion}`); }
-  const pythonVersion = text(files, /(^|\/)(?:\.python-version|runtime\.txt)$/i).trim(); if ((stack.runtimes ?? []).includes('Python') && !pythonVersion && !/requires-python\s*=/i.test(text(files, /pyproject\.toml$/i))) findings.push(finding('RUN002', 'Python version is not declared', 'warning', 85, 'Python is detected without a version declaration.', 'Set project.requires-python or add .python-version.'));
+  const pythonVersion = text(files, /(^|\/)(?:\.python-version|runtime\.txt)$/i).trim()
+    || pythonVersionRequirement(text(files, /pyproject\.toml$/i))
+    || /^\s*python_requires\s*=\s*([^\n]+)/m.exec(text(files, /(?:setup\.cfg|setup\.py)$/i))?.[1] || '';
+  if ((stack.runtimes ?? []).includes('Python')) {
+    if (!pythonVersion) findings.push(finding('RUN002', 'Python version is not declared', 'warning', 85, 'Python is detected without a version declaration.', 'Set project.requires-python or add .python-version.'));
+    else evidence.push(`Python version declaration: ${pythonVersion}`);
+  }
   return result('runtime', 'Runtime Intelligence', `${evidence.length} runtime/version signals analyzed.`, evidence, findings, { runtimes: (stack.runtimes ?? [stack.runtime]).length, versionDeclarations: Number(Boolean(engine || nodeVersion || pythonVersion)) });
 }
 
@@ -61,7 +68,7 @@ function buildModule(files: ProjectFile[], stack: TechnologyStack): Intelligence
 
 function testingModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const all = paths(files); const sourceCount = all.filter((path) => sourceRe.test(path) && classifyProjectFileScope(path) === 'production').length; const testCount = all.filter((path) => classifyProjectFileScope(path) === 'test' && sourceRe.test(path)).length;
-  const frameworks = (stack.technologyDetections ?? []).filter((item) => item.kind === 'testing').map((item) => item.name); const coverage = all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet|pytest\.ini)/i.test(path)) || /--coverage|coverage run|pytest-cov/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
+  const frameworks = [...new Set([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => item.name))]; const coverage = all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
   const findings: IntelligenceModuleFinding[] = []; if (sourceCount >= 5 && testCount === 0) findings.push(finding('TST001', 'No test source files detected', 'warning', 88, `${sourceCount} production source files and no test files were found.`, 'Add automated tests for critical behavior.')); if (testCount > 0 && !coverage) findings.push(finding('TST002', 'Coverage readiness not detected', 'info', 70, 'Tests exist but no coverage configuration or command was recognized.', 'Add coverage reporting with an appropriate threshold.'));
   return result('testing', 'Testing Intelligence', `${testCount} test files across ${frameworks.length} detected frameworks.`, frameworks.map((name) => `Testing framework: ${name}`), findings, { sourceFiles: sourceCount, testFiles: testCount, coverageReady: coverage });
 }

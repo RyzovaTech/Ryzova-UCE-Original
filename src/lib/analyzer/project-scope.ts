@@ -2,7 +2,7 @@ import type { ProjectFile } from './types';
 
 export type ProjectFileScope = 'production' | 'test' | 'fixture' | 'generated' | 'vendor' | 'documentation' | 'configuration';
 
-const TEST_PATH_RE = /(^|\/)(?:__tests__|tests?|testing|specs?|e2e(?:[-_]?tests?)?)(?:\/|$)|(?:^|\/)(?:test|spec)(?:[-_.][^/.]+)?\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$|_test\.(?:go|py)$/i;
+const TEST_PATH_RE = /(^|\/)(?:__tests__|tests?|testing|specs?|e2e(?:[-_]?tests?)?)(?:\/|$)|(?:^|\/)(?:test|spec)(?:[-_.][^/.]+)?\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$|_test\.(?:go|py)$|(?:^|\/)test_[^/]+\.py$/i;
 const FIXTURE_PATH_RE = /(^|\/)(?:fixtures?|mocks?|samples?|examples?|storybook|stories|benchmarks?)(?:\/|$)/i;
 const GENERATED_PATH_RE = /(^|\/)(?:dist|build|out|coverage|generated|autogen|\.next|\.nuxt|\.svelte-kit|target)(?:\/|$)|\.(?:min\.js|map)$/i;
 const VENDOR_PATH_RE = /(^|\/)(?:node_modules|vendor|third_party|pods|carthage)(?:\/|$)/i;

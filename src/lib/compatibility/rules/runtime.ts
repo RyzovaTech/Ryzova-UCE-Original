@@ -1,3 +1,4 @@
+import { pythonVersionRequirement } from '../../analyzer/python-evidence';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile } from './shared';
@@ -71,24 +72,25 @@ export const runtimeRules: CompatibilityRule[] = [
       const runtimeTxt = readFile(ctx, 'runtime.txt');
       const pythonVersion = readFile(ctx, '.python-version');
       const hasPyprojectRequires =
-        !!pyproject && /python_requires\s*=\s*['"][^'"]+['"]/.test(pyproject);
+        !!pythonVersionRequirement(pyproject ?? '');
       const hasSetupRequires =
         !!setupPy && /python_requires\s*=\s*['"][^'"]+['"]/.test(setupPy);
-      const hasRuntimePin = !!runtimeTxt || !!pythonVersion;
+      const setupCfg = readFile(ctx, 'setup.cfg') ?? '';
+      const hasRuntimePin = !!runtimeTxt?.trim() || !!pythonVersion?.trim() || /^\s*python_requires\s*=\s*\S+/m.test(setupCfg);
       if (hasPyprojectRequires || hasSetupRequires || hasRuntimePin) return issues;
       issues.push({
         id: 'python-version-missing',
         title: 'Python version requirement not declared',
         category: 'runtime',
         severity: 'warning',
-        description: 'No python_requires found in pyproject.toml, setup.py, runtime.txt, or .python-version.',
+        description: 'No Python version declaration recognized in project metadata or runtime version files.',
         reason: 'Python 3.8 is end-of-life; without a constraint, older interpreters may be used.',
-        recommendation: 'Add python_requires = ">=3.11" to pyproject.toml or a .python-version file.',
+        recommendation: 'Declare requires-python under [project] in pyproject.toml using the versions you support.',
         affectedFile: pyproject ? 'pyproject.toml' : 'setup.py',
         detected: 'not declared',
         expected: '>=3.11',
         impact: 'Incompatible syntax or missing stdlib features on older interpreters.',
-        suggestedAction: 'Declare python_requires in pyproject.toml.',
+        suggestedAction: 'Declare project.requires-python in pyproject.toml.',
       });
       return issues;
     },

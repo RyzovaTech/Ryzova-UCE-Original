@@ -1,3 +1,4 @@
+import { pythonMetadataValue } from './python-evidence';
 import type {
   ProjectFile,
   DetectedFile,
@@ -458,6 +459,13 @@ export function detectBuildTool(files: DetectedFile[], projectFiles: ProjectFile
   if (hasPrefix(files, 'esbuild.config.')) return 'esbuild';
   if (hasFile(files, 'hardhat.config.js') || hasFile(files, 'hardhat.config.ts')) return 'turbopack';
   if (stack.language === 'Python' && (hasPrimaryFile(files, 'pyproject.toml') || hasPrimaryFile(files, 'requirements.txt') || hasPrimaryFile(files, 'requirements-dev.txt'))) {
+    const config = readPrimaryFileText(projectFiles, 'pyproject.toml') ?? '';
+    const backend = pythonMetadataValue(config, 'build-system', 'build-backend') ?? '';
+    if (backend.startsWith('flit_core.')) return 'Flit';
+    if (backend.startsWith('setuptools.')) return 'Setuptools';
+    if (backend.startsWith('hatchling.')) return 'hatch';
+    if (backend.startsWith('poetry.')) return 'poetry';
+    if (backend.startsWith('pdm.')) return 'PDM';
     if (stack.packageManager === 'poetry') return 'poetry';
     if (stack.packageManager === 'hatch') return 'hatch';
     return 'pip';

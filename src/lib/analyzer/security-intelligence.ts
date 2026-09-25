@@ -1,3 +1,4 @@
+import { maskPythonText } from './python-evidence';
 import type { ProjectFile, SecurityFinding, SecurityIntelligence, SecurityRuleCategory } from './types';
 import { SECURITY_KNOWLEDGE_VERSION, SECURITY_RULES, validateSecurityRules } from './security-knowledge';
 import { classifyProjectFileScope } from './project-scope';
@@ -31,7 +32,7 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
     return !file.isDirectory && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
   });
   for (const file of sourceFiles) {
-    const source = file.content ?? ''; const normalizedPath = normalizePath(file.path);
+    const source = file.content ?? ''; const pythonCode = /\.py$/i.test(file.path) ? maskPythonText(source) : undefined; const normalizedPath = normalizePath(file.path);
     for (const rule of SECURITY_RULES) {
       if (rule.filePattern && !new RegExp(rule.filePattern.source, rule.filePattern.flags.replace('g', '')).test(normalizedPath)) continue;
       rulesExecuted++;
@@ -39,9 +40,10 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
       for (const match of source.matchAll(new RegExp(rule.pattern.source, flags))) {
         if (rule.shouldReport && !rule.shouldReport(match)) continue;
         if (rule.id === 'SEC005' && isCommentContext(source, match.index ?? 0)) continue;
+        if (pythonCode !== undefined && pythonCode.slice(match.index, match.index + 1).trim() === '') continue;
         const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
         if (seen.has(id)) continue; seen.add(id);
-        findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation, scope: /(?:Dockerfile|\.github\/|\.(?:json|ya?ml|tf)$)/i.test(normalizedPath) ? 'configuration' : 'production', falsePositivePossible: rule.falsePositivePossible ?? rule.confidence !== 'high', certainty: rule.certainty ?? (rule.confidence === 'high' ? 'confirmed' : rule.confidence === 'medium' ? 'likely' : 'possible') });
+        findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation, scope: /(?:Dockerfile|\.github\/|\.(?:json|ya?ml|tf)$)/i.test(normalizedPath) ? 'configuration' : 'production', falsePositivePossible: rule.falsePositivePossible ?? rule.confidence !== 'high', certainty: rule.id === 'SEC020' ? 'review-required' : rule.certainty ?? (rule.confidence === 'high' ? 'confirmed' : rule.confidence === 'medium' ? 'likely' : 'possible') });
         if (findings.length >= 300) break;
       }
       if (findings.length >= 300) break;

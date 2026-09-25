@@ -20,6 +20,7 @@ const COPyleft_LICENSES = ['GPL-2.0', 'GPL-3.0', 'LGPL-2.1', 'LGPL-3.0', 'AGPL-3
 function detectLicenseFromContent(content: string): string | null {
   if (/MIT License/i.test(content)) return 'MIT';
   if (/Apache License.*2\.0/i.test(content)) return 'Apache-2.0';
+  if (/Redistribution and use in source and binary forms/i.test(content) && /Redistributions of source code/i.test(content) && /Redistributions in binary form/i.test(content)) return /Neither the name/i.test(content) ? 'BSD-3-Clause' : 'BSD-2-Clause';
   if (/BSD 2-Clause/i.test(content)) return 'BSD-2-Clause';
   if (/BSD 3-Clause/i.test(content)) return 'BSD-3-Clause';
   if (/GNU GENERAL PUBLIC LICENSE.*version 3/i.test(content)) return 'GPL-3.0';
