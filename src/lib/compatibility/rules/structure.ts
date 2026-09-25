@@ -76,16 +76,14 @@ export const structureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasReadme = ctx.detectedFiles.some(
-        (f) => f.path === 'README.md' || f.path.endsWith('/README.md')
-      );
+      const hasReadme = ctx.files.some((f) => !f.isDirectory && /^readme(?:\.(?:md|markdown|rst|txt))?$/i.test(f.path));
       if (!hasReadme) {
         issues.push({
           id: 'readme-missing',
-          title: 'README.md not found',
+          title: 'README not found',
           category: 'structure',
           severity: 'info',
-          description: 'No README.md was detected at the project root.',
+          description: 'No README documentation was detected at the project root.',
           reason: 'A README is the entry point for contributors and operators.',
           recommendation: 'Add a README.md describing setup, scripts, and requirements.',
           affectedFile: 'README.md',

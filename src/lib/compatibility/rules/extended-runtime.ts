@@ -216,7 +216,13 @@ export const extendedRuntimeRules: CompatibilityRule[] = [
       const hasNodeVersion = ctx.detectedFiles.some(
         (f) => f.path === '.node-version' || f.path.endsWith('/.node-version')
       );
-      if (!hasNvmrc && !hasNodeVersion) {
+      const manifest = readFile(ctx, 'package.json');
+      let declaredVersion = false;
+      try {
+        const pkg = JSON.parse(manifest ?? '{}') as { engines?: { node?: string }; volta?: { node?: string } };
+        declaredVersion = Boolean(pkg.engines?.node || pkg.volta?.node);
+      } catch { /* Invalid manifests are handled separately. */ }
+      if (!hasNvmrc && !hasNodeVersion && !declaredVersion) {
         issues.push({
           id: 'node-version-file-missing',
           title: 'No .nvmrc or .node-version file found',

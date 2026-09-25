@@ -1,6 +1,7 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile } from './shared';
+import { classifyProjectFileScope } from '../../analyzer/project-scope';
 
 const FRAMEWORK_ENV_EXPECTATIONS: Record<string, string[]> = {
   'Next.js': ['NEXT_PUBLIC_API_URL'],
@@ -51,8 +52,9 @@ export const configurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       const hasEnvExample = ctx.detectedFiles.some((f) => f.path.endsWith('.env.example'));
-      const hasEnv = ctx.detectedFiles.some((f) => f.path.endsWith('/.env'));
-      if (!hasEnvExample && !hasEnv) {
+      const hasEnv = ctx.files.some((f) => !f.isDirectory && /(^|\/)\.env$/i.test(f.path));
+      const usesEnv = ctx.files.some((f) => !f.isDirectory && classifyProjectFileScope(f.path) === 'production' && /\b(?:process\.env\.(?!NODE_ENV\b)|import\.meta\.env\.(?!MODE\b|DEV\b|PROD\b)|os\.getenv\s*\(|System\.getenv\s*\()/i.test(f.content ?? ''));
+      if (usesEnv && !hasEnvExample && !hasEnv) {
         issues.push({
           id: 'env-example-missing',
           title: 'No .env.example file found',

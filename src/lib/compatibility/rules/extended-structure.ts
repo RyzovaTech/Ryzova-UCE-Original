@@ -1,5 +1,6 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
+import { classifyProjectFileScope } from '../../analyzer/project-scope';
 
 function hasPath(ctx: import('../types').RuleContext, candidates: string[]): boolean {
   return ctx.files.some((f) =>
@@ -151,21 +152,14 @@ export const extendedStructureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasTests = ctx.files.some((f) =>
-        f.path.includes('/test/') || f.path.includes('/tests/') ||
-        f.path.includes('/__tests__/') || f.path.includes('/spec/') ||
-        f.path.endsWith('.test.ts') || f.path.endsWith('.test.js') ||
-        f.path.endsWith('.test.tsx') || f.path.endsWith('.test.jsx') ||
-        f.path.endsWith('.spec.ts') || f.path.endsWith('.spec.js') ||
-        f.path.endsWith('_test.go') || f.path.endsWith('_test.py')
-      );
+      const hasTests = ctx.files.some((f) => !f.isDirectory && (classifyProjectFileScope(f.path) === 'test' || /(?:^|\/)[^/]+_test\.(?:go|py)$/i.test(f.path)));
       if (!hasTests) {
         issues.push({
           id: 'tests-dir-missing',
           title: 'No test files or test directory found',
           category: 'structure',
           severity: 'info',
-          description: 'No test files (*.test.*, *.spec.*, test/, tests/) were detected.',
+          description: 'No test source files were detected.',
           reason: 'Tests ensure code correctness and prevent regressions.',
           recommendation: 'Add a test directory or test files.',
           affectedFile: 'test/',

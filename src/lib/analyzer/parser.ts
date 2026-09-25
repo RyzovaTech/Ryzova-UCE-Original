@@ -174,6 +174,9 @@ const GLOBBISH_CONFIG = [
 export function detectKnownFile(path: string): { kind: string; purpose: string } | null {
   const base = path.split('/').pop() ?? path;
   if (KNOWN_FILES[base]) return KNOWN_FILES[base];
+  if (/^(?:readme(?:\.[a-z0-9]+)?|license(?:\.[a-z0-9]+)?|copying(?:\.[a-z0-9]+)?)$/i.test(base)) {
+    return { kind: 'docs', purpose: /^readme/i.test(base) ? 'Project documentation' : 'License file' };
+  }
   // Dockerfile variants: Dockerfile.dev, Dockerfile.production, etc.
   if (base === 'Dockerfile' || base.startsWith('Dockerfile.')) {
     return { kind: 'container', purpose: 'Container image definition' };

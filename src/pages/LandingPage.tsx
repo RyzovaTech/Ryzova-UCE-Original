@@ -501,7 +501,7 @@ export function LandingPage() {
             >
               Ryzova™
             </a>{" "}
-            · Trust First philosophy · v2.0.0
+            · Trust First philosophy · v{UCE_VERSION}
           </p>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <a

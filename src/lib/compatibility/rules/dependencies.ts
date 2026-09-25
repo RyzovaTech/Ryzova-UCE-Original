@@ -49,7 +49,9 @@ export const dependencyRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.packageManager === 'npm') {
-        if (!ctx.detectedFiles.some((f) => f.path.endsWith('package-lock.json'))) {
+        // Published libraries can intentionally omit a lockfile; application installs need one.
+        if (ctx.stack.architecture?.primary === 'Library') return issues;
+        if (!ctx.detectedFiles.some((f) => /(^|\/)(?:package-lock\.json|npm-shrinkwrap\.json)$/i.test(f.path))) {
           issues.push({
             id: 'lockfile-missing-npm',
             title: 'npm lockfile missing',

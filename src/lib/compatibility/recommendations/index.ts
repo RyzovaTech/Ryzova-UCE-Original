@@ -14,7 +14,7 @@ export function buildRecommendations(categories: CategoryResult[]): string[] {
     recs.push(`Address ${warnings.length} warning${warnings.length > 1 ? 's' : ''} to improve compatibility and long-term maintainability.`);
   }
 
-  const lowest = [...categories].sort((a, b) => a.score - b.score)[0];
+  const lowest = categories.filter((category) => category.status !== 'unknown').sort((a, b) => a.score - b.score)[0];
   if (lowest && lowest.score < 90) {
     recs.push(`Focus on the ${lowest.label} category next — it has the lowest compatibility score (${lowest.score}).`);
   }
