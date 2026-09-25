@@ -20,22 +20,38 @@ export function maskPythonText(source: string): string {
 export interface PythonDependency { name: string; version: string; type: 'runtime' | 'development' | 'optional' }
 export function pythonDependencies(source: string): PythonDependency[] {
   const output: PythonDependency[] = [];
-  // Keep table boundaries so arbitrary documentation strings are not dependencies.
-  let section = '';
-  for (const block of source.split(/(?=^\s*\[[^\n]+\]\s*(?:#.*)?$)/m)) {
-    const header = /^\s*\[([^\n]+)\]/.exec(block);
-    if (header) section = header[1];
-    const body = header ? block.slice(header[0].length) : block;
-    const type = section === 'project' ? 'runtime' : section === 'project.optional-dependencies' ? 'optional' : 'development';
-    if (section === 'project' || section === 'project.optional-dependencies' || section === 'dependency-groups' || section === 'build-system') {
-      for (const array of body.matchAll(/^[ \t]*([\w-]+)\s*=\s*\[((?:"(?:\\.|[^"\\])*"|'[^']*'|#[^\n]*|[^\]"'])*)\]/gm)) {
-        if (section === 'project' && array[1] !== 'dependencies') continue;
-        if (section === 'build-system' && array[1] !== 'requires') continue;
-        for (const quoted of array[2].replace(/\{[^}]*\}/g, '').replace(/#[^\n]*/g, '').matchAll(/["']([^"']+)["']/g)) {
-          const match = /^([\w.-]+)(?:\[[^\]]+\])?\s*(.*)$/.exec(quoted[1]);
-          if (match && !quoted[1].includes('include-group')) output.push({ name: match[1].toLowerCase().replace(/[-_.]+/g, '-'), version: match[2] || 'unspecified', type });
+  let section = ''; let active = false; let quote = ''; let value = ''; let escaped = false; let objectDepth = 0;
+  let type: PythonDependency['type'] = 'runtime';
+  for (const raw of source.split(/\r?\n/)) {
+    let line = raw;
+    if (!active) {
+      const header = /^\s*\[([^\]]+)\]/.exec(line);
+      if (header) { section = header[1]; continue; }
+      const assignment = /^\s*([\w-]+)\s*=\s*\[/.exec(line);
+      if (!assignment) continue;
+      if (section === 'project' && assignment[1] === 'dependencies') type = 'runtime';
+      else if (section === 'project.optional-dependencies') type = 'optional';
+      else if (section === 'dependency-groups' || (section === 'build-system' && assignment[1] === 'requires')) type = 'development';
+      else continue;
+      active = true; line = line.slice(assignment[0].length);
+    }
+    // A linear scan avoids regex backtracking on malformed/unclosed arrays.
+    for (const char of line) {
+      if (quote) {
+        if (escaped) { value += char; escaped = false; continue; }
+        if (char === '\\' && quote === '"') { escaped = true; continue; }
+        if (char !== quote) { value += char; continue; }
+        if (objectDepth === 0) {
+          const item = /^([\w.-]+)(?:\[[^\]]+\])?\s*(.*)$/.exec(value);
+          if (item) output.push({ name: item[1].toLowerCase().replace(/[-_.]+/g, '-'), version: item[2] || 'unspecified', type });
         }
+        quote = ''; value = ''; continue;
       }
+      if (char === '#') break;
+      if (char === '"' || char === "'") { quote = char; value = ''; }
+      else if (char === '{') objectDepth++;
+      else if (char === '}') objectDepth = Math.max(0, objectDepth - 1);
+      else if (char === ']' && objectDepth === 0) { active = false; break; }
     }
   }
   return [...new Map(output.map(item => [`${item.name}|${item.version}|${item.type}`, item])).values()];

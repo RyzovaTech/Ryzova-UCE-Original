@@ -141,6 +141,12 @@ test('Python metadata reader handles extras, optional groups and ignores include
   assert.equal(pythonVersionRequirement('[tool.unrelated]\nrequires-python = ">=3.10"'), undefined);
   assert.equal(pythonVersionRequirement('[tool.poetry.dependencies]\npython = "^3.11"'), '^3.11');
 });
+test('malformed Python dependency arrays remain bounded', () => {
+  const { pythonDependencies } = load('src/lib/analyzer/python-evidence.ts');
+  const start = performance.now();
+  assert.deepEqual(pythonDependencies('[project]\ndependencies = ["' + '\\'.repeat(200000)), []);
+  assert.ok(performance.now() - start < 2000, 'malformed arrays must not cause regex backtracking');
+});
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
 test('slugify-style library report recognizes lowercase docs, AVA test.js and unique technology evidence', () => {
