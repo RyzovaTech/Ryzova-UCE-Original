@@ -1,6 +1,8 @@
 import type {
   AnalysisInput, AnalysisResult, ProjectFile, TimelineStep, CompatibilityScore, CategoryResult, Issue, TechnologyStack, LanguageProfile,
+  TechnologyDetection,
 } from './types';
+import type { V3RuleFinding } from '../knowledge/v3-types';
 import { parseFiles } from './parser';
 import { detectStack, buildSummary } from './detectors';
 import { detectLanguageProfile } from './language-profile';
@@ -58,14 +60,46 @@ function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]
   return { ...stack, languages: profiles, mixedLanguage: secondary.length > 0, primaryLanguage: primary.language, secondaryLanguages: secondary, language: primary.language };
 }
 
+function uniqueTechnologyDetections(detections: TechnologyDetection[]): TechnologyDetection[] {
+  const unique = new Map<string, TechnologyDetection>();
+  for (const item of detections) {
+    const key = `${item.kind}:${item.name.toLowerCase()}`;
+    const existing = unique.get(key);
+    if (!existing) { unique.set(key, item); continue; }
+    const evidence = [...existing.evidence, ...item.evidence];
+    const seen = new Set<string>();
+    unique.set(key, {
+      ...existing,
+      confidence: Math.max(existing.confidence, item.confidence),
+      level: existing.confidence >= item.confidence ? existing.level : item.level,
+      evidence: evidence.filter((entry) => {
+        const marker = `${entry.kind}:${entry.source}:${entry.description}`;
+        if (seen.has(marker)) return false;
+        seen.add(marker); return true;
+      }).slice(0, 8),
+    });
+  }
+  return [...unique.values()];
+}
+
+function uniqueCatalogFindings(findings: V3RuleFinding[]): V3RuleFinding[] {
+  const seen = new Set<string>();
+  return findings.filter((finding) => {
+    if (!finding.ruleId.startsWith('technology.catalog.')) return true;
+    const key = `${finding.title.toLowerCase()}:${finding.file}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+}
+
 export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const detectedFiles = parseFiles(input.files); const classification = classifyProject(input.files, detectedFiles);
   const detectedLanguages = detectLanguageProfile(input.files); const baseStack = detectStack(input.files, detectedFiles);
   const stack = enrichLanguageStack(baseStack, detectedLanguages); const registryDetections = detectRegisteredTechnologies(input.files); const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack, registryDetections);
   stack.frameworks = technologyProfiles.frameworks; stack.runtimes = technologyProfiles.runtimes;
-  stack.technologyDetections = registryDetections; stack.knowledgeVersion = TECHNOLOGY_REGISTRY_VERSION;
-  const technologyGraph = buildTechnologyGraph(registryDetections); stack.capabilities = technologyGraph.capabilities; stack.technologyRelationships = technologyGraph.relationships;
+  stack.technologyDetections = uniqueTechnologyDetections(registryDetections); stack.knowledgeVersion = TECHNOLOGY_REGISTRY_VERSION;
+  const technologyGraph = buildTechnologyGraph(stack.technologyDetections); stack.capabilities = technologyGraph.capabilities; stack.technologyRelationships = technologyGraph.relationships;
   const intelligence = detectTechnologyIntelligence(input.files, detectedFiles, stack);
   stack.technologyEvidence = intelligence.evidence; stack.dependencyIntelligence = intelligence.dependencies; stack.architecture = intelligence.architecture;
   stack.codeIntelligence = detectCodeIntelligence(input.files); stack.securityIntelligence = detectSecurityIntelligence(input.files);
@@ -76,6 +110,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
     const technologies = [stack.language, stack.framework, stack.runtime, stack.buildTool, ...(stack.frameworks ?? []), ...(stack.runtimes ?? []), ...(stack.technologyDetections ?? []).flatMap((item) => [item.id, item.name])]
       .filter((item) => item && item !== 'Unknown' && item !== 'None').map((item) => String(item).toLowerCase());
     stack.v3RulePlatform = executeV3RulePacks(V3_DEFAULT_RULE_PACKS, { files: input.files, technologies: [...new Set(technologies)] });
+    stack.v3RulePlatform.findings = uniqueCatalogFindings(stack.v3RulePlatform.findings);
   }
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
   if (!classification.isSoftware) return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source, trust: buildTrustMetadata(input.source) };

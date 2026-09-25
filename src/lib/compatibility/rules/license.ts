@@ -37,11 +37,7 @@ export const licenseRules: CompatibilityRule[] = [
     category: 'security',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const licenseFile = ctx.files.find(
-        (f) => !f.isDirectory && (f.path === 'LICENSE' || f.path.endsWith('/LICENSE') ||
-          f.path === 'LICENSE.md' || f.path.endsWith('/LICENSE.md') ||
-          f.path === 'LICENSE.txt' || f.path.endsWith('/LICENSE.txt'))
-      );
+      const licenseFile = ctx.files.find((f) => !f.isDirectory && /^(?:license|copying)(?:\.(?:md|txt|rst))?$/i.test(f.path));
       if (!licenseFile || !licenseFile.content) return issues;
       const detected = detectLicenseFromContent(licenseFile.content);
       if (!detected) {
@@ -77,10 +73,7 @@ export const licenseRules: CompatibilityRule[] = [
       } catch {
         // ignore
       }
-      const licenseFile = ctx.files.find(
-        (f) => !f.isDirectory && (f.path === 'LICENSE' || f.path.endsWith('/LICENSE') ||
-          f.path === 'LICENSE.md' || f.path.endsWith('/LICENSE.md'))
-      );
+      const licenseFile = ctx.files.find((f) => !f.isDirectory && /^(?:license|copying)(?:\.(?:md|txt|rst))?$/i.test(f.path));
       if (!pkgLicense || !licenseFile?.content) return issues;
       const fileLicense = detectLicenseFromContent(licenseFile.content);
       if (fileLicense && pkgLicense !== fileLicense && !pkgLicense.includes(fileLicense)) {

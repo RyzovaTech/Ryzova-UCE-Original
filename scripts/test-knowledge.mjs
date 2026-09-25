@@ -25,7 +25,7 @@ function load(file) {
     if (specifier.startsWith('@/')) return load(path.resolve(root, 'src', specifier.slice(2)) + '.ts');
     if (!specifier.startsWith('.')) return nativeRequire(specifier);
     const target = path.resolve(path.dirname(resolved), specifier);
-    return load(path.extname(target) ? target : target + '.ts');
+    return load(path.extname(target) ? target : fs.existsSync(target + '.ts') ? target + '.ts' : path.join(target, 'index.ts'));
   };
   new Function('require', 'module', 'exports', outputText)(requireLocal, module, module.exports);
   return module.exports;
@@ -39,6 +39,8 @@ const { collectEcosystemDependencies } = load('src/lib/analyzer/ecosystem-depend
 const { ADDITIONAL_LANGUAGE_EXTENSIONS } = load('src/lib/analyzer/language-knowledge.ts');
 const { detectLanguageProfile } = load('src/lib/analyzer/language-profile.ts');
 const { classifyProjectFileScope } = load('src/lib/analyzer/project-scope.ts');
+const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+const { buildRecommendations } = load('src/lib/compatibility/recommendations/index.ts');
 const { detectBrowserCompatibility, resolveBrowserTargets } = load('src/lib/analyzer/browser-compatibility.ts');
 const { BROWSER_FEATURES } = load('src/lib/analyzer/browser-knowledge.ts');
 const { detectSecurityIntelligence, isNonProductionPath } = load('src/lib/analyzer/security-intelligence.ts');
@@ -84,6 +86,45 @@ async function asyncTest(name, run) { await run(); checks++; console.log('PASS '
 
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
+test('slugify-style library report recognizes lowercase docs, AVA test.js and unique technology evidence', () => {
+  const files = [
+    file('package.json', JSON.stringify({ name: '@sindresorhus/slugify', type: 'module', license: 'MIT', exports: './index.js', engines: { node: '>=20' }, scripts: { test: 'xo && ava' }, dependencies: { 'escape-string-regexp': '^5.0.0' }, devDependencies: { ava: '^6.4.1', xo: '^1.2.2' } })),
+    file('index.js', 'export default function slugify(value) { return value.toLowerCase(); }'),
+    file('index.d.ts', 'export default function slugify(value: string): string;'),
+    file('test.js', "import test from 'ava'; test('slugify', t => t.is(1, 1));"),
+    file('readme.md', '# slugify\n## Install\n## Usage\n'),
+    file('license', 'MIT License\nPermission is hereby granted, free of charge'),
+    file('.github/workflows/main.yml', 'name: CI\non: push\n'),
+  ];
+  const result = analyzeProject({ files, fileName: 'slugify', source: 'github', scanStats: { projectSize: 14_102, filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [] } });
+  const ids = result.issues.map(issue => issue.id);
+  for (const id of ['readme-missing', 'license-missing', 'tests-dir-missing', 'node-version-file-missing', 'env-example-missing', 'eslint-config-missing', 'prettier-config-missing', 'lockfile-missing-npm', 'deps-no-lockfile']) assert.ok(!ids.includes(id), `${id} is a false signal`);
+  assert.equal(result.stack.extendedIntelligence.modules.testing.metrics.testFiles, 1);
+  assert.equal(result.stack.extendedIntelligence.modules.license.metrics.licenseFile, true);
+  assert.equal(result.analysisVersion, 'uce-3.0.0-beta.1');
+  const detections = result.stack.technologyDetections.map(item => `${item.kind}:${item.name.toLowerCase()}`);
+  assert.equal(new Set(detections).size, detections.length);
+  const catalog = result.stack.v3RulePlatform.findings.filter(item => item.ruleId.startsWith('technology.catalog.')).map(item => `${item.title}:${item.file}`);
+  assert.equal(new Set(catalog).size, catalog.length);
+});
+test('unknown categories do not become urgent recommendations', () => {
+  const categories = [{ id: 'environment', label: 'Environment', status: 'unknown', score: 0, issues: [] }, { id: 'runtime', label: 'Runtime', status: 'good', score: 100, issues: [] }];
+  assert.ok(!buildRecommendations(categories).some(item => item.includes('Environment')));
+});
+test('V3 scans invalidate cached V2 results', () => {
+  const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
+  assert.match(key, /^uce2-/);
+});
+test('missing project evidence still generates relevant advisories', () => {
+  const files = [
+    file('package.json', JSON.stringify({ private: true, scripts: { start: 'node src/app.js' }, dependencies: { express: '^4.0.0' } })),
+    file('src/app.js', 'const port = process.env.APP_PORT; export { port };'),
+  ];
+  const report = analyzeProject({ files, fileName: 'web-app', source: 'upload', scanStats: { projectSize: 150, filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [] } });
+  const ids = report.issues.map(item => item.id);
+  for (const id of ['readme-missing', 'license-missing', 'tests-dir-missing', 'env-example-missing', 'lockfile-missing-npm']) assert.ok(ids.includes(id), `${id} should remain detectable`);
+  assert.ok(!ids.includes('deps-no-lockfile'), 'a missing lockfile should not be reported as a second security vulnerability');
+});
 test('107 distinct real repository manifest snapshots detect their declared frameworks', () => {
   const expectations = new Map([
     ['next', 'nextjs'], ['react', 'react'], ['vue', 'vue'], ['electron', 'electron'],

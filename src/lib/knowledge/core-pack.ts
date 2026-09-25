@@ -7,7 +7,7 @@ export const CORE_KNOWLEDGE_PACK: KnowledgePackManifest = {
   version: '5.0.0-alpha.1',
   publisher: 'RyzovaTech',
   description: 'Built-in deterministic technology, security, browser, compatibility, and project intelligence knowledge.',
-  uceCompatibility: '>=2.0.0 <3.0.0',
+  uceCompatibility: '>=2.0.0 <4.0.0',
   permissions: ['read-project-files', 'emit-findings', 'declare-technology', 'declare-compatibility'],
   rules: [
     { id: 'core.technology', kind: 'technology', title: 'Technology registry', documentation: 'docs/KNOWLEDGE_PACKS.md#technology', version: '2.0.0' },

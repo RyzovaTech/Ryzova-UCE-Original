@@ -75,6 +75,8 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.language !== 'TypeScript' && ctx.stack.language !== 'JavaScript') return issues;
+      const pkg = readFile(ctx, 'package.json') ?? '';
+      if (/"(?:xo|standard|@biomejs\/biome|oxlint)"\s*:/.test(pkg)) return issues;
       const hasEslint = ctx.detectedFiles.some((f) =>
         f.path === '.eslintrc' || f.path.endsWith('/.eslintrc') ||
         f.path.endsWith('.eslintrc.json') || f.path.endsWith('.eslintrc.js') ||
@@ -106,6 +108,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.language !== 'TypeScript' && ctx.stack.language !== 'JavaScript') return issues;
+      if (ctx.stack.architecture?.primary === 'Library') return issues;
       const hasPrettier = ctx.detectedFiles.some((f) =>
         f.path === '.prettierrc' || f.path.endsWith('.prettierrc') ||
         f.path.endsWith('.prettierrc.json') || f.path.endsWith('.prettierrc.js') ||
@@ -424,11 +427,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasLicense = ctx.detectedFiles.some((f) =>
-        f.path === 'LICENSE' || f.path.endsWith('/LICENSE') ||
-        f.path === 'LICENSE.md' || f.path.endsWith('/LICENSE.md') ||
-        f.path === 'LICENSE.txt' || f.path.endsWith('/LICENSE.txt')
-      );
+      const hasLicense = ctx.files.some((f) => !f.isDirectory && /^(?:license|copying)(?:\.(?:md|txt|rst))?$/i.test(f.path));
       if (!hasLicense) {
         issues.push({
           id: 'license-missing',

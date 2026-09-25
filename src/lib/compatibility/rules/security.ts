@@ -204,43 +204,6 @@ export const securityRules: CompatibilityRule[] = [
     },
   },
   {
-    id: 'deps-without-lockfile',
-    category: 'security',
-    run: (ctx) => {
-      const issues: Issue[] = [];
-      const pkg = readFile(ctx, 'package.json');
-      if (!pkg) return issues;
-      try {
-        const p = JSON.parse(pkg);
-        const depCount = Object.keys({ ...(p.dependencies ?? {}), ...(p.devDependencies ?? {}) } as Record<string, string>).length;
-        if (depCount > 0) {
-          const hasLock = ctx.detectedFiles.some(
-            (f) => f.path === 'package-lock.json' || f.path === 'pnpm-lock.yaml' || f.path === 'yarn.lock'
-          );
-          if (!hasLock) {
-            issues.push({
-              id: 'deps-no-lockfile',
-              title: 'Dependencies declared without a lockfile',
-              category: 'security',
-              severity: 'warning',
-              description: `${depCount} dependencies in package.json but no lockfile found.`,
-              reason: 'Without a lockfile, dependency integrity cannot be verified.',
-              recommendation: 'Run npm install and commit the lockfile.',
-              affectedFile: 'package.json',
-              detected: `${depCount} deps, no lock`,
-              expected: 'lockfile present',
-              impact: 'Supply chain risk from unverified dependencies.',
-              suggestedAction: 'Generate and commit a lockfile.',
-            });
-          }
-        }
-      } catch {
-        // ignore
-      }
-      return issues;
-    },
-  },
-  {
     id: 'cors-wildcard-config',
     category: 'security',
     run: (ctx) => {
