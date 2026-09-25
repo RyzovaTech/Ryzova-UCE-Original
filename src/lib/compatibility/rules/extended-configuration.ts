@@ -452,8 +452,8 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasChangelog = ctx.detectedFiles.some((f) =>
-        f.path === 'CHANGELOG.md' || f.path.endsWith('/CHANGELOG.md')
+      const hasChangelog = ctx.files.some((f) =>
+        !f.isDirectory && /(?:^|\/)(?:changelog|changes|history|news)(?:\.(?:md|rst|txt))?$/i.test(f.path)
       );
       if (!hasChangelog) {
         issues.push({
@@ -479,8 +479,8 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasContributing = ctx.detectedFiles.some((f) =>
-        f.path === 'CONTRIBUTING.md' || f.path.endsWith('/CONTRIBUTING.md')
+      const hasContributing = ctx.files.some((f) =>
+        !f.isDirectory && /(?:^|\/)contributing(?:\.(?:md|rst|txt))?$/i.test(f.path)
       );
       if (!hasContributing) {
         issues.push({

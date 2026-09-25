@@ -1,3 +1,4 @@
+import { pythonDependencies } from './python-evidence';
 import type { ArchitectureIntelligence, ArchitectureType, DependencyIntelligence, DependencyItem, DependencyRisk, DetectedFile, ProjectFile, TechnologyEvidence, TechnologyKind, TechnologyStack } from './types';
 import { isProjectEvidenceFile } from './project-scope';
 
@@ -26,13 +27,16 @@ function dependencyMaps(files: ProjectFile[]): DependencyItem[] {
       for (const [name, version] of Object.entries(values as Record<string, unknown>)) if (typeof version === 'string') result.push({ name, version, type, source: file.path });
     }
   }
+  for (const file of files.filter(item => isProjectEvidenceFile(item) && /(?:^|\/)pyproject\.toml$/i.test(item.path))) {
+    result.push(...pythonDependencies(file.content ?? '').map(item => ({ ...item, source: file.path })));
+  }
   return result;
 }
 
 export function detectDependencyIntelligence(files: ProjectFile[], stack: TechnologyStack): DependencyIntelligence {
   const items = dependencyMaps(files);
   const allByName = new Map<string, string[]>();
-  for (const item of items) allByName.set(item.name, [...(allByName.get(item.name) ?? []), item.version]);
+  for (const item of items.filter(item => /(?:^|\/)package\.json$/i.test(item.source ?? ''))) allByName.set(item.name, [...(allByName.get(item.name) ?? []), item.version]);
   const duplicateNames = [...allByName.entries()].filter(([, versions]) => versions.length > 1).map(([name]) => name);
   const versionConflicts = [...allByName.entries()].filter(([, versions]) => new Set(versions).size > 1).map(([name, versions]) => `${name}: ${[...new Set(versions)].join(' vs ')}`);
   const risks: DependencyRisk[] = [];
@@ -73,6 +77,7 @@ function detectArchitecture(files: ProjectFile[], _detectedFiles: DetectedFile[]
     return { primary: 'Operating System Kernel', patterns: ['Operating System Kernel'], confidence: 99, evidence: ['Root Kconfig plus Kbuild/Makefile detected.', `Kernel source structure detected: ${kernelStructureSignals.join(', ')}.`, 'Generic application architecture heuristics were suppressed for this kernel project.'] };
   }
 
+  if (hasRoot('pyproject.toml') && /\[build-system\]/.test(read(evidenceFiles, ['pyproject.toml'])) && paths.some(path => /(?:^|\/)__init__\.py$/.test(path))) add('Library', 'Python package modules and build-system metadata detected.');
   if (stack.monorepo && stack.monorepo !== 'None') add('Monorepo', `${stack.monorepo} workspace configuration detected.`);
   const dependencies = new Set(dependencyMaps(files).map((item) => item.name));
   if (dependencies.has('electron') || dependencies.has('@electron-forge/cli') || hasAny(['electron/', 'electron-builder.'])) add('Desktop App', 'Electron dependency or desktop application markers detected.');

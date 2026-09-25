@@ -84,6 +84,69 @@ let phase5FixtureAssertions = 0;
 function test(name, run) { run(); checks++; console.log('PASS ' + name); }
 async function asyncTest(name, run) { await run(); checks++; console.log('PASS ' + name); }
 
+test('Python package metadata, documentation and testing agree across report modules', () => {
+  const files = [
+    file('pyproject.toml', `[project]\nname = "signed-library"\nrequires-python = ">=3.10"\nlicense = "BSD-3-Clause"\n[dependency-groups]\ntests = ["pytest", "freezegun"]\n[build-system]\nrequires = ["flit_core<4"]\nbuild-backend = "flit_core.buildapi"\n[tool.pytest.ini_options]\ntestpaths = ["tests"]\n[tool.coverage.run]\nbranch = true\n`),
+    file('docs/license.rst', 'See root license'), file('uv.lock', 'version = 1'), file('README.md', '# Library\n## Usage'),
+    file('LICENSE.txt', 'Redistribution and use in source and binary forms\nRedistributions of source code\nRedistributions in binary form\nNeither the name of the copyright holder'),
+    file('CHANGES.rst', 'Release history'), file('CONTRIBUTING.rst', 'Contribution guide'),
+    file('src/demo/__init__.py', 'from .signer import Signer'),
+    file('src/demo/signer.py', '"""A class constructor. The function must verify."""\nclass Signer:\n    def verify(self):\n        return True\n'),
+    file('tests/test_signer.py', 'def test_signer(): pass'),
+  ];
+  const report = analyzeProject({ files, fileName: 'python-library', source: 'upload', scanStats: { projectSize: 1000, filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [] } });
+  for (const id of ['python-version-missing', 'license-unrecognized', 'changelog-missing', 'contributing-missing']) assert.ok(!report.issues.some(issue => issue.id === id), id);
+  assert.equal(report.stack.buildTool, 'Flit');
+  assert.equal(report.stack.extendedIntelligence.modules.runtime.metrics.versionDeclarations, 1);
+  assert.equal(report.stack.architecture.primary, 'Library');
+  assert.equal(report.stack.extendedIntelligence.modules.license.metrics.manifestLicenses, 1);
+  assert.ok(report.stack.extendedIntelligence.modules.license.evidence.includes('LICENSE.txt'));
+  assert.equal(report.stack.extendedIntelligence.modules.testing.metrics.coverageReady, true);
+  assert.ok(report.stack.dependencyIntelligence.dependencies.some(item => item.name === 'pytest' && item.type === 'development'));
+  assert.ok(report.stack.codeIntelligence.dependencyEdges.some(edge => edge.to === 'src/demo/signer.py'));
+  assert.deepEqual(report.stack.codeIntelligence.symbols.map(item => item.name).sort(), ['Signer', 'verify']);
+  assert.equal(report.stack.codeIntelligence.symbols.find(item => item.name === 'verify').line, 3);
+  assert.deepEqual(report.stack.codeIntelligence.quality.unreferencedModules, []);
+  assert.ok(report.notes.some(note => note.includes('no browser source files checked')));
+});
+test('Python metadata absence, comments and production risks remain visible', () => {
+  const files = [file('pyproject.toml', '[project]\nname = "demo"'), file('src/demo.py', 'import hashlib\ndef digest(value):\n    return hashlib.sha1(value)')];
+  const report = analyzeProject({ files, fileName: 'demo', source: 'upload', scanStats: { projectSize: 100, filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [] } });
+  assert.ok(report.issues.some(item => item.id === 'python-version-missing'));
+  const finding = report.stack.securityIntelligence.findings.find(item => item.ruleId === 'SEC020');
+  assert.equal(finding.certainty, 'review-required');
+  assert.equal(finding.line, 3);
+  const docs = detectSecurityIntelligence([file('src/docs.py', '# hashlib.sha1(data)\n"""hashlib.sha1(data)"""')]);
+  assert.ok(!docs.findings.some(item => item.ruleId === 'SEC020'));
+  assert.equal(classifyProjectFileScope('test_signer.py'), 'test');
+});
+test('Python absolute and relative imports resolve without inventing symbols from docstrings', () => {
+  const result = detectCodeIntelligence([
+    file('src/demo/__init__.py', 'from . import signer'),
+    file('src/demo/signer.py', 'import demo.helper\nfrom .helper import verify\ntext = "class Fake"\nasync def sign():\n    return verify()'),
+    file('src/demo/helper.py', 'def verify():\n    return True'),
+  ]);
+  assert.ok(result.dependencyEdges.some(edge => edge.from === 'src/demo/__init__.py' && edge.to === 'src/demo/signer.py'));
+  assert.ok(result.dependencyEdges.some(edge => edge.from === 'src/demo/signer.py' && edge.to === 'src/demo/helper.py'));
+  assert.deepEqual(result.symbols.map(item => item.name).sort(), ['sign', 'verify']);
+});
+
+test('Python metadata reader handles extras, optional groups and ignores include-group references', () => {
+  const { pythonDependencies, pythonVersionRequirement } = load('src/lib/analyzer/python-evidence.ts');
+  const deps = pythonDependencies('[project]\ndependencies = ["requests[socks]>=2", "httpx"]\n[dependency-groups]\ntests = ["pytest", {include-group = "typing"}]\n[project.optional-dependencies]\nweb = ["flask>=3"]');
+  assert.deepEqual(deps.map(item => item.name), ['requests', 'httpx', 'pytest', 'flask']);
+  assert.equal(deps[0].version, '>=2');
+  assert.equal(deps[3].type, 'optional');
+  assert.equal(pythonVersionRequirement('[project]\n# requires-python = ">=3.10"'), undefined);
+  assert.equal(pythonVersionRequirement('[tool.unrelated]\nrequires-python = ">=3.10"'), undefined);
+  assert.equal(pythonVersionRequirement('[tool.poetry.dependencies]\npython = "^3.11"'), '^3.11');
+});
+test('malformed Python dependency arrays remain bounded', () => {
+  const { pythonDependencies } = load('src/lib/analyzer/python-evidence.ts');
+  const start = performance.now();
+  assert.deepEqual(pythonDependencies('[project]\ndependencies = ["' + '\\'.repeat(200000)), []);
+  assert.ok(performance.now() - start < 2000, 'malformed arrays must not cause regex backtracking');
+});
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
 test('slugify-style library report recognizes lowercase docs, AVA test.js and unique technology evidence', () => {
@@ -113,7 +176,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce2-/);
+  assert.match(key, /^uce3-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [

@@ -1,3 +1,4 @@
+import { pythonDependencies } from './python-evidence';
 import type { ProjectFile } from './types';
 import { isProjectEvidenceFile, normalizeProjectPath } from './project-scope';
 
@@ -20,6 +21,7 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
         if (match) add('python', match[1].toLowerCase().replace(/[-_.]+/g, '-'));
       }
     } else if (base === 'pyproject.toml') {
+      for (const item of pythonDependencies(file.content)) add('python', item.name);
       for (const block of file.content.matchAll(/(?:^|\n)\s*dependencies\s*=\s*\[([\s\S]*?)^\s*\]/gm)) {
         for (const quoted of block[1].matchAll(/["']([^"']+)["']/g)) {
           const item = /^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?\s*(?:[<>=!~;@]|$)/.exec(quoted[1].trim());
