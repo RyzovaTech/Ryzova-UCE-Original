@@ -1,4 +1,4 @@
-import { pythonMetadataValue, pythonVersionRequirement } from './python-evidence';
+import { maskPythonProse, pythonMetadataValue, pythonVersionRequirement } from './python-evidence';
 import type { ExtendedIntelligence, ExtendedIntelligenceModuleId, IntelligenceModuleFinding, IntelligenceModuleResult, ProjectFile, TechnologyStack } from './types';
 import { classifyProjectFileScope } from './project-scope';
 
@@ -52,7 +52,15 @@ function platformModule(files: ProjectFile[]): IntelligenceModuleResult {
   const allPaths = paths(files); const evidence: string[] = []; const findings: IntelligenceModuleFinding[] = [];
   const markers: Array<[string, RegExp]> = [['Windows', /(?:^|\/)(?:[^/]+\.sln|[^/]+\.bat|[^/]+\.cmd|[^/]+\.ps1)$/i], ['Linux', /(?:^|\/)(?:Dockerfile|[^/]+\.sh)$/i], ['macOS/iOS', /(?:^|\/)(?:Podfile|[^/]+\.xcodeproj|Package\.swift)$/i], ['Android', /(?:^|\/)android\//i]];
   for (const [name, pattern] of markers) if (allPaths.some((path) => pattern.test(path))) evidence.push(`${name} project marker detected.`);
-  for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) { const source = file.content ?? ''; const match = /(?:["'](?:[A-Z]:\\|\/tmp\/)|\b(?:cmd\.exe|powershell\.exe)\b)/i.exec(source); if (match) findings.push(finding('OS001', 'OS-specific path or command', 'warning', 78, 'A platform-specific path or command is embedded in source.', 'Use platform APIs or configurable paths.', file.path, lineAt(source, match.index))); }
+  for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) {
+    const original = file.content ?? '';
+    const source = /\.py$/i.test(file.path) ? maskPythonProse(original) : original;
+    const pattern = /\.py$/i.test(file.path)
+      ? /(?:\b(?:open|Path)\s*\(\s*["'](?:[A-Z]:\\|\/tmp\/)|\bsubprocess\.(?:run|Popen|call|check_output)\s*\(\s*(?:\[\s*)?["'](?:cmd\.exe|powershell\.exe))/i
+      : /(?:["'](?:[A-Z]:\\|\/tmp\/)|\b(?:cmd\.exe|powershell\.exe)\b)/i;
+    const match = pattern.exec(source);
+    if (match) findings.push(finding('OS001', 'OS-specific path or command', 'warning', 78, 'A platform-specific path or command is embedded in source.', 'Use platform APIs or configurable paths.', file.path, lineAt(original, match.index)));
+  }
   return result('platform', 'OS/Platform Intelligence', `${evidence.length || 'No'} explicit platform markers found.`, evidence, findings, { platforms: evidence.length });
 }
 
@@ -115,16 +123,27 @@ function licenseModule(files: ProjectFile[]): IntelligenceModuleResult {
 }
 
 function documentationModule(files: ProjectFile[]): IntelligenceModuleResult {
-  const readmeFile = files.filter((file) => /(^|\/)README(?:\.[^/]*)?$/i.test(file.path) && classifyProjectFileScope(file.path) === 'documentation').sort((a, b) => a.path.split('/').length - b.path.split('/').length || a.path.length - b.path.length)[0]; const readme = readmeFile?.content ?? ''; const sections = { installation: /#{1,6}\s*(?:install|getting started|setup)/i.test(readme), usage: /#{1,6}\s*(?:usage|examples?|quick start)/i.test(readme), configuration: /#{1,6}\s*(?:configuration|environment|config)/i.test(readme), license: /#{1,6}\s*license/i.test(readme) }; const findings: IntelligenceModuleFinding[] = [];
-  if (!readme.trim()) findings.push(finding('DOC001', 'README is missing or empty', 'warning', 98, 'No usable README content was found.', 'Add project purpose, setup, usage, configuration, and license information.')); else for (const [name, present] of Object.entries(sections)) if (!present) findings.push(finding(`DOC-${name}`, `README ${name} guidance not detected`, 'info', 72, `No ${name} heading was recognized.`, `Document ${name} in the README.`, readmeFile?.path));
-  const all = paths(files); return result('documentation', 'Documentation Intelligence', `${Object.values(sections).filter(Boolean).length}/4 core README sections detected.`, all.filter((path) => /(?:README|CONTRIBUTING|CHANGELOG|SECURITY|openapi|swagger)/i.test(path)).slice(0, 12), findings, { readme: Boolean(readme.trim()), sections: Object.values(sections).filter(Boolean).length, contributing: all.some((p) => /CONTRIBUTING/i.test(p)), apiDocs: all.some((p) => /(?:openapi|swagger)/i.test(p)) });
+  const documentation = files.filter(file => !file.isDirectory && classifyProjectFileScope(file.path) === 'documentation' && !/(?:^|\/)(?:examples?|fixtures?)\//i.test(file.path));
+  const readmeFile = documentation.filter(file => /^(?:README)(?:\.[^/]*)?$/i.test(file.path)).sort((a, b) => a.path.length - b.path.length)[0];
+  const readme = readmeFile?.content ?? '';
+  const hasDocument = (name: RegExp): boolean => documentation.some(file => name.test(file.path));
+  const sections = {
+    installation: /^#{1,6}\s*(?:install|getting started|setup)/im.test(readme) || hasDocument(/(?:^|\/)(?:quickstart|getting-started|installation|install)(?:\.[^/]*)?$/i),
+    usage: /^#{1,6}\s*(?:usage|examples?|quick start|a simple example)/im.test(readme) || hasDocument(/(?:^|\/)(?:quickstart|usage|examples?)(?:\.[^/]*)?$/i),
+    configuration: /^#{1,6}\s*(?:configuration|environment|config)/im.test(readme) || hasDocument(/(?:^|\/)(?:configuration|config|options)(?:\.[^/]*)?$/i),
+    license: /^#{1,6}\s*licen[cs]e/im.test(readme) || hasDocument(/(?:^|\/)(?:license|licence|copying)(?:\.[^/]*)?$/i),
+  };
+  const findings: IntelligenceModuleFinding[] = [];
+  for (const [name, present] of Object.entries(sections)) if (!present) findings.push(finding(`DOC-${name}`, `${name} guidance not detected`, 'info', 72, `No ${name} heading or dedicated documentation file was recognized.`, `Document ${name} in the README or project documentation.`, readmeFile?.path));
+  const evidence = documentation.filter(file => /(?:README|CONTRIBUTING|CHANGELOG|CHANGES|SECURITY|quickstart|options|license|openapi|swagger)/i.test(file.path)).map(file => file.path);
+  return result('documentation', 'Documentation Intelligence', `${Object.values(sections).filter(Boolean).length}/4 documentation topics evidenced.`, evidence.slice(0, 12), findings, { readme: Boolean(readme.trim()), sections: Object.values(sections).filter(Boolean).length, contributing: hasDocument(/(?:^|\/)CONTRIBUTING(?:\.[^/]*)?$/i), apiDocs: hasDocument(/(?:^|\/)(?:api|openapi|swagger)(?:\.[^/]*)?$/i) });
 }
 
 function maintainabilityModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const findings: IntelligenceModuleFinding[] = []; const blocks = new Map<string, Set<string>>(); let complexFiles = 0;
   for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) { const source = file.content ?? ''; const branches = (source.match(/\b(?:if|else if|for|while|case|catch)\b|&&|\|\|/g) ?? []).length; if (branches >= 40) { complexFiles++; findings.push(finding('MAIN001', 'High branching density', 'warning', 72, `${file.path} contains ${branches} branch operators.`, 'Split responsibilities and reduce deeply nested decision logic.', file.path)); } const lines = source.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.length >= 12 && !line.startsWith('//')); for (let i = 0; i <= lines.length - 6; i++) { const key = lines.slice(i, i + 6).join('\n'); (blocks.get(key) ?? blocks.set(key, new Set()).get(key)!).add(file.path); } }
   const duplicated = [...blocks.values()].filter((set) => set.size > 1).slice(0, 20); if (duplicated.length) findings.push(finding('MAIN002', 'Repeated code blocks detected', 'info', 70, `${duplicated.length} six-line blocks occur in multiple source files.`, 'Review repeated blocks and extract shared behavior where appropriate.'));
-  const quality = stack.codeIntelligence?.quality; return result('maintainability', 'Maintainability Intelligence', `${quality?.largeFiles.length ?? 0} large files, ${quality?.largeFunctions.length ?? 0} large functions, ${duplicated.length} repeated blocks.`, (quality?.circularDependencies ?? []).slice(0, 5).map((cycle) => cycle.join(' → ')), findings, { largeFiles: quality?.largeFiles.length ?? 0, largeFunctions: quality?.largeFunctions.length ?? 0, circularDependencies: quality?.circularDependencies.length ?? 0, duplicatedBlocks: duplicated.length, complexFiles });
+  const quality = stack.codeIntelligence?.quality; return result('maintainability', 'Maintainability Intelligence', `${quality?.largeFiles.length ?? 0} large files, ${quality?.largeFunctions.length ?? 0} large functions, ${duplicated.length} repeated blocks.`, (quality?.circularDependencies ?? []).slice(0, 5).map((cycle) => cycle.join(', ')), findings, { largeFiles: quality?.largeFiles.length ?? 0, largeFunctions: quality?.largeFunctions.length ?? 0, circularDependencies: quality?.circularDependencies.length ?? 0, duplicatedBlocks: duplicated.length, complexFiles });
 }
 
 function repositoryModule(files: ProjectFile[]): IntelligenceModuleResult {

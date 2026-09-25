@@ -147,6 +147,42 @@ test('malformed Python dependency arrays remain bounded', () => {
   assert.deepEqual(pythonDependencies('[project]\ndependencies = ["' + '\\'.repeat(200000)), []);
   assert.ok(performance.now() - start < 2000, 'malformed arrays must not cause regex backtracking');
 });
+test('Click-style CLI documentation is recognized across README and docs', () => {
+  const files = [
+    file('README.md', '# Click\n## A Simple Example\n```python\nprint("hello")\n```'),
+    file('docs/quickstart.md', '# Installation\nRun pip install click.'),
+    file('docs/options.md', '# Configuring options'),
+    file('docs/license.md', '# BSD License'),
+    file('examples/foo/README', 'An example'),
+  ];
+  const modules = detectExtendedIntelligence(files, { runtime: 'Python', language: 'Python', buildTool: 'Flit', framework: 'Unknown', packageManager: 'uv', frontend: 'None', backend: 'None', database: 'Unknown', configFiles: [] });
+  assert.equal(modules.modules.documentation.metrics.sections, 4);
+  assert.ok(!modules.modules.documentation.findings.some(item => item.id.startsWith('DOC-')));
+  assert.ok(!modules.modules.documentation.evidence.some(item => item.includes('examples/')));
+});
+test('Python prose does not cause a platform warning while real operations still do', () => {
+  const source = 'def prompt():\n    """Added unicode support for cmd.exe on Windows."""\n    # subprocess.run(["cmd.exe"])\n    return "cmd.exe"\n';
+  const stack = { runtime: 'Python', language: 'Python', buildTool: 'Flit', framework: 'Unknown', packageManager: 'uv', frontend: 'None', backend: 'None', database: 'Unknown', configFiles: [] };
+  assert.ok(!detectExtendedIntelligence([file('src/demo.py', source)], stack).modules.platform.findings.some(item => item.id === 'OS001'));
+  const positive = detectExtendedIntelligence([file('src/demo.py', 'import subprocess\nsubprocess.run(["cmd.exe", "/c", "dir"])')], stack);
+  assert.ok(positive.modules.platform.findings.some(item => item.id === 'OS001' && item.line === 2));
+});
+test('TYPE_CHECKING imports are excluded from runtime cycles and distinct cycles form groups', () => {
+  const typed = detectCodeIntelligence([
+    file('src/demo/globals.py', 'import typing as t\nif t.TYPE_CHECKING:\n    from .core import Context\n'),
+    file('src/demo/core.py', 'from .globals import get_context\n'),
+    file('src/demo/__init__.py', 'from .core import Context\n'),
+  ]);
+  assert.ok(!typed.dependencyEdges.some(edge => edge.from.endsWith('globals.py') && edge.to.endsWith('core.py')));
+  assert.deepEqual(typed.quality.circularDependencies, []);
+  const cycles = detectCodeIntelligence([
+    file('a.py', 'import b\nimport c'), file('b.py', 'import c'), file('c.py', 'import a'),
+    file('d.py', 'import e'), file('e.py', 'import d'),
+  ]);
+  assert.equal(cycles.quality.circularDependencies.length, 2);
+  assert.ok(cycles.quality.circularDependencies.some(group => group.join(',') === 'a.py,b.py,c.py'));
+});
+
 test('registry definitions are valid and uniquely named', () => assert.deepEqual(validateTechnologyRegistry(), []));
 test('empty repository produces no detections', () => assert.deepEqual(detectRegisteredTechnologies([]), []));
 test('slugify-style library report recognizes lowercase docs, AVA test.js and unique technology evidence', () => {
@@ -176,7 +212,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce3-/);
+  assert.match(key, /^uce4-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [

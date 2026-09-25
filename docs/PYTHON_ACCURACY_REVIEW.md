@@ -20,3 +20,14 @@ Python readers are bounded static readers, not a full TOML/Python parser or envi
 ## Verification
 
 Regression suite covers metadata present/absent, comments, unrelated TOML sections, dependency extras and group references, package symbols, relative imports, root test files, documentation and real hash usage. A separate check of upstream itsdangerous metadata and eight source modules found Flit, Library, 15 declared dependency entries, 79 symbols and 21 internal import edges. This was a source subset check, not a fresh scan of the complete upstream repository.
+
+## Click report follow-up
+
+The Click v3 beta report scanned 173 files with no sampling and correctly found Python, uv, Flit, BSD-3-Clause, Python >=3.10, Pytest and coverage. It also exposed these static-analysis mistakes:
+
+- A `cmd.exe` mention in a Python docstring was treated as an OS-specific operation. Platform checks now mask Python comments and docstrings and require an actionable file or process operation for this warning. Real subprocess calls still produce a review finding.
+- README-only headings reported missing guidance when documentation lived in `docs/quickstart.md`, `docs/options.md` and `docs/license.md`. Documentation topics now include dedicated project docs, and sample-project README files are excluded from the project-level documentation summary.
+- Type-only imports inside `if TYPE_CHECKING:` were counted as runtime imports. Runtime edges now exclude those guarded imports; circular imports are grouped by strongly connected modules instead of listing many overlapping paths from one group. The graph remains static and cannot prove import-time failure.
+- The analysis cache version advances so an unchanged repository scan does not reuse the earlier report.
+
+The repository scan benchmark passed within its 30 second budget; synthetic regression tests cover both the false alerts and true positive examples. This does not constitute a full runtime test of Click on every platform.

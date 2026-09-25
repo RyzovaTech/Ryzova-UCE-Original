@@ -43,7 +43,7 @@ export function CodeIntelligencePanel({ data }: { data?: CodeIntelligence }) {
         <section className="rounded-lg border bg-muted/20 p-4">
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold"><ListChecks className="h-4 w-4" />Code Quality Signals</div>
           <div className="grid gap-3 sm:grid-cols-4"><Metric label="Large files" value={data.quality.largeFiles.length} /><Metric label="Large functions" value={data.quality.largeFunctions.length} /><Metric label="TODO" value={data.quality.todoCount} /><Metric label="FIXME" value={data.quality.fixmeCount} /></div>
-          {data.quality.circularDependencies.length > 0 && <div className="mt-3 rounded-md border p-3 text-xs"><span className="font-medium">Circular dependencies:</span> {data.quality.circularDependencies.slice(0, 3).map((cycle) => cycle.join(' → ')).join(' · ')}</div>}
+          {data.quality.circularDependencies.length > 0 && <div className="mt-3 rounded-md border p-3 text-xs"><span className="font-medium">Circular dependency groups:</span> {data.quality.circularDependencies.slice(0, 3).map((cycle) => cycle.join(', ')).join(' · ')}</div>}
           {data.quality.largeFiles.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{data.quality.largeFiles.slice(0, 6).map((item) => <Badge key={item.file} variant="secondary" className="text-[10px]">{item.file} · {item.lines} lines</Badge>)}</div>}
         </section>
         <section className="rounded-lg border bg-muted/20 p-4">
