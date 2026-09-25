@@ -1,4 +1,4 @@
-import { pythonVersionRequirement } from './python-evidence';
+import { pythonMetadataValue, pythonVersionRequirement } from './python-evidence';
 import type { ExtendedIntelligence, ExtendedIntelligenceModuleId, IntelligenceModuleFinding, IntelligenceModuleResult, ProjectFile, TechnologyStack } from './types';
 import { classifyProjectFileScope } from './project-scope';
 
@@ -108,7 +108,8 @@ function environmentModule(files: ProjectFile[]): IntelligenceModuleResult {
 }
 
 function licenseModule(files: ProjectFile[]): IntelligenceModuleResult {
-  const allPaths = paths(files); const licenseFile = allPaths.find((path) => /(^|\/)(?:LICENSE|COPYING)(?:\.[^/]*)?$/i.test(path)) ?? allPaths.find((path) => /(^|\/)LICENSES\//i.test(path)); const manifests = files.filter((file) => /(^|\/)package\.json$/i.test(file.path) && classifyProjectFileScope(file.path) !== 'fixture'); const licenses = new Set<string>(); for (const file of manifests) try { const value = (JSON.parse(file.content ?? '{}') as { license?: string }).license; if (value) licenses.add(value); } catch { /* invalid handled elsewhere */ }
+  const allPaths = paths(files); const licenseFile = allPaths.find((path) => /^(?:LICENSE|COPYING)(?:\.[^/]*)?$/i.test(path)) ?? allPaths.find((path) => /(^|\/)(?:LICENSE|COPYING)(?:\.[^/]*)?$/i.test(path)) ?? allPaths.find((path) => /(^|\/)LICENSES\//i.test(path)); const manifests = files.filter((file) => /(^|\/)package\.json$/i.test(file.path) && classifyProjectFileScope(file.path) !== 'fixture'); const licenses = new Set<string>(); for (const file of manifests) try { const value = (JSON.parse(file.content ?? '{}') as { license?: string }).license; if (value) licenses.add(value); } catch { /* invalid handled elsewhere */ }
+  for (const file of files.filter(file => /(?:^|\/)pyproject\.toml$/i.test(file.path) && classifyProjectFileScope(file.path) === 'configuration')) { const value = pythonMetadataValue(file.content ?? '', 'project', 'license'); if (value) licenses.add(value); }
   const findings: IntelligenceModuleFinding[] = []; if (!licenseFile && licenses.size === 0) findings.push(finding('LIC001', 'Project license is missing', 'warning', 95, 'No license file or package license metadata was found.', 'Add a license file and matching SPDX identifier.')); if ([...licenses].some((value) => /^(?:UNLICENSED|SEE LICENSE)/i.test(value))) findings.push(finding('LIC002', 'Restricted or custom license metadata', 'info', 90, `License metadata: ${[...licenses].join(', ')}`, 'Document redistribution and contribution terms clearly.'));
   return result('license', 'License Intelligence', licenseFile ? `License file: ${licenseFile}` : `${licenses.size} manifest license identifiers.`, [licenseFile, ...licenses].filter(Boolean) as string[], findings, { licenseFile: Boolean(licenseFile), manifestLicenses: licenses.size });
 }

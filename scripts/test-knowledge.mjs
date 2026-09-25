@@ -87,7 +87,7 @@ async function asyncTest(name, run) { await run(); checks++; console.log('PASS '
 test('Python package metadata, documentation and testing agree across report modules', () => {
   const files = [
     file('pyproject.toml', `[project]\nname = "signed-library"\nrequires-python = ">=3.10"\nlicense = "BSD-3-Clause"\n[dependency-groups]\ntests = ["pytest", "freezegun"]\n[build-system]\nrequires = ["flit_core<4"]\nbuild-backend = "flit_core.buildapi"\n[tool.pytest.ini_options]\ntestpaths = ["tests"]\n[tool.coverage.run]\nbranch = true\n`),
-    file('uv.lock', 'version = 1'), file('README.md', '# Library\n## Usage'),
+    file('docs/license.rst', 'See root license'), file('uv.lock', 'version = 1'), file('README.md', '# Library\n## Usage'),
     file('LICENSE.txt', 'Redistribution and use in source and binary forms\nRedistributions of source code\nRedistributions in binary form\nNeither the name of the copyright holder'),
     file('CHANGES.rst', 'Release history'), file('CONTRIBUTING.rst', 'Contribution guide'),
     file('src/demo/__init__.py', 'from .signer import Signer'),
@@ -99,6 +99,8 @@ test('Python package metadata, documentation and testing agree across report mod
   assert.equal(report.stack.buildTool, 'Flit');
   assert.equal(report.stack.extendedIntelligence.modules.runtime.metrics.versionDeclarations, 1);
   assert.equal(report.stack.architecture.primary, 'Library');
+  assert.equal(report.stack.extendedIntelligence.modules.license.metrics.manifestLicenses, 1);
+  assert.ok(report.stack.extendedIntelligence.modules.license.evidence.includes('LICENSE.txt'));
   assert.equal(report.stack.extendedIntelligence.modules.testing.metrics.coverageReady, true);
   assert.ok(report.stack.dependencyIntelligence.dependencies.some(item => item.name === 'pytest' && item.type === 'development'));
   assert.ok(report.stack.codeIntelligence.dependencyEdges.some(edge => edge.to === 'src/demo/signer.py'));
