@@ -25,7 +25,8 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "check": "npm run typecheck && npm run lint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit:accuracy": "node scripts/audit-accuracy.mjs --check"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",

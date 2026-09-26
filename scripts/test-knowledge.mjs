@@ -212,7 +212,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce7-/);
+  assert.match(key, /^uce8-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1218,5 +1218,24 @@ test('architecture labels require combined structural evidence', () => {
   const architecture = detectTechnologyIntelligence(files, parsed, stack).architecture;
   assert.ok(architecture.patterns.includes('Monorepo'));
   for (const label of ['MVC', 'Clean/Hexagonal', 'Modular Monolith']) assert.ok(!architecture.patterns.includes(label));
+});
+test('Cargo and Go inventory retains declared versions, aliases and dependency roles', () => {
+ const files = [file('Cargo.toml', '[dependencies]\nasync_rt={package="tokio", version="1"}\nserde={workspace=true}\nfeature={version="2", optional=true}\n[dev-dependencies]\npretty_assertions="1"\n[build-dependencies.cc]\nversion="1.2"'), file('go.mod', 'module example.org/app\nrequire (\n github.com/gin-gonic/gin v1.10.0 // indirect\n)')];
+ const stack=detectStack(files,parseFiles(files)); const result=detectDependencyIntelligence(files,stack);
+ assert.equal(result.total,6); assert.equal(result.manifestsScanned,2);
+ assert.equal(result.dependencies.find(x=>x.name==='tokio').version,'1');
+ assert.equal(result.dependencies.find(x=>x.name==='serde').version,'workspace-inherited');
+ assert.equal(result.dependencies.find(x=>x.name==='feature').type,'optional');
+ assert.equal(result.dependencies.find(x=>x.name==='pretty_assertions').type,'development');
+ assert.equal(result.dependencies.find(x=>x.name==='cc').type,'development');
+ assert.equal(result.dependencies.find(x=>x.name==='github.com/gin-gonic/gin').version,'v1.10.0');
+});
+test('dependency inventory rejects non-object package manifests and retains table optionality', () => {
+ for (const source of ['null', '[]', '"package"', '42']) {
+  const files=[file('package.json',source)];
+  assert.equal(detectDependencyIntelligence(files, {packageManager:'npm'}).total,0);
+ }
+ const files=[file('Cargo.toml','[dependencies.serde]\nversion="1"\noptional=true')];
+ assert.equal(detectDependencyIntelligence(files,{packageManager:'cargo'}).dependencies[0].type,'optional');
 });
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

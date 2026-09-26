@@ -1,0 +1,270 @@
+{
+  "benchmark": "UCE bounded accuracy audit",
+  "schemaVersion": 1,
+  "scope": "30 hand-labeled synthetic decisions; development-set regression measurement, not independent real-world accuracy",
+  "overall": {
+    "cases": 30,
+    "tp": 15,
+    "tn": 15,
+    "fp": 0,
+    "fn": 0,
+    "accuracy": 100,
+    "precision": 100,
+    "recall": 100
+  },
+  "areas": {
+    "identity": {
+      "cases": 4,
+      "tp": 4,
+      "tn": 0,
+      "fp": 0,
+      "fn": 0,
+      "accuracy": 100,
+      "precision": 100,
+      "recall": 100
+    },
+    "technology": {
+      "cases": 12,
+      "tp": 4,
+      "tn": 8,
+      "fp": 0,
+      "fn": 0,
+      "accuracy": 100,
+      "precision": 100,
+      "recall": 100
+    },
+    "security-pattern": {
+      "cases": 6,
+      "tp": 2,
+      "tn": 4,
+      "fp": 0,
+      "fn": 0,
+      "accuracy": 100,
+      "precision": 100,
+      "recall": 100
+    },
+    "dependency-inventory": {
+      "cases": 8,
+      "tp": 5,
+      "tn": 3,
+      "fp": 0,
+      "fn": 0,
+      "accuracy": 100,
+      "precision": 100,
+      "recall": 100
+    }
+  },
+  "failures": [],
+  "results": [
+    {
+      "id": "rust-manager",
+      "area": "identity",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "go-manager",
+      "area": "identity",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "php-manager",
+      "area": "identity",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "java-manager",
+      "area": "identity",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "react-production",
+      "area": "technology",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "react-vendor",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "react-fixture",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "vue-production",
+      "area": "technology",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "vue-vendor",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "vue-fixture",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "django-production",
+      "area": "technology",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "django-vendor",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "django-fixture",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "tokio-production",
+      "area": "technology",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "tokio-vendor",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "tokio-fixture",
+      "area": "technology",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "pickle-call",
+      "area": "security-pattern",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "pickle-comment",
+      "area": "security-pattern",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "pickle-string",
+      "area": "security-pattern",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "pickle-test",
+      "area": "security-pattern",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "pickle-fixture",
+      "area": "security-pattern",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "pickle-reviewed",
+      "area": "security-pattern",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "npm-declared",
+      "area": "dependency-inventory",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "npm-array-invalid",
+      "area": "dependency-inventory",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "npm-json-schema",
+      "area": "dependency-inventory",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "empty-manifest-count",
+      "area": "dependency-inventory",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "cargo-declared",
+      "area": "dependency-inventory",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "go-declared",
+      "area": "dependency-inventory",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "python-declared",
+      "area": "dependency-inventory",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "vendor-ignored",
+      "area": "dependency-inventory",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    }
+  ]
+}
