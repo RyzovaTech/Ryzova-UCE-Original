@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useAnalyzer } from '@/hooks/useAnalyzer';
-import { cn } from '@/lib/utils';
+import { cn, formatFileSize } from '@/lib/utils';
 import type { AnalysisStage } from '@/lib/analyzer/types';
 
 const STAGE_LABELS: Record<AnalysisStage, string> = {
@@ -259,7 +259,7 @@ export function AnalyzePage() {
               ) : (
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
               )}
-              {STAGE_LABELS[state.stage]}
+              {state.download ? 'Downloading repository…' : STAGE_LABELS[state.stage]}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -276,9 +276,23 @@ export function AnalyzePage() {
             ) : (
               <>
                 <div aria-live="polite" aria-atomic="true" className="sr-only">
-                  {STAGE_LABELS[state.stage]} — {state.progress}% complete
+                  {state.download ? 'Downloading repository archive' : `${STAGE_LABELS[state.stage]} — ${state.progress}% complete`}
                 </div>
-                <Progress value={state.progress} className="h-2" aria-label="Analysis progress" />
+                {state.download ? (
+                  <div className="space-y-2" aria-label="Repository download status">
+                    {state.download.totalBytes !== null ? (
+                      <Progress value={Math.min(100, state.download.receivedBytes / state.download.totalBytes * 100)} className="h-2" aria-label="Repository download progress" />
+                    ) : (
+                      <div role="progressbar" aria-label="Repository download progress" aria-valuetext="Total size unknown" className="h-2 overflow-hidden rounded-full bg-primary/20">
+                        <div className="h-full w-1/3 animate-pulse rounded-full bg-primary motion-reduce:animate-none" />
+                      </div>
+                    )}
+                    <div className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                      <span>{formatFileSize(state.download.receivedBytes)} downloaded{state.download.totalBytes !== null ? ` / ${formatFileSize(state.download.totalBytes)} (${Math.floor(Math.min(100, state.download.receivedBytes / state.download.totalBytes * 100))}%)` : ' · Total size unknown'}</span>
+                      <span>{state.download.receivedBytes > 0 ? `${formatFileSize(state.download.bytesPerSecond)}/s average` : 'Waiting for data…'} · {Math.floor(state.download.elapsedSeconds)}s elapsed</span>
+                    </div>
+                  </div>
+                ) : <Progress value={state.progress} className="h-2" aria-label="Analysis progress" />}
                 {state.message ? <p className="text-xs text-muted-foreground">{state.message}</p> : null}
                 {state.preview ? <div className="grid gap-2 rounded-md border bg-muted/20 p-3 text-xs sm:grid-cols-4"><span><strong>Project:</strong> {state.preview.projectType}</span><span><strong>Language:</strong> {state.preview.language}</span><span><strong>Framework:</strong> {state.preview.framework}</span><span><strong>Runtime:</strong> {state.preview.runtime}</span></div> : null}
                 <ol className="space-y-2.5">
