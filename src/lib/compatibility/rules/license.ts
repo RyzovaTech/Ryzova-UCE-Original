@@ -18,7 +18,8 @@ const LICENSE_COMPATIBILITY: Record<string, string[]> = {
 const COPyleft_LICENSES = ['GPL-2.0', 'GPL-3.0', 'LGPL-2.1', 'LGPL-3.0', 'AGPL-3.0'];
 
 function detectLicenseFromContent(content: string): string | null {
-  if (/MIT License/i.test(content)) return 'MIT';
+  const normalized = content.replace(/\s+/g, ' ');
+  if (/MIT License/i.test(content) || (/Permission is hereby granted, free of charge/i.test(normalized) && /to use, copy, modify, merge, publish, distribute, sublicense, and\/or sell/i.test(normalized) && /this permission notice shall be included/i.test(normalized) && /THE SOFTWARE IS PROVIDED ["“]AS IS/i.test(normalized))) return 'MIT';
   if (/Apache License.*2\.0/i.test(content)) return 'Apache-2.0';
   if (/Redistribution and use in source and binary forms/i.test(content) && /Redistributions of source code/i.test(content) && /Redistributions in binary form/i.test(content)) return /Neither the name/i.test(content) ? 'BSD-3-Clause' : 'BSD-2-Clause';
   if (/BSD 2-Clause/i.test(content)) return 'BSD-2-Clause';

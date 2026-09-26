@@ -212,7 +212,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce5-/);
+  assert.match(key, /^uce6-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1134,5 +1134,45 @@ await asyncTest('ZIP labels oversized lockfile content as incomplete', async () 
   const result = await readZip(await zipFixture([['repo/package-lock.json', ' '.repeat(2 * 1024 * 1024 + 1)]]));
   assert.equal(result.scanStats.truncated, true);
   assert.equal(result.files.find(x => !x.isDirectory)?.content, undefined);
+});
+test('primary compatibility readers ignore auxiliary manifests and retain real file paths', () => {
+  const { findEvidenceFile, readFile } = load('src/lib/compatibility/rules/shared.ts');
+  const ctx = { files: [file('docs/requirements.txt', 'sphinx'), file('test/requirements.txt', 'pytest'), file('vendor/package.json', '{}')] };
+  assert.equal(readFile(ctx, 'requirements.txt'), null);
+  assert.equal(readFile(ctx, 'package.json'), null);
+  ctx.files.push(file('services/api/requirements.txt', 'flask'));
+  assert.equal(findEvidenceFile(ctx, 'requirements.txt').path, 'services/api/requirements.txt');
+  const { dependencyRules } = load('src/lib/compatibility/rules/dependencies.ts');
+  const findings = dependencyRules.find(x => x.id === 'python-requirements-unpinned').run(ctx);
+  assert.equal(findings[0].affectedFile, 'services/api/requirements.txt');
+  ctx.files.push(file('requirements.txt', 'django==5'));
+  assert.equal(readFile(ctx, 'requirements.txt'), 'django==5');
+});
+test('MIT body recognition requires multiple clauses rather than an isolated grant', () => {
+  const { licenseRules } = load('src/lib/compatibility/rules/license.ts');
+  const rule = licenseRules.find(x => x.id === 'license-file-detected');
+  const body = 'Permission is hereby granted, free of charge\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\nthis permission notice shall be included\nTHE SOFTWARE IS PROVIDED "AS IS"';
+  assert.equal(rule.run({ files: [file('LICENSE', body)] }).length, 0);
+  assert.equal(rule.run({ files: [file('LICENSE', 'Permission is hereby granted, free of charge')] }).length, 1);
+});
+test('Python single-module projects prefer declared build backend and RST documentation', () => {
+  const files = [file('pyproject.toml', '[build-system]\nrequires=["flit_core>=3"]\nbuild-backend="flit_core.buildapi"\n[project]\nname="small_library"'), file('small_library.py', 'def greet():\n    return "hello"'), file('Makefile', 'test:\n\tpytest'), file('README.rst', 'Download and Install\n--------------------\nInstructions\n\nExample: Hello\n--------------\nUsage')];
+  const parsed = parseFiles(files); const stack = detectStack(files, parsed);
+  assert.equal(stack.buildTool, 'Flit');
+  assert.equal(detectTechnologyIntelligence(files, parsed, stack).architecture.primary, 'Library');
+  const extended = detectExtendedIntelligence(files, { ...stack, technologyDetections: [{ kind: 'testing', name: 'Pytest' }], technologyEvidence: [{ kind: 'testing', name: 'pytest' }] });
+  assert.equal(extended.modules.testing.evidence.filter(x => x.startsWith('Testing framework:')).length, 1);
+  assert.ok(!extended.modules.documentation.findings.some(x => ['DOC-installation', 'DOC-usage'].includes(x.id)));
+  const unrelated = files.filter(x => x.path !== 'small_library.py').concat(file('script.py', 'print("hello")'));
+  assert.ok(!detectTechnologyIntelligence(unrelated, parseFiles(unrelated), stack).architecture.patterns.includes('Library'));
+});
+test('pickle calls remain review findings without claims of proven unsafe input', () => {
+  for (const source of ['value = pickle.loads(user_data)', 'if verify_signature(data):\n    value = pickle.loads(data)']) {
+    const findings = detectSecurityIntelligence([file('app.py', source)]).findings.filter(x => x.ruleId === 'SEC015');
+    assert.equal(findings.length, 1);
+    assert.equal(findings[0].certainty, 'review-required');
+    assert.equal(findings[0].severity, 'warning');
+  }
+  assert.ok(!detectSecurityIntelligence([file('app.py', '# pickle.loads(data)')]).findings.some(x => x.ruleId === 'SEC015'));
 });
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

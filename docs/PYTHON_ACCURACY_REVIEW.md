@@ -31,3 +31,20 @@ The Click v3 beta report scanned 173 files with no sampling and correctly found 
 - The analysis cache version advances so an unchanged repository scan does not reuse the earlier report.
 
 The repository scan benchmark passed within its 30 second budget; synthetic regression tests cover both the false alerts and true positive examples. This does not constitute a full runtime test of Click on every platform.
+
+## Bottle report follow-up
+
+Reviewed the supplied Bottle report against upstream `pyproject.toml`, `LICENSE`, `README.rst`, and the two pickle call sites in `bottle.py`.
+
+General corrections (no repository-name exceptions):
+
+- Shared compatibility evidence selection now excludes test, fixture, generated, vendor and documentation manifests for production/configuration queries. Root evidence wins deterministically; requirement findings retain the actual selected path.
+- A standard MIT body can be recognized without an `MIT License` heading using multiple characteristic clauses. An isolated permission phrase remains insufficient evidence.
+- RST/Setext headings count toward documentation coverage, including `Download and Install` and `Example` headings.
+- Testing-framework names are deduplicated without case sensitivity.
+- An explicit Python build backend takes precedence over a generic Makefile in a Python project.
+- Build metadata plus a matching declared single-file module supports Library architecture detection; unrelated scripts do not.
+- Pickle calls remain warning-level review signals. A call alone does not prove attacker-controlled input, and nearby signature verification does not justify silently suppressing the finding.
+- Cache revision advances to avoid reusing earlier analysis results.
+
+Positive, negative and scope fixtures cover these cases. The full local suite passes 865 checks. No full browser rescan of all 219 Bottle files was performed as part of this follow-up. Framework self-identity, cross-file security flow, and arbitrary packaging layouts remain bounded-analysis limitations. These checks do not establish universal precision or recall.

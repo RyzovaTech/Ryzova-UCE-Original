@@ -1,6 +1,6 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
-import { readFile } from './shared';
+import { readFile, findEvidenceFile } from './shared';
 
 interface ParsedDep {
   name: string;
@@ -141,7 +141,8 @@ export const dependencyRules: CompatibilityRule[] = [
     category: 'dependencies',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const req = readFile(ctx, 'requirements.txt');
+      const requirementFile = findEvidenceFile(ctx, 'requirements.txt');
+      const req = requirementFile?.content;
       if (!req) return issues;
       const lines = req.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
       for (const line of lines) {
@@ -154,7 +155,7 @@ export const dependencyRules: CompatibilityRule[] = [
             description: `Requirement "${line}" does not pin a specific version.`,
             reason: 'Unpinned requirements resolve to the latest release and may break without notice.',
             recommendation: 'Pin the requirement to a compatible version range.',
-            affectedFile: 'requirements.txt',
+            affectedFile: requirementFile!.path,
             detected: line,
             expected: 'package==X.Y.Z',
             impact: 'Reproducible installs are not guaranteed.',
