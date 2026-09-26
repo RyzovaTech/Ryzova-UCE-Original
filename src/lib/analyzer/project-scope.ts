@@ -4,8 +4,8 @@ export type ProjectFileScope = 'production' | 'test' | 'fixture' | 'generated' |
 
 const TEST_PATH_RE = /(^|\/)(?:__tests__|tests?|testing|specs?|e2e(?:[-_]?tests?)?)(?:\/|$)|(?:^|\/)(?:test|spec)(?:[-_.][^/.]+)?\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$|_test\.(?:go|py)$|(?:^|\/)test_[^/]+\.py$/i;
 const FIXTURE_PATH_RE = /(^|\/)(?:fixtures?|mocks?|samples?|examples?|storybook|stories|benchmarks?)(?:\/|$)/i;
-const GENERATED_PATH_RE = /(^|\/)(?:dist|build|out|coverage|generated|autogen|\.next|\.nuxt|\.svelte-kit|target)(?:\/|$)|\.(?:min\.js|map)$/i;
-const VENDOR_PATH_RE = /(^|\/)(?:node_modules|vendor|third_party|pods|carthage)(?:\/|$)/i;
+const GENERATED_PATH_RE = /(^|\/)(?:dist|build|out|coverage|generated|autogen|__pycache__|\.pytest_cache|\.mypy_cache|\.next|\.nuxt|\.svelte-kit|target)(?:\/|$)|\.(?:min\.js|map)$/i;
+const VENDOR_PATH_RE = /(^|\/)(?:node_modules|vendor|third_party|pods|carthage|\.venv|venv|site-packages)(?:\/|$)/i;
 const DOCUMENTATION_PATH_RE = /(^|\/)(?:docs?|documentation)(?:\/|$)|(^|\/)(?:readme|changelog|contributing|security|security-bugs|license|copying|maintainers)(?:\.[^/]*)?$/i;
 const CONFIG_BASENAME_RE = /^(?:package\.json|pyproject\.toml|requirements(?:-dev)?\.txt|cargo\.toml|go\.mod|pom\.xml|composer\.json|gemfile|mix\.exs|pubspec\.yaml|package\.swift|build\.sbt|makefile|kbuild|kconfig|cmakelists\.txt|\.gitignore|\.editorconfig|[^/]+\.config\.[^/]+|tsconfig(?:\.[^/]+)?\.json|dockerfile(?:\.[^/]+)?|docker-compose\.[^/]+|\.env(?:\.[^/]+)?|[^/]+\.lock)$/i;
 

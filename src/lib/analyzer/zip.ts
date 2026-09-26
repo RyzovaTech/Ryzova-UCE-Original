@@ -179,19 +179,16 @@ const TEXT_EXTENSIONS = [
   '.cs', '.c', '.cpp', '.cc', '.h', '.hpp', '.php',
 ];
 
-const LARGE_LOCKFILES = new Set(['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb']);
-
 function isLikelyText(name: string): boolean {
   const lower = name.toLowerCase();
   const base = lower.split('/').pop() ?? lower;
 
-  if (LARGE_LOCKFILES.has(base)) return false;
   if (TEXT_BASENAMES.has(base)) return true;
   return TEXT_EXTENSIONS.some((ext) => base.endsWith(ext));
 }
 
 /** GitHub and other exporters commonly wrap a project in one top-level folder. */
-function commonArchiveRoot(files: ProjectFile[]): string | null {
+function commonArchiveRoot(files: Array<{ path: string }>): string | null {
   if (files.length === 0) return null;
   const roots = new Set(files.map((file) => file.path.split('/')[0]).filter(Boolean));
   if (roots.size !== 1) return null;
@@ -229,6 +226,8 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   // --- Phase 1: Collect and classify entries ---
   const allEntries = Object.values(zip.files).filter((e) => !e.dir);
   const totalFilesFound = allEntries.length;
+  // Determine the wrapper before sampling/filtering can remove root-level evidence.
+  const archiveRoot = commonArchiveRoot(allEntries.filter(entry => !entry.name.startsWith('__MACOSX/')).map(entry => ({ path: entry.name })));
 
   // Classify entries
   const analyzableEntries: JSZip.JSZipObject[] = [];
@@ -259,7 +258,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   if (analyzableEntries.length === 0) {
     const dirEntries = Object.values(zip.files).filter((e) => e.dir);
     const hasOnlyDirs = allEntries.length === 0 && dirEntries.length > 0;
-    if (allEntries.length === 0) {
+    if (allEntries.length === 0 && !hasOnlyDirs) {
       throw new ZipReadError(
         'The archive is empty — it contains no files or folders. Upload a project with source files.'
       );
@@ -287,9 +286,9 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
 
   // --- Path safety: reject invalid/illegal filenames ---
   for (const entry of analyzableEntries) {
-    if (/[<>:"|?*\x00-\x1f]/.test(entry.name)) {
+    if (/\x00/.test(entry.name) || entry.name.startsWith('/') || /^[A-Za-z]:[\\/]/.test(entry.name) || (entry.unsafeOriginalName ?? entry.name).split(/[\\/]/).includes('..')) {
       throw new ZipReadError(
-        `The archive contains a file with illegal characters in its path: "${entry.name.slice(0, 60)}". Clean the archive and re-upload.`
+        `The archive contains a file with an unsafe absolute, traversal, or NUL-containing path: "${entry.name.slice(0, 60)}". Clean the archive and re-upload.`
       );
     }
     if (entry.name.length > 4096) {
@@ -369,14 +368,15 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     let content: string | undefined;
     const isText = isLikelyText(entry.name);
 
-    if (isText && size <= MAX_SINGLE_TEXT_FILE) {
+    if (isText && size <= MAX_SINGLE_TEXT_FILE && totalTextContent + size <= MAX_TOTAL_TEXT_CONTENT) {
       try {
         content = await entry.async('string');
-        totalTextContent += content.length;
+        totalTextContent += new TextEncoder().encode(content).byteLength;
       } catch {
         content = undefined;
+        contentTruncated = true;
       }
-    } else if (isText && size > MAX_SINGLE_TEXT_FILE) {
+    } else if (isText) {
       contentTruncated = true;
     }
 
@@ -387,7 +387,6 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   onProgress?.(filesAnalyzed, analyzableEntries.length);
 
   // Analyze the project itself, rather than the arbitrary archive wrapper directory.
-  const archiveRoot = commonArchiveRoot(files);
   if (archiveRoot) {
     for (const projectFile of files) projectFile.path = projectFile.path.slice(archiveRoot.length + 1);
   }
@@ -417,7 +416,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     truncationReason: filesSampled || contentTruncated
       ? [
         filesSampled ? `Repository exceeded the ${MAX_FILES.toLocaleString()}-file browser analysis budget; high-priority source and manifest files were sampled.` : '',
-        contentTruncated ? `Text content exceeded the ${formatFileSize(MAX_TOTAL_TEXT_CONTENT)} total or ${formatFileSize(MAX_SINGLE_TEXT_FILE)} per-file read budget.` : '',
+        contentTruncated ? `Some text content could not be read or exceeded the ${formatFileSize(MAX_TOTAL_TEXT_CONTENT)} total or ${formatFileSize(MAX_SINGLE_TEXT_FILE)} per-file read budget.` : '',
       ].filter(Boolean).join(' ')
       : undefined,
     contentBytesRead: totalTextContent,
