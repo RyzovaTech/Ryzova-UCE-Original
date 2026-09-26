@@ -1238,4 +1238,31 @@ test('dependency inventory rejects non-object package manifests and retains tabl
  const files=[file('Cargo.toml','[dependencies.serde]\nversion="1"\noptional=true')];
  assert.equal(detectDependencyIntelligence(files,{packageManager:'cargo'}).dependencies[0].type,'optional');
 });
+await asyncTest('repository stream reports measured bytes with known and unknown totals', async () => {
+ const { readArchiveDownload } = load('src/lib/analyzer/download.ts');
+ for (const headers of [{ 'content-length':'4' }, {}, { 'content-length':'2', 'content-encoding':'gzip' }]) {
+  const updates=[];
+  const response=new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array([1,2]));c.enqueue(new Uint8Array([3,4]));c.close();}}),{headers});
+  const blob=await readArchiveDownload(response,{signal:new AbortController().signal,maxBytes:8,timeoutMs:1000,onProgress:p=>updates.push(p)});
+  assert.equal(blob.size,4); assert.equal(updates.at(-1).receivedBytes,4); assert.equal(updates.at(-1).complete,true);
+  assert.equal(updates.at(-1).totalBytes,headers['content-length']==='4'?4:null);
+  assert.ok(Number.isFinite(updates.at(-1).bytesPerSecond));
+ }
+});
+await asyncTest('repository streaming enforces limits and rejects incomplete responses', async () => {
+ const { readArchiveDownload } = load('src/lib/analyzer/download.ts');
+ const options={signal:new AbortController().signal,maxBytes:3,timeoutMs:1000,onProgress:()=>{}};
+ await assert.rejects(()=>readArchiveDownload(new Response(new Uint8Array(4)),options),/download limit/);
+ await assert.rejects(()=>readArchiveDownload(new Response(new Uint8Array(2),{headers:{'content-length':'3'}}),options),/incomplete/);
+});
+await asyncTest('repository stream cancellation and timeout cancel pending reads', async () => {
+ const { readArchiveDownload } = load('src/lib/analyzer/download.ts');
+ for (const timeout of [false,true]) {
+  let cancelled=false; const controller=new AbortController();
+  const response=new Response(new ReadableStream({cancel(){cancelled=true;}}));
+  const pending=readArchiveDownload(response,{signal:controller.signal,maxBytes:8,timeoutMs:timeout?5:1000,onProgress:()=>{}});
+  if(!timeout)controller.abort();
+  await assert.rejects(()=>pending,{name:'AbortError'});assert.equal(cancelled,true);
+ }
+});
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

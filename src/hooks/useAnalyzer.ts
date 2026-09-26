@@ -1,3 +1,4 @@
+import { readArchiveDownload, type DownloadProgress } from '@/lib/analyzer/download';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { readZip } from '@/lib/analyzer/zip';
 import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
@@ -14,6 +15,7 @@ import { saveReportToHistory } from '@/lib/storage';
 import type { AnalysisInput, AnalysisResult, AnalysisStage } from '@/lib/analyzer/types';
 
 export interface AnalyzerState {
+  download: DownloadProgress | null;
   stage: AnalysisStage;
   progress: number;
   result: AnalysisResult | null;
@@ -25,6 +27,7 @@ export interface AnalyzerState {
 }
 
 const INITIAL_STATE: AnalyzerState = {
+  download: null,
   stage: 'idle',
   progress: 0,
   result: null,
@@ -239,6 +242,7 @@ export function useAnalyzer() {
         if (!defaultBranch) throw new Error('GitHub did not provide a default branch for this repository.');
 
         remoteStep = 'archive';
+        safeSetState((s) => ({ ...s, message: 'Connecting to repository archive…', download: { receivedBytes: 0, totalBytes: null, bytesPerSecond: 0, elapsedSeconds: 0, complete: false } }));
         remoteAbortRef.current = new AbortController();
         const res = await fetchWithTimeout(getGitHubArchiveUrl(repository, defaultBranch), GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
         ensureCurrentRequest(requestId);
@@ -258,16 +262,17 @@ export function useAnalyzer() {
         }
         const contentLength = Number(res.headers.get('content-length') ?? 0);
         if (contentLength > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
-        const startedAt = Date.now();
-        safeSetState((s) => ({ ...s, message: 'Downloading the repository archive. Large repositories may take several minutes.' }));
-        const ticker = setInterval(() => {
-          if (requestId === requestIdRef.current) safeSetState((s) => ({
-            ...s, message: `Downloading repository archive (${Math.floor((Date.now() - startedAt) / 1000)}s elapsed${contentLength > 0 ? `; expected ${(contentLength / 1024 / 1024).toFixed(0)} MiB` : ''}).`,
-          }));
-        }, 10_000);
-        let blob: Blob;
-        try { blob = await res.blob(); } finally { clearInterval(ticker); }
+        safeSetState((s) => ({ ...s, message: 'Downloading repository archive…' }));
+        const blob = await readArchiveDownload(res, {
+          signal: remoteAbortRef.current.signal,
+          maxBytes: MAX_COMPRESSED_ARCHIVE_BYTES,
+          timeoutMs: GITHUB_ARCHIVE_TIMEOUT_MS,
+          onProgress: (download) => {
+            if (requestId === requestIdRef.current) safeSetState((s) => ({ ...s, download }));
+          },
+        });
         ensureCurrentRequest(requestId);
+        safeSetState((s) => ({ ...s, download: null }));
         if (blob.size > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
         const file = new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
         return await analyzeArchive(file, 'github', requestId);
