@@ -1,3 +1,4 @@
+import { collectEcosystemDependencies } from './ecosystem-dependencies';
 import { pythonDependencies, pythonMetadataValue } from './python-evidence';
 import type { ArchitectureIntelligence, ArchitectureType, DependencyIntelligence, DependencyItem, DependencyRisk, DetectedFile, ProjectFile, TechnologyEvidence, TechnologyKind, TechnologyStack } from './types';
 import { isProjectEvidenceFile } from './project-scope';
@@ -22,13 +23,17 @@ function dependencyMaps(files: ProjectFile[]): DependencyItem[] {
   ];
   for (const file of files.filter((item) => isProjectEvidenceFile(item) && /(^|\/)package\.json$/i.test(item.path) && item.content)) {
     let pkg: Record<string, unknown>; try { pkg = JSON.parse(file.content!) as Record<string, unknown>; } catch { continue; }
+    if (!pkg || typeof pkg !== 'object' || Array.isArray(pkg)) continue;
     for (const [section, type] of sections) {
-      const values = pkg[section]; if (!values || typeof values !== 'object') continue;
+      const values = pkg[section]; if (!values || typeof values !== 'object' || Array.isArray(values)) continue;
       for (const [name, version] of Object.entries(values as Record<string, unknown>)) if (typeof version === 'string') result.push({ name, version, type, source: file.path });
     }
   }
   for (const file of files.filter(item => isProjectEvidenceFile(item) && /(?:^|\/)pyproject\.toml$/i.test(item.path))) {
     result.push(...pythonDependencies(file.content ?? '').map(item => ({ ...item, source: file.path })));
+  }
+  for (const item of collectEcosystemDependencies(files).filter(item => item.ecosystem === 'cargo' || item.ecosystem === 'go')) {
+    result.push({ name: item.name, version: item.version ?? 'unspecified', type: item.type ?? 'runtime', source: item.file });
   }
   return result;
 }
@@ -57,7 +62,7 @@ export function detectDependencyIntelligence(files: ProjectFile[], stack: Techno
     duplicateNames,
     versionConflicts,
     risks: risks.slice(0, 100),
-    manifestsScanned: new Set(items.map((item) => item.source).filter(Boolean)).size,
+    manifestsScanned: files.filter(file => isProjectEvidenceFile(file) && file.content !== undefined && /(?:^|\/)(?:package\.json|pyproject\.toml|Cargo\.toml|go\.mod)$/.test(file.path)).length,
     healthScore,
   };
 }

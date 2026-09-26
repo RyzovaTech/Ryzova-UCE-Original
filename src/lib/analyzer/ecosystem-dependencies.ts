@@ -3,7 +3,7 @@ import type { ProjectFile } from './types';
 import { isProjectEvidenceFile, normalizeProjectPath } from './project-scope';
 
 export type Ecosystem = 'python' | 'cargo' | 'go' | 'composer';
-export interface EcosystemDependency { ecosystem: Ecosystem; name: string; file: string; }
+export interface EcosystemDependency { ecosystem: Ecosystem; name: string; file: string; version?: string; type?: 'runtime' | 'development' | 'optional'; }
 
 /** Bounded, non-executing readers for common declaration forms, not full resolvers. */
 export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDependency[] {
@@ -12,7 +12,7 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
     if (!file.content) continue;
     const path = normalizeProjectPath(file.path);
     const base = path.split('/').pop() ?? path;
-    const add = (ecosystem: Ecosystem, name: string) => result.push({ ecosystem, name, file: path });
+    const add = (ecosystem: Ecosystem, name: string, version?: string, type?: EcosystemDependency['type']) => result.push({ ecosystem, name, file: path, ...(version ? { version } : {}), ...(type ? { type } : {}) });
     if (/^requirements(?:[-_.][\w.-]+)?\.txt$/i.test(base)) {
       for (const raw of file.content.split(/\r?\n/)) {
         const line = raw.trim();
@@ -47,13 +47,16 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
         const line = raw.replace(/\/\/.*$/, '').trim();
         if (/^require\s*\($/.test(line)) { inRequire = true; continue; }
         if (line === ')') { inRequire = false; continue; }
-        const match = (inRequire ? /^(\S+)\s+v\S+$/ : /^require\s+(\S+)\s+v\S+$/).exec(line);
-        if (match) add('go', match[1]);
+        const match = (inRequire ? /^(\S+)\s+(v\S+)$/ : /^require\s+(\S+)\s+(v\S+)$/).exec(line);
+        if (match) add('go', match[1], match[2], 'runtime');
       }
     } else if (base === 'Cargo.toml') {
       let section = '';
       let tableName: string | undefined;
-      const flushTable = () => { if (tableName) add('cargo', tableName); tableName = undefined; };
+      let tableVersion = 'unspecified';
+      let tableOptional = false;
+      const dependencyType = (): EcosystemDependency['type'] => /(?:dev|build)-dependencies/.test(section) ? 'development' : 'runtime';
+      const flushTable = () => { if (tableName) add('cargo', tableName, tableVersion, tableOptional ? 'optional' : dependencyType()); tableName = undefined; tableVersion = 'unspecified'; tableOptional = false; };
       for (const raw of file.content.split(/\r?\n/)) {
         const line = raw.trim();
         if (!line || line.startsWith('#')) continue;
@@ -68,13 +71,19 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
         if (tableName) {
           const alias = /^package\s*=\s*["']([^"']+)["']/.exec(line);
           if (alias) tableName = alias[1];
+          const version = /^version\s*=\s*["']([^"']+)["']/.exec(line);
+          if (version) tableVersion = version[1];
+          if (/^optional\s*=\s*true\s*(?:#.*)?$/.test(line)) tableOptional = true;
+          if (/^workspace\s*=\s*true/.test(line)) tableVersion = 'workspace-inherited';
           continue;
         }
         if (!/^(?:(?:target\..+)\.)?(?:dependencies|dev-dependencies|build-dependencies)$|^workspace\.dependencies$/.test(section)) continue;
         const entry = /^([A-Za-z0-9_-]+)\s*=\s*(["'].*["']|\{.*\})\s*(?:#.*)?$/.exec(line);
         if (!entry) continue;
         const alias = /\bpackage\s*=\s*["']([^"']+)["']/.exec(entry[2]);
-        add('cargo', alias?.[1] ?? entry[1]);
+        const version = /^["']([^"']+)["']/.exec(entry[2])?.[1] ?? /\bversion\s*=\s*["']([^"']+)["']/.exec(entry[2])?.[1] ?? (/\bworkspace\s*=\s*true/.test(entry[2]) ? 'workspace-inherited' : 'unspecified');
+        const type = /\boptional\s*=\s*true/.test(entry[2]) ? 'optional' : dependencyType();
+        add('cargo', alias?.[1] ?? entry[1], version, type);
       }
       flushTable();
     }
