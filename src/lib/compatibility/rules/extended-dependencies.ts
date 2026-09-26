@@ -1,6 +1,6 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
-import { readFile } from './shared';
+import { readFile, findEvidenceFile } from './shared';
 
 export const extendedDependencyRules: CompatibilityRule[] = [
   {
@@ -483,7 +483,8 @@ export const extendedDependencyRules: CompatibilityRule[] = [
     category: 'dependencies',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const req = readFile(ctx, 'requirements.txt');
+      const requirementFile = findEvidenceFile(ctx, 'requirements.txt');
+      const req = requirementFile?.content;
       if (!req) return issues;
       const lines = req.split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
       let exactPinned = 0;
@@ -503,7 +504,7 @@ export const extendedDependencyRules: CompatibilityRule[] = [
           description: `${exactPinned}/${totalDeps} requirements use exact pinning (==).`,
           reason: 'Exact pinning ensures reproducible installs.',
           recommendation: 'Use pip-compile or pip freeze to generate exact pins.',
-          affectedFile: 'requirements.txt',
+          affectedFile: requirementFile!.path,
           detected: `${exactPinned}/${totalDeps} pinned`,
           expected: 'all pinned with ==',
           impact: 'Installs may not be reproducible.',

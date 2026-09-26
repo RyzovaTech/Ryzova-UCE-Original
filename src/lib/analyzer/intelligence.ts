@@ -1,4 +1,4 @@
-import { pythonDependencies } from './python-evidence';
+import { pythonDependencies, pythonMetadataValue } from './python-evidence';
 import type { ArchitectureIntelligence, ArchitectureType, DependencyIntelligence, DependencyItem, DependencyRisk, DetectedFile, ProjectFile, TechnologyEvidence, TechnologyKind, TechnologyStack } from './types';
 import { isProjectEvidenceFile } from './project-scope';
 
@@ -77,7 +77,10 @@ function detectArchitecture(files: ProjectFile[], _detectedFiles: DetectedFile[]
     return { primary: 'Operating System Kernel', patterns: ['Operating System Kernel'], confidence: 99, evidence: ['Root Kconfig plus Kbuild/Makefile detected.', `Kernel source structure detected: ${kernelStructureSignals.join(', ')}.`, 'Generic application architecture heuristics were suppressed for this kernel project.'] };
   }
 
-  if (hasRoot('pyproject.toml') && /\[build-system\]/.test(read(evidenceFiles, ['pyproject.toml'])) && paths.some(path => /(?:^|\/)__init__\.py$/.test(path))) add('Library', 'Python package modules and build-system metadata detected.');
+  const pythonProject = evidenceFiles.find(file => file.path === 'pyproject.toml')?.content ?? '';
+  const pythonModule = pythonMetadataValue(pythonProject, 'tool.flit.module', 'name') ?? pythonMetadataValue(pythonProject, 'project', 'name')?.replace(/-/g, '_');
+  const declaredSingleModule = pythonModule && /^[A-Za-z_]\w*$/.test(pythonModule) && (hasRoot(`${pythonModule}.py`) || hasRoot(`src/${pythonModule}.py`));
+  if (/\[build-system\]/.test(pythonProject) && (declaredSingleModule || paths.some(path => /(?:^|\/)__init__\.py$/.test(path)))) add('Library', 'Python package or declared single-file module and build-system metadata detected.');
   if (stack.monorepo && stack.monorepo !== 'None') add('Monorepo', `${stack.monorepo} workspace configuration detected.`);
   const dependencies = new Set(dependencyMaps(files).map((item) => item.name));
   if (dependencies.has('electron') || dependencies.has('@electron-forge/cli') || hasAny(['electron/', 'electron-builder.'])) add('Desktop App', 'Electron dependency or desktop application markers detected.');

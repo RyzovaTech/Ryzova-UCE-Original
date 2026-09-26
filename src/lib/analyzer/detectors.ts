@@ -449,15 +449,6 @@ export function detectBuildTool(files: DetectedFile[], projectFiles: ProjectFile
   if (hasPrimaryFile(files, 'pom.xml')) return 'Maven';
   if (hasPrimaryFile(files, 'build.gradle') || hasPrimaryFile(files, 'build.gradle.kts')) return 'Gradle';
   if (hasPrimaryFile(files, 'CMakeLists.txt')) return 'CMake';
-  if (hasPrimaryFile(files, 'Makefile')) return 'Make';
-  if (hasPrimaryFile(files, 'Package.swift')) return 'Swift Package Manager';
-  if (hasPrimaryFile(files, 'mix.exs')) return 'Mix';
-  if (hasPrimaryFile(files, 'pubspec.yaml')) return 'Pub';
-  if (hasFile(files, 'turbo.json')) return 'Turbo';
-  if (hasPrefix(files, 'webpack.config.')) return 'Webpack';
-  if (hasPrefix(files, 'rollup.config.')) return 'Rollup';
-  if (hasPrefix(files, 'esbuild.config.')) return 'esbuild';
-  if (hasFile(files, 'hardhat.config.js') || hasFile(files, 'hardhat.config.ts')) return 'turbopack';
   if (stack.language === 'Python' && (hasPrimaryFile(files, 'pyproject.toml') || hasPrimaryFile(files, 'requirements.txt') || hasPrimaryFile(files, 'requirements-dev.txt'))) {
     const config = readPrimaryFileText(projectFiles, 'pyproject.toml') ?? '';
     const backend = pythonMetadataValue(config, 'build-system', 'build-backend') ?? '';
@@ -468,8 +459,17 @@ export function detectBuildTool(files: DetectedFile[], projectFiles: ProjectFile
     if (backend.startsWith('pdm.')) return 'PDM';
     if (stack.packageManager === 'poetry') return 'poetry';
     if (stack.packageManager === 'hatch') return 'hatch';
-    return 'pip';
+    if (!hasPrimaryFile(files, 'Makefile')) return 'pip';
   }
+  if (hasPrimaryFile(files, 'Makefile')) return 'Make';
+  if (hasPrimaryFile(files, 'Package.swift')) return 'Swift Package Manager';
+  if (hasPrimaryFile(files, 'mix.exs')) return 'Mix';
+  if (hasPrimaryFile(files, 'pubspec.yaml')) return 'Pub';
+  if (hasFile(files, 'turbo.json')) return 'Turbo';
+  if (hasPrefix(files, 'webpack.config.')) return 'Webpack';
+  if (hasPrefix(files, 'rollup.config.')) return 'Rollup';
+  if (hasPrefix(files, 'esbuild.config.')) return 'esbuild';
+  if (hasFile(files, 'hardhat.config.js') || hasFile(files, 'hardhat.config.ts')) return 'turbopack';
   if (stack.language === 'Python') return 'pip';
   if (stack.language === 'Rust') return 'Cargo';
   if (stack.language === 'Go') return 'Unknown';

@@ -76,7 +76,7 @@ function buildModule(files: ProjectFile[], stack: TechnologyStack): Intelligence
 
 function testingModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const all = paths(files); const sourceCount = all.filter((path) => sourceRe.test(path) && classifyProjectFileScope(path) === 'production').length; const testCount = all.filter((path) => classifyProjectFileScope(path) === 'test' && sourceRe.test(path)).length;
-  const frameworks = [...new Set([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => item.name))]; const coverage = all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
+  const frameworks = [...new Map([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => [item.name.toLowerCase(), item.name])).values()]; const coverage = all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
   const findings: IntelligenceModuleFinding[] = []; if (sourceCount >= 5 && testCount === 0) findings.push(finding('TST001', 'No test source files detected', 'warning', 88, `${sourceCount} production source files and no test files were found.`, 'Add automated tests for critical behavior.')); if (testCount > 0 && !coverage) findings.push(finding('TST002', 'Coverage readiness not detected', 'info', 70, 'Tests exist but no coverage configuration or command was recognized.', 'Add coverage reporting with an appropriate threshold.'));
   return result('testing', 'Testing Intelligence', `${testCount} test files across ${frameworks.length} detected frameworks.`, frameworks.map((name) => `Testing framework: ${name}`), findings, { sourceFiles: sourceCount, testFiles: testCount, coverageReady: coverage });
 }
@@ -127,11 +127,13 @@ function documentationModule(files: ProjectFile[]): IntelligenceModuleResult {
   const readmeFile = documentation.filter(file => /^(?:README)(?:\.[^/]*)?$/i.test(file.path)).sort((a, b) => a.path.length - b.path.length)[0];
   const readme = readmeFile?.content ?? '';
   const hasDocument = (name: RegExp): boolean => documentation.some(file => name.test(file.path));
+  // Normalize RST/Setext underlined headings to the same form as Markdown.
+  const headings = readme.replace(/^([^\n]+)\r?\n[=~^-]{3,}\s*$/gm, '# $1');
   const sections = {
-    installation: /^#{1,6}\s*(?:install|getting started|setup)/im.test(readme) || hasDocument(/(?:^|\/)(?:quickstart|getting-started|installation|install)(?:\.[^/]*)?$/i),
-    usage: /^#{1,6}\s*(?:usage|examples?|quick start|a simple example)/im.test(readme) || hasDocument(/(?:^|\/)(?:quickstart|usage|examples?)(?:\.[^/]*)?$/i),
-    configuration: /^#{1,6}\s*(?:configuration|environment|config)/im.test(readme) || hasDocument(/(?:^|\/)(?:configuration|config|options)(?:\.[^/]*)?$/i),
-    license: /^#{1,6}\s*licen[cs]e/im.test(readme) || hasDocument(/(?:^|\/)(?:license|licence|copying)(?:\.[^/]*)?$/i),
+    installation: /^#{1,6}\s*(?:install|download and install|getting started|setup)/im.test(headings) || hasDocument(/(?:^|\/)(?:quickstart|getting-started|installation|install)(?:\.[^/]*)?$/i),
+    usage: /^#{1,6}\s*(?:usage|examples?|quick start|a simple example)/im.test(headings) || hasDocument(/(?:^|\/)(?:quickstart|usage|examples?)(?:\.[^/]*)?$/i),
+    configuration: /^#{1,6}\s*(?:configuration|environment|config)/im.test(headings) || hasDocument(/(?:^|\/)(?:configuration|config|options)(?:\.[^/]*)?$/i),
+    license: /^#{1,6}\s*licen[cs]e/im.test(headings) || hasDocument(/(?:^|\/)(?:license|licence|copying)(?:\.[^/]*)?$/i),
   };
   const findings: IntelligenceModuleFinding[] = [];
   for (const [name, present] of Object.entries(sections)) if (!present) findings.push(finding(`DOC-${name}`, `${name} guidance not detected`, 'info', 72, `No ${name} heading or dedicated documentation file was recognized.`, `Document ${name} in the README or project documentation.`, readmeFile?.path));
