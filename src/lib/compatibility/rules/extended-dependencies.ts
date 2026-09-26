@@ -1,3 +1,4 @@
+import { isVirtualCargoWorkspace, cargoPackageHas } from '../../analyzer/cargo-evidence';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile, findEvidenceFile } from './shared';
@@ -358,8 +359,8 @@ export const extendedDependencyRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       const cargo = readFile(ctx, 'Cargo.toml');
-      if (!cargo) return issues;
-      if (!/name\s*=/.test(cargo)) {
+      if (!cargo || isVirtualCargoWorkspace(cargo)) return issues;
+      if (!cargoPackageHas(cargo, 'name')) {
         issues.push({
           id: 'cargo-name-missing',
           title: 'Cargo.toml missing package name',
@@ -375,7 +376,7 @@ export const extendedDependencyRules: CompatibilityRule[] = [
           suggestedAction: 'Add a name to Cargo.toml.',
         });
       }
-      if (!/version\s*=/.test(cargo)) {
+      if (!cargoPackageHas(cargo, 'version')) {
         issues.push({
           id: 'cargo-version-missing',
           title: 'Cargo.toml missing package version',
@@ -400,8 +401,8 @@ export const extendedDependencyRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       const cargo = readFile(ctx, 'Cargo.toml');
-      if (!cargo) return issues;
-      if (!/license\s*=/.test(cargo)) {
+      if (!cargo || isVirtualCargoWorkspace(cargo)) return issues;
+      if (!cargoPackageHas(cargo, 'license') && !cargoPackageHas(cargo, 'license-file')) {
         issues.push({
           id: 'cargo-license-missing',
           title: 'Cargo.toml missing license field',

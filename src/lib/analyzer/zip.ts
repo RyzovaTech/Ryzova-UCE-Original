@@ -183,6 +183,7 @@ function isLikelyText(name: string): boolean {
   const lower = name.toLowerCase();
   const base = lower.split('/').pop() ?? lower;
 
+  if (/^(?:licen[cs]e|copying)(?:[-.][a-z0-9.-]+)?$/i.test(base)) return true;
   if (TEXT_BASENAMES.has(base)) return true;
   return TEXT_EXTENSIONS.some((ext) => base.endsWith(ext));
 }
