@@ -232,7 +232,7 @@ export const extendedStructureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const readme = ctx.files.find((f) => !f.isDirectory && (f.path === 'README.md' || f.path.endsWith('/README.md')));
+      const readme = ctx.files.find((f) => !f.isDirectory && /^README(?:\.(?:md|rst|txt))?$/i.test(f.path));
       if (!readme || !readme.content) return issues;
       if (readme.content.length < 100) {
         issues.push({

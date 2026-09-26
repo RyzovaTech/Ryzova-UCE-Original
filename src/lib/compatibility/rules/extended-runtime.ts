@@ -1,3 +1,4 @@
+import { isVirtualCargoWorkspace, cargoPackageHas } from '../../analyzer/cargo-evidence';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile } from './shared';
@@ -16,8 +17,8 @@ export const extendedRuntimeRules: CompatibilityRule[] = [
       const issues: Issue[] = [];
       if (ctx.stack.runtime !== 'Rust') return issues;
       const cargo = readFile(ctx, 'Cargo.toml');
-      if (!cargo) return issues;
-      if (!/\[package\][\s\S]*edition\s*=/.test(cargo)) {
+      if (!cargo || isVirtualCargoWorkspace(cargo)) return issues;
+      if (!cargoPackageHas(cargo, 'edition')) {
         issues.push({
           id: 'rust-edition-missing',
           title: 'Rust edition not declared in Cargo.toml',

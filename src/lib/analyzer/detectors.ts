@@ -398,6 +398,8 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
   if (hasRootFile(files, 'yarn.lock')) return 'yarn';
   if (hasRootFile(files, 'bun.lockb') || hasRootFile(files, 'bun.lock')) return 'bun';
   if (hasRootFile(files, 'package-lock.json') || hasRootFile(files, 'package.json')) return 'npm';
+  const rootManagers: Array<[string, PackageManager]> = [['Cargo.toml', 'cargo'], ['go.mod', 'go-modules'], ['pom.xml', 'maven'], ['build.gradle', 'gradle'], ['build.gradle.kts', 'gradle'], ['composer.json', 'composer'], ['Gemfile', 'bundler'], ['mix.exs', 'mix'], ['pubspec.yaml', 'pub'], ['Package.swift', 'swift-package']];
+  for (const [manifest, manager] of rootManagers) if (hasRootFile(files, manifest)) return manager;
   if (hasPrimaryFile(files, 'pyproject.toml')) {
     const content = readPrimaryFileText(projectFiles, 'pyproject.toml') ?? '';
     if (/\[tool\.poetry\]/i.test(content)) return 'poetry';
@@ -493,6 +495,7 @@ const BACKEND_FRAMEWORKS: Framework[] = [
 ];
 
 export function detectMonorepo(detectedFiles: DetectedFile[], projectFiles: ProjectFile[]): MonorepoTool | 'None' {
+  if (projectFiles.some(file => file.path === 'Cargo.toml' && /^\s*\[workspace\]\s*(?:#.*)?$/m.test(file.content ?? ''))) return 'Cargo Workspaces';
   if (detectedFiles.some((f) => f.path === 'nx.json' || f.path.endsWith('/nx.json'))) return 'Nx';
   if (detectedFiles.some((f) => f.path === 'turbo.json' || f.path.endsWith('/turbo.json'))) return 'Turborepo';
   if (detectedFiles.some((f) => f.path === 'lerna.json' || f.path.endsWith('/lerna.json'))) return 'Lerna';

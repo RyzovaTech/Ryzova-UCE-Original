@@ -427,7 +427,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const hasLicense = ctx.files.some((f) => !f.isDirectory && /^(?:license|copying)(?:\.(?:md|txt|rst))?$/i.test(f.path));
+      const hasLicense = ctx.files.some((f) => !f.isDirectory && /^(?:licen[cs]e|copying)(?:[-.][a-z0-9.-]+)?$/i.test(f.path));
       if (!hasLicense) {
         issues.push({
           id: 'license-missing',

@@ -212,7 +212,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce6-/);
+  assert.match(key, /^uce7-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1174,5 +1174,49 @@ test('pickle calls remain review findings without claims of proven unsafe input'
     assert.equal(findings[0].severity, 'warning');
   }
   assert.ok(!detectSecurityIntelligence([file('app.py', '# pickle.loads(data)')]).findings.some(x => x.ruleId === 'SEC015'));
+});
+test('root ecosystem manifests outrank nested Python helpers', () => {
+  for (const [manifest, expected] of [['Cargo.toml', 'cargo'], ['go.mod', 'go-modules'], ['pom.xml', 'maven'], ['composer.json', 'composer']]) {
+    const files = [file('tools/pyproject.toml', '[project]\nname="helper"'), file(manifest, manifest === 'Cargo.toml' ? '[workspace]\nmembers=["crates/app"]' : '')];
+    const stack = detectStack(files, parseFiles(files));
+    assert.equal(stack.packageManager, expected);
+    if (manifest === 'Cargo.toml') assert.equal(stack.monorepo, 'Cargo Workspaces');
+  }
+});
+test('Cargo virtual workspaces do not require package metadata', () => {
+  const { extendedDependencyRules } = load('src/lib/compatibility/rules/extended-dependencies.ts');
+  const { extendedRuntimeRules } = load('src/lib/compatibility/rules/extended-runtime.ts');
+  const rules = [...extendedDependencyRules, ...extendedRuntimeRules].filter(x => ['cargo-toml-name-version', 'cargo-toml-license', 'rust-edition-pinned'].includes(x.id));
+  assert.equal(rules.length, 3);
+  const ctx = content => ({ files: [file('Cargo.toml', content)], stack: { runtime: 'Rust' } });
+  assert.deepEqual(rules.flatMap(x => x.run(ctx('[workspace]\nmembers=["crates/app"]'))), []);
+  assert.deepEqual(rules.flatMap(x => x.run(ctx('[package]\nname="app"\nversion.workspace=true\nlicense.workspace=true\nedition.workspace=true'))), []);
+  const missing = rules.flatMap(x => x.run(ctx('[package]\n[dependencies]\nname="1"\nversion="1"\nedition="1"')));
+  for (const id of ['cargo-name-missing', 'cargo-version-missing', 'cargo-license-missing', 'rust-edition-missing']) assert.ok(missing.some(x => x.id === id));
+});
+test('root README wins over nested short README regardless of input order', () => {
+  const { extendedStructureRules } = load('src/lib/compatibility/rules/extended-structure.ts');
+  const rule = extendedStructureRules.find(x => x.id === 'readme-substantial');
+  assert.deepEqual(rule.run({ files: [file('tools/README.md', 'helper'), file('README.md', 'Documentation '.repeat(100))] }), []);
+  assert.equal(rule.run({ files: [file('README.md', 'short')] }).length, 1);
+});
+test('Rust test and vendored scopes are excluded without excluding production test tools', () => {
+  for (const path of ['crates/editor/src/editor_tests.rs', 'crates/editor/src/tests.rs']) assert.equal(classifyProjectFileScope(path), 'test');
+  assert.equal(classifyProjectFileScope('tooling/test_fixture/app/Cargo.toml'), 'fixture');
+  assert.equal(classifyProjectFileScope('crates/client/vendored/protocol.rs'), 'vendor');
+  assert.equal(classifyProjectFileScope('crates/test_runner/src/lib.rs'), 'production');
+});
+await asyncTest('ZIP retains named root license content and license presence checks accept it', async () => {
+  const result = await readZip(await zipFixture([['repo/LICENSE-APACHE', 'Apache License 2.0'], ['repo/Cargo.toml', '[workspace]']]));
+  assert.equal(result.files.find(x => x.path === 'LICENSE-APACHE').content, 'Apache License 2.0');
+  const { extendedConfigurationRules } = load('src/lib/compatibility/rules/extended-configuration.ts');
+  assert.deepEqual(extendedConfigurationRules.find(x => x.id === 'license-file-present').run({ files: result.files }), []);
+});
+test('architecture labels require combined structural evidence', () => {
+  const files = [file('Cargo.toml', '[workspace]\nmembers=["crates/app"]'), file('crates/app/Cargo.toml', '[package]\nname="app"'), file('crates/app/src/models/user.rs', 'struct User;'), file('crates/app/src/adapters/client.rs', 'fn connect() {}'), file('packages/tool/info.txt', 'tool')];
+  const parsed = parseFiles(files); const stack = detectStack(files, parsed);
+  const architecture = detectTechnologyIntelligence(files, parsed, stack).architecture;
+  assert.ok(architecture.patterns.includes('Monorepo'));
+  for (const label of ['MVC', 'Clean/Hexagonal', 'Modular Monolith']) assert.ok(!architecture.patterns.includes(label));
 });
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));

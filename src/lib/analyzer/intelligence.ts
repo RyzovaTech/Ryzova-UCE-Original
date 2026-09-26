@@ -97,15 +97,15 @@ function detectArchitecture(files: ProjectFile[], _detectedFiles: DetectedFile[]
   if (serviceRoots.size >= 3) add('Microservices', `${serviceRoots.size} independently manifested service/application roots detected.`);
   if (has(evidenceFiles, ['serverless.yml', 'serverless.yaml', 'sam.yaml', 'template.yaml']) || hasAny(['functions/', 'lambdas/'])) add('Serverless', 'Serverless deployment configuration or function directories detected.');
   if ([...dependencies].some((name) => /kafka|rabbitmq|amqplib|nats|bullmq|eventemitter/i.test(name)) || hasAny(['events/', 'consumers/', 'producers/'])) add('Event-driven', 'Message broker dependencies or event producer/consumer structure detected.');
-  if (hasAny(['domain/', 'adapters/', 'ports/', 'use-cases/', 'usecases/'])) add('Clean/Hexagonal', 'Domain, port, adapter, or use-case boundaries detected.');
-  if (hasAny(['models/', 'views/', 'controllers/'])) add('MVC', 'Model, view, and controller directory markers detected.');
+  if (hasAny(['domain/']) && hasAny(['adapters/', 'ports/', 'use-cases/', 'usecases/'])) add('Clean/Hexagonal', 'Domain, port, adapter, or use-case boundaries detected.');
+  if (['models/', 'views/', 'controllers/'].every(marker => hasAny([marker]))) add('MVC', 'Model, view, and controller directory markers detected.');
   if (hasAny(['viewmodels/', 'view-models/'])) add('MVVM', 'View-model directory structure detected.');
   if ([...dependencies].some((name) => /single-spa|module-federation/i.test(name)) || paths.some((path) => /modulefederation|module-federation/i.test(path))) add('Microfrontend', 'Module federation or single-spa markers detected.');
   if (hasAny(['plugins/', 'extensions/']) && hasAny(['plugin-api', 'plugin.json', 'extension.json'])) add('Plugin Architecture', 'Plugin/extension modules and a plugin contract were detected.');
   if (hasAny(['service-worker', 'serviceworker', 'workbox', 'manifest.webmanifest']) || dependencies.has('workbox')) add('Offline-first', 'Service-worker, Workbox, or web-app manifest markers detected.');
   if (hasAny(['workers/', '.worker.', 'background-jobs/', 'queues/'])) add('Background Workers', 'Worker, queue, or background-job modules detected.');
   if (has(evidenceFiles, ['Dockerfile', 'docker-compose.yml', 'compose.yml']) || hasAny(['k8s/', 'kubernetes/', 'helm/'])) add('Containerized Application', 'Docker or Kubernetes deployment evidence detected.');
-  if (!patterns.includes('Microservices') && manifestCount >= 2 && hasAny(['modules/', 'packages/'])) add('Modular Monolith', 'Multiple internal modules share a single repository deployment boundary.');
+  if (!patterns.includes('Microservices') && !patterns.includes('Monorepo') && manifestCount >= 2 && hasAny(['modules/', 'packages/'])) add('Modular Monolith', 'Multiple internal modules share a single repository deployment boundary.');
   if (!patterns.length) add('Unknown', 'No strong architecture pattern matched the available project evidence.');
 
   const priority: ArchitectureType[] = ['Microservices', 'Serverless', 'Desktop App', 'Mobile App', 'Frontend + Backend', 'SSR', 'SSG', 'SPA', 'API Server', 'Modular Monolith', 'Event-driven', 'Library', 'Monorepo', 'CLI', 'Unknown'];
