@@ -10,6 +10,7 @@ export interface DownloadProgress {
 export async function readArchiveDownload(response: Response, options: {
   signal: AbortSignal;
   maxBytes: number;
+  /** Maximum time without a received chunk, not a total download deadline. */
   timeoutMs: number;
   onProgress: (progress: DownloadProgress) => void;
 }): Promise<Blob> {
@@ -32,7 +33,12 @@ export async function readArchiveDownload(response: Response, options: {
     void reader.cancel().catch(() => undefined);
   };
   options.signal.addEventListener('abort', abort, { once: true });
-  const timer = setTimeout(abort, options.timeoutMs);
+  const stalled = () => {
+    abortError = new DOMException('Repository download stopped receiving data. Check your connection and retry, or download the ZIP directly from GitHub.', 'TimeoutError');
+    void reader.cancel().catch(() => undefined);
+  };
+  let timer = setTimeout(stalled, options.timeoutMs);
+  const resetIdleTimer = () => { clearTimeout(timer); timer = setTimeout(stalled, options.timeoutMs); };
   const ticker = setInterval(() => emit(), 500);
   try {
     if (options.signal.aborted) abort();
@@ -42,6 +48,7 @@ export async function readArchiveDownload(response: Response, options: {
       const { done, value } = await reader.read();
       if (abortError) throw abortError;
       if (done) break;
+      if (value.byteLength > 0) resetIdleTimer();
       receivedBytes += value.byteLength;
       if (receivedBytes > options.maxBytes) throw new Error('Repository archive exceeds the browser download limit. Use the UCE CLI.');
       if (totalBytes !== null && receivedBytes > totalBytes) totalBytes = null;

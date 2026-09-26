@@ -62,6 +62,7 @@ async function fetchWithTimeout(url: string, timeoutMs: number, init: RequestIni
   const abortFromCaller = () => controller.abort();
   init.signal?.addEventListener('abort', abortFromCaller, { once: true });
   try {
+    if (init.signal?.aborted) controller.abort();
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
@@ -223,7 +224,7 @@ export function useAnalyzer() {
   const analyzeGithub = useCallback(
     async (url: string): Promise<AnalysisResult> => {
       let requestId = -1;
-      let remoteStep: 'metadata' | 'archive' = 'metadata';
+      let remoteStep: 'metadata' | 'archive' | 'download' = 'metadata';
       try {
         requestId = startRequest();
         const repository = parseGitHubRepositoryUrl(url);
@@ -263,6 +264,7 @@ export function useAnalyzer() {
         const contentLength = Number(res.headers.get('content-length') ?? 0);
         if (contentLength > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
         safeSetState((s) => ({ ...s, message: 'Downloading repository archive…' }));
+        remoteStep = 'download';
         const blob = await readArchiveDownload(res, {
           signal: remoteAbortRef.current.signal,
           maxBytes: MAX_COMPRESSED_ARCHIVE_BYTES,
@@ -282,7 +284,9 @@ export function useAnalyzer() {
         const message = e instanceof DOMException && e.name === 'AbortError'
           ? remoteStep === 'metadata'
             ? 'GitHub metadata did not respond within 30 seconds. Check your connection and try again.'
-            : 'The GitHub archive relay did not finish within 10 minutes. Try again or use ZIP Upload.'
+            : remoteStep === 'archive'
+              ? 'The GitHub archive relay did not start responding within 10 minutes. Retry or download the ZIP directly from GitHub.'
+              : 'Repository download was cancelled.'
           : e instanceof TypeError && /failed to fetch/i.test(e.message)
             ? remoteStep === 'metadata'
               ? 'Could not contact the GitHub metadata API. Check your connection and try again.'
