@@ -22,12 +22,6 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
       }
     } else if (base === 'pyproject.toml') {
       for (const item of pythonDependencies(file.content)) add('python', item.name);
-      for (const block of file.content.matchAll(/(?:^|\n)\s*dependencies\s*=\s*\[([\s\S]*?)^\s*\]/gm)) {
-        for (const quoted of block[1].matchAll(/["']([^"']+)["']/g)) {
-          const item = /^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]+\])?\s*(?:[<>=!~;@]|$)/.exec(quoted[1].trim());
-          if (item) add('python', item[1].toLowerCase().replace(/[-_.]+/g, '-'));
-        }
-      }
       let poetrySection = false;
       for (const raw of file.content.split(/\r?\n/)) {
         const line = raw.trim();
@@ -58,14 +52,22 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
       }
     } else if (base === 'Cargo.toml') {
       let section = '';
+      let tableName: string | undefined;
+      const flushTable = () => { if (tableName) add('cargo', tableName); tableName = undefined; };
       for (const raw of file.content.split(/\r?\n/)) {
         const line = raw.trim();
         if (!line || line.startsWith('#')) continue;
         const header = /^\[([^\]]+)\]\s*(?:#.*)?$/.exec(line);
         if (header) {
+          flushTable();
           section = header[1];
-          const table = /^(?:(?:target\..+)\.)?(?:dependencies|dev-dependencies|build-dependencies)\.([A-Za-z0-9_-]+)$/.exec(section);
-          if (table) add('cargo', table[1]);
+          const table = /^(?:(?:target\..+|workspace)\.)?(?:dependencies|dev-dependencies|build-dependencies)\.([A-Za-z0-9_-]+)$/.exec(section);
+          if (table) tableName = table[1];
+          continue;
+        }
+        if (tableName) {
+          const alias = /^package\s*=\s*["']([^"']+)["']/.exec(line);
+          if (alias) tableName = alias[1];
           continue;
         }
         if (!/^(?:(?:target\..+)\.)?(?:dependencies|dev-dependencies|build-dependencies)$|^workspace\.dependencies$/.test(section)) continue;
@@ -74,6 +76,7 @@ export function collectEcosystemDependencies(files: ProjectFile[]): EcosystemDep
         const alias = /\bpackage\s*=\s*["']([^"']+)["']/.exec(entry[2]);
         add('cargo', alias?.[1] ?? entry[1]);
       }
+      flushTable();
     }
   }
   return [...new Map(result.map(item => [item.ecosystem + '|' + item.file + '|' + item.name, item])).values()];

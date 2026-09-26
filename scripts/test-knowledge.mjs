@@ -212,7 +212,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce4-/);
+  assert.match(key, /^uce5-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1082,5 +1082,57 @@ await asyncTest('large ZIP extraction samples at the analysis budget and reports
   assert.equal(result.scanStats.filesIgnored, 101);
   assert.ok(result.files.some(item => item.path === 'Makefile'));
   assert.deepEqual(updates.at(-1), [25_000, 25_000]);
+});
+test('installed Python environments do not supply project dependency evidence', () => {
+  for (const prefix of ['.venv', 'venv', 'site-packages', '__pycache__']) {
+    assert.deepEqual(collectEcosystemDependencies([file(`${prefix}/pyproject.toml`, '[project]\ndependencies = ["django"]')]), []);
+  }
+  assert.equal(collectEcosystemDependencies([file('service/pyproject.toml', '[project]\ndependencies = ["django"]')])[0].name, 'django');
+});
+test('unrelated tool dependency arrays do not claim Python packages', () => {
+  const deps = collectEcosystemDependencies([file('pyproject.toml', '[tool.custom]\ndependencies = [\n  "django",\n]\n[project]\ndependencies = ["flask>=3"]')]);
+  assert.deepEqual(deps.map(x => x.name), ['flask']);
+});
+test('Cargo dependency tables resolve package aliases including workspace tables', () => {
+  const deps = collectEcosystemDependencies([file('Cargo.toml', '[dependencies.runtime]\nversion = "1"\npackage = "tokio"\n[workspace.dependencies.serialization]\npackage = "serde"\nversion = "1"')]);
+  assert.deepEqual(deps.map(x => x.name), ['tokio', 'serde']);
+});
+async function zipFixture(entries) {
+  const JSZip = nativeRequire('jszip');
+  const zip = new JSZip();
+  for (const [path, content] of entries) content === null ? zip.folder(path) : zip.file(path, content);
+  const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
+  return Object.assign(bytes, { name: 'fixture.zip', size: bytes.byteLength });
+}
+await asyncTest('ZIP reads small lockfiles and measures Unicode content in bytes', async () => {
+  const entries = [['repo/package-lock.json', '{"lockfileVersion":3}'], ['repo/yarn.lock', '# yarn lock'], ['repo/pnpm-lock.yaml', 'lockfileVersion: 9'], ['repo/src/message.py', 'message = "සිංහල"']];
+  const result = await readZip(await zipFixture(entries));
+  assert.equal(result.scanStats.truncated, false);
+  assert.equal(result.scanStats.contentBytesRead, entries.reduce((sum, [, value]) => sum + Buffer.byteLength(value), 0));
+  for (const [path, content] of entries) assert.equal(result.files.find(x => x.path === path.slice(5))?.content, content);
+});
+await asyncTest('ZIP accepts Linux filename characters without executing paths', async () => {
+  const result = await readZip(await zipFixture([['repo/src/a:b?.py', 'x = 1']]));
+  assert.ok(result.files.some(x => x.path === 'src/a:b?.py'));
+});
+await asyncTest('ZIP rejects traversal and absolute names before analysis', async () => {
+  for (const path of ['../escape.py', '/etc/example.py', 'C:/example.py']) {
+    await assert.rejects(() => zipFixture([[path, 'x = 1']]).then(readZip), /unsafe/);
+  }
+});
+await asyncTest('ZIP distinguishes empty directories from a completely empty archive', async () => {
+  await assert.rejects(() => zipFixture([['empty/', null]]).then(readZip), /only empty directories/);
+  await assert.rejects(() => zipFixture([]).then(readZip), /archive is empty/);
+});
+await asyncTest('ZIP root detection retains source folders when root binaries are filtered', async () => {
+  const result = await readZip(await zipFixture([['logo.png', 'binary'], ['src/index.ts', 'export const value = 1']]));
+  assert.ok(result.files.some(x => x.path === 'src/index.ts'));
+  const wrapped = await readZip(await zipFixture([['repo/logo.png', 'binary'], ['repo/src/index.ts', 'export const value = 1'], ['__MACOSX/._repo', 'metadata']]));
+  assert.ok(wrapped.files.some(x => x.path === 'src/index.ts'));
+});
+await asyncTest('ZIP labels oversized lockfile content as incomplete', async () => {
+  const result = await readZip(await zipFixture([['repo/package-lock.json', ' '.repeat(2 * 1024 * 1024 + 1)]]));
+  assert.equal(result.scanStats.truncated, true);
+  assert.equal(result.files.find(x => !x.isDirectory)?.content, undefined);
 });
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));
