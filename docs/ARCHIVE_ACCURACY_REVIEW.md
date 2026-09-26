@@ -21,3 +21,9 @@ Regression fixtures cover positive and negative dependency evidence, archive pat
 ## Limits
 
 Readers remain bounded static analyzers rather than package-manager resolvers. Unknown extensions may retain metadata without source analysis. Large files and projects remain subject to disclosed budgets. Passing synthetic fixtures is not a measurement of real-world precision or recall. No new vulnerability guarantee or rule-count claim is introduced by these corrections.
+
+## Active-download timeout correction
+
+A reported Linux archive download displayed the generic ten-minute relay timeout. The streaming reader used a fixed total-body deadline, which could cancel healthy slow transfers. It now resets its inactivity timer only when a nonempty chunk arrives. Active transfers can exceed ten minutes; no-data stalls remain bounded, and user cancellation and byte limits still apply. Header-response timeouts and download stalls now have distinct messages. The screenshot does not establish whether that particular request stalled before headers or during the body. A full Linux download has not been reproduced here.
+
+Regression coverage includes a transfer lasting longer than its configured inactivity window, a stall after initial bytes, cancellation, incomplete known-size responses and byte ceilings.

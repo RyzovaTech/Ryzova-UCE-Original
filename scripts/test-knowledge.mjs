@@ -1262,7 +1262,20 @@ await asyncTest('repository stream cancellation and timeout cancel pending reads
   const response=new Response(new ReadableStream({cancel(){cancelled=true;}}));
   const pending=readArchiveDownload(response,{signal:controller.signal,maxBytes:8,timeoutMs:timeout?5:1000,onProgress:()=>{}});
   if(!timeout)controller.abort();
-  await assert.rejects(()=>pending,{name:'AbortError'});assert.equal(cancelled,true);
+  await assert.rejects(()=>pending,{name:timeout?'TimeoutError':'AbortError'});assert.equal(cancelled,true);
  }
+});
+await asyncTest('active repository downloads outlive the idle timeout while stalled ones stop', async () => {
+ const { readArchiveDownload } = load('src/lib/analyzer/download.ts');
+ let interval; let sent=0;
+ const response=new Response(new ReadableStream({start(c){
+  interval=setInterval(()=>{c.enqueue(new Uint8Array([1]));if(++sent===8){clearInterval(interval);c.close();}},20);
+ },cancel(){clearInterval(interval);}}));
+ const blob=await readArchiveDownload(response,{signal:new AbortController().signal,maxBytes:20,timeoutMs:100,onProgress:()=>{}});
+ assert.equal(blob.size,8);
+ let cancelled=false;
+ const stalled=new Response(new ReadableStream({start(c){c.enqueue(new Uint8Array([1]));},cancel(){cancelled=true;}}));
+ await assert.rejects(()=>readArchiveDownload(stalled,{signal:new AbortController().signal,maxBytes:20,timeoutMs:15,onProgress:()=>{}}),{name:'TimeoutError'});
+ assert.equal(cancelled,true);
 });
 console.log(JSON.stringify({ checks, phase5FixtureAssertions, phase5FixtureRules: V3_PHASE5_RULE_COUNT, v3StableFixtureTarget: 30_000, technologies: TECHNOLOGY_REGISTRY.length, additionalLanguages: new Set(Object.values(ADDITIONAL_LANGUAGE_EXTENSIONS)).size }));
