@@ -10,7 +10,7 @@ export function describeReportReadiness(report: AnalysisResult): { title: string
     return {
       title: 'Partial scan — review coverage',
       scope: 'checked scope',
-      coverage: `${selected.toLocaleString()} of ${discovered.toLocaleString()} discovered files entered the analysis set${coverage ? ` (${coverage.fileCoveragePercent}%)` : ''}. Some selected files may have metadata only${report.stack.v3RulePlatform?.metrics.some((metric) => metric.truncated) ? ' and some rules reached their evaluation budgets' : ''}. Findings and score do not cover unchecked content.`,
+      coverage: `${selected.toLocaleString()} of ${discovered.toLocaleString()} discovered files entered the analysis set${coverage ? ` (${coverage.fileCoveragePercent}%)` : ''}.${coverage?.filesWithContent !== undefined ? ` Text content checked for ${coverage.filesWithContent.toLocaleString()} selected files.` : ' Some selected files may have metadata only.'}${report.stack.v3RulePlatform?.metrics.some((metric) => metric.truncated) ? ' Some rules reached their evaluation budgets.' : ''} Findings and score do not cover unchecked content.`,
       partial: true,
     };
   }

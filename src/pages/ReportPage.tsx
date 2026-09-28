@@ -217,7 +217,7 @@ export function ReportPage() {
             </div>
             <Separator className="my-4" />
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-              <Stat label="Files scanned" value={report.summary.filesScanned} />
+              <Stat label="Files selected" value={report.summary.filesScanned} />
               <Stat label="Folders scanned" value={report.summary.foldersScanned} />
               <Stat label="Config files" value={report.summary.detectedConfigFiles.length} />
               <Stat label="Issues found" value={report.issues.length} />
@@ -240,7 +240,8 @@ export function ReportPage() {
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <Stat label="Project Size" value={formatFileSize(report.summary.scanStats.projectSize)} />
               <Stat label="Files Found" value={report.summary.scanStats.filesFound.toLocaleString()} />
-              <Stat label="Files Analyzed" value={report.summary.scanStats.filesAnalyzed.toLocaleString()} />
+              <Stat label="Files Selected" value={report.summary.scanStats.filesAnalyzed.toLocaleString()} />
+              {report.summary.scanStats.filesWithContent !== undefined && <Stat label="Text Content Checked" value={report.summary.scanStats.filesWithContent.toLocaleString()} />}
               <Stat label="Files Ignored" value={report.summary.scanStats.filesIgnored.toLocaleString()} />
             </div>
             {(report.summary.scanStats.scanTimeMs !== undefined ||

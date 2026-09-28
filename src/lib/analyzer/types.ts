@@ -55,8 +55,8 @@ export interface TechnologyStack {
 }
 export type MonorepoTool = 'Cargo Workspaces' | 'Nx' | 'Turborepo' | 'Lerna' | 'Rush' | 'pnpm Workspaces' | 'Yarn Workspaces' | 'None';
 export type CloudProvider = 'Vercel' | 'Netlify' | 'Railway' | 'Fly.io' | 'Render' | 'Cloudflare' | 'None';
-export interface ScanStats { projectSize: number; filesFound: number; filesAnalyzed: number; filesIgnored: number; ignoredCategories: string[]; zipSize?: number; scanTimeMs?: number; memoryUsedMB?: number; rulesExecuted?: number; sampled?: boolean; truncated?: boolean; truncationReason?: string; contentBytesRead?: number; contentByteLimit?: number; }
-export interface AnalysisCoverage { status: 'full' | 'partial'; filesAnalyzed: number; filesFound: number; fileCoveragePercent: number; reason?: string; }
+export interface ScanStats { projectSize: number; filesFound: number; filesAnalyzed: number; filesWithContent?: number; filesIgnored: number; ignoredCategories: string[]; zipSize?: number; scanTimeMs?: number; memoryUsedMB?: number; rulesExecuted?: number; sampled?: boolean; truncated?: boolean; truncationReason?: string; contentBytesRead?: number; contentByteLimit?: number; }
+export interface AnalysisCoverage { status: 'full' | 'partial'; filesAnalyzed: number; filesFound: number; fileCoveragePercent: number; filesWithContent?: number; reason?: string; }
 export interface ProjectSummary { name: string; framework: Framework; language: Language; runtime: Runtime; packageManager: PackageManager; detectedConfigFiles: string[]; filesScanned: number; foldersScanned: number; scanStats: ScanStats; analysisCoverage?: AnalysisCoverage; }
 export interface Issue { id: string; title: string; category: CategoryId; severity: Severity; description: string; reason: string; recommendation: string; affectedFile: string; detected?: string; expected?: string; impact?: string; suggestedAction?: string; }
 export interface CategoryResult { id: CategoryId; label: string; status: CategoryStatus; score: number; issues: Issue[]; summary: string; }
