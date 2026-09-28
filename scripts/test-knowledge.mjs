@@ -1206,6 +1206,58 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     else globalThis.self = previousSelf;
   }
 });
+await asyncTest('seekable ZIP reads stored and deflated entries in bounded slices, preserving UTF-8 boundaries', async () => {
+  const { openStreamZip, ZIP_CHUNK_BYTES } = load('src/lib/analyzer/zip-stream.ts');
+  const JSZip = nativeRequire('jszip');
+  const zip = new JSZip();
+  let seed = 123456789;
+  const pseudoRandom = (count) => Array.from({ length: count }, () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return String.fromCharCode(33 + seed % 90); }).join('');
+  const content = pseudoRandom(ZIP_CHUNK_BYTES - 1) + 'සිංහල' + pseudoRandom(ZIP_CHUNK_BYTES + 10);
+  zip.file('project/src/main.ts', content);
+  const raw = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
+  const file = new File([raw], 'project.zip');
+  const observed = [];
+  const seekable = { size: file.size, slice(start, end) {
+    observed.push(end - start);
+    return file.slice(start, end);
+  } };
+  const entries = await openStreamZip(seekable);
+  assert.equal(entries.find(entry => entry.name.endsWith('main.ts'))._data.uncompressedSize, Buffer.byteLength(content));
+  assert.equal(await entries.find(entry => entry.name.endsWith('main.ts')).async('string'), content);
+  assert.ok(observed.every(size => size <= 65535));
+  const result = await readZip(file);
+  assert.equal(result.files.find(entry => entry.path === 'src/main.ts').content, content);
+  const corrupted = raw.slice();
+  const signature = Buffer.from(corrupted).lastIndexOf(Buffer.from([0x50, 0x4b, 1, 2]));
+  corrupted[signature + 16] ^= 1;
+  await assert.rejects(() => readZip(new File([corrupted], 'corrupt.zip')), /Cannot verify ZIP entry/);
+});
+await asyncTest('seekable ZIP reads ZIP64 end records and rejects missing ZIP64 metadata', async () => {
+  const { openStreamZip } = load('src/lib/analyzer/zip-stream.ts');
+  const JSZip = nativeRequire('jszip');
+  const zip = new JSZip(); zip.file('src/app.ts', 'const answer = 42');
+  const standard = Buffer.from(await zip.generateAsync({ type: 'uint8array', compression: 'STORE' }));
+  const at = standard.lastIndexOf(Buffer.from([0x50, 0x4b, 5, 6]));
+  const original = standard.subarray(at);
+  const zip64 = Buffer.alloc(56); zip64.writeUInt32LE(0x06064b50, 0); zip64.writeBigUInt64LE(44n, 4);
+  zip64.writeBigUInt64LE(BigInt(original.readUInt16LE(10)), 24); zip64.writeBigUInt64LE(BigInt(original.readUInt16LE(10)), 32);
+  zip64.writeBigUInt64LE(BigInt(original.readUInt32LE(12)), 40); zip64.writeBigUInt64LE(BigInt(original.readUInt32LE(16)), 48);
+  const locator = Buffer.alloc(20); locator.writeUInt32LE(0x07064b50, 0);
+  locator.writeBigUInt64LE(BigInt(at), 8); locator.writeUInt32LE(1, 16);
+  const end = Buffer.from(original); end.writeUInt16LE(0xffff, 10); end.writeUInt32LE(0xffffffff, 12); end.writeUInt32LE(0xffffffff, 16);
+  const archive = Buffer.concat([standard.subarray(0, at), zip64, locator, end]);
+  const entries = await openStreamZip(new Blob([archive]));
+  assert.equal(await entries.find(entry => !entry.dir).async('string'), 'const answer = 42');
+  await assert.rejects(() => openStreamZip(new Blob([Buffer.concat([standard.subarray(0, at), end])])), /ZIP64 locator missing/);
+});
+await asyncTest('seekable ZIP rejects unsafe names even when filtered as binary', async () => {
+  const { openStreamZip } = load('src/lib/analyzer/zip-stream.ts');
+  const JSZip = nativeRequire('jszip');
+  const zip = new JSZip();
+  zip.file('../outside.png', 'x');
+  const raw = await zip.generateAsync({ type: 'uint8array' });
+  await assert.rejects(() => openStreamZip(new Blob([raw])), /unsafe path/);
+});
 await asyncTest('ZIP reads small lockfiles and measures Unicode content in bytes', async () => {
   const entries = [['repo/package-lock.json', '{"lockfileVersion":3}'], ['repo/yarn.lock', '# yarn lock'], ['repo/pnpm-lock.yaml', 'lockfileVersion: 9'], ['repo/src/message.py', 'message = "සිංහල"']];
   const result = await readZip(await zipFixture(entries));
@@ -1352,6 +1404,30 @@ await asyncTest('repository stream reports measured bytes with known and unknown
   assert.equal(updates.at(-1).totalBytes,headers['content-length']==='4'?4:null);
   assert.ok(Number.isFinite(updates.at(-1).bytesPerSecond));
  }
+});
+await asyncTest('selected download writes in 32 KiB pieces and aborts without committing on an incomplete stream', async () => {
+  const { readArchiveDownload } = load('src/lib/analyzer/download.ts');
+  let pieces = []; let committed = false; let aborted = false;
+  const destination = {
+    async createWritable() { pieces = []; return {
+      async write(chunk) { assert.ok(chunk.byteLength <= 32 * 1024); pieces.push(new Uint8Array(chunk)); },
+      async close() { committed = true; },
+      async abort() { aborted = true; },
+    }; },
+    async getFile() { assert.equal(committed, true); return new File(pieces, 'saved.zip'); },
+  };
+  const bytes = new Uint8Array(70000);
+  const file = await readArchiveDownload(new Response(bytes, { headers: { 'content-length': String(bytes.length) } }), {
+    signal: new AbortController().signal, maxBytes: 100000, timeoutMs: 1000, destination, onProgress: () => {},
+  });
+  assert.equal(file.size, bytes.length);
+  assert.equal(pieces.length, 3);
+  committed = false;
+  await assert.rejects(() => readArchiveDownload(new Response(bytes, { headers: { 'content-length': '70001' } }), {
+    signal: new AbortController().signal, maxBytes: 100000, timeoutMs: 1000, destination, onProgress: () => {},
+  }), /incomplete/);
+  assert.equal(committed, false);
+  assert.equal(aborted, true);
 });
 await asyncTest('repository downloads spill to private storage and clean up after incomplete streams', async () => {
   const { readArchiveDownload } = load('src/lib/analyzer/download.ts');

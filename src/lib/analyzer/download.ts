@@ -45,6 +45,8 @@ export async function readArchiveDownload(response: Response, options: {
   onTemporaryArchive?: (cleanup: () => Promise<void>) => void;
   /** Internal override for small integration fixtures. */
   diskThresholdBytes?: number;
+  /** An explicitly selected device file; writes are committed only on successful download. */
+  destination?: FileSystemFileHandle;
 }): Promise<Blob> {
   const rawLength = Number(response.headers.get('content-length'));
   const encoding = response.headers.get('content-encoding');
@@ -54,6 +56,7 @@ export async function readArchiveDownload(response: Response, options: {
   const reader = response.body.getReader();
   const chunks: BlobPart[] = [];
   let temporary: TemporaryArchive | null = null;
+  let selectedWriter: FileSystemWritableFileStream | null = null;
   let diskAttempted = false;
   const started = performance.now();
   let receivedBytes = 0;
@@ -76,6 +79,8 @@ export async function readArchiveDownload(response: Response, options: {
   const ticker = setInterval(() => emit(), 500);
   try {
     if (options.signal.aborted) abort();
+    if (options.destination) selectedWriter = await options.destination.createWritable();
+    if (abortError) throw abortError;
     emit();
     while (true) {
       if (abortError) throw abortError;
@@ -86,7 +91,7 @@ export async function readArchiveDownload(response: Response, options: {
       receivedBytes += value.byteLength;
       if (receivedBytes > options.maxBytes) throw new Error('Repository archive exceeds the browser download limit. Use the UCE CLI.');
       if (totalBytes !== null && receivedBytes > totalBytes) totalBytes = null;
-      if (!diskAttempted && receivedBytes > (options.diskThresholdBytes ?? ARCHIVE_MEMORY_THRESHOLD_BYTES)) {
+      if (!selectedWriter && !diskAttempted && receivedBytes > (options.diskThresholdBytes ?? ARCHIVE_MEMORY_THRESHOLD_BYTES)) {
         diskAttempted = true;
         temporary = await openTemporaryArchive();
         if (temporary) {
@@ -94,11 +99,18 @@ export async function readArchiveDownload(response: Response, options: {
           chunks.length = 0;
         }
       }
-      if (temporary) await temporary.writer.write(value);
+      if (selectedWriter) {
+        for (let at = 0; at < value.byteLength; at += 32 * 1024) await selectedWriter.write(value.subarray(at, at + 32 * 1024));
+      } else if (temporary) await temporary.writer.write(value);
       else chunks.push(value);
     }
     if (totalBytes !== null && receivedBytes !== totalBytes) throw new Error('Repository download was incomplete. Please retry.');
     emit(true);
+    if (selectedWriter) {
+      await selectedWriter.close();
+      selectedWriter = null;
+      return options.destination!.getFile();
+    }
     if (temporary) {
       await temporary.writer.close();
       const archive = await temporary.handle.getFile();
@@ -109,6 +121,7 @@ export async function readArchiveDownload(response: Response, options: {
     return new Blob(chunks, { type: 'application/zip' });
   } catch (error) {
     await reader.cancel().catch(() => undefined);
+    if (selectedWriter) await selectedWriter.abort().catch(() => undefined);
     if (temporary) {
       await temporary.writer.abort().catch(() => undefined);
       await temporary.cleanup().catch(() => undefined);

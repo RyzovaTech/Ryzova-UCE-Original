@@ -225,7 +225,7 @@ export function useAnalyzer() {
   }, [runAnalysis, startRequest]);
 
   const analyzeGithub = useCallback(
-    async (url: string): Promise<AnalysisResult> => {
+    async (url: string, destination?: FileSystemFileHandle): Promise<AnalysisResult> => {
       let requestId = -1;
       let remoteStep: 'metadata' | 'archive' | 'download' = 'metadata';
       try {
@@ -271,6 +271,7 @@ export function useAnalyzer() {
         const blob = await readArchiveDownload(res, {
           signal: remoteAbortRef.current.signal,
           maxBytes: MAX_COMPRESSED_ARCHIVE_BYTES,
+          destination,
           timeoutMs: GITHUB_ARCHIVE_TIMEOUT_MS,
           onProgress: (download) => {
             if (requestId === requestIdRef.current) safeSetState((s) => ({ ...s, download }));
