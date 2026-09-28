@@ -623,6 +623,41 @@ test('security transport and JWT rules require executable context', () => {
   const jwt = detectSecurityIntelligence([file('src/auth.py', 'import jwt\nclaims = jwt.decode(token, key)')]);
   assert.ok(jwt.findings.some((item) => item.ruleId === 'SEC024'));
 });
+test('native documentation URLs and ioctl flags are not transport risks', () => {
+  const results = detectSecurityIntelligence([
+    file('mm/userfaultfd.c', 'basic_ioctls = false;\n'),
+    file('drivers/leds/mail.c', 'pr_err("See http://sourceforge.net/project/help");\n'),
+    file('tools/virtio/vringh_test.c', 'fd = open("/tmp/vringh_test-file", O_CREAT, 0600);\n'),
+  ]);
+  assert.ok(!results.findings.some(item => ['SEC005', 'SEC038', 'SEC039'].includes(item.ruleId)));
+  assert.ok(detectSecurityIntelligence([file('src/db.ts', 'const tls = false;')]).findings.some(item => item.ruleId === 'SEC038'));
+  assert.ok(detectSecurityIntelligence([file('src/download.c', 'curl_easy_setopt(handle, CURLOPT_URL, "http://example.com/api");')]).findings.some(item => item.ruleId === 'SEC005'));
+  assert.equal(classifyProjectFileScope('tools/virtio/vringh_test.c'), 'test');
+});
+test('API route syntax is interpreted only in its language', () => {
+  const result = detectCodeIntelligence([
+    file('drivers/gpio/driver.c', 'get "/enable";'),
+    file('config/routes.rb', 'get "/users", to: "users#index"'),
+    file('src/server.ts', 'app.get("/health", check);'),
+  ]);
+  assert.deepEqual(result.apiEndpoints.map(item => item.route).sort(), ['/health', '/users']);
+});
+test('kernel report does not require application templates or invent absent tests', () => {
+  const files = [
+    file('Makefile', 'VERSION = 6\n'), file('Kbuild', 'obj-y += kernel/\n'), file('Kconfig', 'mainmenu "Kernel"\n'),
+    file('arch/x86/kernel/setup.c', 'int setup_arch(void) { return 0; }'), file('drivers/net/core.c', 'int driver_init(void) { return 0; }'),
+    file('kernel/sched/core.c', 'int schedule(void) { return 0; }'), file('include/linux/kernel.h', '#define KERNEL 1'), file('mm/page_alloc.c', 'int alloc_page(void) { return 0; }'),
+    file('tools/perf/util/setup.py', 'import os\nos.getenv("PYTHON_EXTBUILD_LIB")'),
+    file('tools/virtio/vringh_test.c', 'fd = open("/tmp/vringh_test-file", O_CREAT, 0600);'),
+    file('README', 'Linux kernel'), file('COPYING', 'GPL-2.0-only'), file('tools/testing/feature_test.c', 'int main(void) { return 0; }'),
+  ];
+  const report = analyzeProject({ files, name: 'kernel', scanStats: { projectSize: 100, filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [] } });
+  assert.equal(report.stack.architecture.primary, 'Operating System Kernel');
+  for (const id of ['env-example-missing', 'ci-config-missing', 'changelog-missing', 'contributing-missing', 'security-md-missing']) assert.ok(!report.issues.some(issue => issue.id === id), id);
+  assert.equal(report.stack.extendedIntelligence.modules.environment.status, 'unknown');
+  assert.ok(!report.stack.extendedIntelligence.modules.platform.findings.some(item => item.id === 'OS001'));
+  assert.ok(!report.stack.intelligenceInsights.some(item => item.id === 'testing-not-detected'));
+});
 function manifest(ecosystem, name) {
   if (ecosystem === 'python') return file('requirements.txt', name + '>=1.0');
   if (ecosystem === 'cargo') return file('Cargo.toml', '[dependencies]\n' + name + ' = "1.0"');
@@ -963,6 +998,8 @@ test('Phase 5 execution budgets prioritize source and label truncation accuratel
   const prepared = prepareAnalysisInput({ files, fileName: 'budget', source: 'upload', scanStats: { projectSize: 100, filesFound: 3, filesAnalyzed: 3, filesIgnored: 0, ignoredCategories: [] } }, { maxFiles: 2, maxContentBytes: 100, maxSingleFileBytes: 100 });
   assert.equal(prepared.input.scanStats.sampled, true); assert.equal(prepared.input.scanStats.truncated, true);
   assert.deepEqual(prepared.input.files.map(item => item.path), ['package.json', 'src/app.ts']);
+  const alreadySampled = prepareAnalysisInput({ files: [file('src/app.ts', 'export const app=1')], fileName: 'sampled', source: 'upload', scanStats: { projectSize: 100, filesFound: 100, filesAnalyzed: 1, filesIgnored: 99, ignoredCategories: ['file budget'], sampled: true, truncated: true } });
+  assert.equal(alreadySampled.input.scanStats.sampled, true);
   assert.equal(fingerprintAnalysisInput(prepared.input), fingerprintAnalysisInput(prepared.input));
 });
 test('Phase 5 detector SDK validates and executes bounded declarative rules', () => {

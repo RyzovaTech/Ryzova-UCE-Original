@@ -37,6 +37,7 @@ export const securityRules: CompatibilityRule[] = [
     category: 'security',
     run: (ctx) => {
       const issues: Issue[] = [];
+      if (ctx.stack.architecture?.primary === 'Operating System Kernel') return issues;
       const hasSecurityMd = ctx.detectedFiles.some(
         (f) => f.path === 'SECURITY.md' || f.path.endsWith('/SECURITY.md')
       );

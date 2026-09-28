@@ -16,7 +16,8 @@ export function buildCorrelatedInsights(stack: TechnologyStack): IntelligenceIns
   const large = stack.codeIntelligence?.quality.largeFunctions ?? [];
   if (large.length) add({ id: 'large-functions', domain: 'quality', title: `${large.length} large function${large.length === 1 ? '' : 's'} detected`, severity: 'info', confidence: 80, evidence: large.slice(0, 5).map((item) => `${item.file}:${item.line}${item.lines ? ` (${item.lines} lines)` : ''}`), recommendation: 'Review function responsibilities and extract cohesive units where useful.' });
   const testing = stack.capabilities?.find((capability) => capability.id === 'testing');
-  if (!testing && (stack.codeIntelligence?.filesAnalyzed ?? 0) >= 10) add({ id: 'testing-not-detected', domain: 'testing', title: 'No testing capability was detected', severity: 'info', confidence: 65, evidence: [`${stack.codeIntelligence?.filesAnalyzed ?? 0} production source files analyzed`], recommendation: 'Confirm the test setup or add automated coverage for critical behavior.' });
+  const testFiles = Number(stack.extendedIntelligence?.modules.testing.metrics.testFiles ?? 0);
+  if (!testing && !testFiles && (stack.codeIntelligence?.filesAnalyzed ?? 0) >= 10) add({ id: 'testing-not-detected', domain: 'testing', title: 'No testing capability was detected', severity: 'info', confidence: 65, evidence: [`${stack.codeIntelligence?.filesAnalyzed ?? 0} production source files analyzed`], recommendation: 'Confirm the test setup or add automated coverage for critical behavior.' });
   const order = { critical: 0, warning: 1, info: 2 } as const;
   return insights.sort((a, b) => order[a.severity] - order[b.severity] || b.confidence - a.confidence);
 }

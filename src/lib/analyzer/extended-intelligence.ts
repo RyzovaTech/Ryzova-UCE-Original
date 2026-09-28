@@ -48,11 +48,12 @@ function runtimeModule(files: ProjectFile[], stack: TechnologyStack): Intelligen
   return result('runtime', 'Runtime Intelligence', `${evidence.length} runtime/version signals analyzed.`, evidence, findings, { runtimes: (stack.runtimes ?? [stack.runtime]).length, versionDeclarations: Number(Boolean(engine || nodeVersion || pythonVersion)) });
 }
 
-function platformModule(files: ProjectFile[]): IntelligenceModuleResult {
+function platformModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const allPaths = paths(files); const evidence: string[] = []; const findings: IntelligenceModuleFinding[] = [];
-  const markers: Array<[string, RegExp]> = [['Windows', /(?:^|\/)(?:[^/]+\.sln|[^/]+\.bat|[^/]+\.cmd|[^/]+\.ps1)$/i], ['Linux', /(?:^|\/)(?:Dockerfile|[^/]+\.sh)$/i], ['macOS/iOS', /(?:^|\/)(?:Podfile|[^/]+\.xcodeproj|Package\.swift)$/i], ['Android', /(?:^|\/)android\//i]];
+  const markers: Array<[string, RegExp]> = [['Windows', /(?:^|\/)(?:[^/]+\.sln|[^/]+\.bat|[^/]+\.cmd|[^/]+\.ps1)$/i], ['Linux', /(?:^|\/)(?:Dockerfile|[^/]+\.sh)$/i], ['macOS/iOS', /(?:^|\/)(?:Podfile|[^/]+\.xcodeproj|Package\.swift)$/i], ['Android', /^(?:android\/app\/|android\/build\.gradle|app\/src\/main\/AndroidManifest\.xml$)/i]];
   for (const [name, pattern] of markers) if (allPaths.some((path) => pattern.test(path))) evidence.push(`${name} project marker detected.`);
   for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) {
+    if (stack.architecture?.primary === 'Operating System Kernel') break;
     const original = file.content ?? '';
     const source = /\.py$/i.test(file.path) ? maskPythonProse(original) : original;
     const pattern = /\.py$/i.test(file.path)
@@ -108,7 +109,8 @@ function databaseModule(files: ProjectFile[], stack: TechnologyStack): Intellige
   return result('database', 'Database Intelligence', `${technologies.length} database/ORM technologies, ${models} schema models, ${migrations} migration files.`, technologies.map((name) => `Detected: ${name}`), findings, { technologies: technologies.length, schemaModels: models, migrationFiles: migrations });
 }
 
-function environmentModule(files: ProjectFile[]): IntelligenceModuleResult {
+function environmentModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
+  if (stack.architecture?.primary === 'Operating System Kernel') return result('environment', 'Environment Intelligence', 'Application environment templates do not apply to the kernel build.', [], [], { requiredVariables: 0, documentedVariables: 0, undocumentedVariables: 0 });
   const examples = files.filter((file) => /(^|\/)\.env(?:\.[^/]*)?\.example$|(^|\/)\.env\.example$/i.test(file.path)); const declared = new Set(examples.flatMap((file) => (file.content ?? '').split(/\r?\n/).map((line) => /^([A-Z][A-Z0-9_]*)\s*=/.exec(line)?.[1]).filter(Boolean) as string[])); const used = new Map<string, string>();
   for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) for (const match of (file.content ?? '').matchAll(/(?:process\.env\.|import\.meta\.env\.|os\.getenv\(\s*["'])([A-Z][A-Z0-9_]*)/g)) used.set(match[1], file.path);
   const missing = [...used].filter(([name]) => !declared.has(name)); const findings = missing.map(([name, file]) => finding(`ENV-${name}`, `Undocumented environment variable ${name}`, 'warning', 88, `${name} is used in source but absent from an example environment file.`, 'Add the variable name with a safe placeholder and description to .env.example.', file));
@@ -155,7 +157,7 @@ function repositoryModule(files: ProjectFile[]): IntelligenceModuleResult {
 }
 
 export function detectExtendedIntelligence(files: ProjectFile[], stack: TechnologyStack): ExtendedIntelligence {
-  const modules = [projectModule(files, stack), runtimeModule(files, stack), platformModule(files), buildModule(files, stack), testingModule(files, stack), performanceModule(files), accessibilityModule(files), apiModule(files, stack), databaseModule(files, stack), environmentModule(files), licenseModule(files), documentationModule(files), maintainabilityModule(files, stack), repositoryModule(files)];
+  const modules = [projectModule(files, stack), runtimeModule(files, stack), platformModule(files, stack), buildModule(files, stack), testingModule(files, stack), performanceModule(files), accessibilityModule(files), apiModule(files, stack), databaseModule(files, stack), environmentModule(files, stack), licenseModule(files), documentationModule(files), maintainabilityModule(files, stack), repositoryModule(files)];
   const record = Object.fromEntries(modules.map((module) => [module.id, module])) as Record<ExtendedIntelligenceModuleId, IntelligenceModuleResult>; const scored = modules.filter((module) => module.status !== 'unknown');
   return { version: VERSION, modules: record, overallScore: scored.length ? Math.round(scored.reduce((sum, module) => sum + module.score, 0) / scored.length) : 0, filesAnalyzed: files.filter((file) => !file.isDirectory).length, generatedFindings: modules.reduce((sum, module) => sum + module.findings.length, 0) };
 }
