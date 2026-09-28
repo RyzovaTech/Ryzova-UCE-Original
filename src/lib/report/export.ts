@@ -19,7 +19,7 @@ export function exportSarif(result: AnalysisResult): string {
     runs: [{
       tool: { driver: { name: 'Ryzova UCE', informationUri: 'https://uce.ryzova.com/', version: result.analysisVersion, rules: [...rules.values()] } },
       automationDetails: { id: result.id },
-      properties: { project: result.summary.name, localOnly: result.trust?.localOnly ?? true, knowledgePacks: result.trust?.knowledgePacks ?? [] },
+      properties: { project: result.summary.name, localOnly: result.trust?.localOnly ?? true, knowledgePacks: result.trust?.knowledgePacks ?? [], analysisCoverage: result.summary.analysisCoverage ?? null, limitedRules: result.stack.v3RulePlatform?.metrics.filter((metric) => metric.truncated).length ?? 0 },
       results: findings.filter((finding) => finding.file !== 'Project-wide').map((finding) => ({
         ruleId: finding.ruleId ?? `${finding.module}.${slug(finding.title)}`,
         level: finding.severity === 'critical' ? 'error' : finding.severity === 'warning' ? 'warning' : 'note',
@@ -83,7 +83,8 @@ export function exportMarkdown(result: AnalysisResult): string {
   }
   lines.push('## Overall Compatibility Score');
   lines.push('');
-  lines.push(`**${result.score.overall} / 100**`);
+  lines.push(`**${result.score.overall} / 100${result.summary.analysisCoverage?.status === 'partial' ? ' (checked scope only — partial scan)' : ''}**`);
+  if (result.summary.analysisCoverage?.status === 'partial') lines.push('', `Selected ${result.summary.analysisCoverage.filesAnalyzed.toLocaleString()} of ${result.summary.analysisCoverage.filesFound.toLocaleString()} discovered files (${result.summary.analysisCoverage.fileCoveragePercent}%); some selected files may contain metadata only. The score cannot describe unchecked content.`);
   lines.push('');
   lines.push('| Category | Score |');
   lines.push('| --- | --- |');

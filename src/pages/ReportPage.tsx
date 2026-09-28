@@ -530,7 +530,7 @@ export function ReportPage() {
           <CardContent>
             <ul className="divide-y">
               {history.map((h) => {
-                const s = reportStatus(h.result.score.overall, h.result.issues.filter((issue) => issue.severity === 'critical').length, h.result.issues.filter((issue) => issue.severity === 'warning').length);
+                const s = reportStatus(h.result.score.overall, h.result.issues.filter((issue) => issue.severity === 'critical').length, h.result.issues.filter((issue) => issue.severity === 'warning').length, h.result.summary.analysisCoverage?.status === 'partial' || Boolean(h.result.summary.scanStats.truncated));
                 return (
                   <li key={h.id}>
                     <button

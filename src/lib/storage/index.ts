@@ -164,6 +164,8 @@ export function toShareableList(history: HistoryEntry[]): ShareableReport[] {
       filesFound: stats?.filesFound ?? 0,
       filesAnalyzed: stats?.filesAnalyzed ?? 0,
       filesIgnored: stats?.filesIgnored ?? 0,
+      scoreScope: h.result.summary.analysisCoverage?.status === 'partial' || stats?.truncated ? 'partial' : 'complete',
+      fileCoveragePercent: h.result.summary.analysisCoverage?.fileCoveragePercent,
     };
   });
 }

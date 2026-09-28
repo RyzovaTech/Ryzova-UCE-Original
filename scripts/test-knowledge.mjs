@@ -58,6 +58,7 @@ const { canonicalKnowledgePack, verifyKnowledgePack } = load('src/lib/knowledge/
 const { PHASE5_ACCURACY_FIXTURES } = load('testing/fixtures/phase5/corpus.ts');
 const REAL_REPOSITORY_MANIFESTS = JSON.parse(fs.readFileSync(path.join(root, 'testing/fixtures/v3-real-repositories.json'), 'utf8'));
 const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
+const { describeReportReadiness } = load('src/lib/report/readiness.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { detectTechnologyProfiles } = load('src/lib/analyzer/technology-profiles.ts');
@@ -212,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce8-/);
+  assert.match(key, /^uce9-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -295,6 +296,40 @@ test('V3 rules respect technology, module and production scope filters', () => {
   assert.equal(applicable.rulesExecuted, 1); assert.deepEqual(applicable.findings.map((item) => item.file), ['src/app.ts']);
   const irrelevant = executeV3RulePacks([V3_CORE_RULE_PACK], { files, technologies: ['python'], modules: ['security'] });
   assert.equal(irrelevant.rulesExecuted, 0); assert.equal(irrelevant.findings.length, 0);
+});
+test('V3 rule budgets count matching source files instead of unrelated repository files', () => {
+  const rule = structuredClone(V3_CORE_RULE_PACK.rules[0]);
+  rule.budget = { maxFiles: 1, maxMatches: 5, maxContentBytes: 100, maxMilliseconds: 1000 };
+  const files = Array.from({ length: 150 }, (_, index) => file(`drivers/driver${index}.c`, 'int main(void) { return 0; }'));
+  files.push(file('src/actual.ts', 'eval(input);'));
+  const result = executeV3RulePacks([{ ...V3_CORE_RULE_PACK, rules: [rule] }], { files, technologies: ['typescript'] });
+  assert.deepEqual(result.findings.map((item) => item.file), ['src/actual.ts']);
+  assert.equal(result.metrics[0].filesVisited, 1);
+  assert.equal(result.metrics[0].truncated, false);
+});
+test('V3 API inventories are informational while unsafe boundaries still request review', () => {
+  const all = V3_PHASE2_RULE_PACKS.flatMap((pack) => pack.rules);
+  const byId = (id) => all.find((rule) => rule.id === id);
+  assert.equal(byId('security.native-sensitive-api.memcpy').severity, 'info');
+  assert.equal(byId('security.native-sensitive-api.free').severity, 'info');
+  assert.equal(byId('security.native-sensitive-api.gets').severity, 'warning');
+  assert.equal(byId('api.api-protocol-boundary.send').severity, 'info');
+  const sql = byId('security.configuration.sql-string-concatenation');
+  const pack = { ...V3_PHASE2_RULE_PACKS.find((item) => item.rules.some((rule) => rule.id === sql.id)), rules: [sql] };
+  const findings = executeV3RulePacks([pack], { files: [
+    file('scripts/gdb/helper.py', 'sys.path.insert(0, "scripts/gdb")\n# INSERT something + value'),
+    file('src/sql.py', 'query = "SELECT id FROM users WHERE id=" + user_id'),
+    file('tests/sql.py', 'query = "SELECT id FROM users WHERE id=" + user_id'),
+  ], technologies: ['python'] });
+  assert.deepEqual(findings.findings.map((item) => item.file), ['src/sql.py']);
+  assert.equal(classifyProjectFileScope('lib/test_fortify/write_overflow-strcpy.c'), 'test');
+});
+test('partial coverage limits the readiness claim even when checked findings score highly', () => {
+  const base = analyzeProject({ fileName: 'small', files: [file('src/app.ts', 'export const app = 1')], source: 'upload', scanStats: { projectSize: 100, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
+  const partial = { ...base, score: { ...base.score, overall: 95 }, summary: { ...base.summary, scanStats: { ...base.summary.scanStats, filesFound: 100, filesAnalyzed: 25, truncated: true }, analysisCoverage: { status: 'partial', filesFound: 100, filesAnalyzed: 25, fileCoveragePercent: 25 } } };
+  assert.equal(describeReportReadiness(partial).title, 'Partial scan — review coverage');
+  assert.ok(describeReportReadiness(partial).coverage.includes('25 of 100'));
+  assert.equal(describeReportReadiness(base).partial, false);
 });
 test('V3 graph detects missing dependencies, cycles, conflicts and duplicate ids', () => {
   const makeRule = (id) => ({ ...structuredClone(V3_CORE_RULE_PACK.rules[0]), id });

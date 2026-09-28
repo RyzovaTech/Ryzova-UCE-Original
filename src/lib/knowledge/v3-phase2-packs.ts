@@ -6,7 +6,7 @@ import type {
 /** Phase 2 contributes 2,995 rules; together with the five bootstrap rules the public inventory is exactly 3,000. */
 export const V3_PHASE2_RULE_TARGET = 2_995;
 export const V3_TOTAL_CORE_RULE_TARGET = 3_000;
-export const V3_PHASE2_KNOWLEDGE_VERSION = '3.1.0';
+export const V3_PHASE2_KNOWLEDGE_VERSION = '3.1.1';
 
 type DependencyEcosystem = V3DependencyDetector['ecosystems'][number];
 interface CompiledRule { group: string; rule: V3Rule }
@@ -88,7 +88,7 @@ const CONFIG_RULES: ReadonlyArray<{ id: string; group: string; module: V3RuleMod
   { id: 'github-actions-unpinned-use', group: 'cloud-devops', module: 'deployment', technologies: ['github-actions'], include: ['.github/workflows/*.yml', '.github/workflows/*.yaml', '**/.github/workflows/*.yml', '**/.github/workflows/*.yaml'], pattern: '^\\s*uses:\\s*[^@\\s]+@(?:main|master|latest|v\\d+)\\s*$', title: 'GitHub Action is not pinned to an immutable commit', recommendation: 'Pin third-party actions to a reviewed commit SHA and use dependency automation for updates.', reference: 'https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions' },
   { id: 'github-actions-write-all', group: 'cloud-devops', module: 'security', technologies: ['github-actions'], include: ['.github/workflows/*.yml', '.github/workflows/*.yaml', '**/.github/workflows/*.yml', '**/.github/workflows/*.yaml'], pattern: '^\\s*permissions:\\s*write-all\\s*$', title: 'GitHub Actions grants write-all permissions', recommendation: 'Grant the minimum required permissions at workflow or job level.', reference: 'https://docs.github.com/en/actions/security-guides/automatic-token-authentication' },
   { id: 'cloud-public-access', group: 'cloud-devops', module: 'security', technologies: ['aws', 'gcp', 'azure', 'terraform', 'kubernetes'], include: ['**/*.tf', '**/*.yml', '**/*.yaml', '**/*.json'], pattern: '(?:public_access|publicAccess|allUsers|0\\.0\\.0\\.0/0)\\s*[:=]\\s*(?:true|["\']?0\\.0\\.0\\.0/0)', title: 'Cloud configuration may allow public access', recommendation: 'Restrict ingress and public access to explicitly required resources and document exceptions.', reference: 'https://owasp.org/www-project-cloud-native-application-security-top-10/' },
-  { id: 'sql-string-concatenation', group: 'api-data', module: 'security', technologies: ['javascript', 'typescript', 'python', 'java', 'kotlin', 'go', 'php', 'c#'], include: ['**/*.js', '**/*.ts', '**/*.py', '**/*.java', '**/*.kt', '**/*.go', '**/*.php', '**/*.cs'], pattern: '(?:SELECT|INSERT|UPDATE|DELETE)[^\\n]{0,160}(?:\\+|\\$\\{|format\\()', title: 'SQL statement appears dynamically assembled', recommendation: 'Use parameterized queries or a query builder and validate dynamic identifiers separately.', reference: 'https://owasp.org/www-community/attacks/SQL_Injection' },
+  { id: 'sql-string-concatenation', group: 'api-data', module: 'security', technologies: ['javascript', 'typescript', 'python', 'java', 'kotlin', 'go', 'php', 'c#'], include: ['**/*.js', '**/*.ts', '**/*.py', '**/*.java', '**/*.kt', '**/*.go', '**/*.php', '**/*.cs'], pattern: '\\b(?:SELECT\\s+[^\\n]{1,80}\\s+FROM|INSERT\\s+INTO|UPDATE\\s+[A-Za-z_][\\w.]*\\s+SET|DELETE\\s+FROM)\\b[^\\n]{0,160}(?:\\+|\\$\\{|format\\()', title: 'SQL statement appears dynamically assembled', recommendation: 'Use parameterized queries or a query builder and validate dynamic identifiers separately.', reference: 'https://owasp.org/www-community/attacks/SQL_Injection' },
   { id: 'graphql-introspection-production', group: 'api-data', module: 'api', technologies: ['graphql'], include: ['**/*.js', '**/*.ts', '**/*.py', '**/*.java', '**/*.kt', '**/*.go', '**/*.rs', '**/*.php', '**/*.cs'], pattern: 'introspection\\s*:\\s*true', title: 'GraphQL introspection explicitly enabled', recommendation: 'Confirm production introspection exposure is intentional and protected by appropriate controls.', reference: 'https://graphql.org/learn/introspection/' },
   { id: 'websocket-wildcard-origin', group: 'api-data', module: 'security', technologies: ['websocket', 'ws', 'socket.io'], include: ['**/*.js', '**/*.ts', '**/*.py', '**/*.java', '**/*.kt', '**/*.go', '**/*.rs', '**/*.php', '**/*.cs'], pattern: '(?:origin|allowedOrigins?)\\s*[:=]\\s*["\']\\*["\']', title: 'WebSocket origin policy permits every origin', recommendation: 'Allow only trusted origins and authenticate each connection independently.', reference: 'https://owasp.org/www-community/attacks/Cross_Site_WebSocket_Hijacking' },
   { id: 'html-missing-lang', group: 'accessibility', module: 'accessibility', technologies: ['html', 'react', 'vue', 'angular', 'svelte'], include: ['**/*.html', '**/*.htm'], pattern: '<html(?![^>]*\\blang\\s*=)[^>]*>', title: 'HTML document has no language declaration', recommendation: 'Add an accurate lang attribute to the root html element.', reference: 'https://www.w3.org/WAI/WCAG22/Understanding/language-of-page.html' },
@@ -157,16 +157,20 @@ const PATH_GLOBS: Record<string, string[]> = {
   'build2-msbuild': ['**/*.sln'], 'build2-xcode': ['**/*.xcodeproj/project.pbxproj'], 'build2-pyinstaller': ['**/*.spec'], 'runtime2-net': ['**/*.csproj'],
 };
 
+const REVIEW_BOUNDARY_CALLS = new Set(['gets', 'mktemp', 'tmpnam', 'eval', 'exec', 'pickle.load', 'pickle.loads', 'marshal.load', 'marshal.loads', 'yaml.load', 'os.system', 'child_process.exec', 'child_process.execSync', 'Runtime.getRuntime().exec', 'BinaryFormatter.Deserialize', 'unreachable_unchecked', 'get_unchecked', 'from_utf8_unchecked', 'dangerouslySetInnerHTML', 'bypassSecurityTrustHtml', 'bypassSecurityTrustScript', 'bypassSecurityTrustUrl', 'bypassSecurityTrustResourceUrl', 'template.HTML', 'template.JS']);
+
 function sourceRules(): CompiledRule[] {
   const output: CompiledRule[] = [];
   for (const profile of SOURCE_PROFILES) for (const call of profile.calls) {
     const slug = safeId(call); const pattern = callPattern(call);
+    // Ordinary memory, file and network calls do not demonstrate a security flaw.
+    const needsReview = REVIEW_BOUNDARY_CALLS.has(call);
     output.push({
       group: profile.group,
       rule: {
         id: `${profile.module}.${profile.id}.${slug}`, version: V3_PHASE2_KNOWLEDGE_VERSION, module: profile.module,
-        title: `${call} usage requires review`, description: `Locates ${call} usage at a sensitive code or compatibility boundary.`,
-        technologies: profile.technologies, scope: ['production'], severity: 'warning', confidence: 'review-required',
+        title: needsReview ? `${call} usage requires review` : `${call} usage observed`, description: `Locates ${call} usage at a code or compatibility boundary. A call alone does not establish unsafe data flow.`,
+        technologies: profile.technologies, scope: ['production'], severity: needsReview ? 'warning' : 'info', confidence: needsReview ? 'review-required' : 'possible',
         detectors: [{ kind: 'regex', include: profile.include, pattern }], evidenceRequirements: { minimum: 1 },
         recommendation: profile.recommendation, references: [profile.reference], falsePositiveNotes: ['Static presence alone does not prove exploitability or unsafe runtime data flow.'],
         budget: { maxFiles: 25_000, maxMatches: 50, maxContentBytes: 24 * 1024 * 1024, maxMilliseconds: 120 }, tags: ['phase2', 'review-boundary'],

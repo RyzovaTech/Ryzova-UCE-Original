@@ -15,3 +15,11 @@ Verified issues and changes:
 - An insight claimed no testing capability although the same report counted 140 test files. Correlated insights now consult test-file evidence before making that claim.
 
 Limitations: no full Linux ZIP or repeat end-to-end browser scan was available for this audit. Static rules and source-line comparisons informed the regression tests; they do not establish full-project accuracy. The number of findings and the overall score will change after a fresh scan, and coverage is still limited by the configured browser budgets.
+
+## Phase 1 accuracy follow-up
+
+The V3 inventory in the supplied scan recorded 236 findings, including 231 from the security module. Of these, 187 were calls to common native APIs such as `memcpy`, `free`, `malloc`, `memmove`, `sprintf`, `sscanf`, `strcpy`, `calloc` and `realloc`. A call by itself does not establish unsafe bounds or data flow; generic API presence is now informational while explicitly unsafe APIs remain review signals. The SQL assembly rule requires recognizable SQL statement syntax rather than matching isolated action words in unrelated code. Native fortify test sources are classified as tests.
+
+The supplied report also labeled 82 V3 rule evaluations as truncated. Previously each rule counted unrelated file types against its file budget before checking its own file globs. Evaluations now count relevant candidates and retain a truncation label when a rule actually reaches a file, byte, time or match budget. These corrections may change both rule findings and elapsed time on a new scan; no post-change count or accuracy percentage is inferred from the old report.
+
+For incomplete scans the Overview now displays selected-file coverage and says that the numeric score covers the checked scope. Markdown, shareable summaries, report lists and SARIF include compatible scope metadata. Selected files can have metadata without readable content. The 25,000-file and 96 MiB browser budgets are unchanged; exhaustive processing belongs to the next phase.

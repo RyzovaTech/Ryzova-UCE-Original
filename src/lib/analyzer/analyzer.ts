@@ -113,6 +113,14 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
     stack.v3RulePlatform.findings = uniqueCatalogFindings(stack.v3RulePlatform.findings);
   }
   const summary = buildSummary(input.fileName, input.files, detectedFiles, stack, input.scanStats);
+  const limitedRules = stack.v3RulePlatform?.metrics.filter((metric) => metric.truncated).length ?? 0;
+  if (limitedRules && summary.analysisCoverage) {
+    const reason = `${limitedRules} applicable V3 rules reached their evaluation budgets; findings may be missing outside their checked inputs.`;
+    summary.analysisCoverage.status = 'partial';
+    summary.analysisCoverage.reason = [summary.analysisCoverage.reason, reason].filter(Boolean).join(' ');
+    summary.scanStats.truncated = true;
+    summary.scanStats.truncationReason = summary.analysisCoverage.reason;
+  }
   if (!classification.isSoftware) return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source, trust: buildTrustMetadata(input.source) };
   const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName }; const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime); const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined; const rulesExecuted = countApplicableRules(stack.language);
@@ -128,8 +136,8 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.browserCompatibility) { const findingCount = stack.browserCompatibility.findings.length; notes.push(stack.browserCompatibility.filesScanned === 0 ? "Browser compatibility: not applicable to analyzed files; no browser source files checked." : `Browser compatibility: ${findingCount} compatibility finding${findingCount === 1 ? '' : 's'}; score ${stack.browserCompatibility.score}%.`); }
   if (stack.intelligenceInsights?.length) notes.push(`Correlated intelligence: ${stack.intelligenceInsights.length} prioritized cross-engine insight${stack.intelligenceInsights.length === 1 ? '' : 's'}.`);
   if (stack.extendedIntelligence) notes.push(`Phase 3.5 intelligence: ${Object.keys(stack.extendedIntelligence.modules).length} modules; combined static score ${stack.extendedIntelligence.overallScore}%.`);
-  if (stack.v3RulePlatform) notes.push(`V3 rule platform: ${stack.v3RulePlatform.rulesExecuted} of ${stack.v3RulePlatform.rulesConsidered} core rules were applicable across ${stack.v3RulePlatform.packIds.length} packs; ${stack.v3RulePlatform.findings.length} evidence-backed review signal${stack.v3RulePlatform.findings.length === 1 ? '' : 's'}.`);
-  if (summary.analysisCoverage) notes.push(`Analysis coverage: ${summary.analysisCoverage.status}; ${summary.analysisCoverage.fileCoveragePercent}% of discovered files entered the analysis set.`);
+  if (stack.v3RulePlatform) notes.push(`V3 rule platform: ${stack.v3RulePlatform.rulesExecuted} of ${stack.v3RulePlatform.rulesConsidered} core rules were applicable across ${stack.v3RulePlatform.packIds.length} packs; ${stack.v3RulePlatform.findings.length} static observation${stack.v3RulePlatform.findings.length === 1 ? '' : 's'} require context before treating them as risks.${limitedRules ? ` ${limitedRules} applicable rules reached their evaluation budgets.` : ''}`);
+  if (summary.analysisCoverage) notes.push(`Analysis coverage: ${summary.analysisCoverage.status}; ${summary.analysisCoverage.fileCoveragePercent}% of discovered files entered the analysis set. Some selected files may have metadata only.`);
   if (summary.scanStats.truncated) notes.push(`Analysis was truncated or sampled (${summary.scanStats.truncationReason ?? 'configured resource limits'}); absence of findings outside the analyzed content is not guaranteed.`);
   return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories, issues, score, timeline: buildTimeline(), notes: recommendations.length > 1 ? [...notes, ...recommendations.slice(1)] : notes, source: input.source, trust: buildTrustMetadata(input.source) };
 }

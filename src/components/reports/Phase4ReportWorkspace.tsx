@@ -35,6 +35,7 @@ import { exportJson, exportSarif, downloadFile } from '@/lib/report/export';
 import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveReportReviewState } from '@/lib/storage';
 import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
 import { createPortableReportSummary } from '@/lib/report/sharing';
+import { describeReportReadiness } from '@/lib/report/readiness';
 import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
 import type { AnalysisResult, SecurityFinding, Severity } from '@/lib/analyzer/types';
 
@@ -135,19 +136,20 @@ function OverviewView({ report, history, mode, onNavigate }: { report: AnalysisR
   const actions = topActions(report);
   const confidence = projectConfidence(report);
   const identity = projectIdentity(report);
-  const readiness = readinessText(report.score.overall, critical.length);
+  const readiness = describeReportReadiness(report);
 
   return (
     <div className="space-y-4">
       <Card className="overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-card to-card">
         <CardContent className="grid gap-5 p-5 md:grid-cols-[1fr_auto] md:items-center">
           <div>
-            <div className="mb-2 flex flex-wrap items-center gap-2"><SoftStatusBadge status={critical.length ? 'Review required' : statusFromConfidence(confidence)} /><span className="text-xs text-muted-foreground">Overall readiness</span></div>
-            <h2 className="text-2xl font-semibold">{readiness}</h2>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{identity}. {critical.length ? `${critical.length} critical issue${critical.length === 1 ? '' : 's'} should be reviewed first.` : 'No critical compatibility issue was detected by the current static rules.'}</p>
+            <div className="mb-2 flex flex-wrap items-center gap-2"><SoftStatusBadge status={readiness.partial ? 'Not enough evidence' : critical.length ? 'Review required' : statusFromConfidence(confidence)} /><span className="text-xs text-muted-foreground">{readiness.partial ? 'Partial analysis' : 'Overall readiness'}</span></div>
+            <h2 className="text-2xl font-semibold">{readiness.title}</h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">{identity}. {critical.length ? `${critical.length} critical issue${critical.length === 1 ? '' : 's'} should be reviewed first.` : readiness.partial ? 'No critical issue was detected in the checked scope.' : 'No critical compatibility issue was detected by the current static rules.'}</p>
+            {readiness.coverage && <p className="mt-2 max-w-2xl text-sm font-medium text-foreground">{readiness.coverage}</p>}
           </div>
           <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-8 border-primary/20 bg-background/80">
-            <span className="text-3xl font-bold tabular-nums">{report.score.overall}</span><span className="text-[10px] uppercase text-muted-foreground">readiness</span>
+            <span className="text-3xl font-bold tabular-nums">{report.score.overall}</span><span className="text-center text-[10px] uppercase text-muted-foreground">{readiness.scope}</span>
           </div>
         </CardContent>
       </Card>
@@ -171,7 +173,7 @@ function OverviewView({ report, history, mode, onNavigate }: { report: AnalysisR
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card><CardHeader><CardTitle className="text-base">Top five actions</CardTitle><CardDescription>Highest-value next steps from this scan.</CardDescription></CardHeader><CardContent><ol className="space-y-3">{actions.map((action, index) => <li key={`${action}-${index}`} className="flex gap-3 text-sm"><span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">{index + 1}</span><span>{action}</span></li>)}</ol></CardContent></Card>
-        <Card><CardHeader><CardTitle className="text-base">Scan confidence</CardTitle><CardDescription>{statusFromConfidence(confidence)} evidence across the primary detectors.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums">{confidence}%</span><SoftStatusBadge status={statusFromConfidence(confidence)} /></div><Progress value={confidence} /><p className="text-xs text-muted-foreground">Based on language, framework, runtime, package-manager, and build-tool evidence.</p></CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-base">Technology detection confidence</CardTitle><CardDescription>{statusFromConfidence(confidence)} evidence across the primary detectors.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="flex items-end justify-between"><span className="text-3xl font-semibold tabular-nums">{confidence}%</span><SoftStatusBadge status={statusFromConfidence(confidence)} /></div><Progress value={confidence} /><p className="text-xs text-muted-foreground">Based on language, framework, runtime, package-manager, and build-tool evidence. File coverage is reported separately.</p></CardContent></Card>
       </div>
 
       <ScanComparisonPanel report={report} history={history} mode={mode} />
@@ -369,8 +371,7 @@ function SoftStatusBadge({ status }: { status: SoftStatus }) { const variant = s
 function statusFromConfidence(confidence: number): SoftStatus { if (confidence >= 90) return 'Confirmed'; if (confidence >= 70) return 'Likely'; if (confidence >= 45) return 'Possible'; return confidence > 0 ? 'Not enough evidence' : 'Not applicable'; }
 function projectConfidence(report: AnalysisResult): number { const values = Object.values(report.stack.confidence ?? {}).filter((value): value is number => typeof value === 'number'); return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : 0; }
 function projectIdentity(report: AnalysisResult): string { const architecture = report.stack.architecture?.primary; const framework = isKnown(report.stack.framework) ? report.stack.framework : null; const language = report.stack.primaryLanguage ?? report.stack.language; return [architecture, framework, language].filter(Boolean).join(' · ') || report.classification.type; }
-function readinessText(score: number, critical: number): string { if (critical) return 'Important issues need review'; if (score >= 90) return 'Ready with strong confidence'; if (score >= 75) return 'Mostly ready; review a few areas'; if (score >= 50) return 'Usable, but needs focused improvements'; return 'Significant review is recommended'; }
 function isKnown(value: unknown): value is string { return typeof value === 'string' && value !== 'Unknown' && value !== 'None' && value.length > 0; }
-function topActions(report: AnalysisResult): string[] { const source = [...report.issues].sort((a, b) => ({ critical: 0, warning: 1, info: 2 }[a.severity] - { critical: 0, warning: 1, info: 2 }[b.severity])).map((item) => item.suggestedAction || item.recommendation).filter(Boolean); const moduleActions = Object.values(report.stack.extendedIntelligence?.modules ?? {}).flatMap((module) => module.findings.map((item) => item.recommendation)); const defaults = ['Confirm the detected project identity and target environment.', 'Review critical and warning findings before release.', 'Verify build and test commands in a clean environment.', 'Confirm browser, runtime, and deployment targets.', 'Record reviewed findings and accepted limitations.']; return [...new Set([...source, ...moduleActions, ...defaults])].slice(0, 5); }
+function topActions(report: AnalysisResult): string[] { const source = [...report.issues].sort((a, b) => ({ critical: 0, warning: 1, info: 2 }[a.severity] - { critical: 0, warning: 1, info: 2 }[b.severity])).map((item) => item.suggestedAction || item.recommendation).filter(Boolean); const moduleActions = Object.values(report.stack.extendedIntelligence?.modules ?? {}).flatMap((module) => module.findings.map((item) => item.recommendation)); const defaults = ['Confirm the detected project identity and target environment.', 'Review critical and warning findings before release.', 'Verify build and test commands in a clean environment.', 'Confirm browser, runtime, and deployment targets.', 'Record reviewed findings and accepted limitations.']; return [...new Set([...(describeReportReadiness(report).partial ? ['Review scan coverage before treating the score as project readiness.'] : []), ...source, ...moduleActions, ...defaults])].slice(0, 5); }
 function exportSelected(report: AnalysisResult, findings: WorkspaceFinding[], reviewState: ReportReviewState) { const payload = JSON.stringify({ schemaVersion: 1, reportId: report.id, project: report.summary.name, analysisVersion: report.analysisVersion, exportedAt: new Date().toISOString(), selection: { count: findings.length, modules: [...new Set(findings.map((item) => item.module))] }, reviewState, findings }, null, 2); downloadFile(`${report.summary.name}-selected-findings.json`, payload, 'application/json'); }
 function readMode(): UserMode { try { const saved = localStorage.getItem('uce-report-mode:v1'); if (saved === 'simple' || saved === 'developer' || saved === 'expert') return saved; } catch { /* private browsing */ } return 'simple'; }
