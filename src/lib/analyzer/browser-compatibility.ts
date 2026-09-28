@@ -7,7 +7,7 @@ const DEFAULT_TARGETS: BrowserTarget[] = [
   { browser: 'Safari', version: 16.4 }, { browser: 'Edge', version: 109 },
   { browser: 'Chrome Android', version: 109 }, { browser: 'Safari iOS', version: 16.4 },
 ];
-interface TargetResolution { targets: BrowserTarget[]; source: string; usedDefaults: boolean; }
+export interface TargetResolution { targets: BrowserTarget[]; source: string; usedDefaults: boolean; }
 
 function browserName(value: string): BrowserName | undefined {
   const name = value.toLowerCase();
@@ -67,8 +67,8 @@ function isRelevantFile(file: ProjectFile, kind: 'javascript' | 'css' | 'web-api
   return /\.(?:[cm]?[jt]sx?|html?)$/.test(path);
 }
 
-export function detectBrowserCompatibility(files: ProjectFile[]): BrowserCompatibilityIntelligence {
-  const resolution = resolveBrowserTargets(files); const findings: BrowserCompatibilityIntelligence['findings'] = [];
+export function detectBrowserCompatibility(files: ProjectFile[], targetFiles = files, fixedTargets?: TargetResolution): BrowserCompatibilityIntelligence {
+  const resolution = fixedTargets ?? resolveBrowserTargets(targetFiles); const findings: BrowserCompatibilityIntelligence['findings'] = [];
   const sourceFiles = files.filter(isSourceFile); const seen = new Set<string>();
   for (const file of sourceFiles) {
     const content = file.content ?? '';

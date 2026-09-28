@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce10-/);
+  assert.match(key, /^uce11-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1155,6 +1155,13 @@ await asyncTest('large ZIP extraction samples at the analysis budget and reports
   assert.equal(result.scanStats.filesIgnored, 101);
   assert.ok(result.files.some(item => item.path === 'Makefile'));
   assert.deepEqual(updates.at(-1), [25_000, 25_000]);
+  const { scanZipBatches } = load('src/lib/analyzer/zip.ts');
+  const alreadyRead = new Set(result.files.filter(item => item.content !== undefined).map(item => item.path));
+  const followup = await scanZipBatches(new File([bytes], 'linux.zip'), alreadyRead, async batch => {
+    assert.ok(batch.length <= 128);
+  });
+  assert.equal(followup.nextIndex, 25_101);
+  assert.equal(followup.filesWithContent, 101);
 });
 test('installed Python environments do not supply project dependency evidence', () => {
   for (const prefix of ['.venv', 'venv', 'site-packages', '__pycache__']) {
@@ -1198,7 +1205,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce10-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce11-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {
@@ -1257,6 +1264,154 @@ await asyncTest('seekable ZIP rejects unsafe names even when filtered as binary'
   zip.file('../outside.png', 'x');
   const raw = await zip.generateAsync({ type: 'uint8array' });
   await assert.rejects(() => openStreamZip(new Blob([raw])), /unsafe path/);
+});
+await asyncTest('multi-batch ZIP scan checks late source files and keeps cross-file coverage partial', async () => {
+  const JSZip = nativeRequire('jszip');
+  const zip = new JSZip();
+  zip.file('project/README.md', '# App');
+  zip.file('project/package.json', '{"name":"fixture"}');
+  zip.file('project/src/first.ts', 'export const a = 1;');
+  zip.file('project/src/late.ts', 'const token = Math.random();');
+  const archive = new File([await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' })], 'project.zip');
+  const { readZip, scanZipBatches } = load('src/lib/analyzer/zip.ts');
+  const { prepareAnalysisInput } = load('src/lib/analyzer/execution.ts');
+  const { analyzeArchiveBatches } = load('src/lib/analyzer/archive-batch-runner.ts');
+  const indexed = await readZip(archive);
+  const prepared = prepareAnalysisInput({ files: indexed.files, fileName: indexed.name, source: 'upload', scanStats: indexed.scanStats }, { maxFiles: 2, maxContentBytes: 1024, maxSingleFileBytes: 1024 });
+  assert.equal(prepared.input.scanStats.filesAnalyzed, 2);
+  const skipped = new Set(prepared.input.files.filter(item => item.content !== undefined).map(item => item.path));
+  const batches = [];
+  const complete = await scanZipBatches(archive, skipped, async (batch, state) => {
+    batches.push({ paths: batch.map(item => item.path), state });
+    assert.ok(batch.length <= 128);
+    assert.ok(batch.every(item => item.content === undefined || !skipped.has(item.path)));
+  });
+  assert.equal(complete.eligibleFiles, 4);
+  assert.equal(complete.filesWithContent, 2);
+  assert.equal(batches.flatMap(item => item.paths).length, 4);
+  const resumed = await scanZipBatches(archive, skipped, async batch => { assert.ok(batch.every(item => !['README.md','package.json'].includes(item.path))); }, undefined, 2);
+  assert.equal(resumed.nextIndex, 4);
+  const report = await analyzeArchiveBatches(archive, prepared.input, () => {});
+  assert.equal(report.summary.scanStats.filesInventoried, 4);
+  assert.equal(report.summary.scanStats.filesWithContent, 4);
+  assert.equal(report.summary.scanStats.filesAnalyzed, 2);
+  assert.equal(report.summary.scanStats.filesIgnored, 0);
+  assert.equal(report.summary.analysisCoverage.status, 'partial');
+  assert.ok(report.stack.securityIntelligence.findings.some(item => item.file === 'src/late.ts' && item.ruleId === 'SEC012'));
+  assert.ok(report.issues.some(item => item.id.includes('SEC012:src/late.ts') && item.affectedFile === 'src/late.ts:1'));
+  assert.ok(report.stack.languages.some(item => item.language === 'TypeScript' && item.files === 2));
+});
+await asyncTest('bounded ZIP batches retain backpressure beyond a single batch', async () => {
+  const JSZip = nativeRequire('jszip'); const zip = new JSZip();
+  for (let index = 0; index < 280; index++) zip.file(`fixture/src/file-${index}.ts`, `export const n = ${index}`);
+  const archive = new File([await zip.generateAsync({ type: 'uint8array', compression: 'STORE' })], 'fixture.zip');
+  const { scanZipBatches } = load('src/lib/analyzer/zip.ts');
+  let batches = 0; let checked = 0;
+  const result = await scanZipBatches(archive, new Set(), async files => {
+    batches++; checked += files.length;
+    assert.ok(files.length <= 128);
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+  assert.equal(checked, 280);
+  assert.equal(result.filesWithContent, 280);
+  assert.equal(batches, 3);
+});
+await asyncTest('large report store can persist, recover, delete, and clear reports through IndexedDB', async () => {
+  const original = globalThis.indexedDB;
+  const rows = new Map();
+  let created = false;
+  const db = {
+    objectStoreNames: { contains: () => created },
+    createObjectStore() { created = true; },
+    close() {},
+    transaction() {
+      const transaction = { oncomplete: null, onerror: null, onabort: null,
+        objectStore() {
+          const request = (operation) => {
+            const pending = { result: undefined, onsuccess: null, onerror: null };
+            queueMicrotask(() => { pending.result = operation(); pending.onsuccess?.(); queueMicrotask(() => transaction.oncomplete?.()); });
+            return pending;
+          };
+          return {
+            put(value) { return request(() => rows.set(value.id, value)); },
+            get(id) { return request(() => rows.get(id)); },
+            getAll() { return request(() => [...rows.values()]); },
+            delete(id) { return request(() => rows.delete(id)); },
+            clear() { return request(() => rows.clear()); },
+          };
+        },
+      };
+      return transaction;
+    },
+  };
+  globalThis.indexedDB = { open() {
+    const pending = { result: db, onupgradeneeded: null, onsuccess: null, onerror: null };
+    queueMicrotask(() => { if (!created) pending.onupgradeneeded?.(); pending.onsuccess?.(); });
+    return pending;
+  } };
+  try {
+    const { persistLargeReport, readLargeReport, listLargeReports, deleteLargeReport, clearLargeReports } = load('src/lib/storage/large-reports.ts');
+    const first = { id: 'rpt_large_1', createdAt: '2026-09-28T00:00:00Z', summary: { name: 'linux' }, issues: new Array(500).fill({ severity: 'info' }) };
+    await persistLargeReport(first);
+    assert.deepEqual(await readLargeReport(first.id), first);
+    assert.equal((await listLargeReports()).length, 1);
+    await deleteLargeReport(first.id);
+    assert.equal(await readLargeReport(first.id), null);
+    await persistLargeReport(first);
+    await clearLargeReports();
+    assert.equal((await listLargeReports()).length, 0);
+  } finally {
+    if (original === undefined) delete globalThis.indexedDB;
+    else globalThis.indexedDB = original;
+  }
+});
+await asyncTest('archive checkpoints resume from a saved batch with the same archive and clear on completion', async () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const saved = new Map();
+  const root = {
+    async getFileHandle(name, options) {
+      if (!saved.has(name) && !options?.create) throw new Error('missing');
+      return {
+        async getFile() { return new File([saved.get(name) ?? ''], name); },
+        async createWritable() {
+          let contents = '';
+          return {
+            async write(value) { contents += value; },
+            async close() { saved.set(name, contents); },
+            async abort() {},
+          };
+        },
+      };
+    },
+    async removeEntry(name) { saved.delete(name); },
+  };
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { storage: { getDirectory: async () => root } } });
+  try {
+    const JSZip = nativeRequire('jszip'); const zip = new JSZip();
+    zip.file('project/README.md', '# Test');
+    for (let index = 0; index < 1300; index++) zip.file(`project/src/f-${String(index).padStart(4, '0')}.ts`, `export const item = ${index}`);
+    const archive = new File([await zip.generateAsync({ type: 'uint8array', compression: 'STORE' })], 'project.zip');
+    const { readZip } = load('src/lib/analyzer/zip.ts');
+    const { prepareAnalysisInput } = load('src/lib/analyzer/execution.ts');
+    const { analyzeArchiveBatches } = load('src/lib/analyzer/archive-batch-runner.ts');
+    const { openArchiveCheckpoint } = load('src/lib/analyzer/archive-checkpoint.ts');
+    const indexed = await readZip(archive);
+    const baseline = prepareAnalysisInput({ files: indexed.files, fileName: indexed.name, source: 'upload', scanStats: indexed.scanStats }, { maxFiles: 1, maxContentBytes: 1024, maxSingleFileBytes: 1024 }).input;
+    await assert.rejects(() => analyzeArchiveBatches(archive, baseline, checked => { if (checked > 1050) throw new Error('interrupted'); }), /interrupted/);
+    const store = await openArchiveCheckpoint(archive);
+    const pending = await store.load();
+    assert.ok(pending && pending.nextIndex >= 1024 && pending.nextIndex < 1301, JSON.stringify({next: pending?.nextIndex, saved: [...saved.keys()]}));
+    await assert.rejects(() => analyzeArchiveBatches(archive, { ...baseline, scanStats: { ...baseline.scanStats, archiveIndexSignature: 'deadbeef' } }, () => {}), /checkpoint does not match/);
+    const checkpoints = [];
+    const resumed = await analyzeArchiveBatches(archive, baseline, checked => checkpoints.push(checked));
+    assert.ok(checkpoints[0] >= pending.nextIndex);
+    assert.equal(resumed.summary.scanStats.filesInventoried, 1301);
+    assert.equal(resumed.summary.scanStats.filesWithContent, 1301);
+    assert.equal(await store.load(), null);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'navigator', original);
+    else delete globalThis.navigator;
+  }
 });
 await asyncTest('ZIP reads small lockfiles and measures Unicode content in bytes', async () => {
   const entries = [['repo/package-lock.json', '{"lockfileVersion":3}'], ['repo/yarn.lock', '# yarn lock'], ['repo/pnpm-lock.yaml', 'lockfileVersion: 9'], ['repo/src/message.py', 'message = "සිංහල"']];

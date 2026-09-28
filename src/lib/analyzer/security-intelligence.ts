@@ -29,7 +29,7 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
   const findings: SecurityFinding[] = []; const seen = new Set<string>(); let rulesExecuted = 0;
   const sourceFiles = files.filter((file) => {
     const path = normalizePath(file.path);
-    return !file.isDirectory && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
+    return !file.isDirectory && typeof file.content === 'string' && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
   });
   for (const file of sourceFiles) {
     const source = file.content ?? ''; const pythonCode = /\.py$/i.test(file.path) ? maskPythonText(source) : undefined; const normalizedPath = normalizePath(file.path);
@@ -56,6 +56,10 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
     }
     if (findings.length >= 300) break;
   }
+  return summarizeSecurityFindings(findings, sourceFiles.length, rulesExecuted);
+}
+
+export function summarizeSecurityFindings(findings: SecurityFinding[], filesScanned: number, rulesExecuted: number): SecurityIntelligence {
   const weights = { critical: 20, warning: 4, info: 0.5 }; const confidenceWeights = { high: 1, medium: 0.7, low: 0.4 };
   // Repeated matches of one rule increase review effort, but should not make one
   // informational pattern look equivalent to many independent security risks.
@@ -71,5 +75,5 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
   }, 0);
   const categoryCounts: Partial<Record<SecurityRuleCategory, number>> = {};
   for (const finding of findings) if (finding.category) categoryCounts[finding.category] = (categoryCounts[finding.category] ?? 0) + 1;
-  return { findings: findings.slice(0, 300), score: Math.max(0, Math.round(100 - penalty)), filesScanned: sourceFiles.length, rulesExecuted, knowledgeVersion: SECURITY_KNOWLEDGE_VERSION, categoryCounts };
+  return { findings: findings.slice(0, 300), score: Math.max(0, Math.round(100 - penalty)), filesScanned, rulesExecuted, knowledgeVersion: SECURITY_KNOWLEDGE_VERSION, categoryCounts };
 }

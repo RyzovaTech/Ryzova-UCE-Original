@@ -27,6 +27,7 @@ import { BrowserCompatibilityPanel } from '@/components/reports/BrowserCompatibi
 import { exportJson, exportMarkdown, downloadFile } from '@/lib/report/export';
 import { sortIssues } from '@/lib/compatibility/recommendations';
 import type { AnalysisResult, Issue, Severity } from '@/lib/analyzer/types';
+import { readLargeReport } from '@/lib/storage/large-reports';
 
 const SEVERITY_FILTERS: Array<'all' | Severity> = ['all', 'critical', 'warning', 'info'];
 type SortBy = 'severity' | 'category' | 'file';
@@ -42,17 +43,26 @@ export function ReportPage() {
   const navigate = useNavigate();
   const { history, getById } = useReportEngine();
   const [report, setReport] = useState<AnalysisResult | null>(null);
+  const [loadingReport, setLoadingReport] = useState(Boolean(id));
   const [filter, setFilter] = useState<'all' | Severity>('all');
   const [sortBy, setSortBy] = useState<SortBy>('severity');
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
 
   useEffect(() => {
+    let active = true;
     if (id) {
       const r = getById(id);
       setReport(r);
+      if (r) setLoadingReport(false);
+      else {
+        setLoadingReport(true);
+        void readLargeReport(id).then(saved => { if (active) setReport(saved); }).catch(() => undefined).finally(() => { if (active) setLoadingReport(false); });
+      }
     } else {
       setReport(history[0]?.result ?? null);
+      setLoadingReport(false);
     }
+    return () => { active = false; };
   }, [id, history, getById]);
 
   const filteredIssues = useMemo(() => {
@@ -90,7 +100,7 @@ export function ReportPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Compatibility Report</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {id ? 'Report not found in local history.' : 'No analysis has been run yet.'}
+            {loadingReport ? 'Loading the saved report…' : id ? 'Report not found in local history.' : 'No analysis has been run yet.'}
           </p>
         </div>
         <Card>
@@ -99,7 +109,7 @@ export function ReportPage() {
               <FileBarChart className="h-7 w-7 text-muted-foreground" />
             </div>
             <div>
-              <p className="text-sm font-medium">No report available</p>
+              <p className="text-sm font-medium">{loadingReport ? 'Loading report…' : 'No report available'}</p>
               <p className="text-xs text-muted-foreground">
                 {id ? 'This report may have been cleared from local storage.' : 'Run an analysis to generate a report.'}
               </p>
@@ -217,7 +227,7 @@ export function ReportPage() {
             </div>
             <Separator className="my-4" />
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-              <Stat label="Files selected" value={report.summary.filesScanned} />
+              <Stat label="Core files selected" value={report.summary.filesScanned} />
               <Stat label="Folders scanned" value={report.summary.foldersScanned} />
               <Stat label="Config files" value={report.summary.detectedConfigFiles.length} />
               <Stat label="Issues found" value={report.issues.length} />
@@ -240,10 +250,18 @@ export function ReportPage() {
             <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <Stat label="Project Size" value={formatFileSize(report.summary.scanStats.projectSize)} />
               <Stat label="Files Found" value={report.summary.scanStats.filesFound.toLocaleString()} />
-              <Stat label="Files Selected" value={report.summary.scanStats.filesAnalyzed.toLocaleString()} />
-              {report.summary.scanStats.filesWithContent !== undefined && <Stat label="Text Content Checked" value={report.summary.scanStats.filesWithContent.toLocaleString()} />}
+              <Stat label="Core Rules Input" value={report.summary.scanStats.filesAnalyzed.toLocaleString()} />
+              {report.summary.scanStats.eligibleFiles !== undefined && <Stat label="Eligible Files" value={report.summary.scanStats.eligibleFiles.toLocaleString()} />}
+              {report.summary.scanStats.filesInventoried !== undefined && <Stat label="Files Indexed" value={report.summary.scanStats.filesInventoried.toLocaleString()} />}
+              {report.summary.scanStats.filesInventoried !== undefined && report.summary.scanStats.eligibleFiles !== undefined && <Stat label="Eligible Paths Indexed" value={`${(100 * report.summary.scanStats.filesInventoried / Math.max(1, report.summary.scanStats.eligibleFiles)).toFixed(1)}%`} />}
+              {report.summary.scanStats.filesWithContent !== undefined && <Stat label="Source Files Read" value={report.summary.scanStats.filesWithContent.toLocaleString()} />}
+              {report.summary.scanStats.textFilesEligible !== undefined && <Stat label="Readable Text Files" value={report.summary.scanStats.textFilesEligible.toLocaleString()} />}
+              {report.summary.scanStats.textFilesEligible !== undefined && report.summary.scanStats.filesWithContent !== undefined && <Stat label="Eligible Text Read" value={`${(100 * report.summary.scanStats.filesWithContent / Math.max(1, report.summary.scanStats.textFilesEligible)).toFixed(1)}%`} />}
+              {report.summary.scanStats.securityFilesChecked !== undefined && <Stat label="Security Files Checked" value={report.summary.scanStats.securityFilesChecked.toLocaleString()} />}
+              {report.summary.scanStats.browserFilesChecked !== undefined && <Stat label="Browser Files Checked" value={report.summary.scanStats.browserFilesChecked.toLocaleString()} />}
               <Stat label="Files Ignored" value={report.summary.scanStats.filesIgnored.toLocaleString()} />
             </div>
+            {report.summary.scanStats.coreFilesAnalyzed !== undefined && <p className="mt-3 text-xs text-muted-foreground">Archive indexing and selected source checks ran in batches. Core and cross-file rules used {report.summary.scanStats.coreFilesAnalyzed.toLocaleString()} selected files and may have separate evaluation limits. This remains a partial compatibility assessment.</p>}
             {(report.summary.scanStats.scanTimeMs !== undefined ||
               report.summary.scanStats.memoryUsedMB !== undefined ||
               report.summary.scanStats.rulesExecuted !== undefined ||

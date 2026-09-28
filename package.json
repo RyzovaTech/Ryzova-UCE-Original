@@ -16,6 +16,7 @@
     "validate:schema": "node scripts/phase5-gates.mjs && node testing/v3/v3-schema-check.mjs",
     "benchmark": "node scripts/benchmark.mjs",
     "benchmark:v3-memory": "node --max-old-space-size=512 testing/v3/benchmark-v3-memory.mjs",
+    "benchmark:zip-batches": "node --max-old-space-size=768 testing/v3/benchmark-zip-batches.mjs",
     "docs:rules": "node scripts/generate-rule-docs.mjs",
     "security:self-scan": "node scripts/uce-scan.mjs . --output=uce-self-scan.json && node scripts/uce-ci.mjs uce-self-scan.json --min-score=80 --max-critical=0 --max-warning=80 --sarif=uce-self-scan.sarif",
     "uce:ci": "node scripts/uce-ci.mjs",

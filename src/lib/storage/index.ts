@@ -2,6 +2,8 @@ import type { AnalysisResult } from '@/lib/analyzer/types';
 import type { ShareableReport } from '@/lib/report/sharing';
 import type { ReportReviewState } from '@/lib/report/workspace';
 import { clearAnalysisCache } from '@/lib/analyzer/cache';
+import { clearLargeReports } from './large-reports';
+import { clearArchiveTemporaryStorage } from '@/lib/analyzer/archive-checkpoint';
 
 const HISTORY_KEY = 'uce:history';
 const SETTINGS_KEY = 'uce:settings';
@@ -100,6 +102,8 @@ export function saveSettings(settings: StoredSettings): void {
 
 export function clearAllLocalData(): void {
   clearAnalysisCache();
+  void clearLargeReports().catch(() => undefined);
+  void clearArchiveTemporaryStorage().catch(() => undefined);
   try {
     localStorage.removeItem(HISTORY_KEY);
     localStorage.removeItem(SETTINGS_KEY);
