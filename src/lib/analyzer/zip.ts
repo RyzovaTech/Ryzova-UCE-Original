@@ -12,6 +12,19 @@ export interface ZipReadResult {
   scanStats: ScanStats;
 }
 
+/** Bounded follow-up pass over all eligible archive entries. Paths are relative to the ZIP wrapper. */
+export interface ZipBatchProgress {
+  nextIndex: number;
+  eligibleFiles: number;
+  indexSignature: string;
+  textFilesEligible: number;
+  filesWithContent: number;
+  unreadableTextFiles: number;
+  bytesRead: number;
+}
+type ZipEntry = JSZip.JSZipObject | StreamZipEntry;
+interface ZipIndex { analyzableEntries: ZipEntry[]; totalFilesFound: number; archiveRoot: string | null; ignoredCount: number; ignoredCategorySet: Set<string>; indexSignature: string; }
+
 // --- Intelligent limits (no hard 100MB block) ---
 const MAX_FILES = DEFAULT_ANALYSIS_BUDGET.maxFiles;
 const MAX_TOTAL_TEXT_CONTENT = 96 * 1024 * 1024; // bounded content; remaining files keep metadata
@@ -203,7 +216,7 @@ function commonArchiveRoot(files: Array<{ path: string }>): string | null {
   return files.every((file) => file.path.startsWith(`${root}/`)) ? root : null;
 }
 
-export async function readZip(file: File, onProgress?: (filesRead: number, filesSelected: number) => void, displayName = file.name): Promise<ZipReadResult> {
+async function indexZip(file: File): Promise<ZipIndex> {
   if (!file.name.toLowerCase().endsWith('.zip')) {
     throw new ZipReadError('Unsupported file type. Please upload a .zip archive.');
   }
@@ -216,7 +229,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     );
   }
 
-  let entries: Array<JSZip.JSZipObject | StreamZipEntry>;
+  let entries: ZipEntry[];
   try {
     // The seekable path avoids JSZip.loadAsync's whole-archive allocation.
     entries = file instanceof Blob && canStreamDeflate()
@@ -244,7 +257,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   const archiveRoot = commonArchiveRoot(allEntries.filter(entry => !entry.name.startsWith('__MACOSX/')).map(entry => ({ path: entry.name })));
 
   // Classify entries
-  const analyzableEntries: Array<JSZip.JSZipObject | StreamZipEntry> = [];
+  const analyzableEntries: ZipEntry[] = [];
   let ignoredCount = 0;
   const ignoredCategorySet = new Set<string>();
 
@@ -344,6 +357,21 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     return aSize - bSize;
   });
 
+  let signature = 2166136261;
+  for (const entry of analyzableEntries) {
+    const meta = (entry as unknown as { _data?: { uncompressedSize?: number; compressedSize?: number; crc32?: number } })._data;
+    const value = `${entry.name}\0${meta?.uncompressedSize ?? 0}\0${meta?.compressedSize ?? 0}\0${meta?.crc32 ?? 0}\0`;
+    for (let at = 0; at < value.length; at++) signature = Math.imul(signature ^ value.charCodeAt(at), 16777619);
+  }
+  return { analyzableEntries, totalFilesFound, archiveRoot, ignoredCount, ignoredCategorySet, indexSignature: (signature >>> 0).toString(16).padStart(8, '0') };
+}
+
+export async function readZip(file: File, onProgress?: (filesRead: number, filesSelected: number) => void, displayName = file.name): Promise<ZipReadResult> {
+  const index = await indexZip(file);
+  const { analyzableEntries, totalFilesFound, archiveRoot, ignoredCategorySet, indexSignature } = index;
+  let ignoredCount = index.ignoredCount;
+  const eligibleFiles = analyzableEntries.length;
+
   // Preserve manifests and source evidence while safely sampling very large
   // repositories instead of rejecting OS trees and monorepos outright.
   const filesSampled = analyzableEntries.length > MAX_FILES;
@@ -421,6 +449,9 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   const scanStats: ScanStats = {
     projectSize: file.size,
     filesFound: totalFilesFound,
+    eligibleFiles,
+    archiveIndexSignature: indexSignature,
+    filesInventoried: analyzableEntries.length,
     zipSize: file.size,
     filesAnalyzed,
     filesWithContent: files.filter((entry) => !entry.isDirectory && entry.content !== undefined).length,
@@ -441,4 +472,55 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   const baseName = displayName.replace(/\.zip$/i, '');
 
   return { files, name: baseName, scanStats };
+}
+
+/**
+ * Reopen the seekable index, then emit at most 128 files / 8 MiB of text at a
+ * time. The callback must finish before the next batch is extracted. Metadata
+ * and path counts cover every eligible entry; oversized text stays explicit.
+ */
+export async function scanZipBatches(
+  file: File,
+  alreadyRead: ReadonlySet<string>,
+  onBatch: (files: ProjectFile[], progress: ZipBatchProgress) => Promise<void>,
+  onProgress?: (progress: ZipBatchProgress) => void,
+  startIndex = 0,
+): Promise<ZipBatchProgress> {
+  const { analyzableEntries, archiveRoot, indexSignature } = await indexZip(file);
+  const eligibleFiles = analyzableEntries.length;
+  const textFilesEligible = analyzableEntries.filter(entry => isLikelyText(entry.name) && ((entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0) <= MAX_SINGLE_TEXT_FILE).length;
+  if (!Number.isSafeInteger(startIndex) || startIndex < 0 || startIndex > eligibleFiles) throw new ZipReadError('Invalid archive checkpoint cursor.');
+  let filesWithContent = 0;
+  let unreadableTextFiles = 0;
+  let bytesRead = 0;
+  let batch: ProjectFile[] = [];
+  let batchBytes = 0;
+  const flush = async (nextIndex: number) => {
+    if (!batch.length) return;
+    const progress = { nextIndex, eligibleFiles, indexSignature, textFilesEligible, filesWithContent, unreadableTextFiles, bytesRead };
+    await onBatch(batch, progress);
+    batch = []; batchBytes = 0;
+    onProgress?.(progress);
+  };
+  for (let index = startIndex; index < eligibleFiles; index++) {
+    const entry = analyzableEntries[index];
+    const path = archiveRoot ? entry.name.slice(archiveRoot.length + 1) : entry.name;
+    const size = (entry as unknown as { _data?: { uncompressedSize?: number } })._data?.uncompressedSize ?? 0;
+    if (batch.length >= 128 || (batch.length && batchBytes + size > 8 * 1024 * 1024)) await flush(index);
+    let content: string | undefined;
+    if (isLikelyText(path) && !alreadyRead.has(path)) {
+      if (size > MAX_SINGLE_TEXT_FILE) unreadableTextFiles++;
+      else {
+        try { content = await (entry as StreamZipEntry).async('string'); }
+        catch (error) { throw new ZipReadError(`Cannot verify ZIP entry ${entry.name}: ${error instanceof Error ? error.message : 'decompression failed'}`); }
+        filesWithContent++;
+        bytesRead += new TextEncoder().encode(content).byteLength;
+        batchBytes += size;
+      }
+    }
+    batch.push({ path, size, isDirectory: false, content });
+    if (index % 512 === 0) await new Promise<void>(resolve => setTimeout(resolve, 0));
+  }
+  await flush(eligibleFiles);
+  return { nextIndex: eligibleFiles, eligibleFiles, indexSignature, textFilesEligible, filesWithContent, unreadableTextFiles, bytesRead };
 }

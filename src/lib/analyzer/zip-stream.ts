@@ -17,7 +17,7 @@ export interface StreamZipEntry {
   name: string;
   dir: boolean;
   unsafeOriginalName: string;
-  _data: { uncompressedSize: number };
+  _data: { uncompressedSize: number; crc32: number; compressedSize: number };
   async: (kind: 'string') => Promise<string>;
 }
 
@@ -111,7 +111,7 @@ export async function openStreamZip(blob: Blob): Promise<StreamZipEntry[]> {
     const compressedSize = compressed;
     const uncompressedSize = expanded;
     const localOffset = offset;
-    entries.push({ name: filename, unsafeOriginalName: filename, dir: filename.endsWith('/'), _data: { uncompressedSize },
+    entries.push({ name: filename, unsafeOriginalName: filename, dir: filename.endsWith('/'), _data: { uncompressedSize, crc32: crc, compressedSize },
       async: async () => {
         const local = new DataView(await blob.slice(localOffset, localOffset + 30).arrayBuffer());
         if (local.byteLength < 30 || local.getUint32(0, true) !== 0x04034b50 || local.getUint16(8, true) !== method) return fail('local entry header');

@@ -84,7 +84,7 @@ export function exportMarkdown(result: AnalysisResult): string {
   lines.push('## Overall Compatibility Score');
   lines.push('');
   lines.push(`**${result.score.overall} / 100${result.summary.analysisCoverage?.status === 'partial' ? ' (checked scope only — partial scan)' : ''}**`);
-  if (result.summary.analysisCoverage?.status === 'partial') lines.push('', `Selected ${result.summary.analysisCoverage.filesAnalyzed.toLocaleString()} of ${result.summary.analysisCoverage.filesFound.toLocaleString()} discovered files (${result.summary.analysisCoverage.fileCoveragePercent}%)${result.summary.analysisCoverage.filesWithContent === undefined ? '; some selected files may contain metadata only' : `; text content checked for ${result.summary.analysisCoverage.filesWithContent.toLocaleString()} selected files`}. The score cannot describe unchecked content.`);
+  if (result.summary.analysisCoverage?.status === 'partial') lines.push('', `Core rules selected ${result.summary.analysisCoverage.filesAnalyzed.toLocaleString()} of ${result.summary.analysisCoverage.filesFound.toLocaleString()} discovered files (${result.summary.analysisCoverage.fileCoveragePercent}%)${result.summary.analysisCoverage.filesWithContent === undefined ? '; some selected files may contain metadata only' : `; text content read from ${result.summary.analysisCoverage.filesWithContent.toLocaleString()} source files`}. The score cannot describe unchecked rules or content.`);
   lines.push('');
   lines.push('| Category | Score |');
   lines.push('| --- | --- |');
@@ -104,7 +104,9 @@ export function exportMarkdown(result: AnalysisResult): string {
   if (result.summary.scanStats) {
     lines.push(`- Project size: ${formatFileSize(result.summary.scanStats.projectSize)}`);
     lines.push(`- Files found: ${result.summary.scanStats.filesFound.toLocaleString()}`);
-    lines.push(`- Files analyzed: ${result.summary.scanStats.filesAnalyzed.toLocaleString()}`);
+    lines.push(`- Core rule files selected: ${result.summary.scanStats.filesAnalyzed.toLocaleString()}`);
+    if (result.summary.scanStats.filesInventoried !== undefined) lines.push(`- Eligible paths indexed: ${result.summary.scanStats.filesInventoried.toLocaleString()} / ${result.summary.scanStats.eligibleFiles?.toLocaleString() ?? '?'} (excluding ignored files)`);
+    if (result.summary.scanStats.filesWithContent !== undefined) lines.push(`- Source text files read: ${result.summary.scanStats.filesWithContent.toLocaleString()} / ${result.summary.scanStats.textFilesEligible?.toLocaleString() ?? 'unknown'} eligible`);
     lines.push(`- Files ignored: ${result.summary.scanStats.filesIgnored.toLocaleString()}`);
     if (result.summary.scanStats.ignoredCategories.length > 0) {
       lines.push(`- Ignored categories: ${result.summary.scanStats.ignoredCategories.join(', ')}`);
