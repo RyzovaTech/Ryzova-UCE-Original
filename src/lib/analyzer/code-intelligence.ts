@@ -6,6 +6,17 @@ import { isProjectEvidenceFile } from './project-scope';
 type SymbolKind = CodeSymbol['kind'];
 
 const SOURCE_RE = /\.(tsx?|jsx?|mjs|cjs|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|c|cc|cpp|h|hpp|zig|lua|jl|r|cr|nim|sol|v|erl|hrl)$/i;
+const API_ROUTE_LANGUAGE: Record<string, RegExp> = {
+  'Express/Fastify/Hono': /\.(?:[cm]?js|[cm]?ts|jsx|tsx)$/i,
+  'FastAPI/Flask': /\.py$/i,
+  Spring: /\.(?:java|kt|kts)$/i,
+  Laravel: /\.php$/i,
+  'Gin/Fiber/Echo': /\.go$/i,
+  'ASP.NET': /\.cs$/i,
+  Django: /\.py$/i,
+  'Go net/http': /\.go$/i,
+  'Rails/Phoenix': /\.(?:rb|ex|exs)$/i,
+};
 const IMPORT_RE = /(?:import\s+(?:[\s\S]*?\s+from\s+)?|export\s+(?:[\s\S]*?\s+from\s+)?|require\s*\(|import\s*\()(['"])([^'"]+)\1/g;
 const SYMBOL_PATTERNS: Array<[SymbolKind, RegExp]> = [
   ['function', /\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g], ['class', /\bclass\s+([A-Za-z_$][\w$]*)/g], ['interface', /\binterface\s+([A-Za-z_$][\w$]*)/g], ['type', /\btype\s+([A-Za-z_$][\w$]*)\s*=/g], ['enum', /\benum\s+([A-Za-z_$][\w$]*)/g], ['component', /\b(?:const|function)\s+([A-Z][A-Za-z0-9_$]*)/g],
@@ -86,7 +97,7 @@ export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
       }
     }
     apiEndpoints.push(...fileRoutes(file, source));
-    for (const rule of API_ROUTE_RULES) { const regex = new RegExp(rule.pattern.source, rule.pattern.flags); let match: RegExpExecArray | null; while ((match = regex.exec(file.content ?? ''))) { if (/\.py$/i.test(file.path) && !source.slice(match.index, match.index + 1).trim()) continue; const route = match[1]; if (!route) continue; apiEndpoints.push({ method: rule.method, route: normalizeRoute(route), file: file.path, line: lineAt(source, match.index), framework: rule.framework, confidence: rule.confidence }); } }
+    for (const rule of API_ROUTE_RULES) { if (!API_ROUTE_LANGUAGE[rule.framework]?.test(file.path)) continue; const regex = new RegExp(rule.pattern.source, rule.pattern.flags); let match: RegExpExecArray | null; while ((match = regex.exec(file.content ?? ''))) { if (/\.py$/i.test(file.path) && !source.slice(match.index, match.index + 1).trim()) continue; const route = match[1]; if (!route) continue; apiEndpoints.push({ method: rule.method, route: normalizeRoute(route), file: file.path, line: lineAt(source, match.index), framework: rule.framework, confidence: rule.confidence }); } }
     todoCount += (source.match(/\bTODO\b/gi) ?? []).length; fixmeCount += (source.match(/\bFIXME\b/gi) ?? []).length;
   }
   const uniqueEdges = Array.from(new Map(dependencyEdges.map((edge) => [`${edge.from}|${edge.to}|${edge.kind}`, edge])).values());

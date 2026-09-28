@@ -46,7 +46,7 @@ export function prepareAnalysisInput(input: AnalysisInput, budget = DEFAULT_ANAL
   const scanStats = {
     ...input.scanStats,
     filesAnalyzed: selected.length,
-    sampled: fileSampled,
+    sampled: fileSampled || Boolean(input.scanStats.sampled),
     truncated,
     truncationReason: truncated
       ? [fileSampled ? `file budget ${budget.maxFiles.toLocaleString()}` : '', contentTruncated ? `content budget ${formatBytes(budget.maxContentBytes)}` : '', input.scanStats.truncationReason ?? ''].filter(Boolean).join('; ')

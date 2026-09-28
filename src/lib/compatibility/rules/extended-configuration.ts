@@ -396,6 +396,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
+      if (ctx.stack.architecture?.primary === 'Operating System Kernel') return issues;
       const hasCI = ctx.files.some((f) =>
         f.path.startsWith('.github/workflows/') ||
         f.path.includes('/.gitlab-ci.yml') ||
@@ -452,6 +453,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
+      if (ctx.stack.architecture?.primary === 'Operating System Kernel') return issues;
       const hasChangelog = ctx.files.some((f) =>
         !f.isDirectory && /(?:^|\/)(?:changelog|changes|history|news)(?:\.(?:md|rst|txt))?$/i.test(f.path)
       );
@@ -479,6 +481,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
+      if (ctx.stack.architecture?.primary === 'Operating System Kernel') return issues;
       const hasContributing = ctx.files.some((f) =>
         !f.isDirectory && /(?:^|\/)contributing(?:\.(?:md|rst|txt))?$/i.test(f.path)
       );

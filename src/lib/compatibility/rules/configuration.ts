@@ -51,6 +51,7 @@ export const configurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
+      if (ctx.stack.architecture?.primary === 'Operating System Kernel') return issues;
       const hasEnvExample = ctx.detectedFiles.some((f) => f.path.endsWith('.env.example'));
       const hasEnv = ctx.files.some((f) => !f.isDirectory && /(^|\/)\.env$/i.test(f.path));
       const usesEnv = ctx.files.some((f) => !f.isDirectory && classifyProjectFileScope(f.path) === 'production' && /\b(?:process\.env\.(?!NODE_ENV\b)|import\.meta\.env\.(?!MODE\b|DEV\b|PROD\b)|os\.getenv\s*\(|System\.getenv\s*\()/i.test(f.content ?? ''));

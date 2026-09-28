@@ -241,7 +241,8 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     // Check junk directories
     if (isIgnored(entry.name)) {
       ignoredCount++;
-      const topDir = entry.name.split('/')[0];
+      const relativePath = archiveRoot ? entry.name.slice(archiveRoot.length + 1) : entry.name;
+      const topDir = relativePath.split('/')[0];
       ignoredCategorySet.add(topDir || 'junk paths');
       continue;
     }

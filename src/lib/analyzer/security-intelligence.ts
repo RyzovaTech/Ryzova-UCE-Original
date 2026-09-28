@@ -40,6 +40,12 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
       for (const match of source.matchAll(new RegExp(rule.pattern.source, flags))) {
         if (rule.shouldReport && !rule.shouldReport(match)) continue;
         if (rule.id === 'SEC005' && isCommentContext(source, match.index ?? 0)) continue;
+        // A URL printed in a native program's diagnostic or help text is not
+        // evidence of an outbound HTTP request. Require a nearby network call.
+        if (rule.id === 'SEC005' && /\.(?:c|cc|cpp|h|hpp)$/i.test(normalizedPath)) {
+          const statement = source.slice(Math.max(0, (match.index ?? 0) - 150), (match.index ?? 0) + match[0].length + 150);
+          if (!/\b(?:curl_easy_setopt|curl_easy_perform|http_?(?:get|post|request)|wget|send_http_request)\b/i.test(statement)) continue;
+        }
         if (pythonCode !== undefined && pythonCode.slice(match.index, match.index + 1).trim() === '') continue;
         const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
         if (seen.has(id)) continue; seen.add(id);

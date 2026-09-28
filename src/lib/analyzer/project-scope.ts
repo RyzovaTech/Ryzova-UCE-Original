@@ -2,7 +2,7 @@ import type { ProjectFile } from './types';
 
 export type ProjectFileScope = 'production' | 'test' | 'fixture' | 'generated' | 'vendor' | 'documentation' | 'configuration';
 
-const TEST_PATH_RE = /(^|\/)(?:__tests__|tests?|testing|specs?|e2e(?:[-_]?tests?)?)(?:\/|$)|(?:^|\/)(?:test|spec)(?:[-_.][^/.]+)?\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$|_tests?\.rs$|(?:^|\/)tests?\.rs$|_test\.(?:go|py)$|(?:^|\/)test_[^/]+\.py$/i;
+const TEST_PATH_RE = /(^|\/)(?:__tests__|tests?|testing|specs?|e2e(?:[-_]?tests?)?)(?:\/|$)|(?:^|\/)(?:test|spec)(?:[-_.][^/.]+)?\.[cm]?[jt]sx?$|\.(?:test|spec)\.[cm]?[jt]sx?$|_tests?\.rs$|(?:^|\/)tests?\.rs$|_test\.(?:go|py)$|(?:^|\/)test_[^/]+\.py$|(?:^|\/)(?:test_[^/]+|[^/]+_test)\.(?:c|cc|cpp|h|hpp)$/i;
 const FIXTURE_PATH_RE = /(^|\/)(?:fixtures?|test[-_]fixtures?|mocks?|samples?|examples?|storybook|stories|benchmarks?)(?:\/|$)/i;
 const GENERATED_PATH_RE = /(^|\/)(?:dist|build|out|coverage|generated|autogen|__pycache__|\.pytest_cache|\.mypy_cache|\.next|\.nuxt|\.svelte-kit|target)(?:\/|$)|\.(?:min\.js|map)$/i;
 const VENDOR_PATH_RE = /(^|\/)(?:node_modules|vendor|vendored|third_party|pods|carthage|\.venv|venv|site-packages)(?:\/|$)/i;

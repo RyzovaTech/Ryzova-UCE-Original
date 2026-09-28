@@ -104,8 +104,8 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   stack.technologyEvidence = intelligence.evidence; stack.dependencyIntelligence = intelligence.dependencies; stack.architecture = intelligence.architecture;
   stack.codeIntelligence = detectCodeIntelligence(input.files); stack.securityIntelligence = detectSecurityIntelligence(input.files);
   stack.browserCompatibility = detectBrowserCompatibility(input.files);
-  stack.intelligenceInsights = buildCorrelatedInsights(stack);
   if (classification.isSoftware) stack.extendedIntelligence = detectExtendedIntelligence(input.files, stack);
+  stack.intelligenceInsights = buildCorrelatedInsights(stack);
   if (classification.isSoftware) {
     const technologies = [stack.language, stack.framework, stack.runtime, stack.buildTool, ...(stack.frameworks ?? []), ...(stack.runtimes ?? []), ...(stack.technologyDetections ?? []).flatMap((item) => [item.id, item.name])]
       .filter((item) => item && item !== 'Unknown' && item !== 'None').map((item) => String(item).toLowerCase());
