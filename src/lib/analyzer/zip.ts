@@ -1,4 +1,5 @@
 import JSZip from 'jszip';
+import { openStreamZip, type StreamZipEntry } from './zip-stream';
 import { ADDITIONAL_LANGUAGE_EXTENSIONS } from './language-knowledge';
 import type { ProjectFile, ScanStats } from './types';
 import { formatFileSize } from '@/lib/utils';
@@ -112,6 +113,11 @@ const PRIORITY_FILES = new Set([
   '.gitignore', '.editorconfig',
 ]);
 
+function canStreamDeflate(): boolean {
+  try { return typeof DecompressionStream !== 'undefined' && Boolean(new DecompressionStream('deflate-raw')); }
+  catch { return false; }
+}
+
 export class ZipReadError extends Error {
   constructor(message: string) {
     super(message);
@@ -210,11 +216,18 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     );
   }
 
-  let zip: JSZip;
+  let entries: Array<JSZip.JSZipObject | StreamZipEntry>;
   try {
-    zip = await JSZip.loadAsync(file);
+    // The seekable path avoids JSZip.loadAsync's whole-archive allocation.
+    entries = file instanceof Blob && canStreamDeflate()
+      ? await openStreamZip(file)
+      : file.size <= 64 * 1024 * 1024
+        ? Object.values((await JSZip.loadAsync(file)).files)
+        : (() => { throw new ZipReadError('This browser cannot stream ZIP decompression for large archives. Use a browser supporting deflate-raw streams or the UCE CLI.'); })();
   } catch (e) {
+    if (e instanceof ZipReadError) throw e;
     const msg = e instanceof Error ? e.message.toLowerCase() : '';
+    if (msg.startsWith('invalid or unsupported zip:')) throw new ZipReadError(e instanceof Error ? e.message : 'Invalid ZIP');
     if (/encrypted|password/i.test(msg)) {
       throw new ZipReadError('This archive is password-protected or encrypted. UCE cannot analyze encrypted archives — remove the password and re-upload.');
     }
@@ -225,13 +238,13 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   }
 
   // --- Phase 1: Collect and classify entries ---
-  const allEntries = Object.values(zip.files).filter((e) => !e.dir);
+  const allEntries = entries.filter((e) => !e.dir);
   const totalFilesFound = allEntries.length;
   // Determine the wrapper before sampling/filtering can remove root-level evidence.
   const archiveRoot = commonArchiveRoot(allEntries.filter(entry => !entry.name.startsWith('__MACOSX/')).map(entry => ({ path: entry.name })));
 
   // Classify entries
-  const analyzableEntries: JSZip.JSZipObject[] = [];
+  const analyzableEntries: Array<JSZip.JSZipObject | StreamZipEntry> = [];
   let ignoredCount = 0;
   const ignoredCategorySet = new Set<string>();
 
@@ -258,7 +271,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
   }
 
   if (analyzableEntries.length === 0) {
-    const dirEntries = Object.values(zip.files).filter((e) => e.dir);
+    const dirEntries = entries.filter((e) => e.dir);
     const hasOnlyDirs = allEntries.length === 0 && dirEntries.length > 0;
     if (allEntries.length === 0 && !hasOnlyDirs) {
       throw new ZipReadError(
@@ -372,11 +385,10 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
 
     if (isText && size <= MAX_SINGLE_TEXT_FILE && totalTextContent + size <= MAX_TOTAL_TEXT_CONTENT) {
       try {
-        content = await entry.async('string');
+        content = await (entry as StreamZipEntry).async('string');
         totalTextContent += new TextEncoder().encode(content).byteLength;
-      } catch {
-        content = undefined;
-        contentTruncated = true;
+      } catch (error) {
+        throw new ZipReadError(`Cannot verify ZIP entry ${entry.name}: ${error instanceof Error ? error.message : 'decompression failed'}`);
       }
     } else if (isText) {
       contentTruncated = true;

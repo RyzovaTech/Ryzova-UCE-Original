@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,14 @@ export function AnalyzePage() {
     setDragOver(false);
     const file = e.dataTransfer.files?.[0];
     if (file) handleFile(file);
+  };
+
+  const scanToDevice = async () => {
+    const picker = (window as Window & { showSaveFilePicker?: (options: { suggestedName: string; types: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
+    if (!picker) return;
+    // Picker must run directly from this click while user activation is present.
+    const destination = await picker({ suggestedName: 'uce-repository.zip', types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }] });
+    await analyzeGithub(githubUrl, destination);
   };
 
   const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
@@ -239,6 +248,10 @@ export function AnalyzePage() {
                   Analyze
                 </Button>
               </div>
+              {'showSaveFilePicker' in window ? <Button variant="outline" disabled={busy || !githubUrl.trim()} onClick={() => scanToDevice().catch((error) => { if (error instanceof DOMException && error.name === 'AbortError') return; toast.error(error instanceof Error ? error.message : 'Could not save the archive.'); })}>Choose download location and analyze</Button> : null}
+              <p className="text-xs text-muted-foreground">
+                Large archives can be saved directly to a location you choose when supported. ZIP indexing and extraction read 32 KB slices; the analysis still applies its published file and text budgets.
+              </p>
               <p className="text-xs text-muted-foreground">
                 Public GitHub archives are retrieved through UCE&apos;s same-origin relay, then extracted and analyzed locally in your browser. ZIP uploads never leave your browser.
               </p>
