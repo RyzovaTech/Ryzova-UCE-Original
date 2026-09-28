@@ -6,6 +6,34 @@ export interface DownloadProgress {
   complete: boolean;
 }
 
+/** Archives above this size spill into the browser's private temporary storage when supported. */
+export const ARCHIVE_MEMORY_THRESHOLD_BYTES = 64 * 1024 * 1024;
+
+interface TemporaryArchive {
+  writer: FileSystemWritableFileStream;
+  handle: FileSystemFileHandle;
+  cleanup: () => Promise<void>;
+}
+
+async function openTemporaryArchive(): Promise<TemporaryArchive | null> {
+  if (typeof navigator === 'undefined' || !navigator.storage?.getDirectory) return null;
+  try {
+    const root = await navigator.storage.getDirectory();
+    const name = `uce-archive-${crypto.randomUUID()}.zip`;
+    const handle = await root.getFileHandle(name, { create: true });
+    try {
+      const writer = await handle.createWritable();
+      return { writer, handle, cleanup: () => root.removeEntry(name) };
+    } catch (error) {
+      await root.removeEntry(name).catch(() => undefined);
+      throw error;
+    }
+  } catch {
+    // Private storage may be unavailable. Keep the existing bounded memory path.
+    return null;
+  }
+}
+
 /** Read the response incrementally; never infer a size from repository metadata. */
 export async function readArchiveDownload(response: Response, options: {
   signal: AbortSignal;
@@ -13,6 +41,10 @@ export async function readArchiveDownload(response: Response, options: {
   /** Maximum time without a received chunk, not a total download deadline. */
   timeoutMs: number;
   onProgress: (progress: DownloadProgress) => void;
+  /** Called only if the returned Blob lives in private temporary storage. Caller must clean it up after analysis. */
+  onTemporaryArchive?: (cleanup: () => Promise<void>) => void;
+  /** Internal override for small integration fixtures. */
+  diskThresholdBytes?: number;
 }): Promise<Blob> {
   const rawLength = Number(response.headers.get('content-length'));
   const encoding = response.headers.get('content-encoding');
@@ -21,6 +53,8 @@ export async function readArchiveDownload(response: Response, options: {
   if (!response.body) throw new Error('This browser did not provide a readable download stream. Download the ZIP and use ZIP Upload.');
   const reader = response.body.getReader();
   const chunks: BlobPart[] = [];
+  let temporary: TemporaryArchive | null = null;
+  let diskAttempted = false;
   const started = performance.now();
   let receivedBytes = 0;
   let abortError: DOMException | null = null;
@@ -52,13 +86,33 @@ export async function readArchiveDownload(response: Response, options: {
       receivedBytes += value.byteLength;
       if (receivedBytes > options.maxBytes) throw new Error('Repository archive exceeds the browser download limit. Use the UCE CLI.');
       if (totalBytes !== null && receivedBytes > totalBytes) totalBytes = null;
-      chunks.push(value);
+      if (!diskAttempted && receivedBytes > (options.diskThresholdBytes ?? ARCHIVE_MEMORY_THRESHOLD_BYTES)) {
+        diskAttempted = true;
+        temporary = await openTemporaryArchive();
+        if (temporary) {
+          for (const chunk of chunks) await temporary.writer.write(chunk);
+          chunks.length = 0;
+        }
+      }
+      if (temporary) await temporary.writer.write(value);
+      else chunks.push(value);
     }
     if (totalBytes !== null && receivedBytes !== totalBytes) throw new Error('Repository download was incomplete. Please retry.');
     emit(true);
+    if (temporary) {
+      await temporary.writer.close();
+      const archive = await temporary.handle.getFile();
+      options.onTemporaryArchive?.(temporary.cleanup);
+      temporary = null;
+      return archive;
+    }
     return new Blob(chunks, { type: 'application/zip' });
   } catch (error) {
     await reader.cancel().catch(() => undefined);
+    if (temporary) {
+      await temporary.writer.abort().catch(() => undefined);
+      await temporary.cleanup().catch(() => undefined);
+    }
     throw error;
   } finally {
     clearInterval(ticker);

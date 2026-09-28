@@ -197,7 +197,7 @@ function commonArchiveRoot(files: Array<{ path: string }>): string | null {
   return files.every((file) => file.path.startsWith(`${root}/`)) ? root : null;
 }
 
-export async function readZip(file: File, onProgress?: (filesRead: number, filesSelected: number) => void): Promise<ZipReadResult> {
+export async function readZip(file: File, onProgress?: (filesRead: number, filesSelected: number) => void, displayName = file.name): Promise<ZipReadResult> {
   if (!file.name.toLowerCase().endsWith('.zip')) {
     throw new ZipReadError('Unsupported file type. Please upload a .zip archive.');
   }
@@ -411,6 +411,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     filesFound: totalFilesFound,
     zipSize: file.size,
     filesAnalyzed,
+    filesWithContent: files.filter((entry) => !entry.isDirectory && entry.content !== undefined).length,
     filesIgnored: ignoredCount,
     ignoredCategories: Array.from(ignoredCategorySet).sort(),
     sampled: filesSampled,
@@ -425,7 +426,7 @@ export async function readZip(file: File, onProgress?: (filesRead: number, files
     contentByteLimit: MAX_TOTAL_TEXT_CONTENT,
   };
 
-  const baseName = file.name.replace(/\.zip$/i, '');
+  const baseName = displayName.replace(/\.zip$/i, '');
 
   return { files, name: baseName, scanStats };
 }

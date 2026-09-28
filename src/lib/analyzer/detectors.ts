@@ -636,6 +636,6 @@ export function buildSummary(name: string, projectFiles: ProjectFile[], detected
   const filesFound = Math.max(scanStats.filesFound || 0, scanStats.filesAnalyzed || 0);
   const filesAnalyzed = scanStats.filesAnalyzed || projectFiles.filter((f) => !f.isDirectory).length;
   const fileCoveragePercent = filesFound > 0 ? Math.min(100, Math.round((filesAnalyzed / filesFound) * 1000) / 10) : 100;
-  const analysisCoverage = { status: (scanStats.sampled || scanStats.truncated) ? 'partial' as const : 'full' as const, filesAnalyzed, filesFound, fileCoveragePercent, reason: scanStats.truncationReason };
+  const analysisCoverage = { status: (scanStats.sampled || scanStats.truncated) ? 'partial' as const : 'full' as const, filesAnalyzed, filesFound, fileCoveragePercent, filesWithContent: scanStats.filesWithContent ?? projectFiles.filter((f) => !f.isDirectory && f.content !== undefined).length, reason: scanStats.truncationReason };
   return { name, framework: stack.framework, language: stack.language, runtime: stack.runtime, packageManager: stack.packageManager, detectedConfigFiles: detectedFiles.map((f) => f.path), filesScanned: projectFiles.filter((f) => !f.isDirectory).length, foldersScanned, scanStats, analysisCoverage };
 }

@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce9-/);
+  assert.match(key, /^uce10-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1032,6 +1032,7 @@ test('Phase 5 execution budgets prioritize source and label truncation accuratel
   const files = [file('assets/blob.txt', 'x'.repeat(50)), file('package.json', '{"dependencies":{"react":"18"}}'), file('src/app.ts', 'export const app=1')];
   const prepared = prepareAnalysisInput({ files, fileName: 'budget', source: 'upload', scanStats: { projectSize: 100, filesFound: 3, filesAnalyzed: 3, filesIgnored: 0, ignoredCategories: [] } }, { maxFiles: 2, maxContentBytes: 100, maxSingleFileBytes: 100 });
   assert.equal(prepared.input.scanStats.sampled, true); assert.equal(prepared.input.scanStats.truncated, true);
+  assert.equal(prepared.input.scanStats.filesWithContent, 2);
   assert.deepEqual(prepared.input.files.map(item => item.path), ['package.json', 'src/app.ts']);
   const alreadySampled = prepareAnalysisInput({ files: [file('src/app.ts', 'export const app=1')], fileName: 'sampled', source: 'upload', scanStats: { projectSize: 100, filesFound: 100, filesAnalyzed: 1, filesIgnored: 99, ignoredCategories: ['file budget'], sampled: true, truncated: true } });
   assert.equal(alreadySampled.input.scanStats.sampled, true);
@@ -1176,10 +1177,40 @@ async function zipFixture(entries) {
   const bytes = await zip.generateAsync({ type: 'uint8array', compression: 'STORE' });
   return Object.assign(bytes, { name: 'fixture.zip', size: bytes.byteLength });
 }
+await asyncTest('archive worker indexes and analyzes without sending source content to the UI thread', async () => {
+  const previousSelf = globalThis.self;
+  const messages = [];
+  try {
+    const completed = new Promise((resolve, reject) => {
+      globalThis.self = {
+        postMessage(message) {
+          messages.push(message);
+          if (message.type === 'prepared') queueMicrotask(() => globalThis.self.onmessage({ data: { type: 'continue-archive', requestId: 37 } }));
+          if (message.type === 'complete') resolve(message);
+          if (message.type === 'error') reject(new Error(message.message));
+        },
+      };
+      load('src/lib/analyzer/analysis.worker.ts');
+    });
+    const archive = await zipFixture([['sample/package.json', '{"name":"sample","dependencies":{"react":"^19.0.0"}}'], ['sample/src/index.tsx', 'export const App = () => <main>Sample</main>'], ['sample/README.md', '# Sample']]);
+    globalThis.self.onmessage({ data: { type: 'analyze-archive', requestId: 37, file: archive, source: 'upload', displayName: 'sample-project.zip' } });
+    const message = await completed;
+    assert.equal(message.result.summary.name, 'sample-project');
+    assert.equal(message.result.summary.scanStats.filesFound, 3);
+    assert.equal(message.result.trust.execution.worker, true);
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce10-')));
+    assert.ok(messages.some((item) => item.type === 'preview'));
+    assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
+  } finally {
+    if (previousSelf === undefined) delete globalThis.self;
+    else globalThis.self = previousSelf;
+  }
+});
 await asyncTest('ZIP reads small lockfiles and measures Unicode content in bytes', async () => {
   const entries = [['repo/package-lock.json', '{"lockfileVersion":3}'], ['repo/yarn.lock', '# yarn lock'], ['repo/pnpm-lock.yaml', 'lockfileVersion: 9'], ['repo/src/message.py', 'message = "සිංහල"']];
   const result = await readZip(await zipFixture(entries));
   assert.equal(result.scanStats.truncated, false);
+  assert.equal(result.scanStats.filesWithContent, entries.length);
   assert.equal(result.scanStats.contentBytesRead, entries.reduce((sum, [, value]) => sum + Buffer.byteLength(value), 0));
   for (const [path, content] of entries) assert.equal(result.files.find(x => x.path === path.slice(5))?.content, content);
 });
@@ -1205,6 +1236,7 @@ await asyncTest('ZIP root detection retains source folders when root binaries ar
 await asyncTest('ZIP labels oversized lockfile content as incomplete', async () => {
   const result = await readZip(await zipFixture([['repo/package-lock.json', ' '.repeat(2 * 1024 * 1024 + 1)]]));
   assert.equal(result.scanStats.truncated, true);
+  assert.equal(result.scanStats.filesWithContent, 0);
   assert.equal(result.files.find(x => !x.isDirectory)?.content, undefined);
 });
 test('primary compatibility readers ignore auxiliary manifests and retain real file paths', () => {
@@ -1320,6 +1352,44 @@ await asyncTest('repository stream reports measured bytes with known and unknown
   assert.equal(updates.at(-1).totalBytes,headers['content-length']==='4'?4:null);
   assert.ok(Number.isFinite(updates.at(-1).bytesPerSecond));
  }
+});
+await asyncTest('repository downloads spill to private storage and clean up after incomplete streams', async () => {
+  const { readArchiveDownload } = load('src/lib/analyzer/download.ts');
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const removed = []; let aborted = 0; let opened = 0;
+  const root = {
+    async getFileHandle(name) {
+      opened++;
+      const pieces = [];
+      return {
+        async createWritable() { return {
+          async write(chunk) { pieces.push(chunk); },
+          async close() {},
+          async abort() { aborted++; },
+        }; },
+        async getFile() { return new Blob(pieces); },
+      };
+    },
+    async removeEntry(name) { removed.push(name); },
+  };
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { storage: { getDirectory: async () => root } } });
+  try {
+    let cleanup;
+    const response = new Response(new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array([1, 2])); controller.enqueue(new Uint8Array([3, 4, 5])); controller.close(); } }));
+    const blob = await readArchiveDownload(response, { signal: new AbortController().signal, maxBytes: 8, timeoutMs: 1000, diskThresholdBytes: 2, onProgress: () => {}, onTemporaryArchive: (dispose) => { cleanup = dispose; } });
+    assert.deepEqual([...new Uint8Array(await blob.arrayBuffer())], [1, 2, 3, 4, 5]);
+    assert.equal(opened, 1);
+    assert.equal(removed.length, 0);
+    await cleanup();
+    assert.equal(removed.length, 1);
+    const incomplete = new Response(new ReadableStream({ start(controller) { controller.enqueue(new Uint8Array([6, 7, 8])); controller.close(); } }), { headers: { 'content-length': '4' } });
+    await assert.rejects(() => readArchiveDownload(incomplete, { signal: new AbortController().signal, maxBytes: 8, timeoutMs: 1000, diskThresholdBytes: 2, onProgress: () => {} }), /incomplete/);
+    assert.equal(aborted, 1);
+    assert.equal(removed.length, 2);
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'navigator', original);
+    else delete globalThis.navigator;
+  }
 });
 await asyncTest('repository streaming enforces limits and rejects incomplete responses', async () => {
  const { readArchiveDownload } = load('src/lib/analyzer/download.ts');

@@ -1,6 +1,5 @@
 import { readArchiveDownload, type DownloadProgress } from '@/lib/analyzer/download';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { readZip } from '@/lib/analyzer/zip';
 import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
 import { markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
@@ -77,9 +76,10 @@ export function useAnalyzer() {
   const runningRef = useRef(false);
   const requestIdRef = useRef(0);
   const remoteAbortRef = useRef<AbortController | null>(null);
+  const temporaryArchiveCleanupRef = useRef<(() => Promise<void>) | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const workerRejectRef = useRef<((error: Error) => void) | null>(null);
-  const resumableRef = useRef<AnalysisInput | null>(null);
+  const resumableRef = useRef<AnalysisInput | { file: File; source: 'upload' | 'github'; displayName?: string } | null>(null);
 
   const safeSetState = useCallback((update: Partial<AnalyzerState> | ((prev: AnalyzerState) => AnalyzerState)) => {
     if (mountedRef.current) {
@@ -100,6 +100,8 @@ export function useAnalyzer() {
     workerRef.current?.terminate();
     workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
     workerRejectRef.current = null;
+    void temporaryArchiveCleanupRef.current?.();
+    temporaryArchiveCleanupRef.current = null;
     clearAnalysisTimeout();
   }, [clearAnalysisTimeout]);
 
@@ -122,6 +124,9 @@ export function useAnalyzer() {
     workerRef.current = null;
     workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
     workerRejectRef.current = null;
+    if (temporaryArchiveCleanupRef.current) resumableRef.current = null;
+    void temporaryArchiveCleanupRef.current?.();
+    temporaryArchiveCleanupRef.current = null;
     clearAnalysisTimeout();
     runningRef.current = false;
     safeSetState({ ...INITIAL_STATE, stage: 'idle', canResume: Boolean(resumableRef.current), message: resumableRef.current ? 'Cancelled safely. Resume restarts the prepared local scan.' : null });
@@ -163,33 +168,31 @@ export function useAnalyzer() {
   );
 
   const analyzeArchive = useCallback(
-    async (file: File, source: 'upload' | 'github', requestId = startRequest()): Promise<AnalysisResult> => {
+    async (file: File, source: 'upload' | 'github', requestId = startRequest(), displayName?: string): Promise<AnalysisResult> => {
       if (requestId !== requestIdRef.current) throw new Error(CANCELLED_MESSAGE);
+      resumableRef.current = { file, source, displayName };
       timeoutRef.current = setTimeout(() => {
         requestIdRef.current += 1;
         workerRef.current?.terminate();
         workerRef.current = null;
+        workerRejectRef.current?.(new Error('Analysis exceeded the adaptive processing window. The archive may be malformed or this device may not have enough available memory.'));
+        workerRejectRef.current = null;
         safeSetState({ stage: 'error', error: 'Analysis exceeded the adaptive processing window. The archive may be malformed or this device may not have enough available memory.', progress: 0 });
         runningRef.current = false;
       }, archiveProcessingTimeoutMs(file.size));
 
       safeSetState((s) => ({ ...s, stage: 'reading', progress: 15, error: null, message: 'Opening ZIP archive and indexing file names.' }));
       try {
-        const { files, name, scanStats } = await readZip(file, (done, total) => {
-          if (requestId === requestIdRef.current) safeSetState((s) => ({
-            ...s, stage: 'reading', progress: 20 + Math.floor(19 * done / Math.max(total, 1)),
-            message: `Reading selected files: ${done.toLocaleString()} / ${total.toLocaleString()}.`,
-          }));
-        });
-        if (files.length === 0) {
-          runningRef.current = false;
-          clearAnalysisTimeout();
-          const msg = 'The archive contains no files. Check the ZIP contents and try again.';
-          safeSetState({ ...INITIAL_STATE, stage: 'error', error: msg });
-          return Promise.reject(new Error(msg));
-        }
+        const { result, cached } = await executeArchiveInWorker(file, source, requestId, workerRef, workerRejectRef,
+          (stage, progress, message) => safeSetState((s) => ({ ...s, stage, progress, message })),
+          (preview) => safeSetState((s) => ({ ...s, preview })), displayName);
         ensureCurrentRequest(requestId);
-        return await runAnalysis(files, name, source, scanStats, requestId);
+        saveReportToHistory(result);
+        resumableRef.current = null;
+        clearAnalysisTimeout();
+        safeSetState({ stage: 'completed', result, error: null, progress: 100, message: cached ? 'Analysis complete from local cache.' : 'Analysis complete in a background worker.', cacheHit: cached, canResume: false });
+        runningRef.current = false;
+        return result;
       } catch (e) {
         clearAnalysisTimeout();
         if (requestId === requestIdRef.current) runningRef.current = false;
@@ -201,7 +204,7 @@ export function useAnalyzer() {
         throw e;
       }
     },
-    [safeSetState, runAnalysis, clearAnalysisTimeout, ensureCurrentRequest, startRequest]
+    [safeSetState, clearAnalysisTimeout, ensureCurrentRequest, startRequest]
   );
 
   const analyzeFile = useCallback(
@@ -272,13 +275,23 @@ export function useAnalyzer() {
           onProgress: (download) => {
             if (requestId === requestIdRef.current) safeSetState((s) => ({ ...s, download }));
           },
+          onTemporaryArchive: (cleanup) => { temporaryArchiveCleanupRef.current = cleanup; },
         });
         ensureCurrentRequest(requestId);
         safeSetState((s) => ({ ...s, download: null }));
         if (blob.size > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
-        const file = new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
-        return await analyzeArchive(file, 'github', requestId);
+        const file = blob instanceof File ? blob : new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
+        try { return await analyzeArchive(file, 'github', requestId, `${repository.repository}.zip`); }
+        finally {
+          const cleanup = temporaryArchiveCleanupRef.current;
+          temporaryArchiveCleanupRef.current = null;
+          if (cleanup) resumableRef.current = null;
+          await cleanup?.().catch(() => undefined);
+        }
       } catch (e) {
+        const cleanup = temporaryArchiveCleanupRef.current;
+        temporaryArchiveCleanupRef.current = null;
+        await cleanup?.().catch(() => undefined);
         clearAnalysisTimeout();
         if (requestId === requestIdRef.current) runningRef.current = false;
         const message = e instanceof DOMException && e.name === 'AbortError'
@@ -306,6 +319,8 @@ export function useAnalyzer() {
     workerRef.current = null;
     workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
     workerRejectRef.current = null;
+    void temporaryArchiveCleanupRef.current?.();
+    temporaryArchiveCleanupRef.current = null;
     resumableRef.current = null;
     clearAnalysisTimeout();
     runningRef.current = false;
@@ -316,8 +331,9 @@ export function useAnalyzer() {
     if (!resumableRef.current) throw new Error('No cancelled analysis is available to resume.');
     const requestId = startRequest();
     const input = resumableRef.current;
+    if ('file' in input) return analyzeArchive(input.file, input.source, requestId, input.displayName);
     return runAnalysis(input.files, input.fileName, input.source, input.scanStats, requestId);
-  }, [runAnalysis, startRequest]);
+  }, [runAnalysis, analyzeArchive, startRequest]);
 
   return { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, resume, isRunning: runningRef.current };
 }
@@ -347,5 +363,53 @@ async function executeInWorker(
     };
     worker.onerror = (event) => { worker.terminate(); workerRef.current = null; workerRejectRef.current = null; reject(new Error(event.message || 'Worker analysis failed.')); };
     worker.postMessage({ type: 'analyze', requestId, input });
+  });
+}
+
+/** Keep the compressed archive and extracted source in one worker; only the report crosses threads. */
+async function executeArchiveInWorker(
+  file: File,
+  source: 'upload' | 'github',
+  requestId: number,
+  workerRef: React.MutableRefObject<Worker | null>,
+  workerRejectRef: React.MutableRefObject<((error: Error) => void) | null>,
+  onProgress: (stage: AnalysisStage, progress: number, message: string) => void,
+  onPreview: (preview: AnalyzerState['preview']) => void,
+  displayName?: string,
+): Promise<{ result: AnalysisResult; cached: boolean }> {
+  if (typeof Worker === 'undefined') {
+    const [{ readZip }, { analyzeProject }] = await Promise.all([import('@/lib/analyzer/zip'), import('@/lib/analyzer/analyzer')]);
+    const { files, name, scanStats } = await readZip(file, (done, total) => onProgress('reading', 20 + Math.floor(19 * done / Math.max(total, 1)), `Reading selected files: ${done.toLocaleString()} / ${total.toLocaleString()}.`), displayName);
+    const prepared = prepareAnalysisInput({ files, fileName: name, source, scanStats });
+    const cached = loadCachedAnalysis(prepared.cacheKey);
+    const result = cached ? markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}`, createdAt: new Date().toISOString(), source }, true) : markExecution(analyzeProject(prepared.input), false);
+    if (!cached) saveCachedAnalysis(prepared.cacheKey, result);
+    return { result, cached: Boolean(cached) };
+  }
+  return new Promise((resolve, reject) => {
+    const worker = new Worker(new URL('../lib/analyzer/analysis.worker.ts', import.meta.url), { type: 'module' });
+    workerRef.current = worker;
+    workerRejectRef.current = reject;
+    const finish = () => { worker.terminate(); workerRef.current = null; workerRejectRef.current = null; };
+    worker.onmessage = (event: MessageEvent<{ type: string; requestId: number; stage?: AnalysisStage; progress?: number; message?: string; result?: AnalysisResult; cacheKey?: string; preview?: NonNullable<AnalyzerState['preview']> }>) => {
+      if (event.data.requestId !== requestId) return;
+      if (event.data.type === 'progress' && event.data.stage && typeof event.data.progress === 'number') onProgress(event.data.stage, event.data.progress, event.data.message ?? 'Analysis in progress.');
+      if (event.data.type === 'preview' && event.data.preview) onPreview(event.data.preview);
+      if (event.data.type === 'prepared' && event.data.cacheKey) {
+        const cached = loadCachedAnalysis(event.data.cacheKey);
+        if (cached) {
+          finish();
+          resolve({ result: markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}`, createdAt: new Date().toISOString(), source }, true), cached: true });
+        } else worker.postMessage({ type: 'continue-archive', requestId });
+      }
+      if (event.data.type === 'complete' && event.data.result) {
+        finish();
+        if (event.data.cacheKey) saveCachedAnalysis(event.data.cacheKey, event.data.result);
+        resolve({ result: event.data.result, cached: false });
+      }
+      if (event.data.type === 'error') { finish(); reject(new Error(event.data.message ?? 'Worker analysis failed.')); }
+    };
+    worker.onerror = (event) => { finish(); reject(new Error(event.message || 'Worker analysis failed.')); };
+    worker.postMessage({ type: 'analyze-archive', requestId, file, source, displayName });
   });
 }

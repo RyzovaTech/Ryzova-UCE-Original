@@ -84,7 +84,7 @@ export function exportMarkdown(result: AnalysisResult): string {
   lines.push('## Overall Compatibility Score');
   lines.push('');
   lines.push(`**${result.score.overall} / 100${result.summary.analysisCoverage?.status === 'partial' ? ' (checked scope only — partial scan)' : ''}**`);
-  if (result.summary.analysisCoverage?.status === 'partial') lines.push('', `Selected ${result.summary.analysisCoverage.filesAnalyzed.toLocaleString()} of ${result.summary.analysisCoverage.filesFound.toLocaleString()} discovered files (${result.summary.analysisCoverage.fileCoveragePercent}%); some selected files may contain metadata only. The score cannot describe unchecked content.`);
+  if (result.summary.analysisCoverage?.status === 'partial') lines.push('', `Selected ${result.summary.analysisCoverage.filesAnalyzed.toLocaleString()} of ${result.summary.analysisCoverage.filesFound.toLocaleString()} discovered files (${result.summary.analysisCoverage.fileCoveragePercent}%)${result.summary.analysisCoverage.filesWithContent === undefined ? '; some selected files may contain metadata only' : `; text content checked for ${result.summary.analysisCoverage.filesWithContent.toLocaleString()} selected files`}. The score cannot describe unchecked content.`);
   lines.push('');
   lines.push('| Category | Score |');
   lines.push('| --- | --- |');

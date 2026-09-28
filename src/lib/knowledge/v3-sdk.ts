@@ -17,11 +17,12 @@ export function executeV3RulePacks(packs: V3RulePack[], context: V3ExecutionCont
   if (graph.duplicates.length || graph.missingDependencies.length || graph.cycles.length || graph.conflicts.length) throw new Error('V3 rule graph is not executable.');
   const rules = new Map(packs.flatMap((pack) => pack.rules.map((rule) => [rule.id, { rule, packId: pack.id }] as const)));
   const findings: V3RuleFinding[] = []; const metrics: V3RuleMetric[] = []; let skipped = 0;
+  const candidates = createCandidateIndex(context.files);
   for (const id of graph.order) {
     const entry = rules.get(id); if (!entry) continue;
     const { rule, packId } = entry;
     if (!applicable(rule, context)) { skipped++; continue; }
-    const output = executeRule(rule, packId, context);
+    const output = executeRule(rule, packId, context, candidates);
     findings.push(...output.findings); metrics.push(output.metric);
   }
   return {
@@ -40,13 +41,31 @@ export function executeV3RulePacks(packs: V3RulePack[], context: V3ExecutionCont
   };
 }
 
-function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext): { findings: V3RuleFinding[]; metric: V3RuleMetric } {
+type CandidateIndex = (rule: V3Rule, detector: V3RegexDetector | V3AstDetector | V3ManifestDetector | V3ConfigDetector | V3DependencyDetector) => V3ProjectFile[];
+
+/** Reuse scope and path matching across rules, without retaining source between scans. */
+function createCandidateIndex(files: V3ProjectFile[]): CandidateIndex {
+  const cache = new Map<string, V3ProjectFile[]>();
+  const scopes = new Map(files.map((file) => [file, classifyProjectFileScope(file.path)] as const));
+  return (rule, detector) => {
+    const key = JSON.stringify([rule.scope, detector.kind, detector.kind === 'dependency' ? detector.ecosystems : detector.kind === 'regex' ? [detector.include, detector.exclude] : detector.kind === 'ast' ? [detector.include, detector.languages] : detector.files]);
+    const existing = cache.get(key);
+    if (existing) return existing;
+    const selected = files.filter((file) => !file.isDirectory && !!file.content && rule.scope.includes(scopes.get(file)!) && (detector.kind === 'dependency' ? detector.ecosystems.includes(dependencyEcosystem(file.path)!) : detectorAcceptsFile(detector, file.path)));
+    // Bound cached reference arrays independently of the archive/source budget.
+    if (cache.size >= 96) cache.delete(cache.keys().next().value!);
+    cache.set(key, selected);
+    return selected;
+  };
+}
+
+function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext, candidates: CandidateIndex): { findings: V3RuleFinding[]; metric: V3RuleMetric } {
   const budget = { ...DEFAULT_BUDGET, ...rule.budget }; const started = now();
   const state = { filesVisited: 0, contentBytes: 0, matches: 0, truncated: false };
   const detectorEvidence: V3RuleEvidence[][] = [];
   for (const detector of rule.detectors) {
     if (now() - started >= budget.maxMilliseconds || state.matches >= budget.maxMatches) { state.truncated = true; break; }
-    detectorEvidence.push(runDetector(detector, context, rule, budget, state, started));
+    detectorEvidence.push(runDetector(detector, context, rule, budget, state, started, candidates));
   }
   const nonEmpty = detectorEvidence.filter((items) => items.length);
   const requiredKinds = rule.evidenceRequirements.requireDetectorKinds ?? [];
@@ -64,12 +83,11 @@ function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext):
   return { findings, metric: { ruleId: rule.id, ...state, durationMs: Math.max(0, now() - started) } };
 }
 
-function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3Rule, budget: V3RuleBudget, state: MutableState, started: number): V3RuleEvidence[] {
+function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3Rule, budget: V3RuleBudget, state: MutableState, started: number, candidates: CandidateIndex): V3RuleEvidence[] {
   if (detector.kind === 'correlation') return correlationEvidence(detector, context, rule, budget, state, started);
-  if (detector.kind === 'dependency') return dependencyEvidence(detector, context.files, rule, budget, state, started);
+  if (detector.kind === 'dependency') return dependencyEvidence(detector, candidates(rule, detector), budget, state, started);
   const evidence: V3RuleEvidence[] = [];
-  const candidates = context.files.filter((file) => !file.isDirectory && !!file.content && rule.scope.includes(classifyProjectFileScope(file.path)) && detectorAcceptsFile(detector, file.path));
-  for (const file of candidates) {
+  for (const file of candidates(rule, detector)) {
     if (stop(state, budget, started) || state.filesVisited >= budget.maxFiles || state.contentBytes + (file.content?.length ?? 0) > budget.maxContentBytes) { state.truncated = true; break; }
     state.filesVisited++; state.contentBytes += file.content?.length ?? 0;
     const found = detector.kind === 'regex' ? regexEvidence(detector, file, budget.maxMatches - state.matches)
@@ -130,10 +148,9 @@ function configEvidence(detector: V3ConfigDetector, file: V3ProjectFile, supplie
   if (!detector.path && compare(file.content, detector.operator, detector.value)) return [{ detector: 'config', file: file.path, detail: `content ${detector.operator}` }];
   return [];
 }
-function dependencyEvidence(detector: V3DependencyDetector, files: V3ProjectFile[], rule: V3Rule, budget: V3RuleBudget, state: MutableState, started: number): V3RuleEvidence[] {
+function dependencyEvidence(detector: V3DependencyDetector, files: V3ProjectFile[], budget: V3RuleBudget, state: MutableState, started: number): V3RuleEvidence[] {
   const output: V3RuleEvidence[] = [];
-  const candidates = files.filter((file) => !file.isDirectory && !!file.content && rule.scope.includes(classifyProjectFileScope(file.path)) && detector.ecosystems.includes(dependencyEcosystem(file.path)!));
-  for (const file of candidates) {
+  for (const file of files) {
     if (stop(state, budget, started) || state.filesVisited >= budget.maxFiles || state.contentBytes + (file.content?.length ?? 0) > budget.maxContentBytes) { state.truncated = true; break; }
     const dependencies = dependenciesFrom(file);
     state.filesVisited++; state.contentBytes += file.content?.length ?? 0;
