@@ -127,7 +127,7 @@ export function DashboardPage() {
             ) : (
               <ul className="divide-y">
                 {recent.map((r) => {
-                  const status = reportStatus(r.overallScore, r.criticalCount, r.warningCount);
+                  const status = reportStatus(r.overallScore, r.criticalCount, r.warningCount, r.scoreScope === 'partial');
                   return (
                     <li key={r.id}>
                       <button

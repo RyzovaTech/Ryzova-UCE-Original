@@ -31,7 +31,7 @@ export function ReportsPage() {
           ) : (
             <ul className="divide-y">
               {history.map(({ id, createdAt, result }) => {
-                const status = reportStatus(result.score.overall, result.issues.filter((issue) => issue.severity === 'critical').length, result.issues.filter((issue) => issue.severity === 'warning').length);
+                const status = reportStatus(result.score.overall, result.issues.filter((issue) => issue.severity === 'critical').length, result.issues.filter((issue) => issue.severity === 'warning').length, result.summary.analysisCoverage?.status === 'partial' || Boolean(result.summary.scanStats.truncated));
                 return <li key={id} className="flex items-center gap-3 py-3">
                   <button onClick={() => navigate(`/report/${id}`)} className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                     <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold ${status.text}`}>{result.score.overall}</span>

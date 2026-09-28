@@ -15,6 +15,9 @@ export interface ShareableReport {
   filesFound: number;
   filesAnalyzed: number;
   filesIgnored: number;
+  /** Optional so summaries exported by earlier UCE versions remain readable. */
+  scoreScope?: 'complete' | 'partial';
+  fileCoveragePercent?: number;
 }
 
 export interface PortableReportSummary extends ShareableReport { schemaVersion: 1; trust: { localOnly: boolean; networkAccessUsed: boolean; limitations: string[] }; }
@@ -39,6 +42,8 @@ export function createPortableReportSummary(report: import('../analyzer/types').
     filesFound: report.summary.scanStats.filesFound,
     filesAnalyzed: report.summary.scanStats.filesAnalyzed,
     filesIgnored: report.summary.scanStats.filesIgnored,
+    scoreScope: report.summary.analysisCoverage?.status === 'partial' || report.summary.scanStats.truncated ? 'partial' : 'complete',
+    fileCoveragePercent: report.summary.analysisCoverage?.fileCoveragePercent,
     trust: { localOnly: report.trust?.localOnly ?? true, networkAccessUsed: report.trust?.networkAccessUsed ?? false, limitations: report.trust?.limitations ?? [] },
   };
 }

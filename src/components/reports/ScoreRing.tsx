@@ -7,8 +7,9 @@ export function scoreStatus(score: number): { label: string; text: string } {
   return { label: 'Poor', text: 'text-destructive' };
 }
 
-export function reportStatus(score: number, criticalCount = 0, warningCount = 0): { label: string; text: string } {
+export function reportStatus(score: number, criticalCount = 0, warningCount = 0, partial = false): { label: string; text: string } {
   if (criticalCount > 0) return { label: 'Critical', text: 'text-destructive' };
+  if (partial) return { label: 'Partial scan', text: 'text-warning' };
   if (warningCount > 0) return { label: 'Needs attention', text: 'text-warning' };
   return scoreStatus(score);
 }
