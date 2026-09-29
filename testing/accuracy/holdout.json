@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "name": "Phase 5 provisional manifest evaluation",
+  "scope": "Eight pinned public repository manifest excerpts, 16 selected technology-presence decisions. Agent labels; no independent human adjudication or full-repository claims.",
+  "projects": [
+    {
+      "repository": "expressjs/express",
+      "commit": "3b7e39fe74371ddabc77fed736dd22aa71c14f5c",
+      "sourcePath": "package.json",
+      "excerptKind": "selected-manifest-fields",
+      "ecosystem": "JavaScript",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"name\":\"express\",\"version\":\"5.2.1\",\"dependencies\":{\"accepts\":\"^2.0.0\",\"body-parser\":\"^2.3.0\",\"content-disposition\":\"^2.0.1\",\"content-type\":\"^2.0.0\",\"cookie\":\"^0.7.1\",\"cookie-signature\":\"^1.2.1\",\"debug\":\"^4.4.0\",\"depd\":\"^2.0.0\",\"encodeurl\":\"^2.0.0\",\"escape-html\":\"^1.0.3\",\"etag\":\"^1.8.1\",\"finalhandler\":\"^2.1.0\"},\"peerDependencies\":{}}"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Node.js",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Django",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "django/django",
+      "commit": "9332b163a67eabe5bdbf8066b1c5da394be9aa9c",
+      "sourcePath": "pyproject.toml",
+      "excerptKind": "leading-lines",
+      "ecosystem": "Python",
+      "files": [
+        {
+          "path": "pyproject.toml",
+          "content": "[build-system]\nrequires = [\"setuptools>=83\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"Django\"\ndynamic = [\"version\"]\nrequires-python = \">= 3.12\"\ndependencies = [\n    \"asgiref>=3.12.1\",\n    \"sqlparse>=0.5.0\",\n    \"tzdata; sys_platform == 'win32'\",\n]\nauthors = [\n  {name = \"Django Software Foundation\", email = \"foundation@djangoproject.com\"},\n]\ndescription = \"A high-level Python web framework that encourages rapid development and clean, pragmatic design.\"\nreadme = \"README.rst\"\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Django",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "React",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "astral-sh/ruff",
+      "commit": "9318d6d94280ce45ef4783728c1adfbbbc0a2b13",
+      "sourcePath": "Cargo.toml",
+      "excerptKind": "leading-lines",
+      "ecosystem": "Rust",
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "content": "[workspace]\nmembers = [\"crates/*\"]\nresolver = \"2\"\n\n[workspace.package]\n# Please update rustfmt.toml when bumping the Rust edition\nedition = \"2024\"\nrust-version = \"1.96\"\nhomepage = \"https://docs.astral.sh/ruff\"\ndocumentation = \"https://docs.astral.sh/ruff\"\nrepository = \"https://github.com/astral-sh/ruff\"\nauthors = [\"Charlie Marsh <charlie.r.marsh@gmail.com>\"]\nlicense = \"MIT\"\n\n[workspace.dependencies]\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Rust",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Flutter",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "tokio-rs/axum",
+      "commit": "d775cb202bea5f86d7b5f5cd3b36717944635858",
+      "sourcePath": "axum/Cargo.toml",
+      "excerptKind": "leading-lines",
+      "ecosystem": "Rust",
+      "files": [
+        {
+          "path": "axum/Cargo.toml",
+          "content": "[package]\nname = \"axum\"\nversion = \"0.8.9\" # remember to bump the version that axum-extra depends on\ncategories = [\"asynchronous\", \"network-programming\", \"web-programming::http-server\"]\ndescription = \"HTTP routing and request handling library that focuses on ergonomics and modularity\"\nedition = \"2021\"\nrust-version = { workspace = true }\nhomepage = \"https://github.com/tokio-rs/axum\"\nkeywords = [\"http\", \"web\", \"routing\"]\nlicense = \"MIT\"\nreadme = \"README.md\"\nrepository = \"https://github.com/tokio-rs/axum\"\n\n[package.metadata.docs.rs]\nall-features = true\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Axum",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Next.js",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "sveltejs/kit",
+      "commit": "ee3332fe58292be9fcfabaef65dc39e61ab6d1f8",
+      "sourcePath": "packages/kit/package.json",
+      "excerptKind": "selected-manifest-fields",
+      "ecosystem": "JavaScript",
+      "files": [
+        {
+          "path": "packages/kit/package.json",
+          "content": "{\"name\":\"@sveltejs/kit\",\"version\":\"3.0.0-next.30\",\"dependencies\":{\"@rolldown/pluginutils\":\"^1.0.1\",\"@standard-schema/spec\":\"^1.1.0\",\"cookie\":\"^2.0.1\",\"devalue\":\"^5.9.4\",\"esm-env\":\"^1.2.2\",\"magic-string\":\"^1.2.3\",\"mrmime\":\"^2.0.1\",\"sirv\":\"^3.0.2\"},\"peerDependencies\":{\"@opentelemetry/api\":\"^1.0.0\",\"@sveltejs/vite-plugin-svelte\":\"^7.0.0\",\"svelte\":\"^5.57.1\",\"typescript\":\"^6.0.0\",\"vite\":\"^8.0.12\"}}"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "SvelteKit",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Laravel",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "apache/airflow",
+      "commit": "84f751581201739bfaa504854200c7807359b5d8",
+      "sourcePath": "pyproject.toml",
+      "excerptKind": "leading-lines",
+      "ecosystem": "Python",
+      "files": [
+        {
+          "path": "pyproject.toml",
+          "content": "# Licensed to the Apache Software Foundation (ASF) under one\n# or more contributor license agreements.  See the NOTICE file\n# distributed with this work for additional information\n# regarding copyright ownership.  The ASF licenses this file\n# to you under the Apache License, Version 2.0 (the\n# \"License\"); you may not use this file except in compliance\n# with the License.  You may obtain a copy of the License at\n#\n#   http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing,\n# software distributed under the License is distributed on an\n# \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n# KIND, either express or implied.  See the License for the\n# specific language governing permissions and limitations\n# under the License.\n\n[build-system]\nrequires = [\n    \"hatchling==1.32.4\",\n    \"packaging==26.3\",\n    \"pathspec==1.1.1\",\n    \"pluggy==1.6.0\",\n    \"tomli==2.4.1; python_version < '3.11'\",\n    \"tomlkit==0.15.1\",\n    \"trove-classifiers==2026.9.21.13\",\n]\nbuild-backend = \"hatchling.build\"\n\n[project]\nname = \"apache-airflow\"\ndescription = \"Programmatically author, schedule and monitor data pipelines\"\nreadme = { file = \"generated/PYPI_README.md\", content-type = \"text/markdown\" }\nlicense = \"Apache-2.0\"\nlicense-files = [\"LICENSE\", \"NOTICE\"]\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Python",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Angular",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "dotnet/aspnetcore",
+      "commit": "bf676af7baa13fa4d06be384b4285d5406161219",
+      "sourcePath": "global.json",
+      "excerptKind": "complete-manifest",
+      "ecosystem": ".NET",
+      "files": [
+        {
+          "path": "global.json",
+          "content": "{\n  \"sdk\": {\n    \"version\": \"11.0.100-rc.1.26420.103\",\n    \"paths\": [\n      \".dotnet\",\n      \"$host$\"\n    ],\n    \"errorMessage\": \"The .NET SDK could not be found, run ./restore.cmd or ./restore.sh first.\"\n  },\n  \"tools\": {\n    \"dotnet\": \"11.0.100-rc.1.26420.103\",\n    \"runtimes\": {\n      \"dotnet/x86\": [\n        \"$(MicrosoftInternalRuntimeAspNetCoreTransportVersion)\"\n      ],\n      \"dotnet\": [\n        \"$(MicrosoftInternalRuntimeAspNetCoreTransportVersion)\"\n      ]\n    }\n  },\n  \"native-tools\": {\n    \"jdk\": \"latest\"\n  },\n  \"msbuild-sdks\": {\n    \"Microsoft.DotNet.Arcade.Sdk\": \"11.0.0-beta.26453.108\",\n    \"Microsoft.DotNet.Helix.Sdk\": \"11.0.0-beta.26453.108\",\n    \"Microsoft.DotNet.SharedFramework.Sdk\": \"11.0.0-beta.26453.108\",\n    \"Microsoft.Build.NoTargets\": \"3.7.134\",\n    \"Microsoft.Build.Traversal\": \"3.4.0\",\n    \"Microsoft.WixToolset.Sdk\": \"6.0.3-dotnet.6\"\n  }\n}\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": ".NET",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Go",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    },
+    {
+      "repository": "flutter/flutter",
+      "commit": "fab991537bf1ffb063579a0dd8a47cd4f2874618",
+      "sourcePath": "packages/flutter/pubspec.yaml",
+      "excerptKind": "leading-lines",
+      "ecosystem": "Dart",
+      "files": [
+        {
+          "path": "packages/flutter/pubspec.yaml",
+          "content": "name: flutter\ndescription: A framework for writing Flutter applications\nhomepage: https://flutter.dev\n\nenvironment:\n  sdk: ^3.13.0-0\n\nresolution: workspace\n\ndependencies:\n  # To update these, use \"flutter update-packages --force-upgrade\".\n  #\n  # For detailed instructions, refer to:\n  # https://github.com/flutter/flutter/blob/main/docs/infra/Updating-dependencies-in-Flutter.md\n  characters: ^1.4.1\n  collection: ^1.19.1\n  listen: ^1.0.1\n  # This is not unpinned currently.\n  # See https://github.com/flutter/flutter/issues/185017\n  material_color_utilities: 0.13.0\n  meta: ^1.19.0\n  vector_math: ^2.4.3\n  sky_engine:\n    sdk: flutter\n\ndev_dependencies:\n  flutter_driver:\n    sdk: flutter\n  flutter_test:\n    sdk: flutter\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Flutter",
+          "expected": true,
+          "rationale": "The pinned manifest excerpt explicitly identifies this project or runtime."
+        },
+        {
+          "technology": "Express",
+          "expected": false,
+          "rationale": "No evidence for this unrelated technology occurs in the selected manifest excerpt."
+        }
+      ]
+    }
+  ]
+}
