@@ -10,9 +10,9 @@ Generated from executable evidence-linked packs. Static correlations are review 
 | --- | ---: | --- |
 | com.ryzova.uce.v3-phase4.browser-target | 630 | browser |
 | com.ryzova.uce.v3-phase4.manifest-lockfile | 400 | dependency |
-| com.ryzova.uce.v3-phase4.value-flow | 1162 | security |
+| com.ryzova.uce.v3-phase4.value-flow | 1169 | security |
 | com.ryzova.uce.v3-phase4.import-boundary | 300 | architecture |
-| com.ryzova.uce.v3-phase4.context-links | 8 | build, runtime, api, database, performance, accessibility, platform, technology |
+| com.ryzova.uce.v3-phase4.context-links | 1 | build |
 
 ## Rule index
 
@@ -1146,6 +1146,13 @@ Generated from executable evidence-linked packs. Static correlations are review 
 | intelligence.value-flow.dotnet-7-9-uxkm5 | security | correlation |
 | intelligence.value-flow.dotnet-8-0-8vo2xn | security | correlation |
 | intelligence.value-flow.dotnet-8-1-8loh8o | security | correlation |
+| intelligence.value-flow.dotnet-8-2-9fnabl | security | correlation |
+| intelligence.value-flow.dotnet-8-3-95nomm | security | correlation |
+| intelligence.value-flow.dotnet-8-4-9zmhpj | security | correlation |
+| intelligence.value-flow.dotnet-8-5-9pmw0k | security | correlation |
+| intelligence.value-flow.dotnet-8-6-ajlp3h | security | correlation |
+| intelligence.value-flow.dotnet-8-7-a9m3ei | security | correlation |
+| intelligence.value-flow.dotnet-8-8-6nr9dv | security | correlation |
 | intelligence.value-flow.java-0-0-1tj2ppp | security | correlation |
 | intelligence.value-flow.java-0-1-1t9340q | security | correlation |
 | intelligence.value-flow.java-0-10-qxos9q | security | correlation |
@@ -2510,11 +2517,4 @@ Generated from executable evidence-linked packs. Static correlations are review 
 | intelligence.import-boundary.src-widgets-src-private-1bbvc3c | architecture | correlation |
 | intelligence.import-boundary.src-widgets-src-secrets-4s9g42 | architecture | correlation |
 | intelligence.import-boundary.src-widgets-src-server-1oc1pcm | architecture | correlation |
-| intelligence.context-links.accessibility-5-u7hz15 | accessibility | correlation |
-| intelligence.context-links.api-2-16adww4 | api | correlation |
 | intelligence.context-links.build-0-1eelxou | build | correlation |
-| intelligence.context-links.database-3-1ij7wfo | database | correlation |
-| intelligence.context-links.performance-4-z63cck | performance | correlation |
-| intelligence.context-links.platform-6-1qngcdd | platform | correlation |
-| intelligence.context-links.runtime-1-1vzuxrt | runtime | correlation |
-| intelligence.context-links.technology-7-1vz4qbn | technology | correlation |

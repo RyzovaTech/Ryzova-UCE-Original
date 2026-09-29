@@ -56,15 +56,23 @@ export function correlationEvidence(detector: V3CorrelationDetector, context: V3
     for (const file of files) {
       if (!matchesAny(file.path, detector.include)) continue;
       if (!visit(file)) break;
-      const content = file.content ?? ''; source.lastIndex = 0;
+      const content = file.content ?? ''; const comments = commentMask(content, file.path); source.lastIndex = 0;
       for (const match of content.matchAll(source)) {
         const variable = match[1]; if (!variable || !/^[A-Za-z_$][\w$]*$/.test(variable)) continue;
+        if (comments[match.index] === ' ') continue;
         const after = content.slice(match.index + match[0].length, match.index + match[0].length + 4_000);
-        const sink = new RegExp(detector.sinkPattern.replace(/\{\{variable\}\}/g, () => escape(variable))).exec(after);
+        const sinkPattern = new RegExp(detector.sinkPattern.replace(/\{\{variable\}\}/g, () => escape(variable)), 'g');
+        let sink: RegExpExecArray | null;
+        while ((sink = sinkPattern.exec(after)) && comments[match.index + match[0].length + sink.index] === ' ') {
+          if (!sink[0].length) sinkPattern.lastIndex++;
+        }
         if (!sink || lineAt(after, sink.index) > (detector.maxLineDistance ?? 35)) continue;
-        if (new RegExp('\\b' + escape(variable) + '\\s*=(?!=)').test(after.slice(0, sink.index))) continue;
+        const end = match.index + match[0].length + sink.index;
+        if (!sameLexicalScope(content, comments, match.index, end, file.path)) continue;
+        const intervening = comments.slice(match.index + match[0].length, end);
+        if (new RegExp('(?:^|[^\\w$])(?:' + (file.path.endsWith('.php') ? '\\$' : '') + escape(variable) + ')\\s*(?:(?:[+*/%-]|\\?\\?|&&|\\|\\|)?=(?!=)|\\+\\+|--)').test(intervening)) continue;
         add({ file, line: lineAt(content, match.index) }, { file, line: lineAt(content, match.index + match[0].length + sink.index) },
-          'Possible direct value path for ' + variable + '; manually review control flow');
+          'Possible direct value path for ' + variable + ' in one lexical scope; manually review control flow');
       }
     }
   } else if (detector.mode === 'import-boundary') {
@@ -73,8 +81,11 @@ export function correlationEvidence(detector: V3CorrelationDetector, context: V3
     for (const file of files) {
       if (!matchesAny(file.path, detector.include)) continue;
       if (!visit(file)) break;
-      const content = file.content ?? '';
+      const content = file.content ?? ''; const code = commentMask(content, file.path);
       for (const match of content.matchAll(/(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*|\bimport\s*)["'](\.{1,2}\/[^"']+)["']/g)) {
+        if (code[match.index] === ' ') continue;
+        const statement = content.slice(Math.max(0, content.lastIndexOf('\n', match.index) + 1), match.index);
+        if (/\b(?:import|export)\s+type\b/.test(statement)) continue;
         const candidate = resolveImport(file.path, match[1]);
         const destination = targets.find(item => { const path = normalizeProjectPath(item.path); return path === candidate || path.startsWith(candidate + '.') || path.startsWith(candidate + '/index.'); });
         if (destination) add({ file, line: lineAt(content, match.index) }, { file: destination, line: 1 }, 'Import crosses into ' + destination.path);
@@ -123,3 +134,43 @@ function lineAt(content: string, offset: number): number { return content.slice(
 function lineOf(content: string, token: string): number { return lineAt(content, Math.max(0, content.indexOf(token))); }
 function escape(value: string): string { return value.replace(/[.*+?^$(){}|[\]\\]/g, '\\$&'); }
 function parseJson(content: string | undefined): unknown { try { return JSON.parse(content ?? ''); } catch { return undefined; } }
+
+// Keep offsets and string arguments intact; blank comments and string contents so
+// that a quoted example or commented-out sink cannot create a value path.
+function commentMask(content: string, path: string): string {
+  const python = /\.py$/i.test(path); const php = /\.php$/i.test(path);
+  const chars = [...content]; let mode: 'code' | 'line' | 'block' | 'quote' = 'code'; let quote = '';
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i]; const next = chars[i + 1];
+    if (mode === 'line') { if (ch === '\n') mode = 'code'; else chars[i] = ' '; continue; }
+    if (mode === 'block') { if (ch === '*' && next === '/') { chars[i++] = ' '; chars[i] = ' '; mode = 'code'; }
+      else if (ch !== '\n') chars[i] = ' '; continue; }
+    if (mode === 'quote') {
+      if (ch === '\\') { if (next !== '\n') chars[i] = ' '; if (next !== undefined) { i++; if (next !== '\n') chars[i] = ' '; } continue; }
+      if (ch === quote) { mode = 'code'; continue; }
+      if (ch !== '\n') chars[i] = ' '; continue;
+    }
+    if (ch === '/' && next === '/' && !python) { chars[i++] = ' '; chars[i] = ' '; mode = 'line'; }
+    else if (ch === '/' && next === '*' && !python) { chars[i++] = ' '; chars[i] = ' '; mode = 'block'; }
+    else if (ch === '#' && (python || php)) { chars[i] = ' '; mode = 'line'; }
+    else if (ch === '"' || ch === "'" || (ch === '`' && !python && !php)) { quote = ch; mode = 'quote'; }
+  }
+  return chars.join('');
+}
+
+function sameLexicalScope(content: string, code: string, start: number, end: number, path: string): boolean {
+  if (/\.py$/i.test(path)) {
+    const sourceLine = content.lastIndexOf('\n', start - 1) + 1;
+    const indent = (content.slice(sourceLine).match(/^[ \t]*/) ?? [''])[0].length;
+    const between = code.slice(start, end).split('\n');
+    return between.slice(1).every(line => !line.trim() || (line.match(/^[ \t]*/) ?? [''])[0].length >= indent);
+  }
+  let depth = 0;
+  for (let i = 0; i < start; i++) { if (code[i] === '{') depth++; else if (code[i] === '}') depth--; }
+  const sourceDepth = depth;
+  for (let i = start; i < end; i++) {
+    if (code[i] === '{') depth++;
+    else if (code[i] === '}' && --depth < sourceDepth) return false;
+  }
+  return depth === sourceDepth;
+}

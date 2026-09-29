@@ -527,6 +527,53 @@ test('V3 flow avoids reassigned variables and separate test-scope code', () => {
   ], technologies: ['typescript'] }).findings;
   assert.deepEqual(findings, []);
 });
+test('V3 value paths require live source and sink in the same lexical scope', () => {
+  const pack = V3_PHASE4_RULE_PACKS.find(item => item.id.endsWith('.value-flow'));
+  const rule = pack.rules.find(item => item.id.includes('javascript-0-0-'));
+  const only = { ...pack, rules: [rule] };
+  const cases = [
+    ['src/direct.ts', 'function handle(req) { const value = req.query.id; eval(value); }', true],
+    ['src/comment.ts', 'const value = req.query.id; // eval(value);', false],
+    ['src/string.ts', 'const value = req.query.id; const text = "eval(value)";', false],
+    ['src/source-comment.ts', '// const value = req.query.id;\neval(value);', false],
+    ['src/separate-functions.ts', 'function first(req) { const value = req.query.id; } function second() { eval(value); }', false],
+    ['src/reassigned-comment.ts', 'const value = req.query.id; // value = safe;\neval(value);', true],
+    ['src/reassigned.ts', 'let value = req.query.id; value += "safe"; eval(value);', false],
+    ['src/nested.ts', 'function handle(req) { const value = req.query.id; if (ready) { eval(value); } }', false],
+  ];
+  for (const [path, content, expected] of cases) {
+    const findings = executeV3RulePacks([only], { files: [file(path, content)], technologies: ['typescript'] }).findings;
+    assert.equal(findings.length > 0, expected, path);
+    if (expected) assert.equal(findings[0].evidence[0].relatedLine > 0, true);
+  }
+  const pythonRule = pack.rules.find(item => item.id.includes('python-0-0-'));
+  const python = { ...pack, rules: [pythonRule] };
+  assert.equal(executeV3RulePacks([python], { files: [file('src/app.py',
+    "def first(request):\n    user = request.args.get('name')\ndef second():\n    eval(user)\n")], technologies: ['python'] }).findings.length, 0);
+});
+test('V3 context links do not invent issues from unrelated positive patterns', () => {
+  const context = V3_PHASE4_RULE_PACKS.find(item => item.id.endsWith('.context-links'));
+  const files = [file('src/app.tsx', 'function View() { return <button onClick={go} tabIndex={0}>Go</button> }'),
+    file('src/api.ts', 'fetch(url); app.get("/", handler);'),
+    file('src/storage.ts', 'for (const row of rows) { query(row); }')];
+  assert.equal(executeV3RulePacks([context], { files, technologies: ['typescript', 'react'] }).findings.length, 0);
+  assert.equal(context.rules.length, 1);
+});
+test('V3 import boundary ignores type-only and commented imports', () => {
+  const pack = V3_PHASE4_RULE_PACKS.find(item => item.id.endsWith('.import-boundary'));
+  const rule = pack.rules.find(item => item.id.includes('src-components-src-server-'));
+  const only = { ...pack, rules: [rule] };
+  const target = file('src/server/secrets.ts', 'export const token = "x";');
+  for (const source of [
+    "import type { Token } from '../server/secrets';",
+    "export type { Token } from '../server/secrets';",
+    "// import { token } from '../server/secrets';",
+  ]) assert.equal(executeV3RulePacks([only], { files: [target, file('src/components/view.ts', source)], technologies: ['typescript'] }).findings.length, 0);
+  const actual = executeV3RulePacks([only], { files: [target, file('src/components/view.ts',
+    "import { token } from '../server/secrets';")], technologies: ['typescript'] }).findings;
+  assert.equal(actual.length, 1);
+  assert.equal(actual[0].evidence[0].relatedFile, 'src/server/secrets.ts');
+});
 test('V3 value-path rules recognize Python and PHP assignment boundaries', () => {
   const pack = V3_PHASE4_RULE_PACKS.find(item => item.id.endsWith('.value-flow'));
   const selected = { ...pack, rules: pack.rules.filter(item => /(?:python|php)-0-0-/.test(item.id)) };

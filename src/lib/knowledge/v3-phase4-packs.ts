@@ -82,13 +82,6 @@ const importRules = origins.flatMap(origin => destinations.map(target =>
 interface Pair { module: V3RuleModule; tech: string[]; first: string[]; second: string[]; firstPattern: string; secondPattern: string; relation: 'same-file' | 'same-workspace' }
 const pairs: Pair[] = [
   { module: 'build', tech: ['typescript', 'nodejs'], first: ['**/package.json','package.json'], second: ['**/tsconfig.json','tsconfig.json'], firstPattern: '"type"\\s*:\\s*"module"', secondPattern: '"module"\\s*:\\s*"CommonJS"', relation: 'same-workspace' },
-  { module: 'runtime', tech: ['nodejs'], first: ['**/package.json','package.json'], second: ['**/.nvmrc','.nvmrc'], firstPattern: '"node"\\s*:', secondPattern: '^v?\\d+', relation: 'same-workspace' },
-  { module: 'api', tech: ['javascript','typescript','react'], first: ['**/*.ts','**/*.tsx','**/*.js'], second: ['**/*.ts','**/*.tsx','**/*.js'], firstPattern: '\\bfetch\\s*\\(', secondPattern: '\\b(?:app|router)\\.(?:get|post|put|delete)\\s*\\(', relation: 'same-workspace' },
-  { module: 'database', tech: ['prisma'], first: ['**/schema.prisma','schema.prisma'], second: ['**/migration.sql','**/migrations/**/*.sql'], firstPattern: '\\bmodel\\s+\\w+', secondPattern: '\\b(?:ALTER|DROP)\\s+TABLE\\b', relation: 'same-workspace' },
-  { module: 'performance', tech: ['javascript','typescript'], first: ['**/*.js','**/*.ts','**/*.tsx'], second: ['**/*.js','**/*.ts','**/*.tsx'], firstPattern: '\\bfor\\s*\\(', secondPattern: '\\b(?:fetch|readFileSync|query)\\s*\\(', relation: 'same-file' },
-  { module: 'accessibility', tech: ['react','vue','html'], first: ['**/*.tsx','**/*.jsx','**/*.html'], second: ['**/*.tsx','**/*.jsx','**/*.html'], firstPattern: '\\bonClick\\s*=', secondPattern: '\\btabIndex\\s*=', relation: 'same-file' },
-  { module: 'platform', tech: ['javascript','typescript'], first: ['**/*.js','**/*.ts'], second: ['**/*.js','**/*.ts'], firstPattern: '\\bpath\\.join\\s*\\(', secondPattern: '\\bprocess\\.platform\\b', relation: 'same-file' },
-  { module: 'technology', tech: ['react','nextjs'], first: ['**/*.tsx','**/*.jsx'], second: ['**/next.config.*','next.config.*'], firstPattern: '\\buse client\\b', secondPattern: '\\b(?:output|experimental)\\s*:', relation: 'same-workspace' },
 ];
 const contextRules = pairs.map((pair, index) =>
   rule('context-links', pair.module + '-' + index, pair.module, 'Review linked ' + pair.module + ' evidence',
