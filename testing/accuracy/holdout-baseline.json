@@ -1,0 +1,294 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "Phase 5 provisional manifest evaluation",
+  "corpusSha256": "9f80d0b2e9724fe1773c48568a9b6150751b6af00bcd8b9244396a156176be91",
+  "scope": "Eight pinned public repository manifest excerpts, 16 selected technology-presence decisions. Agent labels; no independent human adjudication or full-repository claims.",
+  "reviewStatus": "agent-provisional",
+  "humanReviewedCases": 0,
+  "globalAccuracy": null,
+  "selectedManifestMetrics": {
+    "decisions": 16,
+    "repositories": 8,
+    "fullyCorrectProjects": 5,
+    "tp": 5,
+    "fp": 0,
+    "fn": 3,
+    "tn": 8,
+    "decisionAccuracy": 81.25,
+    "projectPassRate": 62.5,
+    "projectPassWilson95": [
+      30.57,
+      86.32
+    ],
+    "precision": 100,
+    "recall": 62.5,
+    "falsePositiveRate": 0
+  },
+  "ecosystems": {
+    "JavaScript": {
+      "decisions": 4,
+      "repositories": 2,
+      "fullyCorrectProjects": 1,
+      "tp": 1,
+      "fp": 0,
+      "fn": 1,
+      "tn": 2,
+      "decisionAccuracy": 75,
+      "projectPassRate": 50,
+      "projectPassWilson95": [
+        9.45,
+        90.55
+      ],
+      "precision": 100,
+      "recall": 50,
+      "falsePositiveRate": 0
+    },
+    "Python": {
+      "decisions": 4,
+      "repositories": 2,
+      "fullyCorrectProjects": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 2,
+      "decisionAccuracy": 100,
+      "projectPassRate": 100,
+      "projectPassWilson95": [
+        34.24,
+        100
+      ],
+      "precision": 100,
+      "recall": 100,
+      "falsePositiveRate": 0
+    },
+    "Rust": {
+      "decisions": 4,
+      "repositories": 2,
+      "fullyCorrectProjects": 2,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 2,
+      "decisionAccuracy": 100,
+      "projectPassRate": 100,
+      "projectPassWilson95": [
+        34.24,
+        100
+      ],
+      "precision": 100,
+      "recall": 100,
+      "falsePositiveRate": 0
+    },
+    ".NET": {
+      "decisions": 2,
+      "repositories": 1,
+      "fullyCorrectProjects": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 1,
+      "decisionAccuracy": 50,
+      "projectPassRate": 0,
+      "projectPassWilson95": [
+        0,
+        79.35
+      ],
+      "precision": null,
+      "recall": 0,
+      "falsePositiveRate": 0
+    },
+    "Dart": {
+      "decisions": 2,
+      "repositories": 1,
+      "fullyCorrectProjects": 0,
+      "tp": 0,
+      "fp": 0,
+      "fn": 1,
+      "tn": 1,
+      "decisionAccuracy": 50,
+      "projectPassRate": 0,
+      "projectPassWilson95": [
+        0,
+        79.35
+      ],
+      "precision": null,
+      "recall": 0,
+      "falsePositiveRate": 0
+    }
+  },
+  "failures": [
+    {
+      "id": "sveltejs/kit/SvelteKit",
+      "repository": "sveltejs/kit",
+      "ecosystem": "JavaScript",
+      "technology": "SvelteKit",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "dotnet/aspnetcore/.NET",
+      "repository": "dotnet/aspnetcore",
+      "ecosystem": ".NET",
+      "technology": ".NET",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "flutter/flutter/Flutter",
+      "repository": "flutter/flutter",
+      "ecosystem": "Dart",
+      "technology": "Flutter",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    }
+  ],
+  "results": [
+    {
+      "id": "expressjs/express/Node.js",
+      "repository": "expressjs/express",
+      "ecosystem": "JavaScript",
+      "technology": "Node.js",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "expressjs/express/Django",
+      "repository": "expressjs/express",
+      "ecosystem": "JavaScript",
+      "technology": "Django",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "django/django/Django",
+      "repository": "django/django",
+      "ecosystem": "Python",
+      "technology": "Django",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "django/django/React",
+      "repository": "django/django",
+      "ecosystem": "Python",
+      "technology": "React",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "astral-sh/ruff/Rust",
+      "repository": "astral-sh/ruff",
+      "ecosystem": "Rust",
+      "technology": "Rust",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "astral-sh/ruff/Flutter",
+      "repository": "astral-sh/ruff",
+      "ecosystem": "Rust",
+      "technology": "Flutter",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "tokio-rs/axum/Axum",
+      "repository": "tokio-rs/axum",
+      "ecosystem": "Rust",
+      "technology": "Axum",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "tokio-rs/axum/Next.js",
+      "repository": "tokio-rs/axum",
+      "ecosystem": "Rust",
+      "technology": "Next.js",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "sveltejs/kit/SvelteKit",
+      "repository": "sveltejs/kit",
+      "ecosystem": "JavaScript",
+      "technology": "SvelteKit",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "sveltejs/kit/Laravel",
+      "repository": "sveltejs/kit",
+      "ecosystem": "JavaScript",
+      "technology": "Laravel",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "apache/airflow/Python",
+      "repository": "apache/airflow",
+      "ecosystem": "Python",
+      "technology": "Python",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "apache/airflow/Angular",
+      "repository": "apache/airflow",
+      "ecosystem": "Python",
+      "technology": "Angular",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "dotnet/aspnetcore/.NET",
+      "repository": "dotnet/aspnetcore",
+      "ecosystem": ".NET",
+      "technology": ".NET",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "dotnet/aspnetcore/Go",
+      "repository": "dotnet/aspnetcore",
+      "ecosystem": ".NET",
+      "technology": "Go",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "flutter/flutter/Flutter",
+      "repository": "flutter/flutter",
+      "ecosystem": "Dart",
+      "technology": "Flutter",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "flutter/flutter/Express",
+      "repository": "flutter/flutter",
+      "ecosystem": "Dart",
+      "technology": "Express",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    }
+  ]
+}

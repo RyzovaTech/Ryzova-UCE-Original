@@ -37,8 +37,11 @@ jobs:
       - name: Bounded accuracy regression audit
         run: npm run audit:accuracy
 
-      - name: Independent accuracy baseline regression gate
+      - name: Development accuracy baseline regression gate
         run: npm run audit:accuracy:baseline
+
+      - name: Pinned manifest evaluation regression gate
+        run: npm run audit:accuracy:holdout
 
       - name: All V3 rule execution fixtures
         run: npm run test:v3-fixtures

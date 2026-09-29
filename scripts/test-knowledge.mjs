@@ -1163,6 +1163,18 @@ test('Phase 5 accuracy corpus contains 100+ diverse representative projects', ()
   assert.ok(PHASE5_ACCURACY_FIXTURES.length >= 100);
   for (const kind of ['positive', 'negative', 'mixed-stack', 'monorepo', 'vendor-heavy', 'vulnerable', 'browser', 'cross-platform']) assert.ok(PHASE5_ACCURACY_FIXTURES.some(item => item.kind === kind));
 });
+test('pinned evaluation remains separate from development fixtures and reports missed detections', () => {
+  const run = spawnSync(process.execPath, [path.join(root, 'testing/accuracy/holdout.mjs'), '--check'], { encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  const report = JSON.parse(run.stdout);
+  assert.equal(report.reviewStatus, 'agent-provisional');
+  assert.equal(report.globalAccuracy, null);
+  assert.equal(report.humanReviewedCases, 0);
+  assert.equal(report.selectedManifestMetrics.repositories, 8);
+  assert.equal(report.selectedManifestMetrics.decisions, 16);
+  assert.ok(report.selectedManifestMetrics.fn > 0);
+  assert.ok(report.failures.every(item => item.expected && !item.actual));
+});
 for (const fixture of PHASE5_ACCURACY_FIXTURES) {
   test('accuracy fixture: ' + fixture.id, () => {
     const parsed = parseFiles(fixture.files); const classification = classifyProject(fixture.files, parsed);
