@@ -1,3 +1,4 @@
+import { describeReportReadiness } from './readiness';
 import type { AnalysisResult } from '../analyzer/types';
 import { formatFileSize } from '@/lib/utils';
 import { collectWorkspaceFindings } from './workspace';
@@ -81,15 +82,16 @@ export function exportMarkdown(result: AnalysisResult): string {
     lines.push('_Analysis completed by UCE Engine. Results are generated using deterministic classification rules._');
     return lines.join('\n');
   }
-  lines.push('## Overall Compatibility Score');
+  const readiness = describeReportReadiness(result);
+  lines.push('## Overall Compatibility Assessment');
   lines.push('');
-  lines.push(`**${result.score.overall} / 100${result.summary.analysisCoverage?.status === 'partial' ? ' (checked scope only — partial scan)' : ''}**`);
-  if (result.summary.analysisCoverage?.status === 'partial') lines.push('', `Core rules selected ${result.summary.analysisCoverage.filesAnalyzed.toLocaleString()} of ${result.summary.analysisCoverage.filesFound.toLocaleString()} discovered files (${result.summary.analysisCoverage.fileCoveragePercent}%)${result.summary.analysisCoverage.filesWithContent === undefined ? '; some selected files may contain metadata only' : `; text content read from ${result.summary.analysisCoverage.filesWithContent.toLocaleString()} source files`}. The score cannot describe unchecked rules or content.`);
+  lines.push(readiness.partial ? '**Not established — partial scan**' : `**${result.score.overall} / 100 (static checks)**`);
+  if (readiness.coverage) lines.push('', readiness.coverage);
   lines.push('');
   lines.push('| Category | Score |');
   lines.push('| --- | --- |');
   for (const cat of result.categories) {
-    lines.push(`| ${cat.label} | ${cat.score} |`);
+    lines.push(`| ${cat.label} | ${cat.status === 'unknown' || (result.score.applicableCategories && !result.score.applicableCategories.includes(cat.id)) ? 'Not assessed / not applicable' : cat.score} |`);
   }
   lines.push('');
   lines.push('## Project Overview');

@@ -58,7 +58,7 @@ const { canonicalKnowledgePack, verifyKnowledgePack } = load('src/lib/knowledge/
 const { PHASE5_ACCURACY_FIXTURES } = load('testing/fixtures/phase5/corpus.ts');
 const REAL_REPOSITORY_MANIFESTS = JSON.parse(fs.readFileSync(path.join(root, 'testing/fixtures/v3-real-repositories.json'), 'utf8'));
 const { collectWorkspaceFindings, groupWorkspaceFindings, compareReports, compatibleProjectReports } = load('src/lib/report/workspace.ts');
-const { describeReportReadiness } = load('src/lib/report/readiness.ts');
+const { attentionCategories, describeReportReadiness, reportCoverageRows } = load('src/lib/report/readiness.ts');
 const { classifyProject } = load('src/lib/analyzer/classifier.ts');
 const { detectLanguage, detectStack } = load('src/lib/analyzer/detectors.ts');
 const { detectTechnologyProfiles } = load('src/lib/analyzer/technology-profiles.ts');
@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce11-/);
+  assert.match(key, /^uce12-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -330,6 +330,24 @@ test('partial coverage limits the readiness claim even when checked findings sco
   assert.equal(describeReportReadiness(partial).title, 'Partial scan — review coverage');
   assert.ok(describeReportReadiness(partial).coverage.includes('25 of 100'));
   assert.equal(describeReportReadiness(base).partial, false);
+});
+test('coverage distinguishes full inventory from sampled rules and hides an incomplete readiness score', () => {
+  const report = analyzeProject({ fileName: 'coverage', files: [file('src/app.ts', 'export const n=1')], source: 'upload', scanStats: { projectSize: 1, filesFound: 96045, filesAnalyzed: 25000, filesIgnored: 313, ignoredCategories: [], sampled: true, filesInventoried: 95732, eligibleFiles: 95732, filesWithContent: 85512, textFilesTooLarge: 56 } });
+  report.score.overall = 100;
+  const readiness = describeReportReadiness(report);
+  assert.equal(readiness.displayScore, null);
+  assert.ok(readiness.coverage.includes('85,512 files across all passes'));
+  assert.ok(!readiness.coverage.includes('85,512 selected files'));
+  assert.equal(reportCoverageRows(report).find(row => row.label === 'Archive inventory').checked, 95732);
+  report.categories = [{ id: 'runtime', label: 'Runtime', status: 'unknown', score: 0, issues: [], summary: 'Not applicable' }, { id: 'security', label: 'Security', status: 'warning', score: 50, issues: [], summary: 'Review' }];
+  report.score.applicableCategories = ['security'];
+  assert.deepEqual(attentionCategories(report).map(row => row.id), ['security']);
+});
+test('security coverage counts only visited files when the finding budget stops execution', () => {
+  const result = detectSecurityIntelligence([file('src/first.js', Array(350).fill('const token = Math.random();').join('\n')), file('src/second.js', 'const token = Math.random();')]);
+  assert.equal(result.findings.length, 300);
+  assert.equal(result.filesScanned, 1);
+  assert.equal(result.truncated, true);
 });
 test('V3 graph detects missing dependencies, cycles, conflicts and duplicate ids', () => {
   const makeRule = (id) => ({ ...structuredClone(V3_CORE_RULE_PACK.rules[0]), id });
@@ -1205,7 +1223,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce11-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce12-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {

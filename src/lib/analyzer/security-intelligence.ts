@@ -26,12 +26,13 @@ const validationErrors = validateSecurityRules();
 if (validationErrors.length) throw new Error(`Invalid UCE security registry: ${validationErrors.join('; ')}`);
 
 export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntelligence {
-  const findings: SecurityFinding[] = []; const seen = new Set<string>(); let rulesExecuted = 0;
+  const findings: SecurityFinding[] = []; const seen = new Set<string>(); let rulesExecuted = 0; let filesScanned = 0;
   const sourceFiles = files.filter((file) => {
     const path = normalizePath(file.path);
     return !file.isDirectory && typeof file.content === 'string' && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
   });
   for (const file of sourceFiles) {
+    filesScanned++;
     const source = file.content ?? ''; const pythonCode = /\.py$/i.test(file.path) ? maskPythonText(source) : undefined; const normalizedPath = normalizePath(file.path);
     for (const rule of SECURITY_RULES) {
       if (rule.filePattern && !new RegExp(rule.filePattern.source, rule.filePattern.flags.replace('g', '')).test(normalizedPath)) continue;
@@ -56,7 +57,7 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
     }
     if (findings.length >= 300) break;
   }
-  return summarizeSecurityFindings(findings, sourceFiles.length, rulesExecuted);
+  return { ...summarizeSecurityFindings(findings, filesScanned, rulesExecuted), truncated: findings.length >= 300 };
 }
 
 export function summarizeSecurityFindings(findings: SecurityFinding[], filesScanned: number, rulesExecuted: number): SecurityIntelligence {

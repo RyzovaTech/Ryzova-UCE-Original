@@ -1,0 +1,2189 @@
+{
+  "engineVersion": "3.0.0-beta.1",
+  "analysisCacheVersion": 12,
+  "schemaVersion": 1,
+  "benchmark": "Phase 1 independent source baseline",
+  "corpusSha256": "6bf939f317ae4580c2ea4d7035306d6dba4f368bc26de984d69608add70e06d9",
+  "scope": "Selected manifests and source excerpts, not full-repository accuracy. Labels are authored from source intent, not detector output. Agent reviewed; no independent human adjudication yet.",
+  "globalAccuracy": null,
+  "humanReviewedCases": 0,
+  "modules": {
+    "package-manager": {
+      "cases": 6,
+      "correct": 6,
+      "decisionAccuracy": 100,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "precision": null,
+      "recall": null,
+      "falsePositiveRate": null
+    },
+    "security": {
+      "cases": 7,
+      "correct": 5,
+      "decisionAccuracy": 71.43,
+      "tp": 2,
+      "fp": 2,
+      "fn": 0,
+      "tn": 3,
+      "precision": 50,
+      "recall": 100,
+      "falsePositiveRate": 40
+    },
+    "technology": {
+      "cases": 217,
+      "correct": 217,
+      "decisionAccuracy": 100,
+      "tp": 217,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "precision": 100,
+      "recall": 100,
+      "falsePositiveRate": null
+    }
+  },
+  "strata": {
+    "real-manifest": {
+      "cases": 6,
+      "correct": 6,
+      "decisionAccuracy": 100,
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "precision": null,
+      "recall": null,
+      "falsePositiveRate": null
+    },
+    "real-source-excerpt": {
+      "cases": 2,
+      "correct": 0,
+      "decisionAccuracy": 0,
+      "tp": 0,
+      "fp": 2,
+      "fn": 0,
+      "tn": 0,
+      "precision": 0,
+      "recall": null,
+      "falsePositiveRate": 100
+    },
+    "synthetic": {
+      "cases": 5,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "recall": 100,
+      "falsePositiveRate": 0
+    },
+    "legacy-manifest-snapshot": {
+      "cases": 217,
+      "correct": 217,
+      "decisionAccuracy": 100,
+      "tp": 217,
+      "fp": 0,
+      "fn": 0,
+      "tn": 0,
+      "precision": 100,
+      "recall": 100,
+      "falsePositiveRate": null
+    }
+  },
+  "unmeasuredModules": [
+    "architecture",
+    "code",
+    "runtime",
+    "platform",
+    "build",
+    "testing",
+    "performance",
+    "accessibility",
+    "api",
+    "database",
+    "environment",
+    "deployment",
+    "license",
+    "documentation",
+    "maintainability",
+    "repository",
+    "browser"
+  ],
+  "results": [
+    {
+      "id": "pallets-flask",
+      "area": "package-manager",
+      "ecosystem": "Python",
+      "kind": "real-manifest",
+      "expected": "uv",
+      "actual": "uv",
+      "passed": true
+    },
+    {
+      "id": "BurntSushi-ripgrep",
+      "area": "package-manager",
+      "ecosystem": "Rust",
+      "kind": "real-manifest",
+      "expected": "cargo",
+      "actual": "cargo",
+      "passed": true
+    },
+    {
+      "id": "gin-gonic-gin",
+      "area": "package-manager",
+      "ecosystem": "Go",
+      "kind": "real-manifest",
+      "expected": "go-modules",
+      "actual": "go-modules",
+      "passed": true
+    },
+    {
+      "id": "laravel-framework",
+      "area": "package-manager",
+      "ecosystem": "PHP",
+      "kind": "real-manifest",
+      "expected": "composer",
+      "actual": "composer",
+      "passed": true
+    },
+    {
+      "id": "rails-rails",
+      "area": "package-manager",
+      "ecosystem": "Ruby",
+      "kind": "real-manifest",
+      "expected": "bundler",
+      "actual": "bundler",
+      "passed": true
+    },
+    {
+      "id": "spring-projects-spring-petclinic",
+      "area": "package-manager",
+      "ecosystem": "Java",
+      "kind": "real-manifest",
+      "expected": "maven",
+      "actual": "maven",
+      "passed": true
+    },
+    {
+      "id": "linux-SEC025",
+      "area": "security",
+      "ecosystem": "C",
+      "kind": "real-source-excerpt",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "linux-SEC014",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "real-source-excerpt",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "pickle-production",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "pickle-comment",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "pickle-tests",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "cookie-production",
+      "area": "security",
+      "ecosystem": "JavaScript",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "cookie-secure",
+      "area": "security",
+      "ecosystem": "JavaScript",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "snapshot-primer-react-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-primer-react-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-primer-react-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-untitleduico-react-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-untitleduico-react-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-untitleduico-react-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-untitleduico-react-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-phosphor-icons-react-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-phosphor-icons-react-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-phosphor-icons-react-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-remix-run-react-router-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-remix-run-react-router-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-remix-run-react-router-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-remix-run-react-router-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-remix-run-react-router-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-streamich-react-use-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-streamich-react-use-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-reactive-resume-reactive-resume-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-reactive-resume-reactive-resume-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-marmelab-react-admin-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-marmelab-react-admin-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-marmelab-react-admin-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-navigation-react-navigation-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-JedWatson-react-select-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-reduxjs-react-redux-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-reduxjs-react-redux-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-reduxjs-react-redux-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-bootstrap-react-bootstrap-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-bootstrap-react-bootstrap-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-kriasoft-react-starter-kit-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-kriasoft-react-starter-kit-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-kriasoft-react-starter-kit-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-hook-form-react-hook-form-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-hook-form-react-hook-form-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-hook-form-react-hook-form-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-native-maps-react-native-maps-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-native-maps-react-native-maps-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-software-mansion-react-native-svg-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-software-mansion-react-native-svg-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-react-boilerplate-electron-react-boilerplate-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-react-boilerplate-electron-react-boilerplate-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-react-boilerplate-electron-react-boilerplate-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-RocketChat-Rocket.Chat.ReactNative-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-RocketChat-Rocket.Chat.ReactNative-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ant-design-ant-design-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ant-design-ant-design-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ant-design-ant-design-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ant-design-ant-design-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-epicweb-dev-react-fundamentals-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-grid-layout-react-grid-layout-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-grid-layout-react-grid-layout-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-react-grid-layout-react-grid-layout-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-pmndrs-react-three-fiber-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-pmndrs-react-three-fiber-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-pmndrs-react-three-fiber-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-i18next-next-i18next-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-i18next-next-i18next-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-i18next-next-i18next-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-beilunyang-moemail-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-beilunyang-moemail-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-beilunyang-moemail-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-transitive-bullshit-nextjs-notion-starter-kit-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-transitive-bullshit-nextjs-notion-starter-kit-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-michaelshimeles-nextjs-starter-kit-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-michaelshimeles-nextjs-starter-kit-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-michaelshimeles-nextjs-starter-kit-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-timlrx-tailwind-nextjs-starter-blog-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-timlrx-tailwind-nextjs-starter-blog-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-timlrx-tailwind-nextjs-starter-blog-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vercel-nextjs-subscription-payments-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vercel-nextjs-subscription-payments-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vercel-nextjs-subscription-payments-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nobruf-shadcn-landing-page-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nobruf-shadcn-landing-page-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nobruf-shadcn-landing-page-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-joschan21-nextjs-realtime-chat-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-joschan21-nextjs-realtime-chat-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-joschan21-nextjs-realtime-chat-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-medusajs-nextjs-starter-medusa-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-medusajs-nextjs-starter-medusa-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-medusajs-nextjs-starter-medusa-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-NextJSTemplates-startup-nextjs-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-NextJSTemplates-startup-nextjs-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-NextJSTemplates-startup-nextjs-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-muxinc-next-video-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-muxinc-next-video-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-TailAdmin-free-nextjs-admin-dashboard-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-TailAdmin-free-nextjs-admin-dashboard-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-TailAdmin-free-nextjs-admin-dashboard-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-langchain-ai-langchain-nextjs-template-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-langchain-ai-langchain-nextjs-template-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-langchain-ai-langchain-nextjs-template-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ShenSeanChen-launch-mvp-stripe-nextjs-supabase-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ShenSeanChen-launch-mvp-stripe-nextjs-supabase-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ShenSeanChen-launch-mvp-stripe-nextjs-supabase-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-theodorusclarence-ts-nextjs-tailwind-starter-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-theodorusclarence-ts-nextjs-tailwind-starter-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-theodorusclarence-ts-nextjs-tailwind-starter-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-theodorusclarence-ts-nextjs-tailwind-starter-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-auth0-nextjs-auth0-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-auth0-nextjs-auth0-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-auth0-nextjs-auth0-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-auth0-nextjs-auth0-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-auth0-nextjs-auth0-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-bagisto-nextjs-commerce-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-bagisto-nextjs-commerce-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-bagisto-nextjs-commerce-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vercel-nextjs-postgres-nextauth-tailwindcss-template-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vercel-nextjs-postgres-nextauth-tailwindcss-template-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vercel-nextjs-postgres-nextauth-tailwindcss-template-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-supabase-community-nextjs-openai-doc-search-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-supabase-community-nextjs-openai-doc-search-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-supabase-community-nextjs-openai-doc-search-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-jakobhoeg-nextjs-ollama-llm-ui-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-jakobhoeg-nextjs-ollama-llm-ui-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-jakobhoeg-nextjs-ollama-llm-ui-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mlynch-nextjs-tailwind-ionic-capacitor-starter-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mlynch-nextjs-tailwind-ionic-capacitor-starter-next.js",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mlynch-nextjs-tailwind-ionic-capacitor-starter-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-vue-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuetifyjs-vuetify-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuetifyjs-vuetify-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vueuse-vueuse-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vueuse-vueuse-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vueuse-vueuse-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nuxt-nuxt-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nuxt-nuxt-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nuxt-nuxt-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nuxt-nuxt-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-buqiyuan-vue3-antdv-admin-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-buqiyuan-vue3-antdv-admin-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-cuixiaorui-mini-vue-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-buqiyuan-vite-vue3-lowcode-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-buqiyuan-vite-vue3-lowcode-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ecomfe-vue-echarts-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ecomfe-vue-echarts-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-ecomfe-vue-echarts-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-intlify-vue-i18n-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-intlify-vue-i18n-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-logaretm-vee-validate-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-logaretm-vee-validate-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-vitepress-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-vitepress-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-vitepress-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-LokerL-tts-vue-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-LokerL-tts-vue-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-unovue-shadcn-vue-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-vue-loader-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-vue-loader-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vue-zone-vue3-vant-mobile-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vue-zone-vue3-vant-mobile-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-apertureless-vue-chartjs-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-apertureless-vue-chartjs-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-apertureless-vue-chartjs-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-apertureless-vue-chartjs-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-Akryum-vue-virtual-scroller-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-Akryum-vue-virtual-scroller-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-element-plus-element-plus-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-element-plus-element-plus-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mutoe-vue3-realworld-example-app-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mutoe-vue3-realworld-example-app-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mutoe-vue3-realworld-example-app-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mutoe-vue3-realworld-example-app-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-router-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-test-utils-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-test-utils-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-test-utils-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-petite-vue-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vuejs-devtools-v6-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-lzxb-vue-demo-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mihomo-party-org-clash-party-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mihomo-party-org-clash-party-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mihomo-party-org-clash-party-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-mihomo-party-org-clash-party-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-fiddle-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-fiddle-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-fiddle-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-belnadris-angular-electron-angular",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-belnadris-angular-electron-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-belnadris-angular-electron-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-react-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-react-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-react-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-react-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-react-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-forge-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-lyswhut-lx-music-desktop-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-Automattic-simplenote-electron-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-Automattic-simplenote-electron-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-vue-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-vite-electron-vite-vue-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-RocketChat-Rocket.Chat.Electron-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-RocketChat-Rocket.Chat.Electron-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vladimiry-ElectronMail-angular",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-vladimiry-ElectronMail-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-alex8088-electron-vite-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nteract-archived-desktop-app-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-nteract-archived-desktop-app-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-jitsi-jitsi-meet-electron-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-microsoft-vscode-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-cawa-93-vite-electron-builder-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-jupyterlab-jupyterlab-desktop-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-jupyterlab-jupyterlab-desktop-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-tal-tech-electron-playground-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-devtron-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-electron-devtron-tailwind-css",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-desktop-desktop-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-hagopj13-node-express-boilerplate-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-CodeGenieApp-serverless-express-jest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-icebob-vue-express-mongo-boilerplate-vue",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-reactjs-express-react-views-react",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-huntabyte-shadcn-svelte-svelte",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-huntabyte-bits-ui-svelte",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-carbon-design-system-carbon-components-svelte-svelte",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-carbon-design-system-carbon-components-svelte-vite",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-carbon-design-system-carbon-components-svelte-vitest",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "snapshot-carbon-design-system-carbon-components-svelte-playwright",
+      "area": "technology",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    }
+  ]
+}

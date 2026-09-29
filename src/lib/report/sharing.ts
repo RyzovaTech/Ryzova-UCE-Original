@@ -1,3 +1,4 @@
+import { describeReportReadiness } from './readiness';
 export interface ShareableReport {
   id: string;
   createdAt: string;
@@ -42,7 +43,7 @@ export function createPortableReportSummary(report: import('../analyzer/types').
     filesFound: report.summary.scanStats.filesFound,
     filesAnalyzed: report.summary.scanStats.filesAnalyzed,
     filesIgnored: report.summary.scanStats.filesIgnored,
-    scoreScope: report.summary.analysisCoverage?.status === 'partial' || report.summary.scanStats.truncated ? 'partial' : 'complete',
+    scoreScope: describeReportReadiness(report).partial ? 'partial' : 'complete',
     fileCoveragePercent: report.summary.analysisCoverage?.fileCoveragePercent,
     trust: { localOnly: report.trust?.localOnly ?? true, networkAccessUsed: report.trust?.networkAccessUsed ?? false, limitations: report.trust?.limitations ?? [] },
   };
