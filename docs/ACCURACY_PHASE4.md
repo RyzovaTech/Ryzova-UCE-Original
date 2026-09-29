@@ -8,6 +8,8 @@ unrelated functions or Python dedented blocks. It reports a **warning** with
 **review-required** confidence and both line locations. These checks do not
 prove control flow, sanitization, reachability or exploitability. They are not
 a replacement for a language-aware taint analysis.
+The lexical mask is built only when a candidate source or import is found;
+files with no matching candidates avoid that additional memory and CPU work.
 
 Import boundary checks ignore comments and TypeScript `import type` / `export
 type` statements, while retaining runtime imports. Seven context-link rules

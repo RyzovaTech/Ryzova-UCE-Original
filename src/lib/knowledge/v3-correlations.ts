@@ -56,9 +56,10 @@ export function correlationEvidence(detector: V3CorrelationDetector, context: V3
     for (const file of files) {
       if (!matchesAny(file.path, detector.include)) continue;
       if (!visit(file)) break;
-      const content = file.content ?? ''; const comments = commentMask(content, file.path); source.lastIndex = 0;
+      const content = file.content ?? ''; let comments: string | undefined; source.lastIndex = 0;
       for (const match of content.matchAll(source)) {
         const variable = match[1]; if (!variable || !/^[A-Za-z_$][\w$]*$/.test(variable)) continue;
+        comments ??= commentMask(content, file.path);
         if (comments[match.index] === ' ') continue;
         const after = content.slice(match.index + match[0].length, match.index + match[0].length + 4_000);
         const sinkPattern = new RegExp(detector.sinkPattern.replace(/\{\{variable\}\}/g, () => escape(variable)), 'g');
@@ -81,8 +82,9 @@ export function correlationEvidence(detector: V3CorrelationDetector, context: V3
     for (const file of files) {
       if (!matchesAny(file.path, detector.include)) continue;
       if (!visit(file)) break;
-      const content = file.content ?? ''; const code = commentMask(content, file.path);
+      const content = file.content ?? ''; let code: string | undefined;
       for (const match of content.matchAll(/(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*|\bimport\s*)["'](\.{1,2}\/[^"']+)["']/g)) {
+        code ??= commentMask(content, file.path);
         if (code[match.index] === ' ') continue;
         const statement = content.slice(Math.max(0, content.lastIndexOf('\n', match.index) + 1), match.index);
         if (/\b(?:import|export)\s+type\b/.test(statement)) continue;
