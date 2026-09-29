@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce12-/);
+  assert.match(key, /^uce13-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -687,6 +687,32 @@ test('native documentation URLs and ioctl flags are not transport risks', () => 
   assert.ok(detectSecurityIntelligence([file('src/download.c', 'curl_easy_setopt(handle, CURLOPT_URL, "http://example.com/api");')]).findings.some(item => item.ruleId === 'SEC005'));
   assert.equal(classifyProjectFileScope('tools/virtio/vringh_test.c'), 'test');
 });
+test('security rules respect language, receiver, endpoint and creation context', () => {
+  const files = [
+    file('drivers/nvdimm/namespace_devs.c', 'if (!nsl_validate_isetcookie(ndd, label, cookie)) return -1;'),
+    file('scripts/gdb/linux/symbols.py', 'gdb.execute("tbreak *" + hex(address))'),
+    file('fs/ecryptfs/keystore.c', 'token.password.hash_algo = 0x01; /* MD5 */'),
+    file('drivers/nvme/host/fabrics.c', 'opts->tls = false;'),
+    file('scripts/dtc/dt-style-selftest/good/yaml-4space.yaml', '$schema: http://devicetree.org/meta-schemas/core.yaml#'),
+    file('src/server.ts', 'res.cookie("session", token, {secure: true});\ndb.query(`SELECT * FROM users WHERE id = ${id}`);\nfetch("http://example.com/api");'),
+    file('src/temp.c', 'open("/tmp/private", O_CREAT | O_EXCL, 0600);\nopen("/tmp/shared", O_CREAT, 0600);'),
+  ];
+  assert.equal(classifyProjectFileScope('scripts/dtc/dt-style-selftest/good/yaml-4space.yaml'), 'test');
+  assert.equal(classifyProjectFileScope('tools/unittests/kdoc-test-schema.yaml'), 'test');
+  const findings = detectSecurityIntelligence(files).findings;
+  assert.deepEqual(findings.map(item => item.ruleId).sort(), ['SEC005', 'SEC014', 'SEC025', 'SEC039']);
+  assert.equal(findings.find(item => item.ruleId === 'SEC039').severity, 'info');
+  assert.equal(findings.find(item => item.ruleId === 'SEC014').certainty, 'review-required');
+});
+test('reported Linux schema self-tests are classified outside production security scope', () => {
+  const triage = JSON.parse(fs.readFileSync(path.join(root, 'testing/accuracy/linux-triage.json'), 'utf8'));
+  const urls = triage.findings.filter(item => item.rule === 'SEC005');
+  assert.equal(urls.length, 53);
+  for (const item of urls) {
+    const path = item.location.replace(/:\d+$/, '');
+    assert.equal(classifyProjectFileScope(path), 'test', path);
+  }
+});
 test('API route syntax is interpreted only in its language', () => {
   const result = detectCodeIntelligence([
     file('drivers/gpio/driver.c', 'get "/enable";'),
@@ -783,7 +809,7 @@ test('security findings include category, confidence and safe evidence', () => {
   assert.ok(result.findings.some(item => item.ruleId === 'SEC001' && item.category === 'secrets' && item.confidence));
   assert.ok(result.findings.some(item => item.ruleId === 'SEC010' && item.category === 'transport'));
   assert.ok(result.findings.every(item => !item.evidence.includes('real-production-secret')));
-  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.1.0');
+  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.2.0');
 });
 test('security placeholders and local HTTP endpoints are suppressed', () => {
   const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const backupApiKey = "fake-api-key-for-testing"; const url = "http://localhost:3000/api";')]);
@@ -1223,7 +1249,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce12-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce13-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {

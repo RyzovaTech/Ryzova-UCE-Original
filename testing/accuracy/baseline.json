@@ -1,9 +1,9 @@
 {
   "engineVersion": "3.0.0-beta.1",
-  "analysisCacheVersion": 12,
+  "analysisCacheVersion": 13,
   "schemaVersion": 1,
   "benchmark": "Phase 1 independent source baseline",
-  "corpusSha256": "6bf939f317ae4580c2ea4d7035306d6dba4f368bc26de984d69608add70e06d9",
+  "corpusSha256": "d05c5c699e0ae64a847bb5608cffa93a9d8e455daa38b290ed79769e6e9e662a",
   "scope": "Selected manifests and source excerpts, not full-repository accuracy. Labels are authored from source intent, not detector output. Agent reviewed; no independent human adjudication yet.",
   "globalAccuracy": null,
   "humanReviewedCases": 0,
@@ -21,16 +21,16 @@
       "falsePositiveRate": null
     },
     "security": {
-      "cases": 7,
-      "correct": 5,
-      "decisionAccuracy": 71.43,
-      "tp": 2,
-      "fp": 2,
+      "cases": 25,
+      "correct": 25,
+      "decisionAccuracy": 100,
+      "tp": 10,
+      "fp": 0,
       "fn": 0,
-      "tn": 3,
-      "precision": 50,
+      "tn": 15,
+      "precision": 100,
       "recall": 100,
-      "falsePositiveRate": 40
+      "falsePositiveRate": 0
     },
     "technology": {
       "cases": 217,
@@ -59,25 +59,25 @@
       "falsePositiveRate": null
     },
     "real-source-excerpt": {
-      "cases": 2,
-      "correct": 0,
-      "decisionAccuracy": 0,
-      "tp": 0,
-      "fp": 2,
-      "fn": 0,
-      "tn": 0,
-      "precision": 0,
-      "recall": null,
-      "falsePositiveRate": 100
-    },
-    "synthetic": {
       "cases": 5,
       "correct": 5,
       "decisionAccuracy": 100,
-      "tp": 2,
+      "tp": 0,
       "fp": 0,
       "fn": 0,
-      "tn": 3,
+      "tn": 5,
+      "precision": null,
+      "recall": null,
+      "falsePositiveRate": 0
+    },
+    "synthetic": {
+      "cases": 20,
+      "correct": 20,
+      "decisionAccuracy": 100,
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "tn": 10,
       "precision": 100,
       "recall": 100,
       "falsePositiveRate": 0
@@ -175,8 +175,8 @@
       "ecosystem": "C",
       "kind": "real-source-excerpt",
       "expected": false,
-      "actual": true,
-      "passed": false
+      "actual": false,
+      "passed": true
     },
     {
       "id": "linux-SEC014",
@@ -184,8 +184,8 @@
       "ecosystem": "Python",
       "kind": "real-source-excerpt",
       "expected": false,
-      "actual": true,
-      "passed": false
+      "actual": false,
+      "passed": true
     },
     {
       "id": "pickle-production",
@@ -2181,6 +2181,168 @@
       "area": "technology",
       "ecosystem": "JavaScript/TypeScript",
       "kind": "legacy-manifest-snapshot",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "linux-SEC028-context",
+      "area": "security",
+      "ecosystem": "C",
+      "kind": "real-source-excerpt",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "linux-SEC038-context",
+      "area": "security",
+      "ecosystem": "C",
+      "kind": "real-source-excerpt",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "linux-SEC005-schema",
+      "area": "security",
+      "ecosystem": "configuration",
+      "kind": "real-source-excerpt",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "http-fetch",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "http-schema",
+      "area": "security",
+      "ecosystem": "configuration",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "http-config-endpoint",
+      "area": "security",
+      "ecosystem": "configuration",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "http-string-literal",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "sql-query-interpolation",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "sql-gdb-synthetic",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "sql-other-execute",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "cookie-secure-only",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "cookie-httponly-only",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "cookie-native-other",
+      "area": "security",
+      "ecosystem": "configuration",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "hash-password-api",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "temp-literal-only",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "temp-exclusive-create",
+      "area": "security",
+      "ecosystem": "C",
+      "kind": "synthetic",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "temp-unprotected-create",
+      "area": "security",
+      "ecosystem": "C",
+      "kind": "synthetic",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "sql-python-fstring",
+      "area": "security",
+      "ecosystem": "Python",
+      "kind": "synthetic",
       "expected": true,
       "actual": true,
       "passed": true

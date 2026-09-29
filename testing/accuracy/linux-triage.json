@@ -6,8 +6,8 @@
   "sourceReviewCommit": "72d3fcf802c45d00b300f25b848a93c3a2bd7c7e",
   "filesFound": 96045,
   "humanReviewed": 0,
-  "reviewedByAgent": 2,
-  "pending": 77,
+  "reviewedByAgent": 57,
+  "pending": 22,
   "findings": [
     {
       "id": "batch-security:SEC025:drivers/nvdimm/namespace_devs.c:1686",
@@ -25,9 +25,9 @@
       "title": "Weak password hashing function",
       "location": "fs/ecryptfs/keystore.c:1463",
       "severity": "warning",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "false-positive",
+      "reviewer": "agent",
+      "reason": "Pinned source assigns an eCryptfs hash algorithm identifier; the old rule labeled this a password hash API call without such a call."
     },
     {
       "id": "batch-security:SEC039:tools/perf/builtin-inject.c:1646",
@@ -135,9 +135,9 @@
       "title": "Database TLS disabled",
       "location": "drivers/nvme/host/fabrics.c:737",
       "severity": "warning",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "false-positive",
+      "reviewer": "agent",
+      "reason": "Pinned source initializes an NVMe transport option; the old rule labeled it database TLS configuration."
     },
     {
       "id": "batch-security:SEC039:tools/perf/util/dso.c:1928",
@@ -245,9 +245,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "tools/unittests/kdoc-test-schema.yaml:9",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-browser:rust/zerocopy/rustdoc/style.css:css-has:Firefox",
@@ -275,9 +275,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:5",
@@ -285,9 +285,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:4",
@@ -295,9 +295,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:5",
@@ -305,9 +305,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:4",
@@ -315,9 +315,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:5",
@@ -325,9 +325,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:4",
@@ -335,9 +335,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:5",
@@ -345,9 +345,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:4",
@@ -355,9 +355,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:5",
@@ -365,9 +365,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:4",
@@ -375,9 +375,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:5",
@@ -385,9 +385,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:4",
@@ -395,9 +395,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:5",
@@ -405,9 +405,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:4",
@@ -415,9 +415,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:5",
@@ -425,9 +425,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:4",
@@ -435,9 +435,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:5",
@@ -445,9 +445,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:4",
@@ -455,9 +455,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:5",
@@ -465,9 +465,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:4",
@@ -475,9 +475,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:5",
@@ -485,9 +485,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:4",
@@ -495,9 +495,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:5",
@@ -505,9 +505,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:4",
@@ -515,9 +515,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:5",
@@ -525,9 +525,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:4",
@@ -535,9 +535,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:5",
@@ -545,9 +545,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:4",
@@ -555,9 +555,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:5",
@@ -565,9 +565,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:4",
@@ -575,9 +575,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:5",
@@ -585,9 +585,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:4",
@@ -595,9 +595,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:5",
@@ -605,9 +605,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:4",
@@ -615,9 +615,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:5",
@@ -625,9 +625,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:4",
@@ -635,9 +635,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:5",
@@ -645,9 +645,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:4",
@@ -655,9 +655,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:5",
@@ -665,9 +665,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:4",
@@ -675,9 +675,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:5",
@@ -685,9 +685,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:4",
@@ -695,9 +695,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:5",
@@ -705,9 +705,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:4",
@@ -715,9 +715,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:5",
@@ -725,9 +725,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:4",
@@ -735,9 +735,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:5",
@@ -745,9 +745,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:4",
@@ -755,9 +755,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:5",
@@ -765,9 +765,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC039:drivers/gpu/drm/ci/check-devicetrees.yml:8",
@@ -785,9 +785,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:4",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     },
     {
       "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:5",
@@ -795,9 +795,9 @@
       "title": "Non-HTTPS URL literal",
       "location": "scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:5",
       "severity": "info",
-      "label": "unreviewed",
-      "reviewer": null,
-      "reason": "Source context and applicability require independent review."
+      "label": "out-of-scope",
+      "reviewer": "agent",
+      "reason": "The original scan treated Linux schema self-test URLs as production network traffic. This path is a test fixture; the new scope classifier excludes it."
     }
   ]
 }
