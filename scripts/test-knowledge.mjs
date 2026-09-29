@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce13-/);
+  assert.match(key, /^uce14-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -712,6 +712,25 @@ test('reported Linux schema self-tests are classified outside production securit
     const path = item.location.replace(/:\d+$/, '');
     assert.equal(classifyProjectFileScope(path), 'test', path);
   }
+});
+test('V3 archive sweep deduplicates core findings and caps repetitive native signals', () => {
+  const { createV3ArchiveSweep } = load('src/lib/analyzer/v3-archive-sweep.ts');
+  const sources = [file('src/early.c', 'void f(char *s) { gets(s); }'), file('Makefile', 'all:')];
+  const report = analyzeProject({ files: sources, fileName: 'native', source: 'upload', scanStats: { projectSize: 100, filesFound: 2, filesAnalyzed: 2, filesIgnored: 0, ignoredCategories: [] } });
+  const sweep = createV3ArchiveSweep(report);
+  assert.ok(sweep);
+  sweep.scan([sources[0], file('main.c', 'void f(char *s) { gets(s); }'), file('tests/example.c', 'void f(char *s) { gets(s); }')]);
+  const repeated = Array.from({ length: 12 }, (_, index) => file(`src/repeated-${index}.c`, 'void f(void) { malloc(8); }'));
+  sweep.scan(repeated);
+  sweep.finish();
+  const findings = report.stack.v3RulePlatform.findings.filter(item => item.ruleId === 'security.native-sensitive-api.gets');
+  assert.deepEqual(findings.map(item => item.file).sort(), ['main.c', 'src/early.c']);
+  assert.ok(!report.stack.v3RulePlatform.findings.some(item => item.file.startsWith('tests/')));
+  const coverage = report.stack.v3RulePlatform.archiveSweep;
+  assert.equal(coverage.filesChecked, 14);
+  assert.equal(coverage.storedPerRule['security.native-sensitive-api.malloc'], 5);
+  assert.ok(coverage.findingsOmitted >= 7);
+  assert.equal(coverage.complete, true);
 });
 test('API route syntax is interpreted only in its language', () => {
   const result = detectCodeIntelligence([
@@ -1249,7 +1268,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce13-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce14-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {
@@ -1342,8 +1361,47 @@ await asyncTest('multi-batch ZIP scan checks late source files and keeps cross-f
   assert.equal(report.summary.scanStats.filesIgnored, 0);
   assert.equal(report.summary.analysisCoverage.status, 'partial');
   assert.ok(report.stack.securityIntelligence.findings.some(item => item.file === 'src/late.ts' && item.ruleId === 'SEC012'));
+  assert.ok(report.stack.v3RulePlatform.findings.some(item => item.file === 'src/late.ts' && item.ruleId.includes('math-random')));
+  assert.ok(report.stack.v3RulePlatform.archiveSweep.complete);
+  assert.ok(report.stack.v3RulePlatform.archiveSweep.ruleFileVisits > 0);
+  assert.ok(report.stack.v3RulePlatform.archiveSweep.filesChecked >= 2);
+  assert.equal(reportCoverageRows(report).find(item => item.label === 'V3 per-file sweep').checked, report.stack.v3RulePlatform.archiveSweep.filesChecked);
   assert.ok(report.issues.some(item => item.id.includes('SEC012:src/late.ts') && item.affectedFile === 'src/late.ts:1'));
   assert.ok(report.stack.languages.some(item => item.language === 'TypeScript' && item.files === 2));
+});
+await asyncTest('V3 archive sweep checks late dependency manifests beyond the core sample', async () => {
+  const zip = new (nativeRequire('jszip'))();
+  zip.file('project/package.json', '{"name":"root"}');
+  zip.file('project/packages/late/package.json', '{"dependencies":{"electron":"latest"}}');
+  zip.file('project/packages/tests/package.json', '{"dependencies":{"electron":"latest"}}');
+  const archive = new File([await zip.generateAsync({ type: 'uint8array', compression: 'STORE' })], 'project.zip');
+  const { readZip } = load('src/lib/analyzer/zip.ts');
+  const { prepareAnalysisInput } = load('src/lib/analyzer/execution.ts');
+  const { analyzeArchiveBatches } = load('src/lib/analyzer/archive-batch-runner.ts');
+  const initial = await readZip(archive);
+  const baseline = prepareAnalysisInput({ files: initial.files, fileName: initial.name, source: 'upload', scanStats: initial.scanStats }, { maxFiles: 1, maxContentBytes: 1024, maxSingleFileBytes: 1024 }).input;
+  const report = await analyzeArchiveBatches(archive, baseline, () => {});
+  const target = V3_DEFAULT_RULE_PACKS.flatMap(pack => pack.rules).find(rule => rule.id.startsWith('compatibility.') && rule.detectors.length === 1 && rule.detectors[0].kind === 'dependency' && rule.detectors[0].names.includes('electron') && rule.detectors[0].version && new RegExp(rule.detectors[0].version).test('latest'));
+  assert.ok(target);
+  assert.ok(report.stack.v3RulePlatform.findings.some(item => item.ruleId === target.id && item.file === 'packages/late/package.json'));
+  assert.ok(!report.stack.v3RulePlatform.findings.some(item => item.file === 'packages/tests/package.json'));
+  assert.ok(report.stack.v3RulePlatform.archiveSweep.dependencyRulesEligible > 6000);
+  assert.ok(report.stack.v3RulePlatform.archiveSweep.dependencyFilesChecked >= 1);
+});
+await asyncTest('complete small ZIP does not retain a transient partial-inventory label', async () => {
+  const archive = await zipFixture([['project/package.json', '{"name":"small"}'], ['project/src/main.ts', 'export const value = 1;']]);
+  const { readZip } = load('src/lib/analyzer/zip.ts');
+  const { prepareAnalysisInput } = load('src/lib/analyzer/execution.ts');
+  const { analyzeArchiveBatches } = load('src/lib/analyzer/archive-batch-runner.ts');
+  const indexed = await readZip(archive);
+  const baseline = prepareAnalysisInput({ files: indexed.files, fileName: indexed.name, source: 'upload', scanStats: indexed.scanStats }).input;
+  const report = await analyzeArchiveBatches(archive, baseline, () => {});
+  assert.equal(report.summary.scanStats.filesInventoried, 2);
+  assert.equal(report.summary.scanStats.filesWithContent, 2);
+  assert.equal(report.summary.scanStats.sampled, false);
+  assert.equal(report.summary.scanStats.truncated, false);
+  assert.equal(report.summary.analysisCoverage.status, 'full');
+  assert.equal(report.stack.v3RulePlatform.archiveSweep.complete, true);
 });
 await asyncTest('bounded ZIP batches retain backpressure beyond a single batch', async () => {
   const JSZip = nativeRequire('jszip'); const zip = new JSZip();
@@ -1433,24 +1491,30 @@ await asyncTest('archive checkpoints resume from a saved batch with the same arc
   try {
     const JSZip = nativeRequire('jszip'); const zip = new JSZip();
     zip.file('project/README.md', '# Test');
-    for (let index = 0; index < 1300; index++) zip.file(`project/src/f-${String(index).padStart(4, '0')}.ts`, `export const item = ${index}`);
+    zip.file('project/package.json', '{"name":"resume-fixture"}');
+    for (let index = 0; index < 1300; index++) zip.file(`project/src/f-${String(index).padStart(4, '0')}.ts`, index === 1100 ? 'const token = Math.random();' : `export const item = ${index}`);
     const archive = new File([await zip.generateAsync({ type: 'uint8array', compression: 'STORE' })], 'project.zip');
     const { readZip } = load('src/lib/analyzer/zip.ts');
     const { prepareAnalysisInput } = load('src/lib/analyzer/execution.ts');
     const { analyzeArchiveBatches } = load('src/lib/analyzer/archive-batch-runner.ts');
     const { openArchiveCheckpoint } = load('src/lib/analyzer/archive-checkpoint.ts');
     const indexed = await readZip(archive);
-    const baseline = prepareAnalysisInput({ files: indexed.files, fileName: indexed.name, source: 'upload', scanStats: indexed.scanStats }, { maxFiles: 1, maxContentBytes: 1024, maxSingleFileBytes: 1024 }).input;
+    const baseline = prepareAnalysisInput({ files: indexed.files, fileName: indexed.name, source: 'upload', scanStats: indexed.scanStats }, { maxFiles: 2, maxContentBytes: 1024, maxSingleFileBytes: 1024 }).input;
     await assert.rejects(() => analyzeArchiveBatches(archive, baseline, checked => { if (checked > 1050) throw new Error('interrupted'); }), /interrupted/);
     const store = await openArchiveCheckpoint(archive);
     const pending = await store.load();
-    assert.ok(pending && pending.nextIndex >= 1024 && pending.nextIndex < 1301, JSON.stringify({next: pending?.nextIndex, saved: [...saved.keys()]}));
+    assert.ok(pending && pending.nextIndex >= 1024 && pending.nextIndex < 1302, JSON.stringify({next: pending?.nextIndex, saved: [...saved.keys()]}));
+    assert.equal(pending.version, 2);
+    assert.ok(pending.result.stack.v3RulePlatform.archiveSweep.ruleFileVisits > 0);
     await assert.rejects(() => analyzeArchiveBatches(archive, { ...baseline, scanStats: { ...baseline.scanStats, archiveIndexSignature: 'deadbeef' } }, () => {}), /checkpoint does not match/);
     const checkpoints = [];
     const resumed = await analyzeArchiveBatches(archive, baseline, checked => checkpoints.push(checked));
     assert.ok(checkpoints[0] >= pending.nextIndex);
-    assert.equal(resumed.summary.scanStats.filesInventoried, 1301);
-    assert.equal(resumed.summary.scanStats.filesWithContent, 1301);
+    assert.equal(resumed.summary.scanStats.filesInventoried, 1302);
+    assert.equal(resumed.summary.scanStats.filesWithContent, 1302);
+    assert.ok(resumed.stack.v3RulePlatform.archiveSweep.complete);
+    assert.ok(resumed.stack.v3RulePlatform.archiveSweep.ruleFileVisits >= pending.result.stack.v3RulePlatform.archiveSweep.ruleFileVisits);
+    assert.equal(resumed.stack.v3RulePlatform.findings.filter(item => item.file === 'src/f-1100.ts' && item.ruleId.includes('math-random')).length, 1);
     assert.equal(await store.load(), null);
   } finally {
     if (original) Object.defineProperty(globalThis, 'navigator', original);

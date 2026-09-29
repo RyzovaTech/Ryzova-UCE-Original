@@ -165,7 +165,7 @@ function dependencyEvidence(detector: V3DependencyDetector, files: V3ProjectFile
 }
 
 const parsedDependencies = new WeakMap<V3ProjectFile, { content: string | undefined; entries: Map<string, string> }>();
-function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
+export function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
   const cached = parsedDependencies.get(file);
   if (cached && cached.content === file.content) return cached.entries;
   const path = file.path.toLowerCase(); const output = new Map<string, string>(); const content = file.content ?? '';
@@ -231,7 +231,7 @@ function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
   parsedDependencies.set(file, { content: file.content, entries: output });
   return output;
 }
-function dependencyEcosystem(path: string): V3DependencyDetector['ecosystems'][number] | undefined {
+export function dependencyEcosystem(path: string): V3DependencyDetector['ecosystems'][number] | undefined {
   const lower = path.toLowerCase();
   if (lower.endsWith('package.json')) return 'npm';
   if (/requirements[^/]*\.txt$|pyproject\.toml$/.test(lower)) return 'python';

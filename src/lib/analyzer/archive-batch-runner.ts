@@ -4,6 +4,7 @@ import { openArchiveCheckpoint } from './archive-checkpoint';
 import { scanZipBatches, type ZipBatchProgress } from './zip';
 import type { AnalysisInput, AnalysisResult, LanguageProfile } from './types';
 import { detectLanguageProfile } from './language-profile';
+import { createV3ArchiveSweep } from './v3-archive-sweep';
 
 const SUPPORTING_LANGUAGES = new Set(['JSON', 'YAML', 'TOML', 'XML', 'CSS', 'SCSS', 'Sass', 'Less', 'Stylus']);
 
@@ -32,6 +33,8 @@ export async function analyzeArchiveBatches(file: File, baseline: AnalysisInput,
   const originalFilesWithContent = originalContentPaths.length;
   const originalContentBytes = snapshot?.originalContentBytes ?? baseline.scanStats.contentBytesRead ?? 0;
   const result = snapshot?.result ?? analyzeProject(baseline);
+  const v3Sweep = createV3ArchiveSweep(result);
+  if (!snapshot && v3Sweep) result.summary.scanStats.rulesExecuted = (result.summary.scanStats.rulesExecuted ?? 0) + v3Sweep.scan(baseline.files);
   const limits: BatchFindingLimits = { security: snapshot?.securityFindingsOmitted ?? 0, browser: snapshot?.browserFindingsOmitted ?? 0 };
   const languageTotals = new Map<LanguageProfile['language'], { bytes: number; files: number }>((snapshot?.languages ?? []).map(item => [item.language, { bytes: item.bytes, files: item.files }]));
   const previouslyRead = { filesWithContent: snapshot?.additionalFilesWithContent ?? 0, bytesRead: snapshot?.additionalBytesRead ?? 0, unreadableTextFiles: snapshot?.unreadableTextFiles ?? 0 };
@@ -46,12 +49,13 @@ export async function analyzeArchiveBatches(file: File, baseline: AnalysisInput,
   });
   const previousElapsed = snapshot?.result.summary.scanStats.scanTimeMs ?? 0;
   const update = (progress: ZipBatchProgress) => {
-    finishBatchCoverage(result, progress, originalFilesWithContent, originalContentBytes, limits);
+    finishBatchCoverage(result, progress, originalFilesWithContent, originalContentBytes, limits, { sampled: Boolean(baseline.scanStats.sampled), truncated: Boolean(baseline.scanStats.truncated) });
     result.summary.scanStats.scanTimeMs = Math.round(previousElapsed + performance.now() - started);
   };
   const next = await scanZipBatches(file, new Set(originalContentPaths), async (batch, progress) => {
     if (snapshot && (progress.eligibleFiles !== snapshot.eligibleFiles || progress.indexSignature !== snapshot.indexSignature)) throw new Error('Archive checkpoint does not match its ZIP index. Start a new scan.');
     mergeSourceBatch(result, batch, limits);
+    if (v3Sweep) result.summary.scanStats.rulesExecuted = (result.summary.scanStats.rulesExecuted ?? 0) + v3Sweep.scan(batch);
     for (const language of detectLanguageProfile(batch)) {
       const total = languageTotals.get(language.language) ?? { bytes: 0, files: 0 };
       total.bytes += language.bytes; total.files += language.files;
@@ -62,7 +66,7 @@ export async function analyzeArchiveBatches(file: File, baseline: AnalysisInput,
     update(state);
     if (store && persistenceAvailable && (progress.nextIndex - lastSaved >= 1024 || progress.nextIndex === progress.eligibleFiles)) {
       try { await store.save({
-        version: 1, nextIndex: progress.nextIndex, eligibleFiles: progress.eligibleFiles, indexSignature: progress.indexSignature,
+        version: 2, nextIndex: progress.nextIndex, eligibleFiles: progress.eligibleFiles, indexSignature: progress.indexSignature,
         originalContentPaths, originalContentBytes,
         additionalFilesWithContent: state.filesWithContent, additionalBytesRead: state.bytesRead,
         unreadableTextFiles: state.unreadableTextFiles,
@@ -75,6 +79,7 @@ export async function analyzeArchiveBatches(file: File, baseline: AnalysisInput,
     onProgress(progress.nextIndex, progress.eligibleFiles, persistenceAvailable && lastSaved > 0);
   }, undefined, startIndex);
   if (snapshot && (next.eligibleFiles !== snapshot.eligibleFiles || next.indexSignature !== snapshot.indexSignature)) throw new Error('Archive checkpoint does not match its ZIP index. Start a new scan.');
+  v3Sweep?.finish();
   update(cumulative(next));
   onProgress(next.nextIndex, next.eligibleFiles, persistenceAvailable && lastSaved > 0);
   await store?.clear();

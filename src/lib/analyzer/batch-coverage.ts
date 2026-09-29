@@ -58,7 +58,7 @@ export function mergeSourceBatch(result: AnalysisResult, files: ProjectFile[], l
 
 export function finishBatchCoverage(result: AnalysisResult, progress: {
   eligibleFiles: number; nextIndex: number; textFilesEligible: number; filesWithContent: number; unreadableTextFiles: number; bytesRead: number;
-}, originalFilesWithContent: number, originalContentBytes: number, limits: BatchFindingLimits): void {
+}, originalFilesWithContent: number, originalContentBytes: number, limits: BatchFindingLimits, core: { sampled: boolean; truncated: boolean }): void {
   const stats = result.summary.scanStats;
   stats.eligibleFiles = progress.eligibleFiles;
   stats.filesInventoried = progress.nextIndex;
@@ -71,33 +71,38 @@ export function finishBatchCoverage(result: AnalysisResult, progress: {
   stats.textFilesTooLarge = progress.unreadableTextFiles;
   stats.securityFilesChecked = result.stack.securityIntelligence?.filesScanned;
   stats.browserFilesChecked = result.stack.browserCompatibility?.filesScanned;
-  stats.findingsLimited = limits.security > 0 || limits.browser > 0;
+  const sweep = result.stack.v3RulePlatform?.archiveSweep;
+  stats.findingsLimited = limits.security > 0 || limits.browser > 0 || Boolean(sweep?.findingsOmitted);
   const completeInventory = progress.nextIndex === progress.eligibleFiles;
+  const limitedRules = Boolean(result.stack.v3RulePlatform?.metrics.some(metric => metric.truncated));
+  const partial = core.truncated || core.sampled || !completeInventory || progress.unreadableTextFiles > 0 ||
+    stats.filesWithContent < progress.textFilesEligible || Boolean(stats.findingsLimited || result.stack.securityIntelligence?.truncated || limitedRules);
   const extras = [
-    `Core cross-file/V3 rules evaluated only ${stats.coreFilesAnalyzed.toLocaleString()} selected files; per-rule budgets may restrict these further.`,
+    `Core cross-file and multi-file V3 rules evaluated ${stats.coreFilesAnalyzed.toLocaleString()} selected files; per-rule budgets may restrict these further.`,
+    sweep ? `${sweep.rulesChecked.toLocaleString()} standalone V3 source/dependency rules checked ${sweep.filesChecked.toLocaleString()} readable files (${sweep.dependencyFilesChecked.toLocaleString()} dependency manifests) in ${sweep.ruleFileVisits.toLocaleString()} rule-file visits${sweep.complete ? '' : ' so far'}; multi-detector and cross-file rules still use the core input.` : '',
     `${stats.filesWithContent.toLocaleString()} source-text files read in bounded batches; ${progress.unreadableTextFiles.toLocaleString()} oversized text files were not read.`,
     'Additional per-file security and browser findings appear in the Issue Center but do not change the core compatibility score.',
-    limits.security || limits.browser ? `Finding display caps reached (security: ${limits.security}, browser: ${limits.browser}); further findings are not included.` : '',
+    limits.security || limits.browser || sweep?.findingsOmitted ? `Finding display caps reached (security: ${limits.security}, browser: ${limits.browser}, V3 source: ${sweep?.findingsOmitted ?? 0}); further findings are not included.` : '',
     completeInventory ? '' : `Archive inventory paused at ${progress.nextIndex.toLocaleString()} / ${progress.eligibleFiles.toLocaleString()} eligible files.`,
   ].filter(Boolean).join(' ');
-  stats.sampled = !completeInventory || stats.sampled; // core rule sampling remains true
-  stats.truncated = true;
-  stats.truncationReason = extras;
+  stats.sampled = core.sampled || !completeInventory;
+  stats.truncated = partial;
+  stats.truncationReason = partial ? extras : undefined;
   result.notes = result.notes.filter(note => !note.startsWith('Batch coverage:'));
   result.notes.push(`Batch coverage: ${extras}`);
   const coverage = result.summary.analysisCoverage;
   if (coverage) {
-    coverage.status = 'partial';
+    coverage.status = partial ? 'partial' : 'full';
     coverage.eligibleFiles = progress.eligibleFiles;
     coverage.filesInventoried = progress.nextIndex;
     coverage.coreFilesAnalyzed = stats.coreFilesAnalyzed;
     coverage.filesWithContent = stats.filesWithContent;
     coverage.textFilesEligible = progress.textFilesEligible;
-    coverage.reason = extras;
+    coverage.reason = partial ? extras : undefined;
   }
   if (result.trust) {
-    result.trust.limitations = result.trust.limitations.filter(item => !item.startsWith('Core cross-file/V3 rules evaluated only'));
+    result.trust.limitations = result.trust.limitations.filter(item => !item.startsWith('Core cross-file/V3 rules evaluated only') && !item.startsWith('Core cross-file and multi-file V3 rules evaluated '));
     result.trust.limitations.push(extras);
   }
-  if (result.trust) result.trust.execution = { ...result.trust.execution, worker: true, cached: false, sampled: Boolean(stats.sampled), truncated: true };
+  if (result.trust) result.trust.execution = { ...result.trust.execution, worker: true, cached: false, sampled: Boolean(stats.sampled), truncated: partial };
 }

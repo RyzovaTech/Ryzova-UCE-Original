@@ -1,33 +1,12 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
 import { crc32 } from 'node:zlib';
-import { createRequire } from 'node:module';
-import ts from 'typescript';
-
-const root = path.resolve(import.meta.dirname, '../..');
-const nativeRequire = createRequire(import.meta.url);
-const cache = new Map();
-function load(relative) {
-  const full = path.resolve(root, relative);
-  if (cache.has(full)) return cache.get(full).exports;
-  const module = { exports: {} }; cache.set(full, module);
-  const source = ts.transpileModule(fs.readFileSync(full, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;
-  new Function('require', 'module', 'exports', source)((name) => {
-    if (name === 'jszip') return { default: nativeRequire('jszip') };
-    if (name.startsWith('@/')) return load(path.join(root, 'src', name.slice(2)) + '.ts');
-    if (name.startsWith('.')) {
-      const candidate = path.resolve(path.dirname(full), name);
-      return load(path.extname(candidate) ? candidate : `${candidate}.ts`);
-    }
-    return nativeRequire(name);
-  }, module, module.exports);
-  return module.exports;
-}
+import { load } from '../../scripts/trusted-module-loader.mjs';
 const count = Number(process.env.UCE_BENCH_ZIP_FILES ?? 96_000);
 if (!Number.isSafeInteger(count) || count < 25_001 || count > 200_000) throw new Error('UCE_BENCH_ZIP_FILES must be 25,001–200,000.');
-const source = Buffer.from('int kernel_fixture(void) { return 0; }\n');
+const payloadBytes = Number(process.env.UCE_BENCH_ZIP_PAYLOAD_BYTES ?? 0);
+if (!Number.isSafeInteger(payloadBytes) || payloadBytes < 0 || payloadBytes > 4096) throw new Error('UCE_BENCH_ZIP_PAYLOAD_BYTES must be 0–4096.');
+const source = Buffer.from('int kernel_fixture(void) { return 0; }\n'.padEnd(payloadBytes, ' '));
 const checksum = crc32(source);
 const localChunks = []; const centralChunks = [];
 let offset = 0;
@@ -51,22 +30,30 @@ end.writeUInt32LE(0xffffffff, 12); end.writeUInt32LE(0xffffffff, 16);
 const archive = new File([Buffer.concat([...localChunks, ...centralChunks, zip64, locator, end])], 'linux.zip');
 localChunks.length = 0; centralChunks.length = 0;
 const { readZip, scanZipBatches } = load('src/lib/analyzer/zip.ts');
+const { createV3ArchiveSweep } = load('src/lib/analyzer/v3-archive-sweep.ts');
 const started = performance.now();
 const initial = await readZip(archive);
+const report = { stack: { language: 'C', framework: 'Unknown', runtime: 'Unknown', buildTool: 'Unknown', v3RulePlatform: { findings: [] } } };
+const sweep = createV3ArchiveSweep(report);
+sweep.scan(initial.files);
 let peakHeap = process.memoryUsage().heapUsed;
 const alreadyRead = new Set(initial.files.filter(item => item.content !== undefined).map(item => item.path));
 let batches = 0;
 const progress = await scanZipBatches(archive, alreadyRead, async files => {
   assert.ok(files.length <= 128);
+  sweep.scan(files);
   batches++;
   peakHeap = Math.max(peakHeap, process.memoryUsage().heapUsed);
 });
 assert.equal(progress.eligibleFiles, count);
 assert.equal(initial.scanStats.filesAnalyzed, 25_000);
 assert.equal(progress.filesWithContent + initial.scanStats.filesWithContent, count);
+sweep.finish();
+assert.equal(report.stack.v3RulePlatform.archiveSweep.filesChecked, count);
+assert.ok(report.stack.v3RulePlatform.archiveSweep.ruleFileVisits > count);
 const elapsedMs = Math.round(performance.now() - started);
 const heapMiB = Math.round(peakHeap / 1048576);
 const maxRssMiB = Math.round(process.resourceUsage().maxRSS / 1024);
 const status = heapMiB <= 512 && elapsedMs <= 150_000 ? 'passed' : 'failed';
-console.log(JSON.stringify({ benchmark: 'linux-like-zip-batches', filesIndexed: progress.eligibleFiles, textFilesRead: count, compressedMiB: Math.round(archive.size / 1048576), batches, elapsedMs, peakHeapMiB: heapMiB, maxRssMiB, status }));
+console.log(JSON.stringify({ benchmark: 'linux-like-zip-batches', filesIndexed: progress.eligibleFiles, textFilesRead: count, v3SourceRulesEligible: report.stack.v3RulePlatform.archiveSweep.sourceRulesEligible, v3DependencyRulesEligible: report.stack.v3RulePlatform.archiveSweep.dependencyRulesEligible, v3RulesChecked: report.stack.v3RulePlatform.archiveSweep.rulesChecked, v3FilesChecked: report.stack.v3RulePlatform.archiveSweep.filesChecked, v3RuleFileVisits: report.stack.v3RulePlatform.archiveSweep.ruleFileVisits, compressedMiB: Math.round(archive.size / 1048576), batches, elapsedMs, peakHeapMiB: heapMiB, maxRssMiB, status }));
 if (status === 'failed') process.exitCode = 1;
