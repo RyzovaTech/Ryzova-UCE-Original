@@ -126,6 +126,8 @@ export interface V3RuleFinding {
   falsePositiveNotes: string[];
 }
 export interface V3RuleMetric { ruleId: string; filesVisited: number; contentBytes: number; matches: number; durationMs: number; truncated: boolean; }
+/** Separate from core metrics: one bounded source-only rule pass over readable archive entries. */
+export interface V3ArchiveSweepCoverage { rulesEligible: number; sourceRulesEligible: number; dependencyRulesEligible: number; rulesChecked: number; filesChecked: number; dependencyFilesChecked: number; ruleFileVisits: number; findingsStored: number; findingsOmitted: number; complete: boolean; ruleVisits: Record<string, number>; storedPerRule: Record<string, number>; storedWarnings: number; storedInfo: number; }
 export interface V3ExecutionResult {
   schemaVersion: typeof V3_RULE_SCHEMA_VERSION;
   packIds: string[];
@@ -135,6 +137,7 @@ export interface V3ExecutionResult {
   findings: V3RuleFinding[];
   metrics: V3RuleMetric[];
   limitations: string[];
+  archiveSweep?: V3ArchiveSweepCoverage;
 }
 export interface V3PackValidation { valid: boolean; errors: string[]; warnings: string[]; signed: boolean; }
 export interface V3RuleGraph { order: string[]; missingDependencies: string[]; cycles: string[][]; conflicts: string[]; duplicates: string[]; }

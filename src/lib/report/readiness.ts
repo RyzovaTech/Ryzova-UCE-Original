@@ -17,6 +17,7 @@ export function describeReportReadiness(report: AnalysisResult): { title: string
         report.summary.scanStats.securityFilesChecked !== undefined ? `Security module: ${report.summary.scanStats.securityFilesChecked.toLocaleString()} source files checked.` : '',
         report.summary.scanStats.browserFilesChecked !== undefined ? `Browser module: ${report.summary.scanStats.browserFilesChecked.toLocaleString()} source files checked.` : '',
         report.stack.v3RulePlatform?.metrics.some(metric => metric.truncated) ? 'Some rules reached their evaluation budgets.' : '',
+        report.stack.v3RulePlatform?.archiveSweep ? `${report.stack.v3RulePlatform.archiveSweep.rulesChecked.toLocaleString()} standalone V3 source/dependency rules checked ${report.stack.v3RulePlatform.archiveSweep.filesChecked.toLocaleString()} readable files; multi-detector and cross-file rules remain core-limited.` : '',
         'Overall readiness is not established. Findings do not cover unchecked content.',
       ].filter(Boolean).join(' '),
       displayScore: null,
@@ -45,6 +46,7 @@ export function reportCoverageRows(report: AnalysisResult): Array<{ label: strin
     { label: 'Security', checked: report.stack.securityIntelligence?.filesScanned ?? null, note: 'Source files visited; rule scope and finding limits still apply' },
     { label: 'Browser', checked: report.stack.browserCompatibility?.filesScanned ?? null, note: 'Browser source files visited; zero means no browser files checked' },
     { label: 'Code', checked: report.stack.codeIntelligence?.filesAnalyzed ?? null, note: 'Core code module input; parser coverage varies by language' },
+    { label: 'V3 per-file sweep', checked: report.stack.v3RulePlatform?.archiveSweep?.filesChecked ?? null, note: report.stack.v3RulePlatform?.archiveSweep ? `${report.stack.v3RulePlatform.archiveSweep.rulesChecked.toLocaleString()} standalone rules, ${report.stack.v3RulePlatform.archiveSweep.dependencyFilesChecked.toLocaleString()} dependency manifests, ${report.stack.v3RulePlatform.archiveSweep.ruleFileVisits.toLocaleString()} rule-file visits; ${report.stack.v3RulePlatform.archiveSweep.findingsOmitted.toLocaleString()} findings omitted by display caps` : 'No archive source sweep recorded' },
     ...Object.values(report.stack.extendedIntelligence?.modules ?? {}).map(module => ({ label: module.label, checked: null, note: 'Module-specific file coverage not recorded; core input limits apply' })),
   ];
 }

@@ -276,7 +276,7 @@ export function ReportPage() {
                     <Stat label="Memory Used" value={`${report.summary.scanStats.memoryUsedMB}MB`} />
                   )}
                   {report.summary.scanStats.rulesExecuted !== undefined && (
-                    <Stat label="Rules Executed" value={report.summary.scanStats.rulesExecuted.toLocaleString()} />
+                    <Stat label="Rule Evaluations" value={report.summary.scanStats.rulesExecuted.toLocaleString()} />
                   )}
                   {report.summary.scanStats.zipSize !== undefined && (
                     <Stat label="ZIP Size" value={formatFileSize(report.summary.scanStats.zipSize)} />
