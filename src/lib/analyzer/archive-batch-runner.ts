@@ -24,6 +24,7 @@ function updateLanguages(result: AnalysisResult, totals: Map<LanguageProfile['la
 
 /** Run the regular cross-file pass, then bounded source-level passes over the entire eligible ZIP. */
 export async function analyzeArchiveBatches(file: File, baseline: AnalysisInput, onProgress: (checked: number, eligible: number, resumeAvailable: boolean) => void): Promise<AnalysisResult> {
+  const started = performance.now();
   const store = await openArchiveCheckpoint(file);
   const snapshot = await store?.load();
   if (snapshot && snapshot.indexSignature !== baseline.scanStats.archiveIndexSignature) throw new Error('Archive checkpoint does not match the selected source index. Remove the old checkpoint and scan again.');
@@ -43,7 +44,11 @@ export async function analyzeArchiveBatches(file: File, baseline: AnalysisInput,
     unreadableTextFiles: previouslyRead.unreadableTextFiles + progress.unreadableTextFiles,
     bytesRead: previouslyRead.bytesRead + progress.bytesRead,
   });
-  const update = (progress: ZipBatchProgress) => finishBatchCoverage(result, progress, originalFilesWithContent, originalContentBytes, limits);
+  const previousElapsed = snapshot?.result.summary.scanStats.scanTimeMs ?? 0;
+  const update = (progress: ZipBatchProgress) => {
+    finishBatchCoverage(result, progress, originalFilesWithContent, originalContentBytes, limits);
+    result.summary.scanStats.scanTimeMs = Math.round(previousElapsed + performance.now() - started);
+  };
   const next = await scanZipBatches(file, new Set(originalContentPaths), async (batch, progress) => {
     if (snapshot && (progress.eligibleFiles !== snapshot.eligibleFiles || progress.indexSignature !== snapshot.indexSignature)) throw new Error('Archive checkpoint does not match its ZIP index. Start a new scan.');
     mergeSourceBatch(result, batch, limits);

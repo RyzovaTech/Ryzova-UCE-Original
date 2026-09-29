@@ -1,0 +1,803 @@
+{
+  "schemaVersion": 1,
+  "reportId": "rpt_mulfk9sz_7qqnti",
+  "reportSha256": "b8f0aba02bd55eb8c23121b56ac888e94ce51f20c8366c17a0b70daffc76f8a1",
+  "archiveCommit": "not recorded by original scan; do not infer from current HEAD",
+  "sourceReviewCommit": "72d3fcf802c45d00b300f25b848a93c3a2bd7c7e",
+  "filesFound": 96045,
+  "humanReviewed": 0,
+  "reviewedByAgent": 2,
+  "pending": 77,
+  "findings": [
+    {
+      "id": "batch-security:SEC025:drivers/nvdimm/namespace_devs.c:1686",
+      "rule": "SEC025",
+      "title": "Cookie missing secure attributes",
+      "location": "drivers/nvdimm/namespace_devs.c:1686",
+      "severity": "warning",
+      "label": "false-positive",
+      "reviewer": "agent",
+      "reason": "Kernel interleave-set cookie, not HTTP cookie."
+    },
+    {
+      "id": "batch-security:SEC028:fs/ecryptfs/keystore.c:1463",
+      "rule": "SEC028",
+      "title": "Weak password hashing function",
+      "location": "fs/ecryptfs/keystore.c:1463",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/builtin-inject.c:1646",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/builtin-inject.c:1646",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:arch/um/drivers/xterm.c:92",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "arch/um/drivers/xterm.c:92",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/vdso.c:29",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/vdso.c:29",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/symbol.h:280",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/symbol.h:280",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/unwind-libdw.c:95",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/unwind-libdw.c:95",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC014:scripts/gdb/linux/symbols.py:106",
+      "rule": "SEC014",
+      "title": "Potential SQL string interpolation",
+      "location": "scripts/gdb/linux/symbols.py:106",
+      "severity": "warning",
+      "label": "false-positive",
+      "reviewer": "agent",
+      "reason": "Debugger command, not SQL."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/trace-event-info.c:616",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/trace-event-info.c:616",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/map.c:146",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/map.c:146",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/dso.h:832",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/dso.h:832",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/dso.h:999",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/dso.h:999",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC038:drivers/nvme/host/fabrics.c:737",
+      "rule": "SEC038",
+      "title": "Database TLS disabled",
+      "location": "drivers/nvme/host/fabrics.c:737",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/dso.c:1928",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/dso.c:1928",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/symbol.c:1780",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/symbol.c:1780",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/symbol.c:1793",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/symbol.c:1793",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/perf/util/symbol-elf.c:1110",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/perf/util/symbol-elf.c:1110",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:tools/power/x86/intel-speed-select/isst-daemon.c:240",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "tools/power/x86/intel-speed-select/isst-daemon.c:240",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC020:tools/perf/scripts/python/flamegraph.py:205",
+      "rule": "SEC020",
+      "title": "Legacy hash usage requires context review",
+      "location": "tools/perf/scripts/python/flamegraph.py:205",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC020:scripts/sbom/sbom/spdx_graph/kernel_file.py:199",
+      "rule": "SEC020",
+      "title": "Legacy hash usage requires context review",
+      "location": "scripts/sbom/sbom/spdx_graph/kernel_file.py:199",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC015:tools/perf/scripts/python/exported-sql-viewer.py:2727",
+      "rule": "SEC015",
+      "title": "Python pickle deserialization requires trust review",
+      "location": "tools/perf/scripts/python/exported-sql-viewer.py:2727",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC015:tools/perf/scripts/python/exported-sql-viewer.py:2730",
+      "rule": "SEC015",
+      "title": "Python pickle deserialization requires trust review",
+      "location": "tools/perf/scripts/python/exported-sql-viewer.py:2730",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC015:tools/perf/scripts/python/exported-sql-viewer.py:2732",
+      "rule": "SEC015",
+      "title": "Python pickle deserialization requires trust review",
+      "location": "tools/perf/scripts/python/exported-sql-viewer.py:2732",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:tools/unittests/kdoc-test-schema.yaml:9",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "tools/unittests/kdoc-test-schema.yaml:9",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-browser:rust/zerocopy/rustdoc/style.css:css-has:Firefox",
+      "rule": null,
+      "title": "CSS :has() browser support needs review",
+      "location": "rust/zerocopy/rustdoc/style.css:19",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-browser:rust/zerocopy/rustdoc/style.css:css-subgrid:Chrome,Edge,Chrome Android",
+      "rule": null,
+      "title": "CSS subgrid browser support needs review",
+      "location": "rust/zerocopy/rustdoc/style.css:31",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-hex-case.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-tab.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-ws.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-mixed-indent.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unused-label.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-node-close.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unit-addr-prefix.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-indent-strict.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-value-ws-multiline.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-line-length.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-cont-align.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-trailing-comment.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-unclosed-comment.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-order-device-type.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-required-blank.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-label-in-string.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-name-order.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-prop-pairing.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-multi-close.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-digit-node-order.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/good/yaml-4space.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/bad/yaml-child-addr-order.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC039:drivers/gpu/drm/ci/check-devicetrees.yml:8",
+      "rule": "SEC039",
+      "title": "Predictable temporary file path",
+      "location": "drivers/gpu/drm/ci/check-devicetrees.yml:8",
+      "severity": "warning",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:4",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:4",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    },
+    {
+      "id": "batch-security:SEC005:scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:5",
+      "rule": "SEC005",
+      "title": "Non-HTTPS URL literal",
+      "location": "scripts/dtc/dt-style-selftest/good/yaml-tricky-parsing.yaml:5",
+      "severity": "info",
+      "label": "unreviewed",
+      "reviewer": null,
+      "reason": "Source context and applicability require independent review."
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import type { AnalysisInput, AnalysisResult, AnalysisStage, ProjectFile } from './types';
 
 // Rules and report version changed; never reuse cached V2 findings in a V3 scan.
-export const ANALYSIS_CACHE_VERSION = 11;
+export const ANALYSIS_CACHE_VERSION = 12;
 export const DEFAULT_ANALYSIS_BUDGET = Object.freeze({
   maxFiles: 25_000,
   maxContentBytes: 96 * 1024 * 1024,
@@ -31,7 +31,7 @@ export function prepareAnalysisInput(input: AnalysisInput, budget = DEFAULT_ANAL
   let contentTruncated = false;
   for (const file of candidates) {
     if (selected.length >= budget.maxFiles) break;
-    const contentSize = file.content?.length ?? 0;
+    const contentSize = file.content === undefined ? 0 : new TextEncoder().encode(file.content).byteLength;
     if (contentSize > budget.maxSingleFileBytes || contentBytes + contentSize > budget.maxContentBytes) {
       selected.push({ ...file, content: undefined });
       contentTruncated ||= contentSize > 0;

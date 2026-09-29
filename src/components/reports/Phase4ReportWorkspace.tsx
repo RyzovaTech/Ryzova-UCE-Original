@@ -35,7 +35,7 @@ import { exportJson, exportSarif, downloadFile } from '@/lib/report/export';
 import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveReportReviewState } from '@/lib/storage';
 import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
 import { createPortableReportSummary } from '@/lib/report/sharing';
-import { describeReportReadiness } from '@/lib/report/readiness';
+import { attentionCategories, describeReportReadiness, reportCoverageRows } from '@/lib/report/readiness';
 import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
 import type { AnalysisResult, SecurityFinding, Severity } from '@/lib/analyzer/types';
 
@@ -132,7 +132,7 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
 
 function OverviewView({ report, history, mode, onNavigate }: { report: AnalysisResult; history: AnalysisResult[]; mode: UserMode; onNavigate: (section: ReportSection) => void }) {
   const critical = report.issues.filter((item) => item.severity === 'critical');
-  const attention = report.categories.filter((item) => item.score < 80).sort((a, b) => a.score - b.score);
+  const attention = attentionCategories(report);
   const actions = topActions(report);
   const confidence = projectConfidence(report);
   const identity = projectIdentity(report);
@@ -149,10 +149,20 @@ function OverviewView({ report, history, mode, onNavigate }: { report: AnalysisR
             {readiness.coverage && <p className="mt-2 max-w-2xl text-sm font-medium text-foreground">{readiness.coverage}</p>}
           </div>
           <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full border-8 border-primary/20 bg-background/80">
-            <span className="text-3xl font-bold tabular-nums">{report.score.overall}</span><span className="text-center text-[10px] uppercase text-muted-foreground">{readiness.scope}</span>
+            <span className="text-3xl font-bold tabular-nums">{readiness.displayScore ?? "—"}</span><span className="text-center text-[10px] uppercase text-muted-foreground">{readiness.scope}</span>
           </div>
         </CardContent>
       </Card>
+
+      <details className="rounded-lg border p-4">
+        <summary className="cursor-pointer font-medium">Analysis coverage by module</summary>
+        <p className="my-3 text-sm text-muted-foreground">Counts describe recorded work. Unknown coverage is not zero coverage or a clean result.</p>
+        <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+          <thead><tr><th scope="col" className="p-2">Stage / module</th><th scope="col" className="p-2">Files</th><th scope="col" className="p-2">Meaning</th></tr></thead>
+          <tbody>{reportCoverageRows(report).map(row => <tr key={row.label} className="border-t"><th scope="row" className="p-2 font-medium">{row.label}</th><td className="p-2">{row.checked?.toLocaleString() ?? 'Not measured'}</td><td className="p-2 text-muted-foreground">{row.note}</td></tr>)}</tbody>
+        </table></div>
+        {report.stack.v3RulePlatform && <p className="mt-3 text-sm">V3 rules reaching limits: {report.stack.v3RulePlatform.metrics.filter(metric => metric.truncated).length.toLocaleString()} / {report.stack.v3RulePlatform.metrics.length.toLocaleString()} evaluated rules. Rule visits are not unique file coverage.</p>}
+      </details>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <SummaryCard title="What is this project?" icon={<Boxes className="h-4 w-4" />}>

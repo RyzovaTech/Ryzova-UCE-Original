@@ -16,6 +16,7 @@ export function mergeSourceBatch(result: AnalysisResult, files: ProjectFile[], l
   const security = result.stack.securityIntelligence;
   if (security) {
     const batch = detectSecurityIntelligence(withContent);
+    result.summary.scanStats.rulesExecuted = (result.summary.scanStats.rulesExecuted ?? 0) + batch.rulesExecuted;
     const seen = new Set(security.findings.map(finding => finding.id));
     for (const finding of batch.findings) {
       if (seen.has(finding.id)) continue;
@@ -29,7 +30,7 @@ export function mergeSourceBatch(result: AnalysisResult, files: ProjectFile[], l
       else limits.security++;
     }
     if (batch.findings.length >= 300) limits.security++;
-    result.stack.securityIntelligence = summarizeSecurityFindings(security.findings, security.filesScanned + batch.filesScanned, security.rulesExecuted + batch.rulesExecuted);
+    result.stack.securityIntelligence = { ...summarizeSecurityFindings(security.findings, security.filesScanned + batch.filesScanned, security.rulesExecuted + batch.rulesExecuted), truncated: Boolean(security.truncated || batch.truncated || limits.security) };
   }
   const browser = result.stack.browserCompatibility;
   if (browser) {
