@@ -5042,6 +5042,351 @@
           "content": "{\"dependencies\": {\"@playwright/test\": \"1.63.0\", \"svelte\": \"^5.57.0\", \"vite\": \"^8.3.0\", \"vitest\": \"^5.0.0\"}}"
         }
       ]
+    },
+    {
+      "id": "linux-SEC028-context",
+      "area": "security",
+      "ecosystem": "C",
+      "rule": "SEC028",
+      "expected": false,
+      "rationale": "Assigning an algorithm identifier is not a general-purpose password hash function call.",
+      "labelReview": "agent-reviewed; independent human review pending",
+      "source": {
+        "repository": "torvalds/linux",
+        "commit": "72d3fcf802c45d00b300f25b848a93c3a2bd7c7e",
+        "path": "fs/ecryptfs/keystore.c",
+        "startLine": 1463,
+        "endLine": 1463,
+        "url": "https://github.com/torvalds/linux/blob/72d3fcf802c45d00b300f25b848a93c3a2bd7c7e/fs/ecryptfs/keystore.c#L1463",
+        "kind": "real-source-excerpt",
+        "licenseNotice": "SPDX-License-Identifier: GPL-2.0-or-later; Copyright (C) 2004-2006 International Business Machines Corp."
+      },
+      "files": [
+        {
+          "path": "fs/ecryptfs/keystore.c",
+          "content": "(*new_auth_tok)->token.password.hash_algo = 0x01; /* MD5 */"
+        }
+      ]
+    },
+    {
+      "id": "linux-SEC038-context",
+      "area": "security",
+      "ecosystem": "C",
+      "rule": "SEC038",
+      "expected": false,
+      "rationale": "NVMe transport option initialization is not database/service TLS configuration.",
+      "labelReview": "agent-reviewed; independent human review pending",
+      "source": {
+        "repository": "torvalds/linux",
+        "commit": "72d3fcf802c45d00b300f25b848a93c3a2bd7c7e",
+        "path": "drivers/nvme/host/fabrics.c",
+        "startLine": 737,
+        "endLine": 738,
+        "url": "https://github.com/torvalds/linux/blob/72d3fcf802c45d00b300f25b848a93c3a2bd7c7e/drivers/nvme/host/fabrics.c#L737",
+        "kind": "real-source-excerpt",
+        "licenseNotice": "SPDX-License-Identifier: GPL-2.0; Copyright (c) 2015-2016 HGST, a Western Digital Company."
+      },
+      "files": [
+        {
+          "path": "drivers/nvme/host/fabrics.c",
+          "content": "opts->tls = false;\nopts->tls_key = NULL;"
+        }
+      ]
+    },
+    {
+      "id": "linux-SEC005-schema",
+      "area": "security",
+      "ecosystem": "configuration",
+      "rule": "SEC005",
+      "expected": false,
+      "rationale": "Schema identifiers in a style self-test do not demonstrate network traffic.",
+      "labelReview": "agent-reviewed; independent human review pending",
+      "source": {
+        "repository": "torvalds/linux",
+        "commit": "72d3fcf802c45d00b300f25b848a93c3a2bd7c7e",
+        "path": "scripts/dtc/dt-style-selftest/good/yaml-4space.yaml",
+        "startLine": 4,
+        "endLine": 5,
+        "url": "https://github.com/torvalds/linux/blob/72d3fcf802c45d00b300f25b848a93c3a2bd7c7e/scripts/dtc/dt-style-selftest/good/yaml-4space.yaml#L4",
+        "kind": "real-source-excerpt",
+        "licenseNotice": "SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause"
+      },
+      "files": [
+        {
+          "path": "scripts/dtc/dt-style-selftest/good/yaml-4space.yaml",
+          "content": "$id: http://devicetree.org/schemas/test-good-4space.yaml#\n$schema: http://devicetree.org/meta-schemas/core.yaml#"
+        }
+      ]
+    },
+    {
+      "id": "http-fetch",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC005",
+      "expected": true,
+      "rationale": "Direct outbound HTTP request merits transport review.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/api.ts",
+          "content": "fetch(\"http://example.com/api\")"
+        }
+      ]
+    },
+    {
+      "id": "http-schema",
+      "area": "security",
+      "ecosystem": "configuration",
+      "rule": "SEC005",
+      "expected": false,
+      "rationale": "Schema identifier is not an outbound network call.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/schema.yaml",
+          "content": "$schema: http://example.com/schema.json"
+        }
+      ]
+    },
+    {
+      "id": "http-config-endpoint",
+      "area": "security",
+      "ecosystem": "configuration",
+      "rule": "SEC005",
+      "expected": true,
+      "rationale": "Explicit endpoint configuration may cause network traffic.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "config/service.yaml",
+          "content": "endpoint: http://example.com/api"
+        }
+      ]
+    },
+    {
+      "id": "http-string-literal",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC005",
+      "expected": false,
+      "rationale": "A help URL literal is not a demonstrated network endpoint.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/text.ts",
+          "content": "const help = \"http://example.com/docs\""
+        }
+      ]
+    },
+    {
+      "id": "sql-query-interpolation",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC014",
+      "expected": true,
+      "rationale": "SQL interpolation at a database receiver requires review.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/db.ts",
+          "content": "db.query(`SELECT * FROM users WHERE id = ${id}`)"
+        }
+      ]
+    },
+    {
+      "id": "sql-gdb-synthetic",
+      "area": "security",
+      "ecosystem": "Python",
+      "rule": "SEC014",
+      "expected": false,
+      "rationale": "GDB executes debugger commands, not SQL.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/debug.py",
+          "content": "gdb.execute(\"tbreak *\" + hex(address))"
+        }
+      ]
+    },
+    {
+      "id": "sql-other-execute",
+      "area": "security",
+      "ecosystem": "Python",
+      "rule": "SEC014",
+      "expected": false,
+      "rationale": "Generic command execution is not a SQL query.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/commands.py",
+          "content": "runner.execute(\"step \" + action)"
+        }
+      ]
+    },
+    {
+      "id": "cookie-secure-only",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC025",
+      "expected": true,
+      "rationale": "HttpOnly is absent even though Secure is set.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/auth.js",
+          "content": "res.cookie(\"session\", token, { secure: true })"
+        }
+      ]
+    },
+    {
+      "id": "cookie-httponly-only",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC025",
+      "expected": true,
+      "rationale": "Secure is absent even though HttpOnly is set.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/auth.js",
+          "content": "res.cookie(\"session\", token, { httpOnly: true })"
+        }
+      ]
+    },
+    {
+      "id": "cookie-native-other",
+      "area": "security",
+      "ecosystem": "configuration",
+      "rule": "SEC025",
+      "expected": false,
+      "rationale": "A native interleave cookie is not an HTTP cookie API.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/driver.cpp",
+          "content": "nsl_validate_isetcookie(ndd, label, cookie);"
+        }
+      ]
+    },
+    {
+      "id": "hash-password-api",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC028",
+      "expected": true,
+      "rationale": "General-purpose SHA-256 API hashes password material.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/auth.ts",
+          "content": "const hash = createHash(\"sha256\").update(password).digest(\"hex\");"
+        }
+      ]
+    },
+    {
+      "id": "temp-literal-only",
+      "area": "security",
+      "ecosystem": "JavaScript/TypeScript",
+      "rule": "SEC039",
+      "expected": false,
+      "rationale": "A path literal without file creation does not establish a race.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/config.ts",
+          "content": "const debugPath = \"/tmp/output.log\";"
+        }
+      ]
+    },
+    {
+      "id": "temp-exclusive-create",
+      "area": "security",
+      "ecosystem": "C",
+      "rule": "SEC039",
+      "expected": false,
+      "rationale": "Exclusive creation mitigates predictable-name races.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/temp.c",
+          "content": "open(\"/tmp/cachefile\", O_CREAT | O_EXCL, 0600);"
+        }
+      ]
+    },
+    {
+      "id": "temp-unprotected-create",
+      "area": "security",
+      "ecosystem": "C",
+      "rule": "SEC039",
+      "expected": true,
+      "rationale": "Fixed-name file creation without exclusive creation merits review.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/temp.c",
+          "content": "open(\"/tmp/cachefile\", O_CREAT, 0600);"
+        }
+      ]
+    },
+    {
+      "id": "sql-python-fstring",
+      "area": "security",
+      "ecosystem": "Python",
+      "rule": "SEC014",
+      "expected": true,
+      "rationale": "Database cursor executes interpolated SQL f-string.",
+      "labelReview": "agent-authored synthetic; independent human review pending",
+      "source": {
+        "kind": "synthetic"
+      },
+      "files": [
+        {
+          "path": "src/db.py",
+          "content": "cursor.execute(f\"SELECT * FROM users WHERE id = {user_id}\")"
+        }
+      ]
     }
   ]
 }
