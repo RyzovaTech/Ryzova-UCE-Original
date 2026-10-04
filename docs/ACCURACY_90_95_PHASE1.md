@@ -66,3 +66,11 @@ accuracy. Whole-project security recall, source-to-sink validity, unsupported
 modules and independently adjudicated real-world accuracy remain unmeasured.
 A global UCE accuracy value therefore remains null. Phase 1 engineering is
 complete; independent label adjudication and blind release validation are pending.
+
+## CI dependency classification correction
+
+`tailwindcss-animate` is used only by `tailwind.config.js` while generating CSS.
+Move it to devDependencies and refresh lockfile dev flags. The production
+dependency audit then reports zero vulnerabilities. This is correct build-tool
+classification, not a fix to the upstream braces development-tool advisory;
+build-time dependency review remains separate. Production CSS generation passes.
