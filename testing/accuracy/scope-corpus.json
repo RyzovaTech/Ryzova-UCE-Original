@@ -1,0 +1,3007 @@
+{
+  "schemaVersion": 1,
+  "name": "Cross-ecosystem scope contract baseline",
+  "scope": "Synthetic development contracts, not independent repositories or full-project accuracy.",
+  "cases": [
+    {
+      "id": "web-presence-0",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "configuration",
+      "technology": "React",
+      "expected": true,
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-presence-1",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "configuration",
+      "technology": "React",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-presence-2",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "test",
+      "technology": "React",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-presence-3",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "fixture",
+      "technology": "React",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-presence-4",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "vendor",
+      "technology": "React",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-presence-5",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "generated",
+      "technology": "React",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-presence-6",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "documentation",
+      "technology": "React",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/package.json",
+          "content": "{\"dependencies\":{\"react\":\"18.3.1\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web"
+      }
+    },
+    {
+      "id": "web-absent",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "configuration",
+      "technology": "React",
+      "expected": false,
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\":{}}"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "web-absent"
+      }
+    },
+    {
+      "id": "backend-presence-0",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "configuration",
+      "technology": "Express",
+      "expected": true,
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-presence-1",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "configuration",
+      "technology": "Express",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-presence-2",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "test",
+      "technology": "Express",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-presence-3",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "fixture",
+      "technology": "Express",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-presence-4",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "vendor",
+      "technology": "Express",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-presence-5",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "generated",
+      "technology": "Express",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-presence-6",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "documentation",
+      "technology": "Express",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/package.json",
+          "content": "{\"dependencies\":{\"express\":\"4.21.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend"
+      }
+    },
+    {
+      "id": "backend-absent",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "configuration",
+      "technology": "Express",
+      "expected": false,
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\":{}}"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "backend-absent"
+      }
+    },
+    {
+      "id": "python-presence-0",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "configuration",
+      "technology": "Django",
+      "expected": true,
+      "files": [
+        {
+          "path": "requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-presence-1",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "configuration",
+      "technology": "Django",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-presence-2",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "test",
+      "technology": "Django",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-presence-3",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "fixture",
+      "technology": "Django",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-presence-4",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "vendor",
+      "technology": "Django",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-presence-5",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "generated",
+      "technology": "Django",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-presence-6",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "documentation",
+      "technology": "Django",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/requirements.txt",
+          "content": "Django==5.1.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python"
+      }
+    },
+    {
+      "id": "python-absent",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "configuration",
+      "technology": "Django",
+      "expected": false,
+      "files": [
+        {
+          "path": "requirements.txt",
+          "content": "requests==2.32.0\n"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "python-absent"
+      }
+    },
+    {
+      "id": "java-presence-0",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "configuration",
+      "technology": "Spring Boot",
+      "expected": true,
+      "files": [
+        {
+          "path": "pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-presence-1",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "configuration",
+      "technology": "Spring Boot",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-presence-2",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "test",
+      "technology": "Spring Boot",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-presence-3",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "fixture",
+      "technology": "Spring Boot",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-presence-4",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "vendor",
+      "technology": "Spring Boot",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-presence-5",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "generated",
+      "technology": "Spring Boot",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-presence-6",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "documentation",
+      "technology": "Spring Boot",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/pom.xml",
+          "content": "<project><dependencies><dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId><version>3.3.0</version></dependency></dependencies></project>"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java"
+      }
+    },
+    {
+      "id": "java-absent",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "configuration",
+      "technology": "Spring Boot",
+      "expected": false,
+      "files": [
+        {
+          "path": "pom.xml",
+          "content": "<project><dependencies/></project>"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "java-absent"
+      }
+    },
+    {
+      "id": "go-presence-0",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "configuration",
+      "technology": "Gin",
+      "expected": true,
+      "files": [
+        {
+          "path": "go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-presence-1",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "configuration",
+      "technology": "Gin",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-presence-2",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "test",
+      "technology": "Gin",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-presence-3",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "fixture",
+      "technology": "Gin",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-presence-4",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "vendor",
+      "technology": "Gin",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-presence-5",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "generated",
+      "technology": "Gin",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-presence-6",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "documentation",
+      "technology": "Gin",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/go.mod",
+          "content": "module example.com/app\n\ngo 1.22\nrequire github.com/gin-gonic/gin v1.10.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go"
+      }
+    },
+    {
+      "id": "go-absent",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "configuration",
+      "technology": "Gin",
+      "expected": false,
+      "files": [
+        {
+          "path": "go.mod",
+          "content": "module example.com/app\n\ngo 1.22\n"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "go-absent"
+      }
+    },
+    {
+      "id": "rust-presence-0",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "configuration",
+      "technology": "Axum",
+      "expected": true,
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-presence-1",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "configuration",
+      "technology": "Axum",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-presence-2",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "test",
+      "technology": "Axum",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-presence-3",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "fixture",
+      "technology": "Axum",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-presence-4",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "vendor",
+      "technology": "Axum",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-presence-5",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "generated",
+      "technology": "Axum",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-presence-6",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "documentation",
+      "technology": "Axum",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\naxum=\"0.7\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust"
+      }
+    },
+    {
+      "id": "rust-absent",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "configuration",
+      "technology": "Axum",
+      "expected": false,
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "content": "[package]\nname=\"app\"\nversion=\"0.1.0\"\n[dependencies]\n"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "rust-absent"
+      }
+    },
+    {
+      "id": "php-presence-0",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "configuration",
+      "technology": "Laravel",
+      "expected": true,
+      "files": [
+        {
+          "path": "composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-presence-1",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "configuration",
+      "technology": "Laravel",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-presence-2",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "test",
+      "technology": "Laravel",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-presence-3",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "fixture",
+      "technology": "Laravel",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-presence-4",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "vendor",
+      "technology": "Laravel",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-presence-5",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "generated",
+      "technology": "Laravel",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-presence-6",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "documentation",
+      "technology": "Laravel",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/composer.json",
+          "content": "{\"require\":{\"laravel/framework\":\"^11.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php"
+      }
+    },
+    {
+      "id": "php-absent",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "configuration",
+      "technology": "Laravel",
+      "expected": false,
+      "files": [
+        {
+          "path": "composer.json",
+          "content": "{\"require\":{}}"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "php-absent"
+      }
+    },
+    {
+      "id": "ruby-presence-0",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "configuration",
+      "technology": "Rails",
+      "expected": true,
+      "files": [
+        {
+          "path": "Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-presence-1",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "configuration",
+      "technology": "Rails",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-presence-2",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "test",
+      "technology": "Rails",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-presence-3",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "fixture",
+      "technology": "Rails",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-presence-4",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "vendor",
+      "technology": "Rails",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-presence-5",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "generated",
+      "technology": "Rails",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-presence-6",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "documentation",
+      "technology": "Rails",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rails\", \"7.2.0\"\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby"
+      }
+    },
+    {
+      "id": "ruby-absent",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "configuration",
+      "technology": "Rails",
+      "expected": false,
+      "files": [
+        {
+          "path": "Gemfile",
+          "content": "source \"https://rubygems.org\"\ngem \"rake\"\n"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ruby-absent"
+      }
+    },
+    {
+      "id": "mobile-presence-0",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "configuration",
+      "technology": "Flutter",
+      "expected": true,
+      "files": [
+        {
+          "path": "pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-presence-1",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "configuration",
+      "technology": "Flutter",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-presence-2",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "test",
+      "technology": "Flutter",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-presence-3",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "fixture",
+      "technology": "Flutter",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-presence-4",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "vendor",
+      "technology": "Flutter",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-presence-5",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "generated",
+      "technology": "Flutter",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-presence-6",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "documentation",
+      "technology": "Flutter",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/pubspec.yaml",
+          "content": "name: app\ndependencies:\n  flutter:\n    sdk: flutter\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile"
+      }
+    },
+    {
+      "id": "mobile-absent",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "configuration",
+      "technology": "Flutter",
+      "expected": false,
+      "files": [
+        {
+          "path": "pubspec.yaml",
+          "content": "name: app\ndependencies: {}\n"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "mobile-absent"
+      }
+    },
+    {
+      "id": "desktop-presence-0",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "configuration",
+      "technology": "Electron",
+      "expected": true,
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-presence-1",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "configuration",
+      "technology": "Electron",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-presence-2",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "test",
+      "technology": "Electron",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-presence-3",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "fixture",
+      "technology": "Electron",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-presence-4",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "vendor",
+      "technology": "Electron",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-presence-5",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "generated",
+      "technology": "Electron",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-presence-6",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "documentation",
+      "technology": "Electron",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/package.json",
+          "content": "{\"devDependencies\":{\"electron\":\"31.0.0\"}}"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop"
+      }
+    },
+    {
+      "id": "desktop-absent",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "configuration",
+      "technology": "Electron",
+      "expected": false,
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"devDependencies\":{}}"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "desktop-absent"
+      }
+    },
+    {
+      "id": "ai-ml-presence-0",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "configuration",
+      "technology": "PyTorch",
+      "expected": true,
+      "files": [
+        {
+          "path": "requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-presence-1",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "configuration",
+      "technology": "PyTorch",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-presence-2",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "test",
+      "technology": "PyTorch",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-presence-3",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "fixture",
+      "technology": "PyTorch",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-presence-4",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "vendor",
+      "technology": "PyTorch",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-presence-5",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "generated",
+      "technology": "PyTorch",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-presence-6",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "documentation",
+      "technology": "PyTorch",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/requirements.txt",
+          "content": "torch==2.4.0\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml"
+      }
+    },
+    {
+      "id": "ai-ml-absent",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "configuration",
+      "technology": "PyTorch",
+      "expected": false,
+      "files": [
+        {
+          "path": "requirements.txt",
+          "content": "numpy==2.0.0\n"
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "ai-ml-absent"
+      }
+    },
+    {
+      "id": "systems-presence-0",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "configuration",
+      "technology": "CMake",
+      "expected": true,
+      "files": [
+        {
+          "path": "CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-presence-1",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "configuration",
+      "technology": "CMake",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-presence-2",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "test",
+      "technology": "CMake",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-presence-3",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "fixture",
+      "technology": "CMake",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-presence-4",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "vendor",
+      "technology": "CMake",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-presence-5",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "generated",
+      "technology": "CMake",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-presence-6",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "documentation",
+      "technology": "CMake",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/CMakeLists.txt",
+          "content": "cmake_minimum_required(VERSION 3.20)\nproject(app)\n"
+        }
+      ],
+      "rationale": "Declared project technology is evidence only in owned production/configuration files; non-production copies do not establish the project stack.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems"
+      }
+    },
+    {
+      "id": "systems-absent",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "documentation",
+      "technology": "CMake",
+      "expected": false,
+      "files": [
+        {
+          "path": "README.md",
+          "content": ""
+        }
+      ],
+      "rationale": "No declaration or technology-specific configuration is present.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "systems-absent"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-0",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "rule": "SEC002",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-1",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "rule": "SEC002",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/src/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-2",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "test",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-3",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "fixture",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-4",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "vendor",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-5",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "generated",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-scope-6",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "documentation",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-clean",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "JSON.parse(input);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "javascript-SEC002-comment",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "rule": "SEC002",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "// eval(input);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC002"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-0",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "rule": "SEC015",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-1",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "rule": "SEC015",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/src/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-2",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "test",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-3",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "fixture",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-4",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "vendor",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-5",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "generated",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-scope-6",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "documentation",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/app.py",
+          "content": "pickle.loads(payload)"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-clean",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "json.loads(payload)"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "python-SEC015-comment",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "rule": "SEC015",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "# pickle.loads(payload)"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC015"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-0",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "rule": "SEC017",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-1",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "rule": "SEC017",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/src/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-2",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "test",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-3",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "fixture",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-4",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "vendor",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-5",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "generated",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-scope-6",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "documentation",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/app.php",
+          "content": "<?php unserialize($payload);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-clean",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "<?php json_decode($payload);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "php-SEC017-comment",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "rule": "SEC017",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "// <?php unserialize($payload);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC017"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-0",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "rule": "SEC018",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-1",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "rule": "SEC018",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/src/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-2",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "test",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-3",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "fixture",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-4",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "vendor",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-5",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "generated",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-scope-6",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "documentation",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/app.cs",
+          "content": "var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-clean",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.cs",
+          "content": "var value = JsonSerializer.Deserialize<object>(payload);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "dotnet-SEC018-comment",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "rule": "SEC018",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.cs",
+          "content": "// var formatter = new BinaryFormatter();"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC018"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-0",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "rule": "SEC019",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-1",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "rule": "SEC019",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/src/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-2",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "test",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-3",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "fixture",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-4",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "vendor",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-5",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "generated",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-scope-6",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "documentation",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/App.java",
+          "content": "var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-clean",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "var value = mapper.readTree(input);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "java-SEC019-comment",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "rule": "SEC019",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "// var stream = new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC019"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-0",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "rule": "SEC022",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-1",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "rule": "SEC022",
+      "expected": true,
+      "files": [
+        {
+          "path": "packages/app/src/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-2",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "test",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-3",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "fixture",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "examples/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-4",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "vendor",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-5",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "generated",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-scope-6",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "documentation",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "docs/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "This API call requires a security context review in production; copied test, fixture, vendor, generated, or documentation content is excluded. This label is a review signal, not a confirmed vulnerability.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-clean",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "http.Get(\"https://example.com\")"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    },
+    {
+      "id": "go-SEC022-comment",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "rule": "SEC022",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "// http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "The review API is absent from executable code.",
+      "labelReview": "agent-provisional; independent human adjudication pending",
+      "source": {
+        "kind": "synthetic-contract",
+        "family": "SEC022"
+      }
+    }
+  ]
+}

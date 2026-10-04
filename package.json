@@ -29,7 +29,9 @@
     "preview": "vite preview",
     "audit:accuracy": "node scripts/audit-accuracy.mjs --check",
     "audit:accuracy:baseline": "node testing/accuracy/run.mjs --check",
-    "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check"
+    "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check",
+    "audit:accuracy:scopes": "node testing/accuracy/scope.mjs --check",
+    "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",
@@ -77,7 +79,6 @@
     "recharts": "^2.13.3",
     "sonner": "^1.7.0",
     "tailwind-merge": "^2.5.4",
-    "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.1"
   },
   "devDependencies": {
@@ -95,6 +96,7 @@
     "globals": "^15.11.0",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "tailwindcss-animate": "^1.0.7",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.10.0",
     "vite": "^8.2.2"

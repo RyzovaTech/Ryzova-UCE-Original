@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
+import { checkRegression } from './metrics.mjs';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 
 const { detectRegisteredTechnologies } = load('src/lib/analyzer/technology-registry.ts');
@@ -69,9 +70,6 @@ const baselineUrl = new URL('./holdout-baseline.json', import.meta.url);
 if (process.argv.includes('--record')) fs.writeFileSync(baselineUrl, JSON.stringify(report, null, 2) + '\n');
 if (process.argv.includes('--check')) {
   const baseline = JSON.parse(fs.readFileSync(baselineUrl, 'utf8'));
-  if (baseline.corpusSha256 !== report.corpusSha256) throw Error('Held-out corpus changed: review provenance and labels before recording a new baseline.');
-  const prior = new Map(baseline.results.map(row => [row.id, row]));
-  const regressions = results.filter(row => !prior.has(row.id) || (prior.get(row.id).passed && !row.passed));
-  if (regressions.length) { console.error('Held-out evaluation regressions:', regressions); process.exitCode = 1; }
+  checkRegression(baseline, report);
 }
 console.log(JSON.stringify(report, null, 2));
