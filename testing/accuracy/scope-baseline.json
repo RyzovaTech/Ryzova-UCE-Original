@@ -1,0 +1,3143 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "Cross-ecosystem scope contract baseline",
+  "corpusSha256": "2c58e1b562fb4c3583de5d6456111b32d9e30a67c75608e696b01ecc481de457",
+  "engineVersion": "3.0.0-beta.1",
+  "scope": "Synthetic development contracts, not independent repositories or full-project accuracy.",
+  "globalAccuracy": null,
+  "reviewStatus": "agent-provisional",
+  "humanReviewedCases": 0,
+  "metrics": {
+    "cases": 150,
+    "binaryCases": 150,
+    "categoricalCases": 0,
+    "correct": 150,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      97.5,
+      100
+    ],
+    "tp": 36,
+    "fp": 0,
+    "fn": 0,
+    "tn": 114,
+    "precision": 100,
+    "precisionWilson95": [
+      90.36,
+      100
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      90.36,
+      100
+    ],
+    "falsePositiveRate": 0
+  },
+  "modules": {
+    "security": {
+      "cases": 54,
+      "binaryCases": 54,
+      "categoricalCases": 0,
+      "correct": 54,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        93.36,
+        100
+      ],
+      "tp": 12,
+      "fp": 0,
+      "fn": 0,
+      "tn": 42,
+      "precision": 100,
+      "precisionWilson95": [
+        75.75,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        75.75,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "technology": {
+      "cases": 96,
+      "binaryCases": 96,
+      "categoricalCases": 0,
+      "correct": 96,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        96.15,
+        100
+      ],
+      "tp": 24,
+      "fp": 0,
+      "fn": 0,
+      "tn": 72,
+      "precision": 100,
+      "precisionWilson95": [
+        86.2,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        86.2,
+        100
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "ecosystems": {
+    "ai-ml": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "backend": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "desktop": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "dotnet": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "go": {
+      "cases": 17,
+      "binaryCases": 17,
+      "categoricalCases": 0,
+      "correct": 17,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        81.57,
+        100
+      ],
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13,
+      "precision": 100,
+      "precisionWilson95": [
+        51.01,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        51.01,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "java": {
+      "cases": 17,
+      "binaryCases": 17,
+      "categoricalCases": 0,
+      "correct": 17,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        81.57,
+        100
+      ],
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13,
+      "precision": 100,
+      "precisionWilson95": [
+        51.01,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        51.01,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "javascript": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "mobile": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "php": {
+      "cases": 17,
+      "binaryCases": 17,
+      "categoricalCases": 0,
+      "correct": 17,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        81.57,
+        100
+      ],
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13,
+      "precision": 100,
+      "precisionWilson95": [
+        51.01,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        51.01,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "python": {
+      "cases": 17,
+      "binaryCases": 17,
+      "categoricalCases": 0,
+      "correct": 17,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        81.57,
+        100
+      ],
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13,
+      "precision": 100,
+      "precisionWilson95": [
+        51.01,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        51.01,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "ruby": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "rust": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "systems": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "web": {
+      "cases": 8,
+      "binaryCases": 8,
+      "categoricalCases": 0,
+      "correct": 8,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        67.56,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "scopes": {
+    "configuration": {
+      "cases": 35,
+      "binaryCases": 35,
+      "categoricalCases": 0,
+      "correct": 35,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        90.11,
+        100
+      ],
+      "tp": 24,
+      "fp": 0,
+      "fn": 0,
+      "tn": 11,
+      "precision": 100,
+      "precisionWilson95": [
+        86.2,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        86.2,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "documentation": {
+      "cases": 19,
+      "binaryCases": 19,
+      "categoricalCases": 0,
+      "correct": 19,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        83.18,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 19,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "fixture": {
+      "cases": 18,
+      "binaryCases": 18,
+      "categoricalCases": 0,
+      "correct": 18,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        82.41,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 18,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "generated": {
+      "cases": 18,
+      "binaryCases": 18,
+      "categoricalCases": 0,
+      "correct": 18,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        82.41,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 18,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "production": {
+      "cases": 24,
+      "binaryCases": 24,
+      "categoricalCases": 0,
+      "correct": 24,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        86.2,
+        100
+      ],
+      "tp": 12,
+      "fp": 0,
+      "fn": 0,
+      "tn": 12,
+      "precision": 100,
+      "precisionWilson95": [
+        75.75,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        75.75,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "test": {
+      "cases": 18,
+      "binaryCases": 18,
+      "categoricalCases": 0,
+      "correct": 18,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        82.41,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 18,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "vendor": {
+      "cases": 18,
+      "binaryCases": 18,
+      "categoricalCases": 0,
+      "correct": 18,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        82.41,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 18,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    }
+  },
+  "families": {
+    "SEC002": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC015": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC017": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC018": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC019": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC022": {
+      "cases": 9,
+      "binaryCases": 9,
+      "categoricalCases": 0,
+      "correct": 9,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        70.08,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "ai-ml": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "ai-ml-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "backend": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "backend-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "desktop": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "desktop-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "go": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "go-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "java": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "java-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "mobile": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "mobile-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "php": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "php-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "python": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "python-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "ruby": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "ruby-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "rust": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "rust-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "systems": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "systems-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    },
+    "web": {
+      "cases": 7,
+      "binaryCases": 7,
+      "categoricalCases": 0,
+      "correct": 7,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        64.57,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 5,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "web-absent": {
+      "cases": 1,
+      "binaryCases": 1,
+      "categoricalCases": 0,
+      "correct": 1,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        20.65,
+        100
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": null,
+      "recallWilson95": null,
+      "falsePositiveRate": 0
+    }
+  },
+  "scopeClassification": {
+    "cases": 150,
+    "binaryCases": 0,
+    "categoricalCases": 150,
+    "correct": 150,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      97.5,
+      100
+    ],
+    "tp": 0,
+    "fp": 0,
+    "fn": 0,
+    "tn": 0,
+    "precision": null,
+    "precisionWilson95": null,
+    "recall": null,
+    "recallWilson95": null,
+    "falsePositiveRate": null
+  },
+  "failures": [],
+  "results": [
+    {
+      "id": "web-presence-0",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "configuration",
+      "family": "web",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "web-presence-1",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "configuration",
+      "family": "web",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "web-presence-2",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "test",
+      "family": "web",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "web-presence-3",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "fixture",
+      "family": "web",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "web-presence-4",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "vendor",
+      "family": "web",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "web-presence-5",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "generated",
+      "family": "web",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "web-presence-6",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "documentation",
+      "family": "web",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "web-absent",
+      "area": "technology",
+      "ecosystem": "web",
+      "scope": "configuration",
+      "family": "web-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "backend-presence-0",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "configuration",
+      "family": "backend",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "backend-presence-1",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "configuration",
+      "family": "backend",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "backend-presence-2",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "test",
+      "family": "backend",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "backend-presence-3",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "fixture",
+      "family": "backend",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "backend-presence-4",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "vendor",
+      "family": "backend",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "backend-presence-5",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "generated",
+      "family": "backend",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "backend-presence-6",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "documentation",
+      "family": "backend",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "backend-absent",
+      "area": "technology",
+      "ecosystem": "backend",
+      "scope": "configuration",
+      "family": "backend-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "python-presence-0",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "configuration",
+      "family": "python",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "python-presence-1",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "configuration",
+      "family": "python",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "python-presence-2",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "test",
+      "family": "python",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "python-presence-3",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "fixture",
+      "family": "python",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "python-presence-4",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "vendor",
+      "family": "python",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "python-presence-5",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "generated",
+      "family": "python",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "python-presence-6",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "documentation",
+      "family": "python",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "python-absent",
+      "area": "technology",
+      "ecosystem": "python",
+      "scope": "configuration",
+      "family": "python-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "java-presence-0",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "configuration",
+      "family": "java",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "java-presence-1",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "configuration",
+      "family": "java",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "java-presence-2",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "test",
+      "family": "java",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "java-presence-3",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "fixture",
+      "family": "java",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "java-presence-4",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "vendor",
+      "family": "java",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "java-presence-5",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "generated",
+      "family": "java",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "java-presence-6",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "documentation",
+      "family": "java",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "java-absent",
+      "area": "technology",
+      "ecosystem": "java",
+      "scope": "configuration",
+      "family": "java-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "go-presence-0",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "configuration",
+      "family": "go",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "go-presence-1",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "configuration",
+      "family": "go",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "go-presence-2",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "test",
+      "family": "go",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "go-presence-3",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "fixture",
+      "family": "go",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "go-presence-4",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "vendor",
+      "family": "go",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "go-presence-5",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "generated",
+      "family": "go",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "go-presence-6",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "documentation",
+      "family": "go",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "go-absent",
+      "area": "technology",
+      "ecosystem": "go",
+      "scope": "configuration",
+      "family": "go-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "rust-presence-0",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "configuration",
+      "family": "rust",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "rust-presence-1",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "configuration",
+      "family": "rust",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "rust-presence-2",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "test",
+      "family": "rust",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "rust-presence-3",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "fixture",
+      "family": "rust",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "rust-presence-4",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "vendor",
+      "family": "rust",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "rust-presence-5",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "generated",
+      "family": "rust",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "rust-presence-6",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "documentation",
+      "family": "rust",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "rust-absent",
+      "area": "technology",
+      "ecosystem": "rust",
+      "scope": "configuration",
+      "family": "rust-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "php-presence-0",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "configuration",
+      "family": "php",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "php-presence-1",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "configuration",
+      "family": "php",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "php-presence-2",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "test",
+      "family": "php",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "php-presence-3",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "fixture",
+      "family": "php",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "php-presence-4",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "vendor",
+      "family": "php",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "php-presence-5",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "generated",
+      "family": "php",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "php-presence-6",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "documentation",
+      "family": "php",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "php-absent",
+      "area": "technology",
+      "ecosystem": "php",
+      "scope": "configuration",
+      "family": "php-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "ruby-presence-0",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "configuration",
+      "family": "ruby",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "ruby-presence-1",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "configuration",
+      "family": "ruby",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "ruby-presence-2",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "test",
+      "family": "ruby",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "ruby-presence-3",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "fixture",
+      "family": "ruby",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "ruby-presence-4",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "vendor",
+      "family": "ruby",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "ruby-presence-5",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "generated",
+      "family": "ruby",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "ruby-presence-6",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "documentation",
+      "family": "ruby",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "ruby-absent",
+      "area": "technology",
+      "ecosystem": "ruby",
+      "scope": "configuration",
+      "family": "ruby-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "mobile-presence-0",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "configuration",
+      "family": "mobile",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "mobile-presence-1",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "configuration",
+      "family": "mobile",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "mobile-presence-2",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "test",
+      "family": "mobile",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "mobile-presence-3",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "fixture",
+      "family": "mobile",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "mobile-presence-4",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "vendor",
+      "family": "mobile",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "mobile-presence-5",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "generated",
+      "family": "mobile",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "mobile-presence-6",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "documentation",
+      "family": "mobile",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "mobile-absent",
+      "area": "technology",
+      "ecosystem": "mobile",
+      "scope": "configuration",
+      "family": "mobile-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "desktop-presence-0",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "configuration",
+      "family": "desktop",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "desktop-presence-1",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "configuration",
+      "family": "desktop",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "desktop-presence-2",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "test",
+      "family": "desktop",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "desktop-presence-3",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "fixture",
+      "family": "desktop",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "desktop-presence-4",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "vendor",
+      "family": "desktop",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "desktop-presence-5",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "generated",
+      "family": "desktop",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "desktop-presence-6",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "documentation",
+      "family": "desktop",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "desktop-absent",
+      "area": "technology",
+      "ecosystem": "desktop",
+      "scope": "configuration",
+      "family": "desktop-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "ai-ml-presence-0",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "configuration",
+      "family": "ai-ml",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "ai-ml-presence-1",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "configuration",
+      "family": "ai-ml",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "ai-ml-presence-2",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "test",
+      "family": "ai-ml",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "ai-ml-presence-3",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "fixture",
+      "family": "ai-ml",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "ai-ml-presence-4",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "vendor",
+      "family": "ai-ml",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "ai-ml-presence-5",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "generated",
+      "family": "ai-ml",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "ai-ml-presence-6",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "documentation",
+      "family": "ai-ml",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "ai-ml-absent",
+      "area": "technology",
+      "ecosystem": "ai-ml",
+      "scope": "configuration",
+      "family": "ai-ml-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "systems-presence-0",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "configuration",
+      "family": "systems",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "systems-presence-1",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "configuration",
+      "family": "systems",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "configuration",
+      "actualScope": "configuration"
+    },
+    {
+      "id": "systems-presence-2",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "test",
+      "family": "systems",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "systems-presence-3",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "fixture",
+      "family": "systems",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "systems-presence-4",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "vendor",
+      "family": "systems",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "systems-presence-5",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "generated",
+      "family": "systems",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "systems-presence-6",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "documentation",
+      "family": "systems",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "systems-absent",
+      "area": "technology",
+      "ecosystem": "systems",
+      "scope": "documentation",
+      "family": "systems-absent",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "javascript-SEC002-scope-0",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "family": "SEC002",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "javascript-SEC002-scope-1",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "family": "SEC002",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "javascript-SEC002-scope-2",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "test",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "javascript-SEC002-scope-3",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "fixture",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "javascript-SEC002-scope-4",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "vendor",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "javascript-SEC002-scope-5",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "generated",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "javascript-SEC002-scope-6",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "documentation",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "javascript-SEC002-clean",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "javascript-SEC002-comment",
+      "area": "security",
+      "ecosystem": "javascript",
+      "scope": "production",
+      "family": "SEC002",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "python-SEC015-scope-0",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "family": "SEC015",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "python-SEC015-scope-1",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "family": "SEC015",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "python-SEC015-scope-2",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "test",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "python-SEC015-scope-3",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "fixture",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "python-SEC015-scope-4",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "vendor",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "python-SEC015-scope-5",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "generated",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "python-SEC015-scope-6",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "documentation",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "python-SEC015-clean",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "python-SEC015-comment",
+      "area": "security",
+      "ecosystem": "python",
+      "scope": "production",
+      "family": "SEC015",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "php-SEC017-scope-0",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "family": "SEC017",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "php-SEC017-scope-1",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "family": "SEC017",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "php-SEC017-scope-2",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "test",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "php-SEC017-scope-3",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "fixture",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "php-SEC017-scope-4",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "vendor",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "php-SEC017-scope-5",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "generated",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "php-SEC017-scope-6",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "documentation",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "php-SEC017-clean",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "php-SEC017-comment",
+      "area": "security",
+      "ecosystem": "php",
+      "scope": "production",
+      "family": "SEC017",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "dotnet-SEC018-scope-0",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "family": "SEC018",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "dotnet-SEC018-scope-1",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "family": "SEC018",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "dotnet-SEC018-scope-2",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "test",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "dotnet-SEC018-scope-3",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "fixture",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "dotnet-SEC018-scope-4",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "vendor",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "dotnet-SEC018-scope-5",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "generated",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "dotnet-SEC018-scope-6",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "documentation",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "dotnet-SEC018-clean",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "dotnet-SEC018-comment",
+      "area": "security",
+      "ecosystem": "dotnet",
+      "scope": "production",
+      "family": "SEC018",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "java-SEC019-scope-0",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "family": "SEC019",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "java-SEC019-scope-1",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "family": "SEC019",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "java-SEC019-scope-2",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "test",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "java-SEC019-scope-3",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "fixture",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "java-SEC019-scope-4",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "vendor",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "java-SEC019-scope-5",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "generated",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "java-SEC019-scope-6",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "documentation",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "java-SEC019-clean",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "java-SEC019-comment",
+      "area": "security",
+      "ecosystem": "java",
+      "scope": "production",
+      "family": "SEC019",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "go-SEC022-scope-0",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "family": "SEC022",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "go-SEC022-scope-1",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "family": "SEC022",
+      "expected": true,
+      "actual": true,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "go-SEC022-scope-2",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "test",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "test",
+      "actualScope": "test"
+    },
+    {
+      "id": "go-SEC022-scope-3",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "fixture",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "fixture",
+      "actualScope": "fixture"
+    },
+    {
+      "id": "go-SEC022-scope-4",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "vendor",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "vendor",
+      "actualScope": "vendor"
+    },
+    {
+      "id": "go-SEC022-scope-5",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "generated",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "generated",
+      "actualScope": "generated"
+    },
+    {
+      "id": "go-SEC022-scope-6",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "documentation",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "documentation",
+      "actualScope": "documentation"
+    },
+    {
+      "id": "go-SEC022-clean",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    },
+    {
+      "id": "go-SEC022-comment",
+      "area": "security",
+      "ecosystem": "go",
+      "scope": "production",
+      "family": "SEC022",
+      "expected": false,
+      "actual": false,
+      "passed": true,
+      "expectedScope": "production",
+      "actualScope": "production"
+    }
+  ]
+}

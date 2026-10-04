@@ -29,7 +29,9 @@
     "preview": "vite preview",
     "audit:accuracy": "node scripts/audit-accuracy.mjs --check",
     "audit:accuracy:baseline": "node testing/accuracy/run.mjs --check",
-    "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check"
+    "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check",
+    "audit:accuracy:scopes": "node testing/accuracy/scope.mjs --check",
+    "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",

@@ -40,6 +40,9 @@ jobs:
       - name: Development accuracy baseline regression gate
         run: npm run audit:accuracy:baseline
 
+      - name: Accuracy metric contracts and scope regression gate
+        run: npm run test:accuracy-metrics && npm run audit:accuracy:scopes
+
       - name: Pinned manifest evaluation regression gate
         run: npm run audit:accuracy:holdout
 
