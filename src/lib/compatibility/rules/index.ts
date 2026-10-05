@@ -15,6 +15,7 @@ import { cloudProviderRules } from './cloud';
 import { securityRules } from './security';
 import { licenseRules } from './license';
 import { performanceRules } from './performance';
+import { versionCorrelationRules } from './version-correlation';
 
 export const ALL_RULES: CompatibilityRule[] = [
   ...runtimeRules,
@@ -33,4 +34,5 @@ export const ALL_RULES: CompatibilityRule[] = [
   ...securityRules,
   ...licenseRules,
   ...performanceRules,
+  ...versionCorrelationRules,
 ];

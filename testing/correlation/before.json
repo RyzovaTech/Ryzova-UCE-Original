@@ -1,0 +1,502 @@
+{
+  "sourceCommit": "280d6bab8bcf37c9a28ae3ca53d86fff6d6716bc",
+  "scope": "Synthetic contract labels, agent-provisional, no independent adjudication or global accuracy claim.",
+  "runtimeCoverageNote": "The new package-local runtime rule did not exist in the parent; those decisions have no parent signal.",
+  "metrics": {
+    "cases": 56,
+    "binaryCases": 56,
+    "categoricalCases": 0,
+    "correct": 40,
+    "decisionAccuracy": 71.43,
+    "decisionWilson95": [
+      58.52,
+      81.58
+    ],
+    "tp": 3,
+    "fp": 6,
+    "fn": 10,
+    "tn": 37,
+    "precision": 33.33,
+    "precisionWilson95": [
+      12.06,
+      64.58
+    ],
+    "recall": 23.08,
+    "recallWilson95": [
+      8.18,
+      50.26
+    ],
+    "falsePositiveRate": 13.95
+  },
+  "families": {
+    "lock": {
+      "cases": 18,
+      "binaryCases": 18,
+      "categoricalCases": 0,
+      "correct": 14,
+      "decisionAccuracy": 77.78,
+      "decisionWilson95": [
+        54.78,
+        91
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 4,
+      "tn": 13,
+      "precision": 100,
+      "precisionWilson95": [
+        20.65,
+        100
+      ],
+      "recall": 20,
+      "recallWilson95": [
+        3.62,
+        62.45
+      ],
+      "falsePositiveRate": 0
+    },
+    "module": {
+      "cases": 17,
+      "binaryCases": 17,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 58.82,
+      "decisionWilson95": [
+        36.01,
+        78.39
+      ],
+      "tp": 2,
+      "fp": 6,
+      "fn": 1,
+      "tn": 8,
+      "precision": 25,
+      "precisionWilson95": [
+        7.15,
+        59.07
+      ],
+      "recall": 66.67,
+      "recallWilson95": [
+        20.77,
+        93.85
+      ],
+      "falsePositiveRate": 42.86
+    },
+    "runtime": {
+      "cases": 21,
+      "binaryCases": 21,
+      "categoricalCases": 0,
+      "correct": 16,
+      "decisionAccuracy": 76.19,
+      "decisionWilson95": [
+        54.91,
+        89.37
+      ],
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "tn": 16,
+      "precision": null,
+      "precisionWilson95": null,
+      "recall": 0,
+      "recallWilson95": [
+        0,
+        43.45
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "results": [
+    {
+      "id": "runtime-caret-mismatch",
+      "family": "runtime",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "runtime-caret-compatible",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-exact-mismatch",
+      "family": "runtime",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "runtime-tilde-mismatch",
+      "family": "runtime",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "runtime-partial-overlap",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-alternatives-match",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-alternatives-gap",
+      "family": "runtime",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "runtime-alias-unknown",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-prerelease-unknown",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-image-mismatch",
+      "family": "runtime",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "runtime-image-compatible",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-private-image",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-comment",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-prose",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-dynamic",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-siblings",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-caret-mismatch",
+      "family": "lock",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "lock-caret-match",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-zero-caret",
+      "family": "lock",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "lock-tilde-mismatch",
+      "family": "lock",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "lock-exact-mismatch",
+      "family": "lock",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "lock-exact-match",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-union-match",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-union-gap",
+      "family": "lock",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "lock-remote",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-prerelease",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-invalid-installed",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-wildcard",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-sibling-lock",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-commonjs",
+      "family": "module",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "module-lowercase",
+      "family": "module",
+      "expected": true,
+      "actual": false,
+      "passed": false
+    },
+    {
+      "id": "module-esnext",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-top-level-prose",
+      "family": "module",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "module-nested-prose",
+      "family": "module",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "module-no-emit",
+      "family": "module",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "module-declarations",
+      "family": "module",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "module-extends-unknown",
+      "family": "module",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "module-array-invalid",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-manifest-prose",
+      "family": "module",
+      "expected": false,
+      "actual": true,
+      "passed": false
+    },
+    {
+      "id": "module-jsonc",
+      "family": "module",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "module-siblings",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-tests",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-vendor",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-dist",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-examples",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-docs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-tests",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-vendor",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-dist",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-examples",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-docs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-tests",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-vendor",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-dist",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-examples",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-docs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    }
+  ]
+}

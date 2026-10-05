@@ -166,6 +166,12 @@ function examplesForCorrelation(detector) {
       [file(origin, "import safe from './safe';"), file(target, 'export default 42;')],
       [file('tests/' + origin, "import secret from '" + relative + "';"), file('tests/' + target, 'export default 42;')]];
   }
+  if (detector.semantic === 'node-module-typescript') {
+    const a = file('package.json', '{"type":"module"}');
+    const b = file('tsconfig.json', '{"compilerOptions":{"module":"CommonJS"}}');
+    return [[a, b], [a, file('tsconfig.json', '{"compilerOptions":{"module":"CommonJS","noEmit":true}}')],
+      [file('tests/package.json', a.content), file('tests/tsconfig.json', b.content)]];
+  }
   const first = samplePath(detector.first.include[0]);
   const second = detector.relation === 'same-file' ? first : samplePath(detector.second.include[0]);
   const a = syntaxWitness(detector.first.pattern);

@@ -40,6 +40,9 @@ jobs:
       - name: Security false-positive contracts and context checks
         run: npm run audit:accuracy:security && npm run test:security-context
 
+      - name: Package-local version and configuration correlation contracts
+        run: npm run test:correlation && npm run audit:accuracy:correlation
+
       - name: Bounded accuracy regression audit
         run: npm run audit:accuracy
 
