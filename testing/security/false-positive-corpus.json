@@ -1,0 +1,1966 @@
+{
+  "name": "Phase 3 security context development contracts",
+  "scope": "Synthetic review-signal decisions; not real-project vulnerability precision or independent adjudication.",
+  "cases": [
+    {
+      "id": "SEC002-executable",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-line-comment",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // eval(input);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-block-comment",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* eval(input); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-string",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"eval(input);\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-template",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `eval(input);`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-after-string-marker",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\neval(input);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-template-expression",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{eval(input);})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-test-scope",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-vendor-scope",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC002-generated-scope",
+      "rule": "SEC002",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "eval(input);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-executable",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "exec(command);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-line-comment",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // exec(command);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-block-comment",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* exec(command); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-string",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"exec(command);\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-template",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `exec(command);`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-after-string-marker",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nexec(command);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-template-expression",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{exec(command);})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-test-scope",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "exec(command);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-vendor-scope",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "exec(command);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC003-generated-scope",
+      "rule": "SEC003",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "exec(command);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-executable",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "element.innerHTML = input;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-line-comment",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // element.innerHTML = input;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-block-comment",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* element.innerHTML = input; */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-string",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"element.innerHTML = input;\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-template",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `element.innerHTML = input;`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-after-string-marker",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nelement.innerHTML = input;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-template-expression",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{element.innerHTML = input;})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-test-scope",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "element.innerHTML = input;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-vendor-scope",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "element.innerHTML = input;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC004-generated-scope",
+      "rule": "SEC004",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "element.innerHTML = input;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-executable",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "console.log(secret);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-line-comment",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // console.log(secret);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-block-comment",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* console.log(secret); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-string",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"console.log(secret);\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-template",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `console.log(secret);`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-after-string-marker",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nconsole.log(secret);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-template-expression",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{console.log(secret);})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-test-scope",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "console.log(secret);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-vendor-scope",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "console.log(secret);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC007-generated-scope",
+      "rule": "SEC007",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "console.log(secret);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-executable",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const opts = {rejectUnauthorized: false};"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-line-comment",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // const opts = {rejectUnauthorized: false};"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-block-comment",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* const opts = {rejectUnauthorized: false}; */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-string",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"const opts = {rejectUnauthorized: false};\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-template",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `const opts = {rejectUnauthorized: false};`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-after-string-marker",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nconst opts = {rejectUnauthorized: false};"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-template-expression",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{const opts = {rejectUnauthorized: false};})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-test-scope",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "const opts = {rejectUnauthorized: false};"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-vendor-scope",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "const opts = {rejectUnauthorized: false};"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC010-generated-scope",
+      "rule": "SEC010",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "const opts = {rejectUnauthorized: false};"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-executable",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const token = Math.random();"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-line-comment",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // const token = Math.random();"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-block-comment",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* const token = Math.random(); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-string",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"const token = Math.random();\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-template",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `const token = Math.random();`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-after-string-marker",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nconst token = Math.random();"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-template-expression",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{const token = Math.random();})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-test-scope",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "const token = Math.random();"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-vendor-scope",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "const token = Math.random();"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC012-generated-scope",
+      "rule": "SEC012",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "const token = Math.random();"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-executable",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "window.postMessage(data, \"*\");"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-line-comment",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // window.postMessage(data, \"*\");"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-block-comment",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* window.postMessage(data, \"*\"); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-string",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"window.postMessage(data, \\\"*\\\");\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-template",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `window.postMessage(data, \"*\");`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-after-string-marker",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nwindow.postMessage(data, \"*\");"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-template-expression",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{window.postMessage(data, \"*\");})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-test-scope",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "window.postMessage(data, \"*\");"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-vendor-scope",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "window.postMessage(data, \"*\");"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC013-generated-scope",
+      "rule": "SEC013",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "window.postMessage(data, \"*\");"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-executable",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "jwt.decode(token);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-line-comment",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // jwt.decode(token);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-block-comment",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* jwt.decode(token); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-string",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"jwt.decode(token);\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-template",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `jwt.decode(token);`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-after-string-marker",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\njwt.decode(token);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-template-expression",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{jwt.decode(token);})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-test-scope",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "jwt.decode(token);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-vendor-scope",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "jwt.decode(token);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC024-generated-scope",
+      "rule": "SEC024",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "jwt.decode(token);"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-executable",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "res.cookie(\"session\", token, {});"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-line-comment",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // res.cookie(\"session\", token, {});"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-block-comment",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* res.cookie(\"session\", token, {}); */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-string",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"res.cookie(\\\"session\\\", token, {});\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-template",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `res.cookie(\"session\", token, {});`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-after-string-marker",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nres.cookie(\"session\", token, {});"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-template-expression",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{res.cookie(\"session\", token, {});})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-test-scope",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "res.cookie(\"session\", token, {});"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-vendor-scope",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "res.cookie(\"session\", token, {});"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC025-generated-scope",
+      "rule": "SEC025",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "res.cookie(\"session\", token, {});"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-executable",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const allowed = authorized ?? true;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-line-comment",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "line-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; // const allowed = authorized ?? true;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-block-comment",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const x = 1; /* const allowed = authorized ?? true; */"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-string",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = \"const allowed = authorized ?? true;\";"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-template",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "template",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const docs = `const allowed = authorized ?? true;`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-after-string-marker",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const url = \"https://example.com/*\";\nconst allowed = authorized ?? true;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-template-expression",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "template-expression",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "const value = `${(()=>{const allowed = authorized ?? true;})()}`;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-test-scope",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "test-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "tests/app.js",
+          "content": "const allowed = authorized ?? true;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-vendor-scope",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "vendor/app.js",
+          "content": "const allowed = authorized ?? true;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "SEC026-generated-scope",
+      "rule": "SEC026",
+      "ecosystem": "javascript",
+      "scenario": "generated-scope",
+      "expected": false,
+      "files": [
+        {
+          "path": "dist/app.js",
+          "content": "const allowed = authorized ?? true;"
+        }
+      ],
+      "rationale": "Executable review APIs stay visible; prose and excluded scope copies do not establish a production security signal. No exploit adjudication."
+    },
+    {
+      "id": "c-executable",
+      "rule": "SEC020",
+      "ecosystem": "c",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.c",
+          "content": "createHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "c-string",
+      "rule": "SEC020",
+      "ecosystem": "c",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.c",
+          "content": "const docs = \"createHash(\\\"md5\\\");\";"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "c-inline-comment",
+      "rule": "SEC020",
+      "ecosystem": "c",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.c",
+          "content": "const x = 1; // createHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "c-block-comment",
+      "rule": "SEC020",
+      "ecosystem": "c",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.c",
+          "content": "/* createHash(\"md5\"); */"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "c-after-string-marker",
+      "rule": "SEC020",
+      "ecosystem": "c",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.c",
+          "content": "const marker = \"/*\";\ncreateHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "cpp-executable",
+      "rule": "SEC020",
+      "ecosystem": "cpp",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.cpp",
+          "content": "createHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "cpp-string",
+      "rule": "SEC020",
+      "ecosystem": "cpp",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.cpp",
+          "content": "const docs = \"createHash(\\\"md5\\\");\";"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "cpp-inline-comment",
+      "rule": "SEC020",
+      "ecosystem": "cpp",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.cpp",
+          "content": "const x = 1; // createHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "cpp-block-comment",
+      "rule": "SEC020",
+      "ecosystem": "cpp",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.cpp",
+          "content": "/* createHash(\"md5\"); */"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "cpp-after-string-marker",
+      "rule": "SEC020",
+      "ecosystem": "cpp",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.cpp",
+          "content": "const marker = \"/*\";\ncreateHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "java-executable",
+      "rule": "SEC019",
+      "ecosystem": "java",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "java-string",
+      "rule": "SEC019",
+      "ecosystem": "java",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "const docs = \"new ObjectInputStream(input);\";"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "java-inline-comment",
+      "rule": "SEC019",
+      "ecosystem": "java",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "const x = 1; // new ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "java-block-comment",
+      "rule": "SEC019",
+      "ecosystem": "java",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "/* new ObjectInputStream(input); */"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "java-after-string-marker",
+      "rule": "SEC019",
+      "ecosystem": "java",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/App.java",
+          "content": "const marker = \"/*\";\nnew ObjectInputStream(input);"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "go-executable",
+      "rule": "SEC022",
+      "ecosystem": "go",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "go-string",
+      "rule": "SEC022",
+      "ecosystem": "go",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "const docs = \"http.Get(request.URL.Query().Get(\\\"url\\\"))\";"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "go-inline-comment",
+      "rule": "SEC022",
+      "ecosystem": "go",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "const x = 1; // http.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "go-block-comment",
+      "rule": "SEC022",
+      "ecosystem": "go",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "/* http.Get(request.URL.Query().Get(\"url\")) */"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "go-after-string-marker",
+      "rule": "SEC022",
+      "ecosystem": "go",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.go",
+          "content": "const marker = \"/*\";\nhttp.Get(request.URL.Query().Get(\"url\"))"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "rust-executable",
+      "rule": "SEC020",
+      "ecosystem": "rust",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.rs",
+          "content": "createHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "rust-string",
+      "rule": "SEC020",
+      "ecosystem": "rust",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.rs",
+          "content": "const docs = \"createHash(\\\"md5\\\");\";"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "rust-inline-comment",
+      "rule": "SEC020",
+      "ecosystem": "rust",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.rs",
+          "content": "const x = 1; // createHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "rust-block-comment",
+      "rule": "SEC020",
+      "ecosystem": "rust",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.rs",
+          "content": "/* createHash(\"md5\"); */"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "rust-after-string-marker",
+      "rule": "SEC020",
+      "ecosystem": "rust",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.rs",
+          "content": "const marker = \"/*\";\ncreateHash(\"md5\");"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "php-executable",
+      "rule": "SEC017",
+      "ecosystem": "php",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "unserialize($payload);"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "php-string",
+      "rule": "SEC017",
+      "ecosystem": "php",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "const docs = \"unserialize($payload);\";"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "php-inline-comment",
+      "rule": "SEC017",
+      "ecosystem": "php",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "const x = 1; // unserialize($payload);"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "php-block-comment",
+      "rule": "SEC017",
+      "ecosystem": "php",
+      "scenario": "block-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "/* unserialize($payload); */"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "php-after-string-marker",
+      "rule": "SEC017",
+      "ecosystem": "php",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.php",
+          "content": "const marker = \"/*\";\nunserialize($payload);"
+        }
+      ],
+      "rationale": "Lexical API review signal: executable usage is retained while text/comment witnesses are excluded."
+    },
+    {
+      "id": "python-SEC015-executable",
+      "rule": "SEC015",
+      "ecosystem": "python",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "pickle.loads(data)"
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC015-string",
+      "rule": "SEC015",
+      "ecosystem": "python",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "docs = \"pickle.loads(data)\""
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC015-inline-comment",
+      "rule": "SEC015",
+      "ecosystem": "python",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "x = 1 # pickle.loads(data)"
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC015-docstring",
+      "rule": "SEC015",
+      "ecosystem": "python",
+      "scenario": "docstring",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "\"\"\"pickle.loads(data)\"\"\""
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC015-after-string-marker",
+      "rule": "SEC015",
+      "ecosystem": "python",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "marker = \"/*\"\npickle.loads(data)"
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC016-executable",
+      "rule": "SEC016",
+      "ecosystem": "python",
+      "scenario": "executable",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "yaml.load(data)"
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC016-string",
+      "rule": "SEC016",
+      "ecosystem": "python",
+      "scenario": "string",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "docs = \"yaml.load(data)\""
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC016-inline-comment",
+      "rule": "SEC016",
+      "ecosystem": "python",
+      "scenario": "inline-comment",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "x = 1 # yaml.load(data)"
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC016-docstring",
+      "rule": "SEC016",
+      "ecosystem": "python",
+      "scenario": "docstring",
+      "expected": false,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "\"\"\"yaml.load(data)\"\"\""
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    },
+    {
+      "id": "python-SEC016-after-string-marker",
+      "rule": "SEC016",
+      "ecosystem": "python",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "files": [
+        {
+          "path": "src/app.py",
+          "content": "marker = \"/*\"\nyaml.load(data)"
+        }
+      ],
+      "rationale": "Python executable deserialization stays reviewable; string/comment/docstring witnesses are not calls."
+    }
+  ]
+}

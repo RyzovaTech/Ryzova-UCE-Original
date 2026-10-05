@@ -21,7 +21,7 @@ const credentialIsConcrete = (match: RegExpMatchArray): boolean => {
   return value.length >= 8 && !PLACEHOLDER_RE.test(value) && !/^(?:process\.env|import\.meta\.env|os\.getenv|env\[)/i.test(value);
 };
 
-export const SECURITY_KNOWLEDGE_VERSION = '4.2.0';
+export const SECURITY_KNOWLEDGE_VERSION = '4.3.0';
 export const SECURITY_RULES: readonly SecurityRule[] = [
   { id: 'SEC001', title: 'Potential hardcoded credential', category: 'secrets', severity: 'warning', confidence: 'medium', pattern: /(?:password|passwd|secret|api[_-]?key|access[_-]?token)\s*[:=]\s*["']([^"'\n]+)["']/i, evidence: 'A non-placeholder credential-like value is assigned directly in source.', recommendation: 'Confirm the value is sensitive, then move real secrets to environment variables or a managed secret store.', falsePositivePossible: true, certainty: 'likely', shouldReport: credentialIsConcrete },
   { id: 'SEC002', title: 'Dynamic code execution', category: 'code-execution', severity: 'warning', confidence: 'medium', pattern: /\beval\s*\(|new\s+Function\s*\(/, filePattern: /\.[cm]?[jt]sx?$/i, evidence: 'Dynamic JavaScript code execution was detected.', recommendation: 'Avoid eval/new Function and use explicit parsing or safe dispatch.', falsePositivePossible: true },

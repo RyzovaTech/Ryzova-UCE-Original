@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce15-/);
+  assert.match(key, /^uce16-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -875,7 +875,7 @@ test('security findings include category, confidence and safe evidence', () => {
   assert.ok(result.findings.some(item => item.ruleId === 'SEC001' && item.category === 'secrets' && item.confidence));
   assert.ok(result.findings.some(item => item.ruleId === 'SEC010' && item.category === 'transport'));
   assert.ok(result.findings.every(item => !item.evidence.includes('real-production-secret')));
-  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.2.0');
+  assert.ok(result.categoryCounts.secrets >= 1); assert.equal(result.knowledgeVersion, '4.3.0');
 });
 test('security placeholders and local HTTP endpoints are suppressed', () => {
   const result = detectSecurityIntelligence([file('src/config.ts', 'const apiKey = "replace-me"; const backupApiKey = "fake-api-key-for-testing"; const url = "http://localhost:3000/api";')]);
@@ -1327,7 +1327,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce15-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce16-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {
