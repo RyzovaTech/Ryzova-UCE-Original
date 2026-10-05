@@ -45,7 +45,7 @@ function manifest(ecosystem, declarations, excluded = false) {
     case 'npm': name = 'package.json'; content = JSON.stringify({ dependencies: Object.fromEntries(entries) }); break;
     case 'python': name = 'requirements.txt'; content = entries.map(([pkg, v]) => pkg + '==' + v).join('\n'); break;
     case 'cargo': name = 'Cargo.toml'; content = '[dependencies]\n' + entries.map(([pkg, v]) => pkg + ' = "' + v + '"').join('\n'); break;
-    case 'go': name = 'go.mod'; content = entries.map(([pkg, v]) => pkg + ' ' + v).join('\n'); break;
+    case 'go': name = 'go.mod'; content = 'module example.com/fixture\nrequire (\n' + entries.map(([pkg, v]) => pkg + ' ' + v).join('\n') + '\n)\n'; break;
     case 'maven': name = 'pom.xml'; content = '<dependencies>' + entries.map(([pkg, v]) => {
       const [group, artifact] = pkg.split(':'); return '<dependency><groupId>' + (artifact ? group : 'org.example') + '</groupId><artifactId>' + (artifact ?? group) + '</artifactId><version>' + v + '</version></dependency>';
     }).join('') + '</dependencies>'; break;
@@ -197,10 +197,14 @@ for (const rule of rules) {
       publisher: 'RyzovaTech', description: 'Executable multi-detector scenarios.',
       uceCompatibility: '>=2.0.0 <4.0.0', technologies: rule.technologies, modules: [rule.module], rules: [rule] };
     const execute = files => executeV3RulePacks([pack], { files, technologies: rule.technologies }).findings.some(item => item.ruleId === rule.id);
-    const declaration = JSON.stringify({ dependencies: { [name]: '1.2.3' } });
-    assert.ok(execute([file('package.json', declaration)]), 'positive ' + rule.id); assertions++;
-    assert.ok(!execute([file('package.json', JSON.stringify({ dependencies: {} }))]), 'negative ' + rule.id); assertions++;
-    assert.ok(!execute([file('tests/package.json', declaration)]), 'scope ' + rule.id); assertions++;
+    const ecosystem = rule.detectors[0].ecosystems[0];
+    const declaration = ecosystem === 'go'
+      ? file('go.mod', `module example.com/fixture\nrequire ${name} v1.2.3\n`)
+      : manifest(ecosystem, new Map([[name, '1.2.3']]));
+    const negative = ecosystem === 'go' ? file('go.mod', 'module example.com/fixture\n') : manifest(ecosystem, new Map());
+    assert.ok(execute([declaration]), 'positive ' + rule.id); assertions++;
+    assert.ok(!execute([negative]), 'negative ' + rule.id); assertions++;
+    assert.ok(!execute([file('tests/' + declaration.path, declaration.content)]), 'scope ' + rule.id); assertions++;
     covered++;
   } catch (error) { errors.push(String(error)); }
 }

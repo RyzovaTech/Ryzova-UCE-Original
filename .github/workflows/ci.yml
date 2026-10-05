@@ -34,6 +34,9 @@ jobs:
       - name: Knowledge regression tests
         run: npm test
 
+      - name: Structured declaration and AST evidence regression tests
+        run: npm run test:evidence
+
       - name: Bounded accuracy regression audit
         run: npm run audit:accuracy
 

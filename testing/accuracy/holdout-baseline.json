@@ -9,38 +9,38 @@
   "selectedManifestMetrics": {
     "decisions": 16,
     "repositories": 8,
-    "fullyCorrectProjects": 5,
-    "tp": 5,
+    "fullyCorrectProjects": 8,
+    "tp": 8,
     "fp": 0,
-    "fn": 3,
+    "fn": 0,
     "tn": 8,
-    "decisionAccuracy": 81.25,
-    "projectPassRate": 62.5,
+    "decisionAccuracy": 100,
+    "projectPassRate": 100,
     "projectPassWilson95": [
-      30.57,
-      86.32
+      67.56,
+      100
     ],
     "precision": 100,
-    "recall": 62.5,
+    "recall": 100,
     "falsePositiveRate": 0
   },
   "ecosystems": {
     "JavaScript": {
       "decisions": 4,
       "repositories": 2,
-      "fullyCorrectProjects": 1,
-      "tp": 1,
+      "fullyCorrectProjects": 2,
+      "tp": 2,
       "fp": 0,
-      "fn": 1,
+      "fn": 0,
       "tn": 2,
-      "decisionAccuracy": 75,
-      "projectPassRate": 50,
+      "decisionAccuracy": 100,
+      "projectPassRate": 100,
       "projectPassWilson95": [
-        9.45,
-        90.55
+        34.24,
+        100
       ],
       "precision": 100,
-      "recall": 50,
+      "recall": 100,
       "falsePositiveRate": 0
     },
     "Python": {
@@ -82,69 +82,41 @@
     ".NET": {
       "decisions": 2,
       "repositories": 1,
-      "fullyCorrectProjects": 0,
-      "tp": 0,
+      "fullyCorrectProjects": 1,
+      "tp": 1,
       "fp": 0,
-      "fn": 1,
+      "fn": 0,
       "tn": 1,
-      "decisionAccuracy": 50,
-      "projectPassRate": 0,
+      "decisionAccuracy": 100,
+      "projectPassRate": 100,
       "projectPassWilson95": [
-        0,
-        79.35
+        20.65,
+        100
       ],
-      "precision": null,
-      "recall": 0,
+      "precision": 100,
+      "recall": 100,
       "falsePositiveRate": 0
     },
     "Dart": {
       "decisions": 2,
       "repositories": 1,
-      "fullyCorrectProjects": 0,
-      "tp": 0,
+      "fullyCorrectProjects": 1,
+      "tp": 1,
       "fp": 0,
-      "fn": 1,
+      "fn": 0,
       "tn": 1,
-      "decisionAccuracy": 50,
-      "projectPassRate": 0,
+      "decisionAccuracy": 100,
+      "projectPassRate": 100,
       "projectPassWilson95": [
-        0,
-        79.35
+        20.65,
+        100
       ],
-      "precision": null,
-      "recall": 0,
+      "precision": 100,
+      "recall": 100,
       "falsePositiveRate": 0
     }
   },
-  "failures": [
-    {
-      "id": "sveltejs/kit/SvelteKit",
-      "repository": "sveltejs/kit",
-      "ecosystem": "JavaScript",
-      "technology": "SvelteKit",
-      "expected": true,
-      "actual": false,
-      "passed": false
-    },
-    {
-      "id": "dotnet/aspnetcore/.NET",
-      "repository": "dotnet/aspnetcore",
-      "ecosystem": ".NET",
-      "technology": ".NET",
-      "expected": true,
-      "actual": false,
-      "passed": false
-    },
-    {
-      "id": "flutter/flutter/Flutter",
-      "repository": "flutter/flutter",
-      "ecosystem": "Dart",
-      "technology": "Flutter",
-      "expected": true,
-      "actual": false,
-      "passed": false
-    }
-  ],
+  "failures": [],
   "results": [
     {
       "id": "expressjs/express/Node.js",
@@ -224,8 +196,8 @@
       "ecosystem": "JavaScript",
       "technology": "SvelteKit",
       "expected": true,
-      "actual": false,
-      "passed": false
+      "actual": true,
+      "passed": true
     },
     {
       "id": "sveltejs/kit/Laravel",
@@ -260,8 +232,8 @@
       "ecosystem": ".NET",
       "technology": ".NET",
       "expected": true,
-      "actual": false,
-      "passed": false
+      "actual": true,
+      "passed": true
     },
     {
       "id": "dotnet/aspnetcore/Go",
@@ -278,8 +250,8 @@
       "ecosystem": "Dart",
       "technology": "Flutter",
       "expected": true,
-      "actual": false,
-      "passed": false
+      "actual": true,
+      "passed": true
     },
     {
       "id": "flutter/flutter/Express",

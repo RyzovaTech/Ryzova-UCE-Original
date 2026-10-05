@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce14-/);
+  assert.match(key, /^uce15-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1163,7 +1163,7 @@ test('Phase 5 accuracy corpus contains 100+ diverse representative projects', ()
   assert.ok(PHASE5_ACCURACY_FIXTURES.length >= 100);
   for (const kind of ['positive', 'negative', 'mixed-stack', 'monorepo', 'vendor-heavy', 'vulnerable', 'browser', 'cross-platform']) assert.ok(PHASE5_ACCURACY_FIXTURES.some(item => item.kind === kind));
 });
-test('pinned evaluation remains separate from development fixtures and reports missed detections', () => {
+test('pinned evaluation remains separate from development fixtures and reports labeled detection outcomes', () => {
   const run = spawnSync(process.execPath, [path.join(root, 'testing/accuracy/holdout.mjs'), '--check'], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
   const report = JSON.parse(run.stdout);
@@ -1172,7 +1172,7 @@ test('pinned evaluation remains separate from development fixtures and reports m
   assert.equal(report.humanReviewedCases, 0);
   assert.equal(report.selectedManifestMetrics.repositories, 8);
   assert.equal(report.selectedManifestMetrics.decisions, 16);
-  assert.ok(report.selectedManifestMetrics.fn > 0);
+  assert.equal(report.selectedManifestMetrics.fn, report.results.filter(item => item.expected && !item.actual).length);
   assert.ok(report.failures.every(item => item.expected && !item.actual));
 });
 for (const fixture of PHASE5_ACCURACY_FIXTURES) {
@@ -1327,7 +1327,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce14-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce15-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {

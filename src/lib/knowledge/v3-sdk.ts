@@ -225,7 +225,16 @@ export function dependenciesFrom(file: V3ProjectFile): Map<string, string> {
       const match = /^\s*([\w-]+)\s*=\s*(?:["']([^"']+)["']|\{[^\n]*version\s*=\s*["']([^"']+)["'])/.exec(line);
       if (match) output.set(match[1].toLowerCase(), match[2] ?? match[3]);
     }
-  } else if (/(requirements[^/]*\.txt|go\.mod|pyproject\.toml|composer\.json|gemfile)$/i.test(path)) {
+  } else if (path.endsWith('go.mod')) {
+    let inRequire = false;
+    for (const raw of content.split(/\r?\n/)) {
+      const line = raw.replace(/\/\/.*$/, '').trim();
+      if (/^require\s*\($/.test(line)) { inRequire = true; continue; }
+      if (line === ')') { inRequire = false; continue; }
+      const match = (inRequire ? /^(\S+)\s+(\S+)$/ : /^require\s+(\S+)\s+(\S+)$/).exec(line);
+      if (match) output.set(match[1].toLowerCase(), match[2]);
+    }
+  } else if (/(requirements[^/]*\.txt|pyproject\.toml|composer\.json|gemfile)$/i.test(path)) {
     for (const line of content.split(/\r?\n/)) { const match = /^\s*['"]?([@\w./-]+)['"]?\s*(?:[=~^<>! ]+|\/v)([^\s,'"]+)?/.exec(line); if (match) output.set(match[1].toLowerCase(), match[2] ?? 'declared'); }
   }
   parsedDependencies.set(file, { content: file.content, entries: output });
