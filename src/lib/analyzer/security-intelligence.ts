@@ -46,7 +46,9 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
         if (rule.shouldReport && !rule.shouldReport(match, source, normalizedPath)) continue;
         if (pythonCode !== undefined && (allowLiteral ? pythonProse! : pythonCode).slice(match.index, match.index + 1).trim() === '') continue;
         const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
-        occurrences.set(id, [...(occurrences.get(id) ?? []), { start: offset, end: offset + match[0].length }]);
+        const ranges = occurrences.get(id) ?? [];
+        ranges.push({ start: offset, end: offset + match[0].length });
+        occurrences.set(id, ranges);
         if (seen.has(id)) continue; seen.add(id);
         findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation, scope: /(?:Dockerfile|\.github\/|\.(?:json|ya?ml|tf)$)/i.test(normalizedPath) ? 'configuration' : 'production', falsePositivePossible: rule.falsePositivePossible ?? rule.confidence !== 'high', certainty: rule.id === 'SEC020' ? 'review-required' : rule.certainty ?? (rule.confidence === 'high' ? 'confirmed' : rule.confidence === 'medium' ? 'likely' : 'possible') });
         if (findings.length >= 300) break;

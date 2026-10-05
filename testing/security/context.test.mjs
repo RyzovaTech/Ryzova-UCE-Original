@@ -34,6 +34,7 @@ test('specific password-hash review subsumes only overlapping generic hash signa
   assert.equal(specific.some(row => row.ruleId === 'SEC028'), true);
   assert.equal(specific.some(row => row.ruleId === 'SEC020'), false);
   assert.equal(has('const checksum = createHash("md5").update(file);', 'SEC020'), true);
+  assert.equal(has('createHash("sha1").update(file); createHash("md5").update(password);', 'SEC020'), true);
   const separate = scan('const checksum = createHash("sha1").update(file);\nconst digest = createHash("md5").update(password);');
   assert.equal(separate.some(row => row.ruleId === 'SEC020' && row.line === 1), true);
 });
