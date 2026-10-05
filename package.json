@@ -31,7 +31,8 @@
     "audit:accuracy:baseline": "node testing/accuracy/run.mjs --check",
     "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check",
     "audit:accuracy:scopes": "node testing/accuracy/scope.mjs --check",
-    "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs"
+    "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs",
+    "test:evidence": "node --test testing/evidence/phase2.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",
@@ -62,6 +63,7 @@
     "@radix-ui/react-toggle": "^1.1.14",
     "@radix-ui/react-toggle-group": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.8",
+    "acorn": "^8.18.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
