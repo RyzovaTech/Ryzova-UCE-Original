@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 1,
+  "benchmark": "Phase 5 pinned manifest validation collection",
+  "corpusSha256": "c615f1c9daad7ef15662c8f2186fe18c076c1edd4d8163274e2d18f3d17cc803",
+  "scope": "Eight new repository-separated pinned manifest excerpts; selected technology presence only, agent-provisional labels, not whole-repository or global UCE accuracy.",
+  "reviewStatus": "agent-provisional",
+  "humanReviewedCases": 0,
+  "globalAccuracy": null,
+  "firstEvaluationEngineCommit": "af12ddb4e247740489dbe484e41db1ca4c2e520c",
+  "initialEvaluationNoEngineTuning": true,
+  "evaluationUse": "provisional-pinned-regression",
+  "metrics": {
+    "cases": 16,
+    "binaryCases": 16,
+    "categoricalCases": 0,
+    "correct": 16,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      80.64,
+      100
+    ],
+    "tp": 8,
+    "fp": 0,
+    "fn": 0,
+    "tn": 8,
+    "precision": 100,
+    "precisionWilson95": [
+      67.56,
+      100
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      67.56,
+      100
+    ],
+    "falsePositiveRate": 0
+  },
+  "projects": {
+    "repositories": 8,
+    "fullyCorrectProjects": 8,
+    "projectPassRate": 100,
+    "projectPassWilson95": [
+      67.56,
+      100
+    ]
+  },
+  "ecosystems": {
+    "Go": {
+      "cases": 2,
+      "binaryCases": 2,
+      "categoricalCases": 0,
+      "correct": 2,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        34.24,
+        100
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": 100,
+      "precisionWilson95": [
+        20.65,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        20.65,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "JavaScript": {
+      "cases": 4,
+      "binaryCases": 4,
+      "categoricalCases": 0,
+      "correct": 4,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        51.01,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 2,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "PHP": {
+      "cases": 2,
+      "binaryCases": 2,
+      "categoricalCases": 0,
+      "correct": 2,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        34.24,
+        100
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": 100,
+      "precisionWilson95": [
+        20.65,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        20.65,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "Python": {
+      "cases": 6,
+      "binaryCases": 6,
+      "categoricalCases": 0,
+      "correct": 6,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        60.97,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "Rust": {
+      "cases": 2,
+      "binaryCases": 2,
+      "categoricalCases": 0,
+      "correct": 2,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        34.24,
+        100
+      ],
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "tn": 1,
+      "precision": 100,
+      "precisionWilson95": [
+        20.65,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        20.65,
+        100
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "accuracyClaim": {
+    "status": "not-established",
+    "globalAccuracy": null,
+    "targets": {
+      "precision": 95,
+      "recall": 90
+    },
+    "policy": {
+      "minimumRepositories": 30,
+      "minimumPositiveDecisions": 50,
+      "minimumNegativeDecisions": 50
+    },
+    "blockers": [
+      "Independent decision adjudication is incomplete or unverified",
+      "A fresh independent blind evaluation is required",
+      "Full-repository scan boundaries have not been verified",
+      "At least 30 independently selected repositories are required",
+      "At least 50 positive and 50 negative decisions are required",
+      "Technology, security and compatibility need independent module evaluations"
+    ],
+    "automaticGlobalClaim": false
+  },
+  "failures": [],
+  "results": [
+    {
+      "id": "pallets/click/Python",
+      "repository": "pallets/click",
+      "ecosystem": "Python",
+      "technology": "Python",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "pallets/click/React",
+      "repository": "pallets/click",
+      "ecosystem": "Python",
+      "technology": "React",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "denoland/deno/Rust",
+      "repository": "denoland/deno",
+      "ecosystem": "Rust",
+      "technology": "Rust",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "denoland/deno/Django",
+      "repository": "denoland/deno",
+      "ecosystem": "Rust",
+      "technology": "Django",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "vercel/next.js/Next.js",
+      "repository": "vercel/next.js",
+      "ecosystem": "JavaScript",
+      "technology": "Next.js",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "vercel/next.js/Django",
+      "repository": "vercel/next.js",
+      "ecosystem": "JavaScript",
+      "technology": "Django",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "vuejs/core/Vue",
+      "repository": "vuejs/core",
+      "ecosystem": "JavaScript",
+      "technology": "Vue",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "vuejs/core/Django",
+      "repository": "vuejs/core",
+      "ecosystem": "JavaScript",
+      "technology": "Django",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "psf/requests/Python",
+      "repository": "psf/requests",
+      "ecosystem": "Python",
+      "technology": "Python",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "psf/requests/React",
+      "repository": "psf/requests",
+      "ecosystem": "Python",
+      "technology": "React",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "prometheus/prometheus/Go",
+      "repository": "prometheus/prometheus",
+      "ecosystem": "Go",
+      "technology": "Go",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "prometheus/prometheus/Django",
+      "repository": "prometheus/prometheus",
+      "ecosystem": "Go",
+      "technology": "Django",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "symfony/symfony/Symfony",
+      "repository": "symfony/symfony",
+      "ecosystem": "PHP",
+      "technology": "Symfony",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "symfony/symfony/Django",
+      "repository": "symfony/symfony",
+      "ecosystem": "PHP",
+      "technology": "Django",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "fastapi/fastapi/FastAPI",
+      "repository": "fastapi/fastapi",
+      "ecosystem": "Python",
+      "technology": "FastAPI",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "fastapi/fastapi/React",
+      "repository": "fastapi/fastapi",
+      "ecosystem": "Python",
+      "technology": "React",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    }
+  ]
+}

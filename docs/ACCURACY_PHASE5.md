@@ -1,5 +1,7 @@
 # Accuracy Phase 5: pinned evaluation and release gate
 
+Historical first-evaluation results below are retained for provenance. Phase 2 subsequently fixed the three misses. See [the current release validation](ACCURACY_90_95_PHASE5.md) for current measurements and claim boundaries.
+
 Phase 5 introduces a separately versioned evaluation corpus with 8 public
 repositories, 8 positive and 8 negative technology-presence decisions. Each
 manifest excerpt is attributed to a specific source commit and file. JSON
