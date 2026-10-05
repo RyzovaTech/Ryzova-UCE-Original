@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "name": "Phase 5 pinned manifest validation collection",
+  "scope": "Eight new repository-separated pinned manifest excerpts; selected technology presence only, agent-provisional labels, not whole-repository or global UCE accuracy.",
+  "labelStatus": "agent-provisional",
+  "usedForTuning": false,
+  "projects": [
+    {
+      "repository": "pallets/click",
+      "commit": "2247b35ea1c47c727d7a06e51fa280e12a863ff6",
+      "sourcePath": "pyproject.toml",
+      "sourceUrl": "https://github.com/pallets/click/blob/2247b35ea1c47c727d7a06e51fa280e12a863ff6/pyproject.toml",
+      "upstreamLicense": "BSD-3-Clause",
+      "excerptKind": "leading-sections",
+      "ecosystem": "Python",
+      "files": [
+        {
+          "path": "pyproject.toml",
+          "content": "[project]\nname = \"click\"\nversion = \"8.6.0.dev\"\ndescription = \"Composable command line interface toolkit\"\nreadme = \"README.md\"\nlicense = \"BSD-3-Clause\"\nlicense-files = [\"LICENSE.txt\"]\nmaintainers = [{name = \"Pallets\", email = \"contact@palletsprojects.com\"}]\nclassifiers = [\n    \"Development Status :: 5 - Production/Stable\",\n    \"Intended Audience :: Developers\",\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python\",\n    \"Typing :: Typed\",\n]\nrequires-python = \">=3.10\"\n\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Python",
+          "expected": true,
+          "rationale": "The excerpt declares Python project metadata in pyproject.toml."
+        },
+        {
+          "technology": "React",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for React; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "327b296ab1fc9280c106c71efea961f71dffa5d8f69d85a88eba758e0f440636"
+    },
+    {
+      "repository": "denoland/deno",
+      "commit": "b4f08f127652d8442b4d3dbabc277aca3840bc1d",
+      "sourcePath": "Cargo.toml",
+      "sourceUrl": "https://github.com/denoland/deno/blob/b4f08f127652d8442b4d3dbabc277aca3840bc1d/Cargo.toml",
+      "upstreamLicense": "MIT",
+      "excerptKind": "leading-sections",
+      "ecosystem": "Rust",
+      "files": [
+        {
+          "path": "Cargo.toml",
+          "content": "# Copyright 2018-2026 the Deno authors. MIT license.\n\n[workspace]\nresolver = \"2\"\nmembers = [\n  \"cli\",\n  \"cli/lib\",\n  \"cli/rt\",\n  \"cli/rt_desktop\",\n  \"cli/snapshot\",\n  \"ext/bundle\",\n  \"ext/cache\",\n  \"ext/canvas\",\n  \"ext/cron\",\n  \"ext/crypto\",\n  \"ext/fetch\",\n  \"ext/ffi\",\n  \"ext/fs\",\n  \"ext/http\",\n  \"ext/image\",\n  \"ext/io\",\n  \"ext/kv\",\n  \"ext/napi\",\n  \"ext/napi/sym\",\n  \"ext/net\",\n  \"ext/node\",\n  \"ext/node_crypto\",\n  \"ext/node_sqlite\",\n  \"ext/rt_helper\",\n  \"ext/signals\",\n  \"ext/telemetry\",\n  \"ext/url\",\n  \"ext/web\",\n  \"ext/webgpu\",\n  \"ext/webidl\",\n  \"ext/websocket\",\n  \"ext/webstorage\",\n  \"libs/cache_dir\",\n  \"libs/cli_parser\",\n  \"libs/config\",\n  \"libs/core\",\n  \"libs/core/examples/snapshot\",\n  \"libs/core_testing\",\n  \"libs/crypto\",\n  \"libs/dcore\",\n  \"libs/deno_v8\",\n  \"libs/dotenv\",\n  \"libs/eszip\",\n  \"libs/http_h1\",\n  \"libs/inspector_server\",\n  \"libs/lockfile\",\n  \"libs/maybe_sync\",\n  \"libs/napi_sys\",\n  \"libs/node_resolver\",\n  \"libs/node_shim\",\n  \"libs/npm\",\n  \"libs/npm_cache\",\n  \"libs/npm_installer\",\n  \"libs/npmrc\",\n  \"libs/ops\",\n  \"libs/ops/compile_test_runner\",\n  \"libs/package_json\",\n  \"libs/print\",\n  \"libs/resolver\",\n  \"libs/serde_v8\",\n  \"runtime\",\n  \"runtime/features\",\n  \"runtime/permissions\",\n  \"runtime/subprocess_windows\",\n  \"tests/bench\",\n  \"tests/bench_util\",\n  \"tests/ffi\",\n  \"tests/integration\",\n  \"tests/napi\",\n  \"tests/node_compat\",\n  \"tests/specs\",\n  \"tests/unit\",\n  \"tests/unit_node\",\n  \"tests/util/lib\",\n  \"tests/util/server\",\n  \"tests/util/test_macro\",\n  \"tools/bsdiff_helper\",\n]\n# tests/sqlite_extension is excluded because it requires rusqlite's \"loadable_extension\"\n# feature, which is incompatible with the \"session\" feature used by the rest of the workspace.\nexclude = [\"tests/util/std/hash/_wasm\", \"tests/sqlite_extension\"]\n\n[workspace.package]\nauthors = [\"the Deno authors\"]\nedition = \"2024\"\nlicense = \"MIT\"\nrepository = \"https://github.com/denoland/deno\"\n\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Rust",
+          "expected": true,
+          "rationale": "The excerpt declares a Cargo workspace for Rust packages."
+        },
+        {
+          "technology": "Django",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for Django; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "b92fafd057023c3c0a382df8f0a6929e67cbcacef4c15ca20cfb2754c2c09448"
+    },
+    {
+      "repository": "vercel/next.js",
+      "commit": "cdf6866a1d9c4a88afff3ffdc127fe7932e184d5",
+      "sourcePath": "packages/next/package.json",
+      "sourceUrl": "https://github.com/vercel/next.js/blob/cdf6866a1d9c4a88afff3ffdc127fe7932e184d5/packages/next/package.json",
+      "upstreamLicense": "MIT",
+      "excerptKind": "selected-manifest-fields",
+      "ecosystem": "JavaScript",
+      "files": [
+        {
+          "path": "packages/next/package.json",
+          "content": "{\n  \"name\": \"next\",\n  \"version\": \"16.4.0-canary.60\",\n  \"license\": \"MIT\",\n  \"dependencies\": {\n    \"@next/env\": \"16.4.0-canary.60\",\n    \"@swc/helpers\": \"0.5.23\",\n    \"baseline-browser-mapping\": \"^2.9.19\",\n    \"caniuse-lite\": \"^1.0.30001579\",\n    \"postcss\": \"8.5.23\",\n    \"styled-jsx\": \"5.1.6\"\n  },\n  \"devDependencies\": {\n    \"@babel/core\": \"7.26.10\",\n    \"@babel/eslint-parser\": \"7.24.6\",\n    \"@babel/generator\": \"7.27.0\",\n    \"@babel/plugin-syntax-bigint\": \"7.8.3\",\n    \"@babel/plugin-syntax-dynamic-import\": \"7.8.3\",\n    \"@babel/plugin-syntax-import-attributes\": \"7.26.0\",\n    \"@babel/plugin-syntax-jsx\": \"7.25.9\",\n    \"@babel/plugin-syntax-typescript\": \"7.25.4\",\n    \"@babel/plugin-transform-class-properties\": \"7.25.9\",\n    \"@babel/plugin-transform-export-namespace-from\": \"7.25.9\",\n    \"@babel/plugin-transform-modules-commonjs\": \"7.26.3\",\n    \"@babel/plugin-transform-numeric-separator\": \"7.25.9\",\n    \"@babel/plugin-transform-object-rest-spread\": \"7.25.9\",\n    \"@babel/plugin-transform-runtime\": \"7.26.10\",\n    \"@babel/preset-env\": \"7.26.9\",\n    \"@babel/preset-react\": \"7.26.3\",\n    \"@babel/preset-typescript\": \"7.27.0\",\n    \"@babel/runtime\": \"7.27.0\",\n    \"@babel/traverse\": \"7.27.0\",\n    \"@babel/types\": \"7.27.0\",\n    \"@base-ui-components/react\": \"1.0.0-beta.2\",\n    \"@capsizecss/metrics\": \"3.4.0\",\n    \"@edge-runtime/cookies\": \"6.0.0\",\n    \"@edge-runtime/ponyfill\": \"4.0.0\",\n    \"@edge-runtime/primitives\": \"6.0.0\",\n    \"@hapi/accept\": \"5.0.2\",\n    \"@jest/transform\": \"29.5.0\",\n    \"@jest/types\": \"29.5.0\",\n    \"@modelcontextprotocol/sdk\": \"1.18.1\",\n    \"@mswjs/interceptors\": \"0.42.5\",\n    \"@napi-rs/triples\": \"1.2.0\",\n    \"@next/font\": \"16.4.0-canary.60\",\n    \"@next/polyfill-module\": \"16.4.0-canary.60\",\n    \"@next/polyfill-nomodule\": \"16.4.0-canary.60\",\n    \"@next/react-refresh-utils\": \"16.4.0-canary.60\",\n    \"@next/swc\": \"16.4.0-canary.60\",\n    \"@opentelemetry/api\": \"1.6.0\",\n    \"@playwright/test\": \"1.61.0\",\n    \"@rspack/core\": \"1.6.7\",\n    \"@storybook/addon-a11y\": \"8.6.0\",\n    \"@storybook/addon-essentials\": \"8.6.0\",\n    \"@storybook/addon-interactions\": \"8.6.0\",\n    \"@storybook/addon-webpack5-compiler-swc\": \"3.0.0\",\n    \"@storybook/blocks\": \"8.6.0\",\n    \"@storybook/react\": \"8.6.0\",\n    \"@storybook/react-webpack5\": \"8.6.0\",\n    \"@storybook/test\": \"8.6.0\",\n    \"@storybook/test-runner\": \"0.21.0\",\n    \"@swc/core\": \"1.11.24\",\n    \"@swc/types\": \"0.1.7\",\n    \"@taskr/clear\": \"1.1.0\",\n    \"@taskr/esnext\": \"1.1.0\",\n    \"@types/babel__code-frame\": \"7.0.6\",\n    \"@types/babel__core\": \"7.20.5\",\n    \"@types/babel__generator\": \"7.27.0\",\n    \"@types/babel__template\": \"7.4.4\",\n    \"@types/babel__traverse\": \"7.20.7\",\n    \"@types/bytes\": \"3.1.1\",\n    \"@types/ci-info\": \"2.0.0\",\n    \"@types/compression\": \"0.0.36\",\n    \"@types/content-disposition\": \"0.5.4\",\n    \"@types/content-type\": \"1.1.3\",\n    \"@types/cookie\": \"0.3.3\",\n    \"@types/cross-spawn\": \"6.0.0\",\n    \"@types/debug\": \"4.1.5\",\n    \"@types/express-serve-static-core\": \"4.17.33\",\n    \"@types/fresh\": \"0.5.0\",\n    \"@types/glob\": \"7.1.1\",\n    \"@types/jsonwebtoken\": \"9.0.0\",\n    \"@types/lodash\": \"4.14.198\",\n    \"@types/lodash.curry\": \"4.1.6\",\n    \"@types/path-to-regexp\": \"1.7.0\",\n    \"@types/picomatch\": \"2.3.3\",\n    \"@types/platform\": \"1.3.4\",\n    \"@types/react\": \"19.0.8\",\n    \"@types/react-dom\": \"19.0.3\",\n    \"@types/react-is\": \"18.2.4\",\n    \"@types/semver\": \"7.3.1\",\n    \"@types/send\": \"0.14.4\",\n    \"@types/serve-handler\": \"6.1.4\",\n    \"@types/shell-quote\": \"1.7.1\",\n    \"@types/text-table\": \"0.2.1\",\n    \"@types/ua-parser-js\": \"0.7.36\",\n    \"@types/webpack-sources1\": \"npm:@types/webpack-sources@0.1.5\",\n    \"@types/ws\": \"8.2.0\",\n    \"@vercel/blob\": \"2.3.2\",\n    \"@vercel/detect-agent\": \"1.2.3\",\n    \"@vercel/ncc\": \"0.38.4\",\n    \"@vercel/nft\": \"1.10.2\",\n    \"@vercel/routing-utils\": \"5.2.0\",\n    \"@vercel/turbopack-ecmascript-runtime\": \"*\",\n    \"acorn\": \"8.14.0\",\n    \"anser\": \"1.4.9\",\n    \"arg\": \"4.1.0\",\n    \"assert\": \"2.0.0\",\n    \"async-retry\": \"1.2.3\",\n    \"async-sema\": \"3.0.0\",\n    \"axe-playwright\": \"2.0.3\",\n    \"babel-loader\": \"10.0.0\",\n    \"babel-plugin-react-compiler\": \"0.0.0-experimental-1371fcb-20260227\",\n    \"babel-plugin-transform-define\": \"2.0.0\",\n    \"babel-plugin-transform-react-remove-prop-types\": \"0.4.24\",\n    \"browserify-zlib\": \"0.2.0\",\n    \"browserslist\": \"4.28.1\",\n    \"buffer\": \"5.6.0\",\n    \"busboy\": \"1.6.0\",\n    \"bytes\": \"3.1.1\",\n    \"ci-info\": \"watson/ci-info#f43f6a1cefff47fb361c88cf4b943fdbcaafe540\",\n    \"cli-select\": \"1.1.2\",\n    \"client-only\": \"0.0.1\",\n    \"commander\": \"12.1.0\",\n    \"comment-json\": \"3.0.3\",\n    \"compression\": \"1.7.4\",\n    \"conf\": \"5.0.0\",\n    \"constants-browserify\": \"1.0.0\",\n    \"content-disposition\": \"0.5.3\",\n    \"content-type\": \"1.0.4\",\n    \"cookie\": \"0.4.1\",\n    \"cross-env\": \"6.0.3\",\n    \"cross-spawn\": \"7.0.3\",\n    \"crypto-browserify\": \"3.12.0\",\n    \"css-loader\": \"7.1.2\",\n    \"css.escape\": \"1.5.1\",\n    \"cssnano-preset-default\": \"7.0.6\",\n    \"data-uri-to-buffer\": \"3.0.1\",\n    \"debug\": \"4.1.1\",\n    \"devalue\": \"2.0.1\",\n    \"domain-browser\": \"4.19.0\",\n    \"edge-runtime\": \"4.0.1\",\n    \"events\": \"3.3.0\",\n    \"find-up\": \"4.1.0\",\n    \"fresh\": \"0.5.2\",\n    \"glob\": \"7.1.7\",\n    \"gzip-size\": \"5.1.1\",\n    \"hash.js\": \"1.1.7\",\n    \"http-proxy-agent\": \"5.0.0\",\n    \"https-browserify\": \"1.0.0\",\n    \"https-proxy-agent\": \"5.0.1\",\n    \"httpxy\": \"0.5.5\",\n    \"icss-utils\": \"5.1.0\",\n    \"ignore-loader\": \"0.1.2\",\n    \"image-size\": \"1.2.1\",\n    \"ipaddr.js\": \"2.2.0\",\n    \"is-docker\": \"2.0.0\",\n    \"is-wsl\": \"2.2.0\",\n    \"jest-worker\": \"27.5.1\",\n    \"json5\": \"2.2.3\",\n    \"jsonwebtoken\": \"9.0.0\",\n    \"loader-runner\": \"4.3.0\",\n    \"loader-utils2\": \"npm:loader-utils@2.0.4\",\n    \"loader-utils3\": \"npm:loader-utils@3.1.3\",\n    \"lodash.curry\": \"4.1.1\",\n    \"mini-css-extract-plugin\": \"2.4.4\",\n    \"msw\": \"2.3.0\",\n    \"nanoid\": \"3.1.32\",\n    \"native-url\": \"0.3.4\",\n    \"neo-async\": \"2.6.1\",\n    \"node-html-parser\": \"5.3.3\",\n    \"ora\": \"4.0.4\",\n    \"os-browserify\": \"0.3.0\",\n    \"p-limit\": \"3.1.0\",\n    \"p-queue\": \"6.6.2\",\n    \"path-browserify\": \"1.0.1\",\n    \"path-to-regexp\": \"6.3.0\",\n    \"picomatch\": \"4.0.1\",\n    \"postcss-flexbugs-fixes\": \"5.0.2\",\n    \"postcss-modules-extract-imports\": \"3.0.0\",\n    \"postcss-modules-local-by-default\": \"4.2.0\",\n    \"postcss-modules-scope\": \"3.0.0\",\n    \"postcss-modules-values\": \"4.0.0\",\n    \"postcss-preset-env\": \"7.4.3\",\n    \"postcss-safe-parser\": \"6.0.0\",\n    \"postcss-scss\": \"4.0.3\",\n    \"postcss-value-parser\": \"4.2.0\",\n    \"process\": \"0.11.10\",\n    \"punycode\": \"2.1.1\",\n    \"querystring-es3\": \"0.2.1\",\n    \"raw-body\": \"2.4.1\",\n    \"react-refresh\": \"0.12.0\",\n    \"recast\": \"0.23.11\",\n    \"regenerator-runtime\": \"0.13.4\",\n    \"safe-stable-stringify\": \"2.5.0\",\n    \"sass-loader\": \"16.0.5\",\n    \"schema-utils2\": \"npm:schema-utils@2.7.1\",\n    \"schema-utils3\": \"npm:schema-utils@3.0.0\",\n    \"semver\": \"7.3.2\",\n    \"send\": \"0.18.0\",\n    \"serve-handler\": \"6.1.6\",\n    \"server-only\": \"0.0.1\",\n    \"setimmediate\": \"1.0.5\",\n    \"shell-quote\": \"1.7.3\",\n    \"source-map\": \"0.6.1\",\n    \"source-map-loader\": \"5.0.0\",\n    \"source-map08\": \"npm:source-map@0.8.0-beta.0\",\n    \"stacktrace-parser\": \"0.1.10\",\n    \"storybook\": \"8.6.0\",\n    \"stream-browserify\": \"3.0.0\",\n    \"stream-http\": \"3.1.1\",\n    \"strict-event-emitter\": \"0.5.0\",\n    \"string-hash\": \"1.1.3\",\n    \"string_decoder\": \"1.3.0\",\n    \"strip-ansi\": \"6.0.0\",\n    \"style-loader\": \"4.0.0\",\n    \"superstruct\": \"1.0.3\",\n    \"tar\": \"7.5.11\",\n    \"taskr\": \"1.1.0\",\n    \"terser\": \"5.27.0\",\n    \"terser-webpack-plugin\": \"5.3.9\",\n    \"text-table\": \"0.2.0\",\n    \"timers-browserify\": \"2.0.12\",\n    \"tty-browserify\": \"0.0.1\",\n    \"typescript\": \"6.0.2\",\n    \"ua-parser-js\": \"1.0.35\",\n    \"unistore\": \"3.4.1\",\n    \"util\": \"0.12.4\",\n    \"vm-browserify\": \"1.1.2\",\n    \"watchpack\": \"2.4.0\",\n    \"web-vitals\": \"6.2.1\",\n    \"webpack\": \"5.98.0\",\n    \"webpack-sources1\": \"npm:webpack-sources@1.4.3\",\n    \"webpack-sources3\": \"npm:webpack-sources@3.2.3\",\n    \"write-file-atomic\": \"7.0.1\",\n    \"ws\": \"8.2.3\",\n    \"zod\": \"3.25.76\",\n    \"zod-validation-error\": \"3.4.0\"\n  },\n  \"peerDependencies\": {\n    \"@opentelemetry/api\": \"^1.1.0\",\n    \"@playwright/test\": \"^1.51.1\",\n    \"babel-plugin-react-compiler\": \"*\",\n    \"react\": \"^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0\",\n    \"react-dom\": \"^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0\",\n    \"sass\": \"^1.3.0\"\n  },\n  \"optionalDependencies\": {\n    \"sharp\": \"^0.35.4\"\n  }\n}\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Next.js",
+          "expected": true,
+          "rationale": "The excerpt declares the framework-owned package identity Next.js."
+        },
+        {
+          "technology": "Django",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for Django; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "5154dc0e9d6198b039c2f651072b2092ca7ae618bc83263a1d7f8f391507d4b6"
+    },
+    {
+      "repository": "vuejs/core",
+      "commit": "4ab865a848a1da3d10fb674f857e5fff13094644",
+      "sourcePath": "packages/vue/package.json",
+      "sourceUrl": "https://github.com/vuejs/core/blob/4ab865a848a1da3d10fb674f857e5fff13094644/packages/vue/package.json",
+      "upstreamLicense": "MIT",
+      "excerptKind": "selected-manifest-fields",
+      "ecosystem": "JavaScript",
+      "files": [
+        {
+          "path": "packages/vue/package.json",
+          "content": "{\n  \"name\": \"vue\",\n  \"version\": \"3.5.43\",\n  \"license\": \"MIT\",\n  \"dependencies\": {\n    \"@vue/shared\": \"workspace:*\",\n    \"@vue/compiler-dom\": \"workspace:*\",\n    \"@vue/runtime-dom\": \"workspace:*\",\n    \"@vue/compiler-sfc\": \"workspace:*\",\n    \"@vue/server-renderer\": \"workspace:*\"\n  },\n  \"peerDependencies\": {\n    \"typescript\": \"*\"\n  }\n}\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Vue",
+          "expected": true,
+          "rationale": "The excerpt declares the framework-owned package identity Vue."
+        },
+        {
+          "technology": "Django",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for Django; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "56467fcce80da7a7f37a29cd28e320a9ed999e80a946842493288dfd01fac630"
+    },
+    {
+      "repository": "psf/requests",
+      "commit": "611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60",
+      "sourcePath": "pyproject.toml",
+      "sourceUrl": "https://github.com/psf/requests/blob/611c6162cbc4ac2020a2f91c7cfa4f3abf9bbb60/pyproject.toml",
+      "upstreamLicense": "Apache-2.0",
+      "excerptKind": "leading-sections",
+      "ecosystem": "Python",
+      "files": [
+        {
+          "path": "pyproject.toml",
+          "content": "[build-system]\nrequires = [\"setuptools>=61.0\"]\nbuild-backend = \"setuptools.build_meta\"\n\n[project]\nname = \"requests\"\ndescription = \"Python HTTP for Humans.\"\nreadme = \"README.md\"\nlicense = {text = \"Apache-2.0\"}\nauthors = [\n    { name = \"Kenneth Reitz\", email = \"me@kennethreitz.org\" },\n]\nmaintainers = [\n    {name = \"Ian Stapleton Cordasco\", email=\"graffatcolmingov@gmail.com\"},\n    {name = \"Nate Prewitt\", email=\"nate.prewitt@gmail.com\"}\n]\nrequires-python = \">=3.10\"\ndependencies = [\n    \"charset_normalizer>=2,<4\",\n    \"idna>=2.5,<4\",\n    \"urllib3>=1.26,<3\",\n    \"certifi>=2023.5.7\"\n]\ndynamic = [\"version\"]\n\nclassifiers = [\n    \"Development Status :: 5 - Production/Stable\",\n    \"Environment :: Web Environment\",\n    \"Intended Audience :: Developers\",\n    \"License :: OSI Approved :: Apache Software License\",\n    \"Natural Language :: English\",\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Programming Language :: Python :: 3.14\",\n    \"Programming Language :: Python :: 3.15\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: Implementation :: CPython\",\n    \"Programming Language :: Python :: Implementation :: PyPy\",\n    \"Programming Language :: Python :: Free Threading :: 2 - Beta\",\n    \"Topic :: Internet :: WWW/HTTP\",\n    \"Topic :: Software Development :: Libraries\"\n]\n\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Python",
+          "expected": true,
+          "rationale": "The excerpt declares Python project metadata in pyproject.toml."
+        },
+        {
+          "technology": "React",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for React; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "345f26b9f691435e39d0eb6f7f4150a390f43175b22f8d61ac95e7f2827f0a77"
+    },
+    {
+      "repository": "prometheus/prometheus",
+      "commit": "961c9ba40923ca4d7adf4a7a9167e56d0406df83",
+      "sourcePath": "go.mod",
+      "sourceUrl": "https://github.com/prometheus/prometheus/blob/961c9ba40923ca4d7adf4a7a9167e56d0406df83/go.mod",
+      "upstreamLicense": "Apache-2.0",
+      "excerptKind": "full-file",
+      "ecosystem": "Go",
+      "files": [
+        {
+          "path": "go.mod",
+          "content": "module github.com/prometheus/prometheus\n\ngo 1.26.7\n\nrequire (\n\tgithub.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.1\n\tgithub.com/Azure/azure-sdk-for-go/sdk/azidentity v1.14.1\n\tgithub.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8 v8.3.0\n\tgithub.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8 v8.0.0\n\tgithub.com/Code-Hex/go-generics-cache v1.5.1\n\tgithub.com/KimMachineGun/automemlimit v0.7.5\n\tgithub.com/alecthomas/kingpin/v2 v2.4.0\n\tgithub.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b\n\tgithub.com/aws/aws-sdk-go-v2 v1.47.0\n\tgithub.com/aws/aws-sdk-go-v2/config v1.33.5\n\tgithub.com/aws/aws-sdk-go-v2/credentials v1.20.5\n\tgithub.com/aws/aws-sdk-go-v2/service/ec2 v1.335.0\n\tgithub.com/aws/aws-sdk-go-v2/service/ecs v1.99.0\n\tgithub.com/aws/aws-sdk-go-v2/service/elasticache v1.61.0\n\tgithub.com/aws/aws-sdk-go-v2/service/kafka v1.65.0\n\tgithub.com/aws/aws-sdk-go-v2/service/lightsail v1.66.0\n\tgithub.com/aws/aws-sdk-go-v2/service/rds v1.129.0\n\tgithub.com/aws/aws-sdk-go-v2/service/sts v1.51.0\n\tgithub.com/aws/smithy-go v1.28.2\n\tgithub.com/bboreham/go-loser v0.0.0-20230920113527-fcc2c21820a3\n\tgithub.com/cespare/xxhash/v2 v2.3.0\n\tgithub.com/dennwc/varint v1.0.0\n\tgithub.com/digitalocean/godo v1.210.0\n\tgithub.com/edsrzf/mmap-go v1.2.1-0.20241212181136-fad1cd13edbd\n\tgithub.com/envoyproxy/go-control-plane/envoy v1.39.0\n\tgithub.com/envoyproxy/protoc-gen-validate v1.3.3\n\tgithub.com/facette/natsort v0.0.0-20181210072756-2cd4dd1e2dcb\n\tgithub.com/felixge/fgprof v0.9.5\n\tgithub.com/fsnotify/fsnotify v1.10.1\n\tgithub.com/go-openapi/strfmt v0.27.2\n\tgithub.com/go-zookeeper/zk v1.0.4\n\tgithub.com/gogo/protobuf v1.3.2\n\tgithub.com/golang/snappy v1.0.0\n\tgithub.com/google/go-cmp v0.7.0\n\tgithub.com/google/pprof v0.0.0-20260906184651-6331bc6350fe\n\tgithub.com/google/uuid v1.6.0\n\tgithub.com/gophercloud/gophercloud/v2 v2.15.0\n\tgithub.com/grafana/regexp v0.0.0-20250905093917-f7b3be9d1853\n\tgithub.com/hashicorp/consul/api v1.34.5\n\tgithub.com/hashicorp/nomad/api v0.0.0-20260921181219-70519e8467e4\n\tgithub.com/hetznercloud/hcloud-go/v2 v2.48.0\n\tgithub.com/ionos-cloud/sdk-go/v6 v6.3.11\n\tgithub.com/json-iterator/go v1.1.12\n\tgithub.com/klauspost/compress v1.20.0\n\tgithub.com/kolo/xmlrpc v0.0.0-20220921171641-a4b6fa1dd06b\n\tgithub.com/linode/linodego v1.69.1\n\tgithub.com/miekg/dns v1.1.73\n\tgithub.com/moby/moby/api v1.56.0\n\tgithub.com/moby/moby/client v0.6.0\n\tgithub.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822\n\tgithub.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f\n\tgithub.com/nsf/jsondiff v0.0.0-20260207060731-8e8d90c4c0ac\n\tgithub.com/oklog/run v1.2.0\n\tgithub.com/oklog/ulid/v2 v2.1.2\n\tgithub.com/open-telemetry/opentelemetry-collector-contrib/processor/deltatocumulativeprocessor v0.161.0\n\tgithub.com/outscale/osc-sdk-go/v2 v2.35.0\n\tgithub.com/ovh/go-ovh v1.9.0\n\tgithub.com/pb33f/libopenapi v0.38.7\n\tgithub.com/pb33f/libopenapi-validator v0.14.0\n\tgithub.com/prometheus/alertmanager v0.34.1\n\tgithub.com/prometheus/client_golang v1.24.1\n\tgithub.com/prometheus/client_golang/exp v0.0.0-20260921141911-45322d125bf0\n\tgithub.com/prometheus/client_model v0.6.3\n\tgithub.com/prometheus/common v0.71.0\n\tgithub.com/prometheus/common/assets v0.2.0\n\tgithub.com/prometheus/exporter-toolkit v0.20.0\n\tgithub.com/prometheus/sigv4 v0.5.0\n\tgithub.com/scaleway/scaleway-sdk-go v1.0.0-beta.37\n\tgithub.com/shurcooL/httpfs v0.0.0-20230704072500-f1e31cf0ba5c\n\tgithub.com/stackitcloud/stackit-sdk-go/core v0.27.0\n\tgithub.com/stretchr/testify v1.12.1\n\tgithub.com/vultr/govultr/v3 v3.33.0\n\tgo.opentelemetry.io/collector/component v1.67.0\n\tgo.opentelemetry.io/collector/consumer v1.67.0\n\tgo.opentelemetry.io/collector/pdata v1.67.0\n\tgo.opentelemetry.io/collector/processor v1.67.0\n\tgo.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.71.0\n\tgo.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0\n\tgo.opentelemetry.io/otel v1.46.0\n\tgo.opentelemetry.io/otel/exporters/otlp/otlptrace v1.46.0\n\tgo.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.46.0\n\tgo.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.46.0\n\tgo.opentelemetry.io/otel/metric v1.46.0\n\tgo.opentelemetry.io/otel/sdk v1.46.0\n\tgo.opentelemetry.io/otel/trace v1.46.0\n\tgo.uber.org/atomic v1.12.0\n\tgo.uber.org/automaxprocs v1.6.0\n\tgo.uber.org/goleak v1.3.0\n\tgo.yaml.in/yaml/v2 v2.4.4\n\tgo.yaml.in/yaml/v3 v3.0.5\n\tgo.yaml.in/yaml/v4 v4.0.0-rc.6\n\tgolang.org/x/oauth2 v0.37.0\n\tgolang.org/x/sync v0.23.0\n\tgolang.org/x/sys v0.48.0\n\tgolang.org/x/text v0.42.0\n\tgoogle.golang.org/api v0.299.0\n\tgoogle.golang.org/genproto/googleapis/api v0.0.0-20260921155816-b14227669459\n\tgoogle.golang.org/grpc v1.84.0\n\tgoogle.golang.org/protobuf v1.36.12\n\tk8s.io/api v0.37.0\n\tk8s.io/apimachinery v0.37.0\n\tk8s.io/client-go v0.37.0\n\tk8s.io/klog v1.0.0\n\tk8s.io/klog/v2 v2.140.0\n)\n\nrequire (\n\tgithub.com/go-openapi/swag/pools v0.28.0 // indirect\n\tgithub.com/gofrs/flock v0.13.0 // indirect\n\tgithub.com/hashicorp/go-metrics v0.6.0 // indirect\n\tgithub.com/sony/gobreaker/v2 v2.4.0 // indirect\n\tgithub.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect\n\tgo.opentelemetry.io/collector/consumer/xconsumer v0.161.0 // indirect\n\tgo.opentelemetry.io/collector/pdata/pprofile v0.161.0 // indirect\n\tgo.opentelemetry.io/collector/processor/xprocessor v0.161.0 // indirect\n)\n\nrequire (\n\tgithub.com/aws/aws-sdk-go v1.55.8 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/internal/v4a v1.5.3 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/service/signin v1.10.0 // indirect\n\tgithub.com/bahlo/generic-list-go v0.2.0 // indirect\n\tgithub.com/basgys/goxml2json v1.1.1-0.20231018121955-e66ee54ceaad // indirect\n\tgithub.com/buger/jsonparser v1.1.2 // indirect\n\tgithub.com/go-openapi/swag/cmdutils v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/conv v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/fileutils v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/jsonutils v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/loading v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/mangling v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/netutils v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/stringutils v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/typeutils v0.28.0 // indirect\n\tgithub.com/go-openapi/swag/yamlutils v0.28.0 // indirect\n\tgithub.com/jmespath/go-jmespath v0.4.0 // indirect\n\tgithub.com/oracle/oci-go-sdk/v65 v65.125.0\n\tgithub.com/pb33f/jsonpath v0.8.2 // indirect\n\tgithub.com/pb33f/ordered-map/v2 v2.3.1 // indirect\n\tgithub.com/puzpuzpuz/xsync/v4 v4.5.0 // indirect\n\tgithub.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect\n\tgo.opentelemetry.io/collector/internal/componentalias v0.161.0 // indirect\n\tgo.uber.org/multierr v1.11.0 // indirect\n\tgolang.org/x/tools/godoc v0.1.0-deprecated // indirect\n\tgopkg.in/yaml.v2 v2.4.0 // indirect\n\tsigs.k8s.io/structured-merge-diff/v6 v6.4.2 // indirect\n)\n\nrequire (\n\tcloud.google.com/go/auth v0.23.3 // indirect\n\tcloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect\n\tcloud.google.com/go/compute/metadata v0.9.1 // indirect\n\tgithub.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect\n\tgithub.com/AzureAD/microsoft-authentication-library-for-go v1.8.0 // indirect\n\tgithub.com/Microsoft/go-winio v0.6.2 // indirect\n\tgithub.com/armon/go-metrics v0.4.1 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.0\n\tgithub.com/aws/aws-sdk-go-v2/internal/configsources v1.5.3 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.3 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.19 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.3 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/service/sso v1.38.0 // indirect\n\tgithub.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.0 // indirect\n\tgithub.com/beorn7/perks v1.0.1 // indirect\n\tgithub.com/cenkalti/backoff/v5 v5.0.3\n\tgithub.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect\n\tgithub.com/containerd/errdefs v1.0.0 // indirect\n\tgithub.com/containerd/errdefs/pkg v0.3.0 // indirect\n\tgithub.com/coreos/go-systemd/v22 v22.7.0 // indirect\n\tgithub.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect\n\tgithub.com/distribution/reference v0.6.0 // indirect\n\tgithub.com/docker/go-connections v0.7.0 // indirect\n\tgithub.com/docker/go-units v0.5.0 // indirect\n\tgithub.com/emicklei/go-restful/v3 v3.13.0 // indirect\n\tgithub.com/fatih/color v1.19.0 // indirect\n\tgithub.com/felixge/httpsnoop v1.1.0 // indirect\n\tgithub.com/fxamacker/cbor/v2 v2.9.1 // indirect\n\tgithub.com/go-logr/logr v1.4.4 // indirect\n\tgithub.com/go-logr/stdr v1.2.2 // indirect\n\tgithub.com/go-openapi/analysis v0.25.5 // indirect\n\tgithub.com/go-openapi/errors v0.22.8 // indirect\n\tgithub.com/go-openapi/jsonpointer v1.0.0 // indirect\n\tgithub.com/go-openapi/jsonreference v1.0.0 // indirect\n\tgithub.com/go-openapi/loads v0.25.0 // indirect\n\tgithub.com/go-openapi/spec v0.22.9 // indirect\n\tgithub.com/go-openapi/swag v0.28.0 // indirect\n\tgithub.com/go-openapi/validate v0.26.1 // indirect\n\tgithub.com/go-resty/resty/v2 v2.17.2 // indirect\n\tgithub.com/go-viper/mapstructure/v2 v2.5.0 // indirect\n\tgithub.com/gobwas/glob v0.2.3 // indirect\n\tgithub.com/golang-jwt/jwt/v5 v5.3.1 // indirect\n\tgithub.com/google/gnostic-models v0.7.0 // indirect\n\tgithub.com/google/go-querystring v1.2.0 // indirect\n\tgithub.com/google/s2a-go v0.1.10 // indirect\n\tgithub.com/googleapis/enterprise-certificate-proxy v0.3.22 // indirect\n\tgithub.com/googleapis/gax-go/v2 v2.24.1 // indirect\n\tgithub.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect\n\tgithub.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect\n\tgithub.com/hashicorp/cronexpr v1.1.3 // indirect\n\tgithub.com/hashicorp/errwrap v1.1.0 // indirect\n\tgithub.com/hashicorp/go-cleanhttp v0.5.2 // indirect\n\tgithub.com/hashicorp/go-hclog v1.6.3 // indirect\n\tgithub.com/hashicorp/go-immutable-radix v1.3.1 // indirect\n\tgithub.com/hashicorp/go-multierror v1.1.1 // indirect\n\tgithub.com/hashicorp/go-retryablehttp v0.7.8 // indirect\n\tgithub.com/hashicorp/go-rootcerts v1.0.2 // indirect\n\tgithub.com/hashicorp/go-version v1.9.0 // indirect\n\tgithub.com/hashicorp/golang-lru v1.0.2 // indirect\n\tgithub.com/hashicorp/serf v0.10.4 // indirect\n\tgithub.com/jpillora/backoff v1.0.0 // indirect\n\tgithub.com/julienschmidt/httprouter v1.3.0 // indirect\n\tgithub.com/knadh/koanf/maps v0.1.3 // indirect\n\tgithub.com/knadh/koanf/providers/confmap v1.0.1 // indirect\n\tgithub.com/knadh/koanf/v2 v2.3.6 // indirect\n\tgithub.com/kylelemons/godebug v1.1.0 // indirect\n\tgithub.com/mattn/go-colorable v0.1.15 // indirect\n\tgithub.com/mattn/go-isatty v0.0.23 // indirect\n\tgithub.com/mdlayher/socket v0.6.0 // indirect\n\tgithub.com/mdlayher/vsock v1.3.0 // indirect\n\tgithub.com/mitchellh/copystructure v1.2.0 // indirect\n\tgithub.com/mitchellh/go-homedir v1.1.0 // indirect\n\tgithub.com/mitchellh/reflectwalk v1.0.2 // indirect\n\tgithub.com/moby/docker-image-spec v1.3.1 // indirect\n\tgithub.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect\n\tgithub.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect\n\tgithub.com/open-telemetry/opentelemetry-collector-contrib/internal/exp/metrics v0.161.0 // indirect\n\tgithub.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatautil v0.161.0 // indirect\n\tgithub.com/opencontainers/go-digest v1.0.0 // indirect\n\tgithub.com/opencontainers/image-spec v1.1.1 // indirect\n\tgithub.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect\n\tgithub.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect\n\tgithub.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect\n\tgithub.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect\n\tgithub.com/prometheus/otlptranslator v1.0.0\n\tgithub.com/prometheus/procfs v0.21.1 // indirect\n\tgithub.com/spf13/pflag v1.0.10 // indirect\n\tgithub.com/stretchr/objx v0.5.3 // indirect\n\tgithub.com/x448/float16 v0.8.4 // indirect\n\tgithub.com/xhit/go-str2duration/v2 v2.1.0 // indirect\n\tgo.opentelemetry.io/auto/sdk v1.2.1 // indirect\n\tgo.opentelemetry.io/collector/confmap v1.67.0 // indirect\n\tgo.opentelemetry.io/collector/featuregate v1.67.0 // indirect\n\tgo.opentelemetry.io/collector/pipeline v1.67.0 // indirect\n\tgo.opentelemetry.io/proto/otlp v1.11.0 // indirect\n\tgo.uber.org/zap v1.28.0 // indirect\n\tgolang.org/x/crypto v0.57.0 // indirect\n\tgolang.org/x/exp v0.0.0-20260709172345-9ea1abe57597 // indirect\n\tgolang.org/x/net v0.59.0 // indirect\n\tgolang.org/x/term v0.46.0 // indirect\n\tgolang.org/x/time v0.16.0\n\tgoogle.golang.org/genproto/googleapis/rpc v0.0.0-20260921155816-b14227669459 // indirect\n\tgopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect\n\tgopkg.in/inf.v0 v0.9.1 // indirect\n\tgopkg.in/ini.v1 v1.67.2 // indirect\n\tk8s.io/kube-openapi v0.0.0-20260721132016-d427ff9ee9ad // indirect\n\tk8s.io/utils v0.0.0-20260626114624-be93311217bd // indirect\n\tsigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect\n\tsigs.k8s.io/randfill v1.0.0 // indirect\n\tsigs.k8s.io/yaml v1.6.0 // indirect\n)\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Go",
+          "expected": true,
+          "rationale": "The excerpt declares a Go module."
+        },
+        {
+          "technology": "Django",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for Django; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "98410e0dea78f6eacc863488842601d3d639e62ba8740586536196edcf0cbf77"
+    },
+    {
+      "repository": "symfony/symfony",
+      "commit": "859020c4a426d73a39b868b29d12c8e06d0505d7",
+      "sourcePath": "src/Symfony/Bundle/FrameworkBundle/composer.json",
+      "sourceUrl": "https://github.com/symfony/symfony/blob/859020c4a426d73a39b868b29d12c8e06d0505d7/src/Symfony/Bundle/FrameworkBundle/composer.json",
+      "upstreamLicense": "MIT",
+      "excerptKind": "selected-manifest-fields",
+      "ecosystem": "PHP",
+      "files": [
+        {
+          "path": "src/Symfony/Bundle/FrameworkBundle/composer.json",
+          "content": "{\n  \"name\": \"symfony/framework-bundle\",\n  \"type\": \"symfony-bundle\",\n  \"license\": \"MIT\",\n  \"require\": {\n    \"php\": \">=8.4.1\",\n    \"composer-runtime-api\": \">=2.1\",\n    \"ext-xml\": \"*\",\n    \"symfony/cache\": \"^8.2\",\n    \"symfony/config\": \"^8.2\",\n    \"symfony/dependency-injection\": \"^8.2\",\n    \"symfony/deprecation-contracts\": \"^2.5|^3\",\n    \"symfony/error-handler\": \"^7.4|^8.0\",\n    \"symfony/event-dispatcher\": \"^8.2\",\n    \"symfony/filesystem\": \"^7.4|^8.0\",\n    \"symfony/finder\": \"^7.4|^8.0\",\n    \"symfony/http-foundation\": \"^8.2\",\n    \"symfony/http-kernel\": \"^8.2\",\n    \"symfony/polyfill-mbstring\": \"^1.0\",\n    \"symfony/polyfill-php85\": \"^1.33\",\n    \"symfony/routing\": \"^8.2\",\n    \"symfony/service-contracts\": \"^3.7.1\",\n    \"symfony/var-exporter\": \"^8.1\"\n  }\n}\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "Symfony",
+          "expected": true,
+          "rationale": "The excerpt declares the framework-owned package identity Symfony."
+        },
+        {
+          "technology": "Django",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for Django; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "b6a90f52e407ebf1e94542b8ce1e5957ad7bf0df6fd7aa7bf45d93817ea3555f"
+    },
+    {
+      "repository": "fastapi/fastapi",
+      "commit": "5f9fc5c59a9bb54608aa35376715f3ba9708188e",
+      "sourcePath": "pyproject.toml",
+      "sourceUrl": "https://github.com/fastapi/fastapi/blob/5f9fc5c59a9bb54608aa35376715f3ba9708188e/pyproject.toml",
+      "upstreamLicense": "MIT",
+      "excerptKind": "leading-sections",
+      "ecosystem": "Python",
+      "files": [
+        {
+          "path": "pyproject.toml",
+          "content": "[build-system]\nrequires = [\"pdm-backend\"]\nbuild-backend = \"pdm.backend\"\n\n[project]\nname = \"fastapi\"\ndynamic = [\"version\"]\ndescription = \"FastAPI framework, high performance, easy to learn, fast to code, ready for production\"\nreadme = \"README.md\"\nlicense = \"MIT\"\nlicense-files = [\"LICENSE\"]\nrequires-python = \">=3.10\"\nauthors = [\n    { name = \"Sebastián Ramírez\", email = \"tiangolo@gmail.com\" },\n]\nclassifiers = [\n    \"Intended Audience :: Information Technology\",\n    \"Intended Audience :: System Administrators\",\n    \"Operating System :: OS Independent\",\n    \"Programming Language :: Python :: 3\",\n    \"Programming Language :: Python\",\n    \"Topic :: Internet\",\n    \"Topic :: Software Development :: Libraries :: Application Frameworks\",\n    \"Topic :: Software Development :: Libraries :: Python Modules\",\n    \"Topic :: Software Development :: Libraries\",\n    \"Topic :: Software Development\",\n    \"Typing :: Typed\",\n    \"Development Status :: 4 - Beta\",\n    \"Environment :: Web Environment\",\n    \"Framework :: AsyncIO\",\n    \"Framework :: FastAPI\",\n    \"Framework :: Pydantic\",\n    \"Framework :: Pydantic :: 2\",\n    \"Intended Audience :: Developers\",\n    \"Programming Language :: Python :: 3 :: Only\",\n    \"Programming Language :: Python :: 3.10\",\n    \"Programming Language :: Python :: 3.11\",\n    \"Programming Language :: Python :: 3.12\",\n    \"Programming Language :: Python :: 3.13\",\n    \"Programming Language :: Python :: 3.14\",\n    \"Topic :: Internet :: WWW/HTTP :: HTTP Servers\",\n    \"Topic :: Internet :: WWW/HTTP\",\n]\ndependencies = [\n    \"starlette>=0.46.0\",\n    \"pydantic>=2.9.0\",\n    \"typing-extensions>=4.8.0\",\n    \"typing-inspection>=0.4.2\",\n    \"annotated-doc>=0.0.2\",\n    \"opentelemetry-api>=1.44.0\",\n]\n\n"
+        }
+      ],
+      "decisions": [
+        {
+          "technology": "FastAPI",
+          "expected": true,
+          "rationale": "The excerpt declares the framework-owned package identity FastAPI."
+        },
+        {
+          "technology": "React",
+          "expected": false,
+          "rationale": "The selected manifest excerpt contains no declaration or structured evidence for React; this label is limited to this excerpt."
+        }
+      ],
+      "sourceSha256": "1e1dd3dc00bf7707a9f5fa5ea5296f5b1dd752428339b9717c87d70c6432abdc"
+    }
+  ],
+  "firstEvaluationEngineCommit": "af12ddb4e247740489dbe484e41db1ca4c2e520c"
+}

@@ -29,6 +29,15 @@ export function groupMetrics(rows, key) {
 }
 export function checkRegression(baseline, report) {
   if (baseline.corpusSha256 !== report.corpusSha256) throw Error('Corpus changed: review labels before recording a new baseline.');
+  for (const collection of [baseline.results, report.results]) {
+    if (!Array.isArray(collection)) throw Error('Missing baseline decisions.');
+    const ids = new Set();
+    for (const row of collection) {
+      if (typeof row.id !== 'string' || !row.id || ids.has(row.id)) throw Error('Duplicate or invalid decision ID.');
+      ids.add(row.id);
+      if (!['boolean', 'string'].includes(typeof row.expected) || typeof row.actual !== typeof row.expected || row.passed !== (row.expected === row.actual)) throw Error('Invalid baseline decision: ' + row.id);
+    }
+  }
   const prior = new Map(baseline.results.map(row => [row.id, row]));
   if (prior.size !== baseline.results.length || prior.size !== report.results.length) throw Error('Baseline decision IDs changed.');
   const regressions = report.results.filter(row => {

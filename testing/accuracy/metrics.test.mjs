@@ -26,3 +26,11 @@ test('regression gate permits known failures, rejects new failures and changed l
   assert.throws(() => checkRegression(base, { ...base, results: [base.results[0]] }), /IDs changed/);
   assert.throws(() => checkRegression(base, { ...base, corpusSha256: 'modified' }), /Corpus changed/);
 });
+
+test('regression gate rejects duplicate current IDs and forged pass flags', () => {
+  const row = { id: 'a', expected: true, actual: true, passed: true };
+  const base = { corpusSha256: 'fixed', results: [row, { ...row, id: 'b' }] };
+  assert.throws(() => checkRegression(base, { ...base, results: [row, row] }), /Duplicate/);
+  assert.throws(() => checkRegression(base, { ...base, results: [row, { ...row, id: 'b', actual: false }] }), /Invalid baseline/);
+  assert.throws(() => checkRegression(base, { ...base, results: [row, { ...row, id: 'b', expected: null }] }), /Invalid baseline/);
+});

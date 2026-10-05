@@ -82,3 +82,7 @@ the official source repository for the Universal Compatibility Engine.
 
 For a concise factual overview suitable for future community introductions, see
 [docs/PROJECT-INTRODUCTION.md](docs/PROJECT-INTRODUCTION.md).
+
+## Accuracy validation
+
+The bounded five-phase accuracy engineering program and its measured limits are documented in [Phase 5 release validation](docs/ACCURACY_90_95_PHASE5.md). Run `npm run audit:accuracy:release` to reproduce separate development and pinned-manifest measurements. Independent adjudication and global 90–95% accuracy remain unverified.

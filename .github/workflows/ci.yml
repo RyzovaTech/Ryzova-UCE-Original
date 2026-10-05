@@ -55,6 +55,9 @@ jobs:
       - name: Pinned manifest evaluation regression gate
         run: npm run audit:accuracy:holdout
 
+      - name: Accuracy release validation and claim boundaries
+        run: npm run test:release-validation && node testing/release/run.mjs --output=uce-accuracy-release.json
+
       - name: All V3 rule execution fixtures
         run: npm run test:v3-fixtures
 
@@ -92,6 +95,7 @@ jobs:
         with:
           name: uce-analysis-reports
           path: |
+            uce-accuracy-release.json
             uce-self-scan.json
             uce-self-scan.sarif
             uce-ci-results.sarif

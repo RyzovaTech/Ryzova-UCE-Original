@@ -36,7 +36,10 @@
     "audit:accuracy:security": "node testing/security/false-positive.mjs --check",
     "test:security-context": "node --test testing/security/context.test.mjs",
     "test:correlation": "node --test testing/correlation/phase4.test.mjs",
-    "audit:accuracy:correlation": "node testing/correlation/audit.mjs --check"
+    "audit:accuracy:correlation": "node testing/correlation/audit.mjs --check",
+    "test:release-validation": "node --test testing/release/evaluation.test.mjs",
+    "audit:accuracy:release": "node testing/release/run.mjs",
+    "audit:accuracy:manifest-validation": "node testing/release/manifest.mjs --check"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",
