@@ -103,6 +103,7 @@ function validateDetector(detector: V3Detector): string[] {
     if (detector.mode === 'lockfile-version' && !text(detector.packageName)) errors.push('lockfile correlation needs a package name.');
     if (detector.mode === 'import-boundary' && (!detector.include?.length || !detector.target?.length)) errors.push('import boundary needs origin and target paths.');
     if (detector.mode === 'paired-evidence') {
+      if (detector.semantic !== undefined && detector.semantic !== 'node-module-typescript') errors.push('paired evidence semantic is unsupported.');
       if (!detector.first?.include?.length || !detector.second?.include?.length || !['same-file', 'same-workspace'].includes(detector.relation)) errors.push('paired evidence needs two path patterns and a relation.');
       for (const pattern of [detector.first?.pattern, detector.second?.pattern]) try { new RegExp(pattern); } catch { errors.push('paired evidence pattern is invalid.'); }
     }

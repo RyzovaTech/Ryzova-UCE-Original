@@ -1,5 +1,6 @@
 import type { ProjectFile } from './types';
 import { normalizeProjectPath } from './project-scope';
+import { versionRangesDisjoint } from './version-constraints';
 
 export interface PackageDeclaration { name: string; file: string; identity: boolean; version?: string; }
 const object = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
@@ -66,8 +67,8 @@ export function npmLockCorroborates(files: ProjectFile[], declaration: PackageDe
       const root = data.packages[''];
       if (!object(root) || !['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'].some(section =>
         object(root[section]) && root[section][declaration.name] === declaration.version)) return undefined;
-      if (object(entry) && typeof entry.version === 'string' && /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(entry.version)) {
-        if (declaration.version && /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(declaration.version) && declaration.version !== entry.version) return undefined;
+      if (object(entry) && entry.link !== true && typeof entry.version === 'string' && /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(entry.version)) {
+        if (!declaration.version || versionRangesDisjoint(declaration.version, entry.version) !== false) return undefined;
         return normalizeProjectPath(lock.path);
       }
     }

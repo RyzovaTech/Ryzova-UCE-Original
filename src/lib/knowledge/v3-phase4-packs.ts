@@ -3,7 +3,7 @@ import { TECHNOLOGY_REGISTRY } from '../analyzer/technology-registry';
 import { V3_PHASE3_RULE_PACKS } from './v3-phase3-packs';
 import type { V3CorrelationDetector, V3Rule, V3RuleModule, V3RulePack } from './v3-types';
 
-export const V3_PHASE4_VERSION = '3.3.0';
+export const V3_PHASE4_VERSION = '3.3.1';
 export const V3_PHASE4_RULE_TARGET = 2_500;
 export const V3_PHASE4_TOTAL_TARGET = 9_000;
 type Group = 'browser-target' | 'manifest-lockfile' | 'value-flow' | 'import-boundary' | 'context-links';
@@ -85,7 +85,7 @@ const pairs: Pair[] = [
 ];
 const contextRules = pairs.map((pair, index) =>
   rule('context-links', pair.module + '-' + index, pair.module, 'Review linked ' + pair.module + ' evidence',
-    pair.tech, { kind: 'correlation', mode: 'paired-evidence',
+    pair.tech, { kind: 'correlation', mode: 'paired-evidence', semantic: 'node-module-typescript',
       first: { include: pair.first, pattern: pair.firstPattern }, second: { include: pair.second, pattern: pair.secondPattern }, relation: pair.relation }));
 
 function compile(): V3RulePack[] {

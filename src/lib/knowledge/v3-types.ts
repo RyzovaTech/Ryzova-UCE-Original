@@ -52,7 +52,7 @@ export type V3CorrelationDetector =
   | { kind: 'correlation'; mode: 'browser-target'; featureId: string; browser: string }
   | { kind: 'correlation'; mode: 'lockfile-version'; packageName: string }
   | { kind: 'correlation'; mode: 'import-boundary'; include: string[]; target: string[] }
-  | { kind: 'correlation'; mode: 'paired-evidence'; first: { include: string[]; pattern: string }; second: { include: string[]; pattern: string }; relation: 'same-file' | 'same-workspace' };
+  | { kind: 'correlation'; mode: 'paired-evidence'; semantic?: 'node-module-typescript'; first: { include: string[]; pattern: string }; second: { include: string[]; pattern: string }; relation: 'same-file' | 'same-workspace' };
 export type V3Detector = V3RegexDetector | V3AstDetector | V3ManifestDetector | V3DependencyDetector | V3ConfigDetector | V3CorrelationDetector;
 
 export interface V3EvidenceRequirements {

@@ -1,0 +1,967 @@
+{
+  "schemaVersion": 1,
+  "name": "Phase 4 package-local correlation development contracts",
+  "scope": "Synthetic contract labels, agent-provisional, no independent adjudication or global accuracy claim.",
+  "cases": [
+    {
+      "id": "runtime-caret-mismatch",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "22.0.0"
+        }
+      ],
+      "expected": true,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-caret-compatible",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "20.3.0"
+        }
+      ],
+      "expected": false,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-exact-mismatch",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \"22.1.0\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "20.1.0"
+        }
+      ],
+      "expected": true,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-tilde-mismatch",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \"~20.2.0\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "20.3.0"
+        }
+      ],
+      "expected": true,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-partial-overlap",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=20.5\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "20"
+        }
+      ],
+      "expected": false,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-alternatives-match",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \"18 || >=22\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "22"
+        }
+      ],
+      "expected": false,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-alternatives-gap",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \"18 || >=22\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "20"
+        }
+      ],
+      "expected": true,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-alias-unknown",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "lts/*"
+        }
+      ],
+      "expected": false,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-prerelease-unknown",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": ".nvmrc",
+          "content": "22.0.0-rc.1"
+        }
+      ],
+      "expected": false,
+      "rationale": "Review only disjoint supported numeric selections in the same package."
+    },
+    {
+      "id": "runtime-image-mismatch",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "Dockerfile",
+          "content": "FROM node:18-alpine"
+        }
+      ],
+      "expected": true,
+      "rationale": "Only explicit official Node FROM instructions establish runtime selection."
+    },
+    {
+      "id": "runtime-image-compatible",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "Dockerfile",
+          "content": "FROM node:22"
+        }
+      ],
+      "expected": false,
+      "rationale": "Only explicit official Node FROM instructions establish runtime selection."
+    },
+    {
+      "id": "runtime-private-image",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "Dockerfile",
+          "content": "FROM company/node:18"
+        }
+      ],
+      "expected": false,
+      "rationale": "Only explicit official Node FROM instructions establish runtime selection."
+    },
+    {
+      "id": "runtime-comment",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "Dockerfile",
+          "content": "# FROM node:18"
+        }
+      ],
+      "expected": false,
+      "rationale": "Only explicit official Node FROM instructions establish runtime selection."
+    },
+    {
+      "id": "runtime-prose",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "Dockerfile",
+          "content": "RUN echo FROM node:18"
+        }
+      ],
+      "expected": false,
+      "rationale": "Only explicit official Node FROM instructions establish runtime selection."
+    },
+    {
+      "id": "runtime-dynamic",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "Dockerfile",
+          "content": "FROM node:${NODE_VERSION}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Only explicit official Node FROM instructions establish runtime selection."
+    },
+    {
+      "id": "runtime-siblings",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "apps/a/package.json",
+          "content": "{\"engines\": {\"node\": \">=22\"}}"
+        },
+        {
+          "path": "apps/b/package.json",
+          "content": "{}"
+        },
+        {
+          "path": "apps/b/.nvmrc",
+          "content": "18"
+        }
+      ],
+      "expected": false,
+      "rationale": "Sibling packages cannot share a runtime pin."
+    },
+    {
+      "id": "lock-caret-mismatch",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-caret-match",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"18.3.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-zero-caret",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"^0.2.3\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"0.3.0\"}}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-tilde-mismatch",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"~18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"18.3.0\"}}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-exact-mismatch",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-exact-match",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"18.2.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-union-match",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"18 || 20\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"20.2.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-union-gap",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"18 || 20\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.2.0\"}}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-remote",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"git+https://example.test/react.git\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-prerelease",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0-beta.1\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-invalid-installed",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": false}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-wildcard",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"dependencies\": {\"react\": \"*\"}}"
+        },
+        {
+          "path": "package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Conflict requires a supported declaration and concrete stable installed version."
+    },
+    {
+      "id": "lock-sibling-lock",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "apps/a/package.json",
+          "content": "{\"dependencies\": {\"react\": \"18.2.0\"}}"
+        },
+        {
+          "path": "apps/b/package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Lockfile must match the package directory."
+    },
+    {
+      "id": "module-commonjs",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-lowercase",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"commonjs\"}}"
+        }
+      ],
+      "expected": true,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-esnext",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"ESNext\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-top-level-prose",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"module\": \"CommonJS\"}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-nested-prose",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"notes\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-no-emit",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\", \"noEmit\": true}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-declarations",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\", \"emitDeclarationOnly\": true}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-extends-unknown",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"extends\": \"./base.json\", \"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-array-invalid",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "[]"
+        }
+      ],
+      "expected": false,
+      "rationale": "Require structured package type and emitting compilerOptions; unresolved inheritance stays unknown."
+    },
+    {
+      "id": "module-manifest-prose",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"notes\": {\"type\": \"module\"}}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Nested prose is not package type."
+    },
+    {
+      "id": "module-jsonc",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{/* comment */\"compilerOptions\":{\"module\":\"CommonJS\",},}"
+        }
+      ],
+      "expected": true,
+      "rationale": "JSONC comments and trailing commas are supported."
+    },
+    {
+      "id": "module-siblings",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "apps/a/package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "apps/b/package.json",
+          "content": "{}"
+        },
+        {
+          "path": "apps/b/tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Module relationships require matching package ownership."
+    },
+    {
+      "id": "runtime-excluded-tests",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "tests/package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": "tests/.nvmrc",
+          "content": "22.0.0"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "runtime-excluded-vendor",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "vendor/package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": "vendor/.nvmrc",
+          "content": "22.0.0"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "runtime-excluded-dist",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "dist/package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": "dist/.nvmrc",
+          "content": "22.0.0"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "runtime-excluded-examples",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "examples/package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": "examples/.nvmrc",
+          "content": "22.0.0"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "runtime-excluded-docs",
+      "family": "runtime",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "docs/package.json",
+          "content": "{\"engines\": {\"node\": \"^20.2.0\"}}"
+        },
+        {
+          "path": "docs/.nvmrc",
+          "content": "22.0.0"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "lock-excluded-tests",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "tests/package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "tests/package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "lock-excluded-vendor",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "vendor/package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "vendor/package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "lock-excluded-dist",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "dist/package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "dist/package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "lock-excluded-examples",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "examples/package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "examples/package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "lock-excluded-docs",
+      "family": "lock",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "docs/package.json",
+          "content": "{\"dependencies\": {\"react\": \"^18.2.0\"}}"
+        },
+        {
+          "path": "docs/package-lock.json",
+          "content": "{\"packages\": {\"node_modules/react\": {\"version\": \"19.0.0\"}}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "module-excluded-tests",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "tests/package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "tests/tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "module-excluded-vendor",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "vendor/package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "vendor/tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "module-excluded-dist",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "dist/package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "dist/tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "module-excluded-examples",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "examples/package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "examples/tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    },
+    {
+      "id": "module-excluded-docs",
+      "family": "module",
+      "ecosystem": "nodejs",
+      "files": [
+        {
+          "path": "docs/package.json",
+          "content": "{\"type\": \"module\"}"
+        },
+        {
+          "path": "docs/tsconfig.json",
+          "content": "{\"compilerOptions\": {\"module\": \"CommonJS\"}}"
+        }
+      ],
+      "expected": false,
+      "rationale": "Auxiliary scope does not establish production/configuration conflicts."
+    }
+  ]
+}

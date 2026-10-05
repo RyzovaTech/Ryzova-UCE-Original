@@ -1,3 +1,5 @@
+import { isRecord, jsonObject, typescriptConfig } from '../analyzer/configuration-evidence';
+import { versionRangesDisjoint } from '../analyzer/version-constraints';
 import { BROWSER_FEATURES } from '../analyzer/browser-knowledge';
 import { resolveBrowserTargets } from '../analyzer/browser-compatibility';
 import { classifyProjectFileScope, normalizeProjectPath } from '../analyzer/project-scope';
@@ -39,17 +41,21 @@ export function correlationEvidence(detector: V3CorrelationDetector, context: V3
   } else if (detector.mode === 'lockfile-version') {
     for (const manifest of files.filter(file => /(^|\/)package\.json$/i.test(normalizeProjectPath(file.path)))) {
       if (!visit(manifest)) break;
-      const value = parseJson(manifest.content) as Record<string, unknown> | undefined;
+      const value = jsonObject(manifest.content);
       const groups = ['dependencies', 'devDependencies', 'optionalDependencies'];
-      const declared = groups.map(group => (value?.[group] as Record<string, unknown> | undefined)?.[detector.packageName]).find(item => typeof item === 'string');
-      if (typeof declared !== 'string' || !/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(declared)) continue;
+      const declared = groups.map(group => value && isRecord(value[group]) ? value[group][detector.packageName] : undefined).find(item => typeof item === 'string');
+      if (typeof declared !== 'string') continue;
       const path = normalizeProjectPath(manifest.path);
-      const lock = context.files.find(file => normalizeProjectPath(file.path) === path.slice(0, -'package.json'.length) + 'package-lock.json');
+      const lock = files.find(file => normalizeProjectPath(file.path) === path.slice(0, -'package.json'.length) + 'package-lock.json');
       if (!lock?.content || !visit(lock)) continue;
-      const locked = parseJson(lock.content) as { packages?: Record<string, { version?: string }>; dependencies?: Record<string, { version?: string }> } | undefined;
-      const installed = locked?.packages?.['node_modules/' + detector.packageName]?.version ?? locked?.dependencies?.[detector.packageName]?.version;
-      if (installed && installed !== declared) add({ file: manifest, line: lineOf(manifest.content ?? '', '"' + detector.packageName + '"') },
-        { file: lock, line: lineOf(lock.content, '"' + detector.packageName + '"') }, detector.packageName + ': declared ' + declared + ', locked ' + installed);
+      const locked = jsonObject(lock.content);
+      const entries = locked && isRecord(locked.packages) ? locked.packages : undefined;
+      const entry = entries?.['node_modules/' + detector.packageName];
+      const legacy = locked && isRecord(locked.dependencies) ? locked.dependencies[detector.packageName] : undefined;
+      const installed = isRecord(entry) && entry.link !== true ? entry.version : locked?.packages === undefined && isRecord(legacy) ? legacy.version : undefined;
+      if (typeof installed === 'string' && /^\d+\.\d+\.\d+$/.test(installed) && versionRangesDisjoint(declared, installed) === true)
+        add({ file: manifest, line: lineOf(manifest.content ?? '', '"' + detector.packageName + '"') },
+          { file: lock, line: lineOf(lock.content, '"node_modules/' + detector.packageName + '"') }, detector.packageName + ': declared ' + declared + ', locked ' + installed);
     }
   } else if (detector.mode === 'flow') {
     const source = new RegExp(detector.sourcePattern, 'g');
@@ -94,13 +100,19 @@ export function correlationEvidence(detector: V3CorrelationDetector, context: V3
       }
     }
   } else {
+    const modulePair = detector.semantic === 'node-module-typescript';
     const left: Hit[] = []; const right: Hit[] = [];
     for (const file of files) {
       const a = matchesAny(file.path, detector.first.include); const b = matchesAny(file.path, detector.second.include);
       if (!a && !b) continue;
       if (!visit(file)) break;
-      if (a) { const match = new RegExp(detector.first.pattern).exec(file.content ?? ''); if (match) left.push({ file, line: lineAt(file.content ?? '', match.index) }); }
-      if (b) { const match = new RegExp(detector.second.pattern).exec(file.content ?? ''); if (match) right.push({ file, line: lineAt(file.content ?? '', match.index) }); }
+      if (a) { const match = new RegExp(detector.first.pattern).exec(file.content ?? ''); if (match && (!modulePair || jsonObject(file.content)?.type === 'module')) left.push({ file, line: lineAt(file.content ?? '', match.index) }); }
+      if (b) {
+        const config = modulePair ? typescriptConfig(file.content) : undefined;
+        const commonjs = config && isRecord(config.compilerOptions) && typeof config.compilerOptions.module === 'string' && config.compilerOptions.module.toLowerCase() === 'commonjs';
+        const match = new RegExp(detector.second.pattern, modulePair ? 'i' : '').exec(file.content ?? '');
+        if (match && (!modulePair || (commonjs && config?.extends === undefined && config.compilerOptions && isRecord(config.compilerOptions) && (config.compilerOptions.noEmit === undefined || config.compilerOptions.noEmit === false) && (config.compilerOptions.emitDeclarationOnly === undefined || config.compilerOptions.emitDeclarationOnly === false)))) right.push({ file, line: lineAt(file.content ?? '', match.index) });
+      }
     }
     for (const source of left) {
       const target = right.find(hit => detector.relation === 'same-file' ? hit.file.path === source.file.path : workspace(hit.file.path, context.files) === workspace(source.file.path, context.files));
@@ -135,7 +147,6 @@ function workspace(path: string, files: V3ProjectFile[]): string {
 function lineAt(content: string, offset: number): number { return content.slice(0, offset).split('\n').length; }
 function lineOf(content: string, token: string): number { return lineAt(content, Math.max(0, content.indexOf(token))); }
 function escape(value: string): string { return value.replace(/[.*+?^$(){}|[\]\\]/g, '\\$&'); }
-function parseJson(content: string | undefined): unknown { try { return JSON.parse(content ?? ''); } catch { return undefined; } }
 
 // Keep offsets and string arguments intact; blank comments and string contents so
 // that a quoted example or commented-out sink cannot create a value path.

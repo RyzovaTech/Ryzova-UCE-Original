@@ -1,0 +1,564 @@
+{
+  "benchmark": "Phase 4 package-local correlation development contracts",
+  "corpusSha256": "10d2dc53de81abd4e4fab26daf51dbd35afe1aaf3861eb0ba7764ddc16a6a6c4",
+  "scope": "Synthetic contract labels, agent-provisional, no independent adjudication or global accuracy claim.",
+  "globalAccuracy": null,
+  "humanReviewedCases": 0,
+  "reviewStatus": "agent-provisional",
+  "metrics": {
+    "cases": 56,
+    "binaryCases": 56,
+    "categoricalCases": 0,
+    "correct": 56,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      93.58,
+      100
+    ],
+    "tp": 13,
+    "fp": 0,
+    "fn": 0,
+    "tn": 43,
+    "precision": 100,
+    "precisionWilson95": [
+      77.19,
+      100
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      77.19,
+      100
+    ],
+    "falsePositiveRate": 0
+  },
+  "families": {
+    "lock": {
+      "cases": 18,
+      "binaryCases": 18,
+      "categoricalCases": 0,
+      "correct": 18,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        82.41,
+        100
+      ],
+      "tp": 5,
+      "fp": 0,
+      "fn": 0,
+      "tn": 13,
+      "precision": 100,
+      "precisionWilson95": [
+        56.55,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        56.55,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "module": {
+      "cases": 17,
+      "binaryCases": 17,
+      "categoricalCases": 0,
+      "correct": 17,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        81.57,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 14,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "runtime": {
+      "cases": 21,
+      "binaryCases": 21,
+      "categoricalCases": 0,
+      "correct": 21,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        84.54,
+        100
+      ],
+      "tp": 5,
+      "fp": 0,
+      "fn": 0,
+      "tn": 16,
+      "precision": 100,
+      "precisionWilson95": [
+        56.55,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        56.55,
+        100
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "results": [
+    {
+      "id": "runtime-caret-mismatch",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "runtime-caret-compatible",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-exact-mismatch",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "runtime-tilde-mismatch",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "runtime-partial-overlap",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-alternatives-match",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-alternatives-gap",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "runtime-alias-unknown",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-prerelease-unknown",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-image-mismatch",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "runtime-image-compatible",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-private-image",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-comment",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-prose",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-dynamic",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-siblings",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-caret-mismatch",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "lock-caret-match",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-zero-caret",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "lock-tilde-mismatch",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "lock-exact-mismatch",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "lock-exact-match",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-union-match",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-union-gap",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "lock-remote",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-prerelease",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-invalid-installed",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-wildcard",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-sibling-lock",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-commonjs",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "module-lowercase",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "module-esnext",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-top-level-prose",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-nested-prose",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-no-emit",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-declarations",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-extends-unknown",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-array-invalid",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-manifest-prose",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-jsonc",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "module-siblings",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-tests",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-vendor",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-dist",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-examples",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "runtime-excluded-docs",
+      "ecosystem": "nodejs",
+      "family": "runtime",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-tests",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-vendor",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-dist",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-examples",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "lock-excluded-docs",
+      "ecosystem": "nodejs",
+      "family": "lock",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-tests",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-vendor",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-dist",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-examples",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "module-excluded-docs",
+      "ecosystem": "nodejs",
+      "family": "module",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    }
+  ]
+}
