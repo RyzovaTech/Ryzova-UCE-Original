@@ -1,4 +1,5 @@
-import { maskPythonText } from './python-evidence';
+import { securityContext, matchIsProse } from './security-context';
+import { maskPythonText, maskPythonProse } from './python-evidence';
 import type { ProjectFile, SecurityFinding, SecurityIntelligence, SecurityRuleCategory } from './types';
 import { SECURITY_KNOWLEDGE_VERSION, SECURITY_RULES, validateSecurityRules } from './security-knowledge';
 import { classifyProjectFileScope } from './project-scope';
@@ -26,23 +27,28 @@ const validationErrors = validateSecurityRules();
 if (validationErrors.length) throw new Error(`Invalid UCE security registry: ${validationErrors.join('; ')}`);
 
 export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntelligence {
-  const findings: SecurityFinding[] = []; const seen = new Set<string>(); let rulesExecuted = 0; let filesScanned = 0;
+  const findings: SecurityFinding[] = []; const occurrences = new Map<string, Array<{ start: number; end: number }>>(); const seen = new Set<string>(); let rulesExecuted = 0; let filesScanned = 0;
   const sourceFiles = files.filter((file) => {
     const path = normalizePath(file.path);
     return !file.isDirectory && typeof file.content === 'string' && SOURCE_RE.test(path) && !INTERNAL_PATH_RE.test(path) && !isNonProductionPath(path);
   });
   for (const file of sourceFiles) {
     filesScanned++;
-    const source = file.content ?? ''; const pythonCode = /\.py$/i.test(file.path) ? maskPythonText(source) : undefined; const normalizedPath = normalizePath(file.path);
+    const source = file.content ?? ''; const context = securityContext(source, file.path); const pythonCode = /\.py$/i.test(file.path) ? maskPythonText(source) : undefined; const pythonProse = pythonCode === undefined ? undefined : maskPythonProse(source); const normalizedPath = normalizePath(file.path);
     for (const rule of SECURITY_RULES) {
       if (rule.filePattern && !new RegExp(rule.filePattern.source, rule.filePattern.flags.replace('g', '')).test(normalizedPath)) continue;
       rulesExecuted++;
       const flags = rule.pattern.flags.includes('g') ? rule.pattern.flags : `${rule.pattern.flags}g`;
       for (const match of source.matchAll(new RegExp(rule.pattern.source, flags))) {
-        if (isCommentContext(source, match.index ?? 0)) continue;
+        const offset = match.index ?? 0;
+        const allowLiteral = ['SEC005', 'SEC008', 'SEC009', 'SEC039'].includes(rule.id);
+        if (context ? matchIsProse(context, source, offset, offset + match[0].length, allowLiteral) : pythonCode !== undefined ? false : isCommentContext(source, offset)) continue;
         if (rule.shouldReport && !rule.shouldReport(match, source, normalizedPath)) continue;
-        if (pythonCode !== undefined && pythonCode.slice(match.index, match.index + 1).trim() === '') continue;
+        if (pythonCode !== undefined && (allowLiteral ? pythonProse! : pythonCode).slice(match.index, match.index + 1).trim() === '') continue;
         const line = source.slice(0, match.index).split('\n').length; const id = `${rule.id}:${normalizedPath}:${line}`;
+        const ranges = occurrences.get(id) ?? [];
+        ranges.push({ start: offset, end: offset + match[0].length });
+        occurrences.set(id, ranges);
         if (seen.has(id)) continue; seen.add(id);
         findings.push({ id, ruleId: rule.id, title: rule.title, category: rule.category, confidence: rule.confidence, severity: rule.severity, file: file.path, line, evidence: rule.evidence, recommendation: rule.recommendation, scope: /(?:Dockerfile|\.github\/|\.(?:json|ya?ml|tf)$)/i.test(normalizedPath) ? 'configuration' : 'production', falsePositivePossible: rule.falsePositivePossible ?? rule.confidence !== 'high', certainty: rule.id === 'SEC020' ? 'review-required' : rule.certainty ?? (rule.confidence === 'high' ? 'confirmed' : rule.confidence === 'medium' ? 'likely' : 'possible') });
         if (findings.length >= 300) break;
@@ -51,7 +57,13 @@ export function detectSecurityIntelligence(files: ProjectFile[]): SecurityIntell
     }
     if (findings.length >= 300) break;
   }
-  return { ...summarizeSecurityFindings(findings, filesScanned, rulesExecuted), truncated: findings.length >= 300 };
+  const deduplicated = findings.filter(finding => {
+    if (finding.ruleId !== 'SEC020') return true;
+    const specific = findings.filter(other => other.ruleId === 'SEC028' && other.file === finding.file && other.line === finding.line);
+    const covers = specific.flatMap(other => occurrences.get(other.id) ?? []);
+    return !(occurrences.get(finding.id) ?? []).every(range => covers.some(cover => cover.start <= range.start && cover.end >= range.end));
+  });
+  return { ...summarizeSecurityFindings(deduplicated, filesScanned, rulesExecuted), truncated: findings.length >= 300 };
 }
 
 export function summarizeSecurityFindings(findings: SecurityFinding[], filesScanned: number, rulesExecuted: number): SecurityIntelligence {

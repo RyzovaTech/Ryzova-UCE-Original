@@ -37,6 +37,9 @@ jobs:
       - name: Structured declaration and AST evidence regression tests
         run: npm run test:evidence
 
+      - name: Security false-positive contracts and context checks
+        run: npm run audit:accuracy:security && npm run test:security-context
+
       - name: Bounded accuracy regression audit
         run: npm run audit:accuracy
 

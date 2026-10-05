@@ -1,0 +1,1925 @@
+{
+  "benchmark": "Phase 3 security context development contracts",
+  "corpusSha256": "c6970700610d52f0a273485e6927a423fcfca5206e2b6d32fce12a8538639ee1",
+  "globalAccuracy": null,
+  "reviewStatus": "agent-provisional",
+  "humanReviewedCases": 0,
+  "scope": "Synthetic review-signal decisions; not real-project vulnerability precision or independent adjudication.",
+  "metrics": {
+    "cases": 140,
+    "binaryCases": 140,
+    "categoricalCases": 0,
+    "correct": 140,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      97.33,
+      100
+    ],
+    "tp": 46,
+    "fp": 0,
+    "fn": 0,
+    "tn": 94,
+    "precision": 100,
+    "precisionWilson95": [
+      92.29,
+      100
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      92.29,
+      100
+    ],
+    "falsePositiveRate": 0
+  },
+  "ecosystems": {
+    "c": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "cpp": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "go": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "java": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "javascript": {
+      "cases": 100,
+      "binaryCases": 100,
+      "categoricalCases": 0,
+      "correct": 100,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        96.3,
+        100
+      ],
+      "tp": 30,
+      "fp": 0,
+      "fn": 0,
+      "tn": 70,
+      "precision": 100,
+      "precisionWilson95": [
+        88.65,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        88.65,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "php": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "python": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 4,
+      "fp": 0,
+      "fn": 0,
+      "tn": 6,
+      "precision": 100,
+      "precisionWilson95": [
+        51.01,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        51.01,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "rust": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "families": {
+    "SEC002": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC003": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC004": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC007": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC010": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC012": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC013": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC015": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC016": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC017": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC019": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC020": {
+      "cases": 15,
+      "binaryCases": 15,
+      "categoricalCases": 0,
+      "correct": 15,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        79.61,
+        100
+      ],
+      "tp": 6,
+      "fp": 0,
+      "fn": 0,
+      "tn": 9,
+      "precision": 100,
+      "precisionWilson95": [
+        60.97,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        60.97,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC022": {
+      "cases": 5,
+      "binaryCases": 5,
+      "categoricalCases": 0,
+      "correct": 5,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        56.55,
+        100
+      ],
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 3,
+      "precision": 100,
+      "precisionWilson95": [
+        34.24,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        34.24,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC024": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC025": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    },
+    "SEC026": {
+      "cases": 10,
+      "binaryCases": 10,
+      "categoricalCases": 0,
+      "correct": 10,
+      "decisionAccuracy": 100,
+      "decisionWilson95": [
+        72.25,
+        100
+      ],
+      "tp": 3,
+      "fp": 0,
+      "fn": 0,
+      "tn": 7,
+      "precision": 100,
+      "precisionWilson95": [
+        43.85,
+        100
+      ],
+      "recall": 100,
+      "recallWilson95": [
+        43.85,
+        100
+      ],
+      "falsePositiveRate": 0
+    }
+  },
+  "failures": [],
+  "results": [
+    {
+      "id": "SEC002-executable",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC002-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC002-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC002-string",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC002-template",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC002-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC002-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC002-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC002-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC002-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC002",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-executable",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC003-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-string",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-template",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC003-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC003-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC003-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC003",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-executable",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC004-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-string",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-template",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC004-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC004-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC004-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC004",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-executable",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC007-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-string",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-template",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC007-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC007-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC007-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC007",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-executable",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC010-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-string",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-template",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC010-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC010-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC010-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC010",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-executable",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC012-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-string",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-template",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC012-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC012-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC012-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC012",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-executable",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC013-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-string",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-template",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC013-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC013-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC013-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC013",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-executable",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC024-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-string",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-template",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC024-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC024-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC024-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC024",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-executable",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC025-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-string",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-template",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC025-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC025-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC025-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC025",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-executable",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC026-line-comment",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "line-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-block-comment",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-string",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-template",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "template",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-after-string-marker",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC026-template-expression",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "template-expression",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "SEC026-test-scope",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "test-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-vendor-scope",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "vendor-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "SEC026-generated-scope",
+      "ecosystem": "javascript",
+      "family": "SEC026",
+      "scenario": "generated-scope",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "c-executable",
+      "ecosystem": "c",
+      "family": "SEC020",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "c-string",
+      "ecosystem": "c",
+      "family": "SEC020",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "c-inline-comment",
+      "ecosystem": "c",
+      "family": "SEC020",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "c-block-comment",
+      "ecosystem": "c",
+      "family": "SEC020",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "c-after-string-marker",
+      "ecosystem": "c",
+      "family": "SEC020",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "cpp-executable",
+      "ecosystem": "cpp",
+      "family": "SEC020",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "cpp-string",
+      "ecosystem": "cpp",
+      "family": "SEC020",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "cpp-inline-comment",
+      "ecosystem": "cpp",
+      "family": "SEC020",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "cpp-block-comment",
+      "ecosystem": "cpp",
+      "family": "SEC020",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "cpp-after-string-marker",
+      "ecosystem": "cpp",
+      "family": "SEC020",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "java-executable",
+      "ecosystem": "java",
+      "family": "SEC019",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "java-string",
+      "ecosystem": "java",
+      "family": "SEC019",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "java-inline-comment",
+      "ecosystem": "java",
+      "family": "SEC019",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "java-block-comment",
+      "ecosystem": "java",
+      "family": "SEC019",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "java-after-string-marker",
+      "ecosystem": "java",
+      "family": "SEC019",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "go-executable",
+      "ecosystem": "go",
+      "family": "SEC022",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "go-string",
+      "ecosystem": "go",
+      "family": "SEC022",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "go-inline-comment",
+      "ecosystem": "go",
+      "family": "SEC022",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "go-block-comment",
+      "ecosystem": "go",
+      "family": "SEC022",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "go-after-string-marker",
+      "ecosystem": "go",
+      "family": "SEC022",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "rust-executable",
+      "ecosystem": "rust",
+      "family": "SEC020",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "rust-string",
+      "ecosystem": "rust",
+      "family": "SEC020",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "rust-inline-comment",
+      "ecosystem": "rust",
+      "family": "SEC020",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "rust-block-comment",
+      "ecosystem": "rust",
+      "family": "SEC020",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "rust-after-string-marker",
+      "ecosystem": "rust",
+      "family": "SEC020",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "php-executable",
+      "ecosystem": "php",
+      "family": "SEC017",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "php-string",
+      "ecosystem": "php",
+      "family": "SEC017",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "php-inline-comment",
+      "ecosystem": "php",
+      "family": "SEC017",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "php-block-comment",
+      "ecosystem": "php",
+      "family": "SEC017",
+      "scenario": "block-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "php-after-string-marker",
+      "ecosystem": "php",
+      "family": "SEC017",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "python-SEC015-executable",
+      "ecosystem": "python",
+      "family": "SEC015",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "python-SEC015-string",
+      "ecosystem": "python",
+      "family": "SEC015",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "python-SEC015-inline-comment",
+      "ecosystem": "python",
+      "family": "SEC015",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "python-SEC015-docstring",
+      "ecosystem": "python",
+      "family": "SEC015",
+      "scenario": "docstring",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "python-SEC015-after-string-marker",
+      "ecosystem": "python",
+      "family": "SEC015",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "python-SEC016-executable",
+      "ecosystem": "python",
+      "family": "SEC016",
+      "scenario": "executable",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    },
+    {
+      "id": "python-SEC016-string",
+      "ecosystem": "python",
+      "family": "SEC016",
+      "scenario": "string",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "python-SEC016-inline-comment",
+      "ecosystem": "python",
+      "family": "SEC016",
+      "scenario": "inline-comment",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "python-SEC016-docstring",
+      "ecosystem": "python",
+      "family": "SEC016",
+      "scenario": "docstring",
+      "expected": false,
+      "actual": false,
+      "passed": true
+    },
+    {
+      "id": "python-SEC016-after-string-marker",
+      "ecosystem": "python",
+      "family": "SEC016",
+      "scenario": "after-string-marker",
+      "expected": true,
+      "actual": true,
+      "passed": true
+    }
+  ]
+}

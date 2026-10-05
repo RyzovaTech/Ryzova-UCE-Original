@@ -32,7 +32,9 @@
     "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check",
     "audit:accuracy:scopes": "node testing/accuracy/scope.mjs --check",
     "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs",
-    "test:evidence": "node --test testing/evidence/phase2.test.mjs"
+    "test:evidence": "node --test testing/evidence/phase2.test.mjs",
+    "audit:accuracy:security": "node testing/security/false-positive.mjs --check",
+    "test:security-context": "node --test testing/security/context.test.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",
