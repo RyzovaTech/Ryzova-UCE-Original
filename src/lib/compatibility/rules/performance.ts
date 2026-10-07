@@ -1,5 +1,6 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
+import { isProjectEvidenceFile } from '../../analyzer/project-scope';
 import { readFile } from './shared';
 
 export const performanceRules: CompatibilityRule[] = [
@@ -263,7 +264,7 @@ export const performanceRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       const htmlFiles = ctx.files.filter(
-        (f) => !f.isDirectory && f.content && /\.html$/i.test(f.path)
+        (f) => isProjectEvidenceFile(f) && f.content && /\.html$/i.test(f.path)
       );
       for (const file of htmlFiles) {
         if (!file.content) continue;
@@ -296,7 +297,7 @@ export const performanceRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       const htmlFiles = ctx.files.filter(
-        (f) => !f.isDirectory && f.content && /\.html$/i.test(f.path)
+        (f) => isProjectEvidenceFile(f) && f.content && /\.html$/i.test(f.path)
       );
       for (const file of htmlFiles) {
         if (!file.content) continue;

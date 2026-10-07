@@ -1,5 +1,6 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
+import { findEvidenceFile } from './shared';
 import { classifyProjectFileScope } from '../../analyzer/project-scope';
 
 function hasPath(ctx: import('../types').RuleContext, candidates: string[]): boolean {
@@ -66,11 +67,13 @@ export const extendedStructureRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.language !== 'JavaScript' && ctx.stack.language !== 'TypeScript') return issues;
-      const pkgFile = ctx.files.find((f) => f.path === 'package.json' || f.path.endsWith('/package.json'));
+      const pkgFile = findEvidenceFile(ctx, 'package.json');
       if (!pkgFile || !pkgFile.content) return issues;
       try {
         const p = JSON.parse(pkgFile.content);
-        if (!p.main && !p.module && !p.exports && !p.bin) {
+        const directory = pkgFile.path.slice(0, -'package.json'.length);
+        const defaultEntry = ctx.files.some(file => !file.isDirectory && file.path === directory + 'index.js');
+        if (!p.main && !p.module && !p.exports && !p.bin && !defaultEntry) {
           issues.push({
             id: 'pkg-entry-point-missing',
             title: 'package.json has no entry point (main/module/exports/bin)',

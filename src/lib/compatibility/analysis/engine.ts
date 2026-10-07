@@ -1,5 +1,6 @@
 import type { CategoryId, CategoryResult, CategoryStatus, Issue, Language, ProjectFile } from '../../analyzer/types';
 import type { RuleContext } from '../types';
+import { hasEslintConfig } from '../rules/shared';
 import { ALL_RULES } from '../rules';
 import { CATEGORIES } from '../categories';
 
@@ -57,16 +58,6 @@ function packageJson(ctx: RuleContext): Record<string, unknown> | null {
   } catch {
     return null;
   }
-}
-
-function hasEslintConfig(ctx: RuleContext): boolean {
-  return ctx.files.some((f) => {
-    if (f.isDirectory) return false;
-    const base = fileBase(f.path);
-    return base === '.eslintrc' ||
-      /^\.eslintrc\.(json|js|cjs|mjs)$/i.test(base) ||
-      /^eslint\.config\.(js|mjs|cjs|ts|mts|cts)$/i.test(base);
-  });
 }
 
 function hasCiWorkflow(ctx: RuleContext): boolean {

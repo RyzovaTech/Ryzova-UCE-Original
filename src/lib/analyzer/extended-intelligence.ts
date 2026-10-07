@@ -1,8 +1,9 @@
+import { maskRustTestModules } from './rust-evidence';
 import { maskPythonProse, pythonMetadataValue, pythonVersionRequirement } from './python-evidence';
 import type { ExtendedIntelligence, ExtendedIntelligenceModuleId, IntelligenceModuleFinding, IntelligenceModuleResult, ProjectFile, TechnologyStack } from './types';
 import { classifyProjectFileScope } from './project-scope';
 
-const VERSION = '3.5.1';
+const VERSION = '3.5.2';
 const sourceRe = /\.(?:[cm]?[jt]sx?|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|cpp|c|h|vue|svelte)$/i;
 const text = (files: ProjectFile[], pattern: RegExp): string => files.filter((file) => !file.isDirectory && pattern.test(file.path)).map((file) => file.content ?? '').join('\n');
 const paths = (files: ProjectFile[]): string[] => files.filter((file) => !file.isDirectory).map((file) => file.path.replace(/\\/g, '/'));
@@ -55,7 +56,7 @@ function platformModule(files: ProjectFile[], stack: TechnologyStack): Intellige
   for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) {
     if (stack.architecture?.primary === 'Operating System Kernel') break;
     const original = file.content ?? '';
-    const source = /\.py$/i.test(file.path) ? maskPythonProse(original) : original;
+    const source = /\.py$/i.test(file.path) ? maskPythonProse(original) : /\.rs$/i.test(file.path) ? maskRustTestModules(original) : original;
     const pattern = /\.py$/i.test(file.path)
       ? /(?:\b(?:open|Path)\s*\(\s*["'](?:[A-Z]:\\|\/tmp\/)|\bsubprocess\.(?:run|Popen|call|check_output)\s*\(\s*(?:\[\s*)?["'](?:cmd\.exe|powershell\.exe))/i
       : /(?:["'](?:[A-Z]:\\|\/tmp\/)|\b(?:cmd\.exe|powershell\.exe)\b)/i;
@@ -75,9 +76,19 @@ function buildModule(files: ProjectFile[], stack: TechnologyStack): Intelligence
   return result('build', 'Build Intelligence', `Primary build tool: ${stack.buildTool}.`, [...primaryEvidence, ...evidence], findings, { tools: evidence.length });
 }
 
+function hasNpmCoverageCommand(files: ProjectFile[]): boolean {
+  return productionFiles(files).filter(file => /(?:^|\/)package\.json$/.test(file.path)).some(file => {
+    try {
+      const scripts = JSON.parse(file.content ?? '{}').scripts;
+      if (!scripts || typeof scripts !== 'object' || Array.isArray(scripts)) return false;
+      return Object.values(scripts).some(command => typeof command === 'string' && /(?:^|&&\s*|;\s*|\|\|\s*)(?:npx\s+)?(?:nyc|c8)(?=\s|$)/.test(command));
+    } catch { return false; }
+  });
+}
+
 function testingModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const all = paths(files); const sourceCount = all.filter((path) => sourceRe.test(path) && classifyProjectFileScope(path) === 'production').length; const testCount = all.filter((path) => classifyProjectFileScope(path) === 'test' && sourceRe.test(path)).length;
-  const frameworks = [...new Map([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => [item.name.toLowerCase(), item.name])).values()]; const coverage = all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
+  const frameworks = [...new Map([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => [item.name.toLowerCase(), item.name])).values()]; const coverage = hasNpmCoverageCommand(files) || all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
   const findings: IntelligenceModuleFinding[] = []; if (sourceCount >= 5 && testCount === 0) findings.push(finding('TST001', 'No test source files detected', 'warning', 88, `${sourceCount} production source files and no test files were found.`, 'Add automated tests for critical behavior.')); if (testCount > 0 && !coverage) findings.push(finding('TST002', 'Coverage readiness not detected', 'info', 70, 'Tests exist but no coverage configuration or command was recognized.', 'Add coverage reporting with an appropriate threshold.'));
   return result('testing', 'Testing Intelligence', `${testCount} test files across ${frameworks.length} detected frameworks.`, frameworks.map((name) => `Testing framework: ${name}`), findings, { sourceFiles: sourceCount, testFiles: testCount, coverageReady: coverage });
 }
