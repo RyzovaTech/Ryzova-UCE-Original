@@ -1,6 +1,6 @@
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
-import { readFile } from './shared';
+import { readFile, hasEslintConfig } from './shared';
 
 export const extendedConfigurationRules: CompatibilityRule[] = [
   {
@@ -77,12 +77,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
       if (ctx.stack.language !== 'TypeScript' && ctx.stack.language !== 'JavaScript') return issues;
       const pkg = readFile(ctx, 'package.json') ?? '';
       if (/"(?:xo|standard|@biomejs\/biome|oxlint)"\s*:/.test(pkg)) return issues;
-      const hasEslint = ctx.detectedFiles.some((f) =>
-        f.path === '.eslintrc' || f.path.endsWith('/.eslintrc') ||
-        f.path.endsWith('.eslintrc.json') || f.path.endsWith('.eslintrc.js') ||
-        f.path.endsWith('.eslintrc.cjs') || f.path.endsWith('.eslintrc.mjs') ||
-        f.path === 'eslint.config.js' || f.path === 'eslint.config.mjs'
-      );
+      const hasEslint = hasEslintConfig(ctx);
       if (!hasEslint) {
         issues.push({
           id: 'eslint-config-missing',

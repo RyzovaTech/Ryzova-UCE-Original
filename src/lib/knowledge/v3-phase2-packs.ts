@@ -6,7 +6,7 @@ import type {
 /** Phase 2 contributes 2,995 rules; together with the five bootstrap rules the public inventory is exactly 3,000. */
 export const V3_PHASE2_RULE_TARGET = 2_995;
 export const V3_TOTAL_CORE_RULE_TARGET = 3_000;
-export const V3_PHASE2_KNOWLEDGE_VERSION = '3.1.1';
+export const V3_PHASE2_KNOWLEDGE_VERSION = '3.1.2';
 
 type DependencyEcosystem = V3DependencyDetector['ecosystems'][number];
 interface CompiledRule { group: string; rule: V3Rule }
@@ -144,10 +144,10 @@ function technologyDetectors(definition: TechnologyDefinition): V3Detector[] {
   if (definition.dependencies?.length) detectors.push({ kind: 'dependency', ecosystems: ['npm'], names: [...definition.dependencies] });
   for (const item of definition.ecosystemDependencies ?? []) detectors.push({ kind: 'dependency', ecosystems: [item.ecosystem as DependencyEcosystem], names: [item.name] });
   if (definition.files?.length) detectors.push({ kind: 'config', files: definition.files.flatMap(fileGlobs), operator: 'exists' });
-  if (definition.filePrefixes?.length) detectors.push({ kind: 'regex', include: definition.filePrefixes.flatMap((item) => [item + '*', `**/${item}*`]), pattern: '\\S' });
+  if (definition.filePrefixes?.length) detectors.push({ kind: 'config', files: definition.filePrefixes.flatMap((item) => [item + '*', `**/${item}*`]), operator: 'exists' });
   for (const signature of definition.manifestPatterns ?? []) detectors.push({ kind: 'config', files: signature.files.flatMap(fileGlobs), operator: 'matches', pattern: signature.pattern.source });
   const pathGlobs = PATH_GLOBS[definition.id];
-  if (pathGlobs) detectors.push({ kind: 'regex', include: pathGlobs, pattern: '\\S' });
+  if (pathGlobs) detectors.push({ kind: 'config', files: pathGlobs, operator: 'exists' });
   return detectors;
 }
 
