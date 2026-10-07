@@ -1,6 +1,7 @@
 import { isTypeCheckingImport, maskPythonText } from './python-evidence';
 import type { ApiEndpoint, CallRelationship, CodeIntelligence, CodeSymbol, ComplexitySignal, DependencyEdge, DuplicateCodeSignal, ModuleBoundarySignal, ProjectFile } from './types';
 import { API_ROUTE_RULES } from './api-knowledge';
+import { securityContext } from './security-context';
 import { isProjectEvidenceFile } from './project-scope';
 
 type SymbolKind = CodeSymbol['kind'];
@@ -21,6 +22,22 @@ const IMPORT_RE = /(?:import\s+(?:[\s\S]*?\s+from\s+)?|export\s+(?:[\s\S]*?\s+fr
 const SYMBOL_PATTERNS: Array<[SymbolKind, RegExp]> = [
   ['function', /\b(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/g], ['class', /\bclass\s+([A-Za-z_$][\w$]*)/g], ['interface', /\binterface\s+([A-Za-z_$][\w$]*)/g], ['type', /\btype\s+([A-Za-z_$][\w$]*)\s*=/g], ['enum', /\benum\s+([A-Za-z_$][\w$]*)/g], ['component', /\b(?:const|function)\s+([A-Z][A-Za-z0-9_$]*)/g],
 ];
+/** Offset-preserving lexical evidence; retained line numbers refer to the original source. */
+function codeEvidence(source: string, path: string): string {
+  if (/\.py$/i.test(path)) return maskPythonText(source);
+  const context = securityContext(source, path);
+  if (!context?.spans.length) return source;
+  const chars = source.split('');
+  for (const span of context.spans) for (let i = span.start; i < span.end; i++) if (chars[i] !== '\n' && chars[i] !== '\r') chars[i] = ' ';
+  return chars.join('');
+}
+function symbolPatterns(path: string): Array<[SymbolKind, RegExp]> {
+  if (/\.py$/i.test(path)) return [['function', /^[ \t]*(?:async[ \t]+)?def[ \t]+([A-Za-z_]\w*)/gm], ['class', /^[ \t]*class[ \t]+([A-Za-z_]\w*)/gm]];
+  if (/\.rs$/i.test(path)) return [['function', /\bfn\s+([A-Za-z_]\w*)/g], ['class', /\bstruct\s+([A-Za-z_]\w*)/g], ['interface', /\btrait\s+([A-Za-z_]\w*)/g], ['enum', /\benum\s+([A-Za-z_]\w*)/g], ['type', /\btype\s+([A-Za-z_]\w*)\s*=/g]];
+  if (/\.go$/i.test(path)) return [['function', /\bfunc\s+(?:\([^)]*\)\s*)?([A-Za-z_]\w*)\s*\(/g], ['type', /\btype\s+([A-Za-z_]\w*)/g]];
+  if (/\.(?:c|cc|cpp|h|hpp)$/i.test(path)) return [['function', /^[ \t]*(?:[A-Za-z_]\w*[ \t*]+)+([A-Za-z_]\w*)\s*\([^;{}]*\)\s*\{/gm], ['class', /\b(?:struct|class)\s+([A-Za-z_]\w*)\s*\{/g], ['enum', /\benum\s+([A-Za-z_]\w*)\s*\{/g]];
+  return SYMBOL_PATTERNS;
+}
 function lineAt(source: string, offset: number): number { return source.slice(0, offset).split('\n').length; }
 function isSource(file: ProjectFile): boolean { return !file.isDirectory && SOURCE_RE.test(file.path) && isProjectEvidenceFile(file); }
 function normalizeRoute(route: string): string { const value = route.startsWith('/') ? route : `/${route}`; return value.replace(/\[(?:\.\.\.)?([^\]]+)\]/g, ':$1').replace(/\/+/g, '/'); }
@@ -73,9 +90,9 @@ function findCycles(edges: DependencyEdge[]): string[][] {
 export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
   const sourceFiles = files.filter(isSource); const symbols: CodeSymbol[] = []; const dependencyEdges: DependencyEdge[] = []; const apiEndpoints: ApiEndpoint[] = []; const architectureAreas: Record<string, string[]> = {}; const largeFiles: Array<{ file: string; lines: number }> = []; const largeFunctions: Array<{ file: string; name: string; line: number; lines?: number }> = []; const largeClasses: Array<{ file: string; name: string; line: number; lines: number }> = []; const complexity: ComplexitySignal[] = []; let todoCount = 0; let fixmeCount = 0;
   for (const file of sourceFiles) {
-    const source = /\.py$/i.test(file.path) ? maskPythonText(file.content ?? '') : file.content ?? ''; const lines = source ? source.split('\n').length : 0; const area = areaFor(file.path); (architectureAreas[area] ??= []).push(file.path); if (lines >= 500) largeFiles.push({ file: file.path, lines });
-    for (const [kind, regex] of (/\.py$/i.test(file.path) ? [['function', /^[ \t]*(?:async[ \t]+)?def[ \t]+([A-Za-z_]\w*)/gm], ['class', /^[ \t]*class[ \t]+([A-Za-z_]\w*)/gm]] as Array<[SymbolKind, RegExp]> : SYMBOL_PATTERNS)) { regex.lastIndex = 0; let match: RegExpExecArray | null; while ((match = regex.exec(source))) { const name = match[1]; if (kind === 'component' && symbols.some((s) => s.name === name && s.file === file.path)) continue; const before = source.slice(Math.max(0, match.index - 30), match.index); const exported = /\bexport\s*$/.test(before) || new RegExp(`\\bexport\\s+(?:default\\s+)?(?:async\\s+)?(?:function|class|const|interface|type|enum)\\s+${name}`).test(source); const line = lineAt(source, match.index); symbols.push({ name, kind, file: file.path, line, exported }); if (kind === 'function' || kind === 'class' || kind === 'component') { const end = /\.py$/i.test(file.path) ? undefined : blockEnd(source, match.index); const span = end === undefined ? undefined : lineAt(source, end) - line + 1; if (kind === 'class' && span && span >= 150) largeClasses.push({ file: file.path, name, line, lines: span }); else if (kind !== 'class' && span && span >= 80) largeFunctions.push({ file: file.path, name, line, lines: span }); if (end !== undefined) { const score = complexityFor(source, match.index, end); if (score.cyclomatic >= 10 || score.cognitive >= 12) complexity.push({ file: file.path, symbol: name, line, ...score }); } } } }
-    IMPORT_RE.lastIndex = 0; let importMatch: RegExpExecArray | null; while ((importMatch = IMPORT_RE.exec(source))) { const target = normalizeTarget(file.path, importMatch[2], files); if (target) dependencyEdges.push({ from: file.path, to: target, kind: source.slice(importMatch.index, importMatch.index + 10).includes('require') ? 'require' : source.slice(importMatch.index, importMatch.index + 10).includes('import(') ? 'dynamic-import' : 'import' }); }
+    const source = codeEvidence(file.content ?? '', file.path); const lines = source ? source.split('\n').length : 0; const area = areaFor(file.path); (architectureAreas[area] ??= []).push(file.path); if (lines >= 500) largeFiles.push({ file: file.path, lines });
+    for (const [kind, regex] of symbolPatterns(file.path)) { regex.lastIndex = 0; let match: RegExpExecArray | null; while ((match = regex.exec(source))) { const name = match[1]; if (kind === 'component' && symbols.some((s) => s.name === name && s.file === file.path)) continue; const before = source.slice(Math.max(0, match.index - 30), match.index); const exported = /\bexport\s*$/.test(before) || new RegExp(`\\bexport\\s+(?:default\\s+)?(?:async\\s+)?(?:function|class|const|interface|type|enum)\\s+${name}`).test(source); const line = lineAt(source, match.index); symbols.push({ name, kind, file: file.path, line, exported }); if (kind === 'function' || kind === 'class' || kind === 'component') { const end = /\.py$/i.test(file.path) ? undefined : blockEnd(source, match.index); const span = end === undefined ? undefined : lineAt(source, end) - line + 1; if (kind === 'class' && span && span >= 150) largeClasses.push({ file: file.path, name, line, lines: span }); else if (kind !== 'class' && span && span >= 80) largeFunctions.push({ file: file.path, name, line, lines: span }); if (end !== undefined) { const score = complexityFor(source, match.index, end); if (score.cyclomatic >= 10 || score.cognitive >= 12) complexity.push({ file: file.path, symbol: name, line, ...score }); } } } }
+    IMPORT_RE.lastIndex = 0; let importMatch: RegExpExecArray | null; while ((importMatch = IMPORT_RE.exec(file.content ?? ''))) { if (!source.slice(importMatch.index, importMatch.index + 1).trim()) continue; const target = normalizeTarget(file.path, importMatch[2], files); if (target) dependencyEdges.push({ from: file.path, to: target, kind: source.slice(importMatch.index, importMatch.index + 10).includes('require') ? 'require' : source.slice(importMatch.index, importMatch.index + 10).includes('import(') ? 'dynamic-import' : 'import' }); }
     if (/\.py$/i.test(file.path)) {
       for (const match of source.matchAll(/^[ \t]*(?:from[ \t]+([.\w]+)[ \t]+import[ \t]+([^\n]+)|import[ \t]+([\w.]+))/gm)) {
         if (isTypeCheckingImport(source, match.index)) continue;
@@ -97,8 +114,8 @@ export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
       }
     }
     apiEndpoints.push(...fileRoutes(file, source));
-    for (const rule of API_ROUTE_RULES) { if (!API_ROUTE_LANGUAGE[rule.framework]?.test(file.path)) continue; const regex = new RegExp(rule.pattern.source, rule.pattern.flags); let match: RegExpExecArray | null; while ((match = regex.exec(file.content ?? ''))) { if (/\.py$/i.test(file.path) && !source.slice(match.index, match.index + 1).trim()) continue; const route = match[1]; if (!route) continue; apiEndpoints.push({ method: rule.method, route: normalizeRoute(route), file: file.path, line: lineAt(source, match.index), framework: rule.framework, confidence: rule.confidence }); } }
-    todoCount += (source.match(/\bTODO\b/gi) ?? []).length; fixmeCount += (source.match(/\bFIXME\b/gi) ?? []).length;
+    for (const rule of API_ROUTE_RULES) { if (!API_ROUTE_LANGUAGE[rule.framework]?.test(file.path)) continue; const regex = new RegExp(rule.pattern.source, rule.pattern.flags); let match: RegExpExecArray | null; while ((match = regex.exec(file.content ?? ''))) { if (!source.slice(match.index, match.index + 1).trim()) continue; const route = match[1]; if (!route) continue; apiEndpoints.push({ method: rule.method, route: normalizeRoute(route), file: file.path, line: lineAt(source, match.index), framework: rule.framework, confidence: rule.confidence }); } }
+    todoCount += ((/\.py$/i.test(file.path) ? source : file.content ?? '').match(/\bTODO\b/gi) ?? []).length; fixmeCount += ((/\.py$/i.test(file.path) ? source : file.content ?? '').match(/\bFIXME\b/gi) ?? []).length;
   }
   const uniqueEdges = Array.from(new Map(dependencyEdges.map((edge) => [`${edge.from}|${edge.to}|${edge.kind}`, edge])).values());
   const entryPoints = sourceFiles.filter((file) => /(^|\/)(main|index|app|server|cli|start|__init__|__main__)\.(tsx?|jsx?|mjs|cjs|py|go|rs|java|kt)$/i.test(file.path)).map((file) => file.path).slice(0, 20); const circularDependencies = findCycles(uniqueEdges);
@@ -106,7 +123,7 @@ export function detectCodeIntelligence(files: ProjectFile[]): CodeIntelligence {
   const referenced = new Set(uniqueEdges.map((edge) => edge.to));
   const unreferencedModules = sourceFiles.map((file) => file.path).filter((path) => /\.[cm]?[jt]sx?$/i.test(path) && !referenced.has(path) && !entryPoints.includes(path) && !/(?:^|\/)(?:vite|webpack|rollup|eslint|jest|vitest|playwright|cypress)\.config\./i.test(path)).slice(0, 100);
   const moduleBoundarySignals: ModuleBoundarySignal[] = uniqueEdges.flatMap((edge) => { const fromArea = areaFor(edge.from); const toArea = areaFor(edge.to); return (fromArea === 'Frontend' && toArea === 'Backend') || (fromArea === 'Core' && toArea === 'Testing') ? [{ from: edge.from, to: edge.to, fromArea, toArea }] : []; }).slice(0, 50);
-  const callRelationships = sourceFiles.filter(file => /\.[cm]?[jt]sx?$/i.test(file.path)).flatMap((file) => callGraph(file.content ?? '', file.path, symbols)).slice(0, 3000);
+  const callRelationships = sourceFiles.filter(file => /\.[cm]?[jt]sx?$/i.test(file.path)).flatMap((file) => callGraph(codeEvidence(file.content ?? '', file.path), file.path, symbols)).slice(0, 3000);
   const duplicateCode = duplicateSignals(sourceFiles);
   const parserCoverage = sourceFiles.reduce<Record<string, number>>((result, file) => { const family = parserFamily(file.path); result[family] = (result[family] ?? 0) + 1; return result; }, {});
   const technicalDebtScore = Math.min(100, Math.round(todoCount * .25 + fixmeCount + circularDependencies.length * 5 + largeFiles.length * 2 + largeFunctions.length * 1.5 + largeClasses.length * 2 + complexity.length * 1.5 + duplicateCode.length * 2 + moduleBoundarySignals.length * 2));

@@ -42,12 +42,17 @@ export interface ReportReviewState {
 }
 
 export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFinding[] {
-  const findings: WorkspaceFinding[] = report.issues.filter((item) => !item.id.startsWith('security-intelligence-')).map((item) => ({
+  // Batch issues mirror canonical module findings. Preserve orphaned issues in older reports.
+  const mirrored = new Set([
+    ...(report.stack.securityIntelligence?.findings ?? []).map(item => `batch-security:${item.id}`),
+    ...(report.stack.browserCompatibility?.findings ?? []).map(item => `batch-browser:${item.file}:${item.id}:${item.affectedBrowsers.join(',')}`),
+  ]);
+  const findings: WorkspaceFinding[] = report.issues.filter((item) => !item.id.startsWith('security-intelligence-') && !mirrored.has(item.id)).map((item) => ({
     id: `compatibility:${item.id}`,
     title: item.title,
     severity: item.severity,
     module: item.category,
-    file: item.affectedFile,
+    ...issueLocation(item.affectedFile),
     description: item.description,
     evidence: item.reason,
     recommendation: item.suggestedAction || item.recommendation,
@@ -169,3 +174,10 @@ export function compatibleProjectReports(current: AnalysisResult, reports: Analy
 
 function normalize(value: string): string { return value.trim().toLowerCase().replace(/\\/g, '/').replace(/\s+/g, ' '); }
 function severityRank(value: Severity): number { return value === 'critical' ? 0 : value === 'warning' ? 1 : 2; }
+
+/** Legacy issues encode a line after the path; do not strip drive letters or numeric basenames. */
+function issueLocation(value: string): { file: string; line?: number } {
+  const match = /^(.*\.[^/\\:]+):(\d+)$/.exec(value);
+  const line = match ? Number(match[2]) : 0;
+  return match && Number.isSafeInteger(line) && line > 0 ? { file: match[1], line } : { file: value };
+}

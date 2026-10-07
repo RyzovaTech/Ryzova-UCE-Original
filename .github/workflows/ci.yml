@@ -34,6 +34,9 @@ jobs:
       - name: Knowledge regression tests
         run: npm test
 
+      - name: Batch report and native symbol regression tests
+        run: npm run test:report-regressions
+
       - name: Structured declaration and AST evidence regression tests
         run: npm run test:evidence
 

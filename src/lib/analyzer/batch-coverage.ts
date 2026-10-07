@@ -1,6 +1,7 @@
 import type { AnalysisResult, Issue, ProjectFile } from './types';
 import { detectBrowserCompatibility } from './browser-compatibility';
 import { detectSecurityIntelligence, summarizeSecurityFindings } from './security-intelligence';
+import { buildCorrelatedInsights } from './correlated-intelligence';
 import { BROWSER_FEATURES } from './browser-knowledge';
 
 export interface BatchFindingLimits { security: number; browser: number }
@@ -88,7 +89,14 @@ export function finishBatchCoverage(result: AnalysisResult, progress: {
   stats.sampled = core.sampled || !completeInventory;
   stats.truncated = partial;
   stats.truncationReason = partial ? extras : undefined;
-  result.notes = result.notes.filter(note => !note.startsWith('Batch coverage:'));
+  result.stack.intelligenceInsights = buildCorrelatedInsights(result.stack);
+  result.notes = result.notes.filter(note => !['Batch coverage:', 'Security intelligence:', 'Browser compatibility:', 'Correlated intelligence:'].some(prefix => note.startsWith(prefix)) &&
+    !(note === 'All deterministic compatibility checks passed. No compatibility action is required.' && (partial || result.issues.length > 0)));
+  const security = result.stack.securityIntelligence;
+  if (security) result.notes.push(`Security intelligence: ${security.findings.length} finding${security.findings.length === 1 ? '' : 's'}; static security score ${security.score}%.`);
+  const browser = result.stack.browserCompatibility;
+  if (browser) result.notes.push(browser.filesScanned === 0 ? 'Browser compatibility: not applicable to analyzed files; no browser source files checked.' : `Browser compatibility: ${browser.findings.length} compatibility finding${browser.findings.length === 1 ? '' : 's'}; score ${browser.score}%.`);
+  if (result.stack.intelligenceInsights.length) result.notes.push(`Correlated intelligence: ${result.stack.intelligenceInsights.length} prioritized cross-engine insights.`);
   result.notes.push(`Batch coverage: ${extras}`);
   const coverage = result.summary.analysisCoverage;
   if (coverage) {
