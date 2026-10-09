@@ -135,6 +135,8 @@ export const extendedDependencyRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.packageManager !== 'composer') return issues;
+      const manifest = readFile(ctx, 'composer.json');
+      try { if (manifest && JSON.parse(manifest)?.config?.lock === false) return issues; } catch { /* Invalid manifests cannot establish an opt-out. */ }
       if (!ctx.detectedFiles.some((f) => f.path.endsWith('composer.lock'))) {
         issues.push({
           id: 'composer-lock-missing',

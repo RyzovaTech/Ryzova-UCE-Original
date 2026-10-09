@@ -181,7 +181,7 @@ const TEXT_BASENAMES = new Set([
   '.babelrc', 'pipfile', 'pipfile.lock', 'requirements.txt', 'requirements-dev.txt',
   'setup.py', 'setup.cfg', 'go.mod', 'go.sum', 'cargo.toml', 'cargo.lock',
   'pom.xml', 'build.gradle', 'build.gradle.kts', 'settings.gradle',
-  'gradle.properties', 'composer.json', 'composer.lock',
+  'gradle.properties', 'composer.json', 'composer.lock', 'phpunit.xml.dist',
   'mix.exs', 'mix.lock', 'pubspec.yaml', 'pubspec.lock',
   'build.sbt', 'packages.config',
 ]);

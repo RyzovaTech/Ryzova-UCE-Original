@@ -213,7 +213,7 @@ test('unknown categories do not become urgent recommendations', () => {
 });
 test('V3 scans invalidate cached V2 results', () => {
   const key = fingerprintAnalysisInput({ files: [file('package.json', '{}')], fileName: 'slugify', source: 'github', scanStats: { projectSize: 2, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] } });
-  assert.match(key, /^uce19-/);
+  assert.match(key, /^uce20-/);
 });
 test('missing project evidence still generates relevant advisories', () => {
   const files = [
@@ -1013,7 +1013,7 @@ const extendedStack = {
 };
 test('Phase 3.5 exposes every planned intelligence module', () => {
   const intelligence = detectExtendedIntelligence([file('src/app.ts', 'export const app = 1')], extendedStack);
-  assert.equal(Object.keys(intelligence.modules).length, 14); assert.equal(intelligence.version, '3.5.2'); assert.ok(intelligence.overallScore >= 0);
+  assert.equal(Object.keys(intelligence.modules).length, 14); assert.equal(intelligence.version, '3.5.3'); assert.ok(intelligence.overallScore >= 0);
   for (const id of ['project', 'runtime', 'platform', 'build', 'testing', 'performance', 'accessibility', 'api', 'database', 'environment', 'license', 'documentation', 'maintainability', 'repository']) assert.equal(intelligence.modules[id].id, id);
 });
 test('accessibility intelligence finds deterministic HTML and JSX problems', () => {
@@ -1327,7 +1327,7 @@ await asyncTest('archive worker indexes and analyzes without sending source cont
     assert.equal(message.result.summary.name, 'sample-project');
     assert.equal(message.result.summary.scanStats.filesFound, 3);
     assert.equal(message.result.trust.execution.worker, true);
-    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce19-')));
+    assert.ok(messages.some((item) => item.type === 'prepared' && item.cacheKey.startsWith('uce20-')));
     assert.ok(messages.some((item) => item.type === 'preview'));
     assert.ok(messages.every((item) => !('files' in item) && !('input' in item)));
   } finally {

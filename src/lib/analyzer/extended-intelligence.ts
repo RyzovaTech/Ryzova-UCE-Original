@@ -1,9 +1,10 @@
+import { securityContext } from './security-context';
 import { maskRustTestModules } from './rust-evidence';
 import { maskPythonProse, pythonMetadataValue, pythonVersionRequirement } from './python-evidence';
 import type { ExtendedIntelligence, ExtendedIntelligenceModuleId, IntelligenceModuleFinding, IntelligenceModuleResult, ProjectFile, TechnologyStack } from './types';
 import { classifyProjectFileScope } from './project-scope';
 
-const VERSION = '3.5.2';
+const VERSION = '3.5.3';
 const sourceRe = /\.(?:[cm]?[jt]sx?|py|java|kt|kts|go|rs|php|rb|ex|exs|dart|swift|scala|cs|cpp|c|h|vue|svelte)$/i;
 const text = (files: ProjectFile[], pattern: RegExp): string => files.filter((file) => !file.isDirectory && pattern.test(file.path)).map((file) => file.content ?? '').join('\n');
 const paths = (files: ProjectFile[]): string[] => files.filter((file) => !file.isDirectory).map((file) => file.path.replace(/\\/g, '/'));
@@ -49,6 +50,25 @@ function runtimeModule(files: ProjectFile[], stack: TechnologyStack): Intelligen
   return result('runtime', 'Runtime Intelligence', `${evidence.length} runtime/version signals analyzed.`, evidence, findings, { runtimes: (stack.runtimes ?? [stack.runtime]).length, versionDeclarations: Number(Boolean(engine || nodeVersion || pythonVersion)) });
 }
 
+function platformEvidence(source: string, path: string): string {
+  if (/\.py$/i.test(path)) return maskPythonProse(source);
+  const original = /\.rs$/i.test(path) ? maskRustTestModules(source) : source;
+  const chars = original.split('');
+  for (const span of securityContext(original, path)?.spans ?? []) {
+    if (span.kind !== 'comment') continue;
+    for (let i = span.start; i < span.end; i++) if (chars[i] !== '\n' && chars[i] !== '\r') chars[i] = ' ';
+  }
+  return chars.join('');
+}
+
+function hasPhpUnitCoverage(files: ProjectFile[]): boolean {
+  return productionFiles(files).some(file => {
+    if (!/(?:^|\/)phpunit\.xml(?:\.dist)?$/i.test(file.path)) return false;
+    const xml = (file.content ?? '').replace(/<!--[\s\S]*?-->/g, '').replace(/<!\[CDATA\[[\s\S]*?\]\]>/g, '');
+    return /<phpunit(?:\s|>)/i.test(xml) && /<coverage(?:\s|\/?>)/i.test(xml);
+  });
+}
+
 function platformModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const allPaths = paths(files); const evidence: string[] = []; const findings: IntelligenceModuleFinding[] = [];
   const markers: Array<[string, RegExp]> = [['Windows', /(?:^|\/)(?:[^/]+\.sln|[^/]+\.bat|[^/]+\.cmd|[^/]+\.ps1)$/i], ['Linux', /(?:^|\/)(?:Dockerfile|[^/]+\.sh)$/i], ['macOS/iOS', /(?:^|\/)(?:Podfile|[^/]+\.xcodeproj|Package\.swift)$/i], ['Android', /^(?:android\/app\/|android\/build\.gradle|app\/src\/main\/AndroidManifest\.xml$)/i]];
@@ -56,10 +76,12 @@ function platformModule(files: ProjectFile[], stack: TechnologyStack): Intellige
   for (const file of productionFiles(files).filter((item) => sourceRe.test(item.path))) {
     if (stack.architecture?.primary === 'Operating System Kernel') break;
     const original = file.content ?? '';
-    const source = /\.py$/i.test(file.path) ? maskPythonProse(original) : /\.rs$/i.test(file.path) ? maskRustTestModules(original) : original;
+    const source = platformEvidence(original, file.path);
     const pattern = /\.py$/i.test(file.path)
       ? /(?:\b(?:open|Path)\s*\(\s*["'](?:[A-Z]:\\|\/tmp\/)|\bsubprocess\.(?:run|Popen|call|check_output)\s*\(\s*(?:\[\s*)?["'](?:cmd\.exe|powershell\.exe))/i
-      : /(?:["'](?:[A-Z]:\\|\/tmp\/)|\b(?:cmd\.exe|powershell\.exe)\b)/i;
+      : /\.go$/i.test(file.path)
+        ? /(?:["'](?:[A-Z]:\\|\/tmp\/)|\bexec\.Command(?:Context\s*\(\s*[^,\n]+,|\s*\()\s*["`'](?:cmd\.exe|powershell\.exe)["`'])/i
+        : /(?:["'](?:[A-Z]:\\|\/tmp\/)|\b(?:cmd\.exe|powershell\.exe)\b)/i;
     const match = pattern.exec(source);
     if (match) findings.push(finding('OS001', 'OS-specific path or command', 'warning', 78, 'A platform-specific path or command is embedded in source.', 'Use platform APIs or configurable paths.', file.path, lineAt(original, match.index)));
   }
@@ -88,7 +110,7 @@ function hasNpmCoverageCommand(files: ProjectFile[]): boolean {
 
 function testingModule(files: ProjectFile[], stack: TechnologyStack): IntelligenceModuleResult {
   const all = paths(files); const sourceCount = all.filter((path) => sourceRe.test(path) && classifyProjectFileScope(path) === 'production').length; const testCount = all.filter((path) => classifyProjectFileScope(path) === 'test' && sourceRe.test(path)).length;
-  const frameworks = [...new Map([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => [item.name.toLowerCase(), item.name])).values()]; const coverage = hasNpmCoverageCommand(files) || all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
+  const frameworks = [...new Map([...(stack.technologyDetections ?? []), ...(stack.technologyEvidence ?? [])].filter((item) => item.kind === 'testing').map((item) => [item.name.toLowerCase(), item.name])).values()]; const coverage = hasPhpUnitCoverage(files) || hasNpmCoverageCommand(files) || all.some((path) => /(?:coverage|nyc|c8|jacoco|coverlet)/i.test(path)) || /--coverage|coverage run|pytest-cov|\[tool\.coverage\.(?:run|report)\]/i.test(text(files, /(^|\/)package\.json$|pyproject\.toml$/i));
   const findings: IntelligenceModuleFinding[] = []; if (sourceCount >= 5 && testCount === 0) findings.push(finding('TST001', 'No test source files detected', 'warning', 88, `${sourceCount} production source files and no test files were found.`, 'Add automated tests for critical behavior.')); if (testCount > 0 && !coverage) findings.push(finding('TST002', 'Coverage readiness not detected', 'info', 70, 'Tests exist but no coverage configuration or command was recognized.', 'Add coverage reporting with an appropriate threshold.'));
   return result('testing', 'Testing Intelligence', `${testCount} test files across ${frameworks.length} detected frameworks.`, frameworks.map((name) => `Testing framework: ${name}`), findings, { sourceFiles: sourceCount, testFiles: testCount, coverageReady: coverage });
 }
