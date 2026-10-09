@@ -52,7 +52,7 @@ function walk(absolute, relative) {
     else if (dirent.isFile()) entries.push({ path: childRelative.replace(/\\/g, '/'), absolute: childAbsolute, size: fs.statSync(childAbsolute).size });
   }
 }
-function isText(value) { return /(^|\/)(dockerfile|makefile|readme|license)(\.|$)|\.(?:[cm]?[jt]sx?|py|go|rs|java|kt|swift|rb|php|cs|cpp|c|h|vue|svelte|astro|json|ya?ml|toml|xml|gradle|properties|md|txt|css|scss|html|env|lock|mod)$/i.test(value); }
+function isText(value) { return /(?:^|\/)phpunit\.xml\.dist$/i.test(value) || /(^|\/)(dockerfile|makefile|readme|license)(\.|$)|\.(?:[cm]?[jt]sx?|py|go|rs|java|kt|swift|rb|php|cs|cpp|c|h|vue|svelte|astro|json|ya?ml|toml|xml|gradle|properties|md|txt|css|scss|html|env|lock|mod)$/i.test(value); }
 function priority(value) { return /(^|\/)(package\.json|pyproject\.toml|cargo\.toml|go\.mod|pom\.xml|composer\.json|dockerfile|readme)/i.test(value) ? 0 : isText(value) ? 1 : 2; }
 function option(name, fallback) { const item = process.argv.find((arg) => arg.startsWith(`--${name}=`)); return item ? item.slice(name.length + 3) : fallback; }
 function numberOption(name, fallback) { const value = Number(option(name, fallback)); if (!Number.isFinite(value) || value < 1) throw new Error(`--${name} must be a positive number.`); return value; }

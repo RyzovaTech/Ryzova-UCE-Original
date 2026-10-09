@@ -380,7 +380,7 @@ export const extendedStructureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const rootConfigs = ['package.json', 'tsconfig.json', 'Cargo.toml', 'go.mod', 'pyproject.toml'];
+      const rootConfigs = ['package.json', 'tsconfig.json', 'Cargo.toml', 'go.mod', 'pyproject.toml', 'composer.json'];
       const found = rootConfigs.some((c) => hasFile(ctx, c));
       if (!found && ctx.stack.language !== 'Unknown') {
         issues.push({
@@ -388,7 +388,7 @@ export const extendedStructureRules: CompatibilityRule[] = [
           title: 'No root configuration file found',
           category: 'structure',
           severity: 'info',
-          description: 'No package.json, tsconfig.json, Cargo.toml, go.mod, or pyproject.toml at root.',
+          description: `No recognized root configuration found (${rootConfigs.join(', ')}).`,
           reason: 'Root config files anchor the project and its tooling.',
           recommendation: 'Add the appropriate config file for the detected language.',
           affectedFile: 'project root',

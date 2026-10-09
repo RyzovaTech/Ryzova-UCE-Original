@@ -16,6 +16,7 @@ export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' = 'uploa
       { id: V3_CORE_RULE_PACK.id, version: V3_CORE_RULE_PACK.version, schemaVersion: V3_CORE_RULE_PACK.schemaVersion, signed: Boolean(V3_CORE_RULE_PACK.signature) },
     ],
     limitations: [
+      ...(source === 'github' ? ['GitHub archives can omit tracked files through export-ignore rules. Missing-file findings describe the downloaded archive, not necessarily the complete repository.'] : []),
       'Static findings are review signals, not proof of runtime behavior or exploitable vulnerabilities.',
       'Browser and platform checks do not execute the project on real devices.',
       'Accessibility checks do not replace keyboard, screen-reader, contrast, or user testing.',
