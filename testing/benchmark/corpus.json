@@ -727,6 +727,275 @@
           "text": "export declare const value: number;"
         }
       ]
+    },
+    {
+      "id": "node-range-bug",
+      "family": "node-range",
+      "ecosystem": "JavaScript",
+      "module": "runtime",
+      "rule": "node-engine-pinned",
+      "finding": "node-engine-outdated",
+      "stack": {
+        "runtime": "Node.js"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Range only permits an end-of-life release line.",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\":{\"node\":\"^16\"}}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "package.json",
+          "line": 1,
+          "text": "{\"engines\":{\"node\":\"^16\"}}"
+        }
+      ]
+    },
+    {
+      "id": "node-range-fixed",
+      "family": "node-range",
+      "ecosystem": "JavaScript",
+      "module": "runtime",
+      "rule": "node-engine-pinned",
+      "finding": "node-engine-outdated",
+      "stack": {
+        "runtime": "Node.js"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Range permits a maintained release line at the documented snapshot.",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\":{\"node\":\"^24\"}}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "package.json",
+          "line": 1,
+          "text": "{\"engines\":{\"node\":\"^24\"}}"
+        }
+      ]
+    },
+    {
+      "id": "node-range-negative",
+      "family": "node-range",
+      "ecosystem": "JavaScript",
+      "module": "runtime",
+      "rule": "node-engine-pinned",
+      "finding": "node-engine-outdated",
+      "stack": {
+        "runtime": "Node.js"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Lower bound admits maintained releases and is not a deployed version.",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"engines\":{\"node\":\">=14.15.0\"}}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "package.json",
+          "line": 1,
+          "text": "{\"engines\":{\"node\":\">=14.15.0\"}}"
+        }
+      ]
+    },
+    {
+      "id": "typescript-inheritance-bug",
+      "family": "typescript-inheritance",
+      "ecosystem": "TypeScript",
+      "module": "extended-configuration",
+      "rule": "tsconfig-strict-mode",
+      "finding": "tsconfig-strict-missing",
+      "stack": {
+        "language": "TypeScript"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Strict explicitly disabled.",
+      "files": [
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\":{\"strict\":false}}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "tsconfig.json",
+          "line": 1,
+          "text": "{\"compilerOptions\":{\"strict\":false}}"
+        }
+      ]
+    },
+    {
+      "id": "typescript-inheritance-fixed",
+      "family": "typescript-inheritance",
+      "ecosystem": "TypeScript",
+      "module": "extended-configuration",
+      "rule": "tsconfig-strict-mode",
+      "finding": "tsconfig-strict-missing",
+      "stack": {
+        "language": "TypeScript"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Relative base enables strict mode.",
+      "files": [
+        {
+          "path": "tsconfig.json",
+          "content": "{\"extends\":\"./base\"}"
+        },
+        {
+          "path": "base.json",
+          "content": "{\"compilerOptions\":{\"strict\":true}}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "tsconfig.json",
+          "line": 1,
+          "text": "{\"extends\":\"./base\"}"
+        },
+        {
+          "path": "base.json",
+          "line": 1,
+          "text": "{\"compilerOptions\":{\"strict\":true}}"
+        }
+      ]
+    },
+    {
+      "id": "typescript-inheritance-negative",
+      "family": "typescript-inheritance",
+      "ecosystem": "TypeScript",
+      "module": "extended-configuration",
+      "rule": "tsconfig-strict-mode",
+      "finding": "tsconfig-strict-missing",
+      "stack": {
+        "language": "TypeScript"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "External base unresolved; absence of local strict cannot prove missing effective strict mode.",
+      "files": [
+        {
+          "path": "tsconfig.json",
+          "content": "{\"extends\":\"@tsconfig/node22/tsconfig.json\"}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "tsconfig.json",
+          "line": 1,
+          "text": "{\"extends\":\"@tsconfig/node22/tsconfig.json\"}"
+        }
+      ]
+    },
+    {
+      "id": "env-prose-bug",
+      "family": "env-prose",
+      "ecosystem": "JavaScript",
+      "module": "configuration",
+      "rule": "env-example-present",
+      "finding": "env-example-missing",
+      "stack": {},
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Actual production environment read without local template; advisory only.",
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "console.log(process.env.API_TOKEN)"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/app.js",
+          "line": 1,
+          "text": "console.log(process.env.API_TOKEN)"
+        }
+      ]
+    },
+    {
+      "id": "env-prose-fixed",
+      "family": "env-prose",
+      "ecosystem": "JavaScript",
+      "module": "configuration",
+      "rule": "env-example-present",
+      "finding": "env-example-missing",
+      "stack": {},
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Production package template documents the key.",
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "console.log(process.env.API_TOKEN)"
+        },
+        {
+          "path": ".env.example",
+          "content": "API_TOKEN="
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/app.js",
+          "line": 1,
+          "text": "console.log(process.env.API_TOKEN)"
+        },
+        {
+          "path": ".env.example",
+          "line": 1,
+          "text": "API_TOKEN="
+        }
+      ]
+    },
+    {
+      "id": "env-prose-negative",
+      "family": "env-prose",
+      "ecosystem": "JavaScript",
+      "module": "configuration",
+      "rule": "env-example-present",
+      "finding": "env-example-missing",
+      "stack": {},
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Comments and string examples are not reads.",
+      "files": [
+        {
+          "path": "src/app.js",
+          "content": "// process.env.API_TOKEN\nconst text = \"process.env.EXAMPLE\";"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/app.js",
+          "line": 1,
+          "text": "// process.env.API_TOKEN"
+        },
+        {
+          "path": "src/app.js",
+          "line": 2,
+          "text": "const text = \"process.env.EXAMPLE\";"
+        }
+      ]
     }
   ]
 }

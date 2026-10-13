@@ -1,7 +1,8 @@
+import { resolveTypeScriptOptions } from '../../analyzer/typescript-options';
 import { isProjectEvidenceFile } from '../../analyzer/project-scope';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
-import { readFile, hasEslintConfig } from './shared';
+import { readFile, hasEslintConfig, findEvidenceFile } from './shared';
 
 export const extendedConfigurationRules: CompatibilityRule[] = [
   {
@@ -10,21 +11,21 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.language !== 'TypeScript') return issues;
-      const tsconfig = readFile(ctx, 'tsconfig.json');
+      const tsconfig = findEvidenceFile(ctx, 'tsconfig.json');
       if (!tsconfig) return issues;
       try {
-        const p = JSON.parse(tsconfig);
-        const opts = p.compilerOptions ?? {};
-        if (!opts.strict) {
+        const resolved = resolveTypeScriptOptions(ctx.files, tsconfig.path);
+        const opts = resolved.options;
+        if (!resolved.solution && (opts.strict === false || (resolved.complete && opts.strict === undefined))) {
           issues.push({
             id: 'tsconfig-strict-missing',
             title: 'TypeScript strict mode not enabled',
             category: 'configuration',
             severity: 'warning',
-            description: 'tsconfig.json does not set "strict": true.',
+            description: 'The inspected TypeScript configuration does not enable strict mode, including resolved relative base configs.',
             reason: 'Strict mode catches common type errors at compile time.',
             recommendation: 'Add "strict": true to compilerOptions.',
-            affectedFile: 'tsconfig.json',
+            affectedFile: tsconfig.path,
             detected: 'strict not set',
             expected: 'strict: true',
             impact: 'Type safety is reduced.',
@@ -43,25 +44,25 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.language !== 'TypeScript') return issues;
-      const tsconfig = readFile(ctx, 'tsconfig.json');
+      const tsconfig = findEvidenceFile(ctx, 'tsconfig.json');
       if (!tsconfig) return issues;
       try {
-        const p = JSON.parse(tsconfig);
-        const target = p.compilerOptions?.target?.toUpperCase();
+        const resolved = resolveTypeScriptOptions(ctx.files, tsconfig.path);
+        const target = typeof resolved.options.target === 'string' ? resolved.options.target.toUpperCase() : undefined;
         if (target && ['ES3', 'ES5', 'ES6', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020'].includes(target)) {
           issues.push({
             id: 'tsconfig-target-outdated',
-            title: 'TypeScript target is outdated',
+            title: 'TypeScript emits an older JavaScript target',
             category: 'configuration',
             severity: 'info',
             description: `tsconfig.json targets "${target}".`,
-            reason: 'Modern browsers and Node support ES2022+.',
-            recommendation: 'Bump target to ES2022 or higher.',
-            affectedFile: 'tsconfig.json',
+            reason: 'Older output may be intentional for supported consumers; the target alone does not establish an incompatibility.',
+            recommendation: 'Review the target against supported browsers and runtimes before changing it.',
+            affectedFile: tsconfig.path,
             detected: target,
             expected: 'ES2022+',
-            impact: 'Modern syntax is down-leveled unnecessarily.',
-            suggestedAction: 'Update target in tsconfig.json.',
+            impact: 'Lower targets can increase emitted code, but may be required for compatibility.',
+            suggestedAction: 'Confirm the output target matches consumer requirements.',
           });
         }
       } catch {

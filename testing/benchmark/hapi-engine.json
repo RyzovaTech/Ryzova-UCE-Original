@@ -1,0 +1,19 @@
+{
+  "repository": "hapijs/hapi",
+  "commit": "80b77282a3a787531c5ae59466a89b37daf36d5d",
+  "sourcePath": "package.json",
+  "sourceUrl": "https://github.com/hapijs/hapi/blob/80b77282a3a787531c5ae59466a89b37daf36d5d/package.json",
+  "license": "BSD-3-Clause",
+  "excerpt": {
+    "name": "@hapi/hapi",
+    "version": "21.4.10",
+    "engines": {
+      "node": ">=14.15.0"
+    }
+  },
+  "expectedFinding": "node-engine-outdated",
+  "expected": false,
+  "rationale": "The lower-bounded engine range admits maintained Node release lines; it does not pin the deployed runtime.",
+  "labelStatus": "agent-provisional",
+  "scope": "Selected engine-range decision, not full repository accuracy"
+}

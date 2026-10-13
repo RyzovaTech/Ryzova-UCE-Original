@@ -5,8 +5,8 @@ import { evaluate } from './evaluate.mjs';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 const corpus=()=>JSON.parse(fs.readFileSync(new URL('./corpus.json',import.meta.url),'utf8'));
 test('silent detector fails recall and noisy detector fails precision',()=>{
-  const silent=evaluate(corpus(),()=>[]);assert.equal(silent.metrics.fn,7);assert.equal(silent.metrics.recall,0);assert.equal(silent.metrics.precision,null);
-  const noisy=evaluate(corpus(),c=>[{id:c.finding}]);assert.equal(noisy.metrics.fp,14);assert.equal(noisy.metrics.precision,33.33);assert.equal(noisy.priorities.length,7);
+  const silent=evaluate(corpus(),()=>[]);assert.equal(silent.metrics.fn,10);assert.equal(silent.metrics.recall,0);assert.equal(silent.metrics.precision,null);
+  const noisy=evaluate(corpus(),c=>[{id:c.finding}]);assert.equal(noisy.metrics.fp,20);assert.equal(noisy.metrics.precision,33.33);assert.equal(noisy.priorities.length,10);
 });
 test('perfect provisional results never establish a 95% global claim',()=>{
   const result=evaluate(corpus(),c=>c.expected?[{id:c.finding}]:[]);
