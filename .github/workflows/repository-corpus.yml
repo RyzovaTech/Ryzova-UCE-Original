@@ -1,0 +1,37 @@
+name: 100 repository validation
+on:
+  pull_request:
+    paths:
+      - 'testing/repositories/**'
+      - '.github/workflows/repository-corpus.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: current
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: 61b355bb67a54aa7ba546cb07993b9b771f52df9
+          path: baseline
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+        working-directory: current
+      - run: ln -s "$GITHUB_WORKSPACE/current/node_modules" "$GITHUB_WORKSPACE/baseline/node_modules"
+      - run: python3 current/testing/repositories/run.py "$RUNNER_TEMP/uce-corpus" "$GITHUB_WORKSPACE/baseline"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uce-100-repository-results
+          path: |
+            ${{ runner.temp }}/uce-corpus/*.json
+          retention-days: 90

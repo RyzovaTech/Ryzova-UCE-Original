@@ -110,6 +110,8 @@ export const extendedDependencyRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.packageManager !== 'go-modules') return issues;
+      const goMod = ctx.files.find(f => f.path === 'go.mod')?.content;
+      if (goMod !== undefined && !/^\s*require\s+(?:\(|[^\s/])/m.test(goMod.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, ''))) return issues;
       if (!ctx.detectedFiles.some((f) => f.path.endsWith('go.sum'))) {
         issues.push({
           id: 'go-sum-missing',

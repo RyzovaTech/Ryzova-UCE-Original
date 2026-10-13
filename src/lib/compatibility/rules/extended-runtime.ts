@@ -1,3 +1,4 @@
+import { isProjectEvidenceFile } from '../../analyzer/project-scope';
 import { isVirtualCargoWorkspace, cargoPackageHas } from '../../analyzer/cargo-evidence';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
@@ -152,10 +153,10 @@ export const extendedRuntimeRules: CompatibilityRule[] = [
       const issues: Issue[] = [];
       if (ctx.stack.runtime !== 'JVM') return issues;
       const pom = readFile(ctx, 'pom.xml');
-      const gradle = readFile(ctx, 'build.gradle') ?? readFile(ctx, 'build.gradle.kts');
+      const gradle = ctx.files.filter(f => isProjectEvidenceFile(f) && /\.gradle(?:\.kts)?$/i.test(f.path)).map(f => f.content ?? '').join('\n');
       if (!pom && !gradle) return issues;
       const hasMavenTarget = pom && /<maven\.compiler\.(source|release|target)>/.test(pom);
-      const hasGradleSource = gradle && /sourceCompatibility|JavaVersion|languageVersion/i.test(gradle);
+      const hasGradleSource = gradle && /sourceCompatibility|targetCompatibility|JavaVersion|JavaLanguageVersion|jvmToolchain|jvmTarget/i.test(gradle);
       if (!hasMavenTarget && !hasGradleSource) {
         issues.push({
           id: 'java-version-missing',
@@ -185,7 +186,8 @@ export const extendedRuntimeRules: CompatibilityRule[] = [
         (f) => !f.isDirectory && f.path.toLowerCase().endsWith('.csproj')
       );
       if (!csproj) return issues;
-      const content = csproj.content ?? '';
+      if (csproj.content === undefined) return issues;
+      const content = csproj.content;
       if (!/<TargetFramework/i.test(content)) {
         issues.push({
           id: 'dotnet-targetframework-missing',

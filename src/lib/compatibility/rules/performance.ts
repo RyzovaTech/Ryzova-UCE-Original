@@ -40,7 +40,7 @@ export const performanceRules: CompatibilityRule[] = [
       const issues: Issue[] = [];
       if (ctx.stack.buildTool !== 'Vite') return issues;
       const viteConfig = ctx.files.find(
-        (f) => !f.isDirectory && f.content && /vite\.config\./.test(f.path)
+        (f) => isProjectEvidenceFile(f) && f.content && /vite\.config\./.test(f.path)
       );
       if (!viteConfig?.content) return issues;
       if (!/sourcemap/i.test(viteConfig.content)) {
@@ -69,7 +69,7 @@ export const performanceRules: CompatibilityRule[] = [
       const issues: Issue[] = [];
       if (ctx.stack.buildTool !== 'Webpack' && ctx.stack.buildTool !== 'Rollup') return issues;
       const configFiles = ctx.files.filter(
-        (f) => !f.isDirectory && f.content && /(webpack|rollup)\.config\./.test(f.path)
+        (f) => isProjectEvidenceFile(f) && f.content && /(webpack|rollup)\.config\./.test(f.path)
       );
       for (const file of configFiles) {
         if (!file.content) continue;
