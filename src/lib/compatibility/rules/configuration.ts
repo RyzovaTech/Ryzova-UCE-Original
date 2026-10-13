@@ -27,6 +27,7 @@ export const configurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.language !== 'TypeScript') return issues;
+      if (!ctx.files.some(f => !f.isDirectory && /\.[cm]?tsx?$/i.test(f.path) && !/\.d\.[cm]?ts$/i.test(f.path) && classifyProjectFileScope(f.path) === 'production')) return issues;
       if (!ctx.detectedFiles.some((f) => f.path.endsWith('tsconfig.json'))) {
         issues.push({
           id: 'tsconfig-missing',

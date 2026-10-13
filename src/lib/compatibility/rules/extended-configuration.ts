@@ -1,3 +1,4 @@
+import { isProjectEvidenceFile } from '../../analyzer/project-scope';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile, hasEslintConfig } from './shared';
@@ -571,7 +572,7 @@ export const extendedConfigurationRules: CompatibilityRule[] = [
     category: 'configuration',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const envFile = ctx.detectedFiles.find((f) => f.path === '.env' || f.path.endsWith('/.env'));
+      const envFile = ctx.files.filter(isProjectEvidenceFile).find((f) => f.path === '.env' || f.path.endsWith('/.env'));
       if (!envFile) return issues;
       const gitignore = readFile(ctx, '.gitignore');
       if (gitignore && !/^\s*\.env\s*$/m.test(gitignore) && !/^\s*\.env$/m.test(gitignore)) {

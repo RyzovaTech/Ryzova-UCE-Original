@@ -93,6 +93,7 @@ const PRIORITY_SOURCE_EXTENSIONS = [
   '.py', '.js', '.jsx', '.ts', '.tsx', '.mjs', '.cjs',
   '.go', '.rs', '.java', '.kt', '.kts', '.swift',
   '.rb', '.ex', '.exs', '.dart', '.scala', '.sbt',
+  '.csproj', '.fsproj', '.vbproj', '.props', '.targets', '.sln', '.slnx',
   '.cs', '.c', '.cpp', '.cc', '.h', '.hpp',
   '.php',
 ];
@@ -195,14 +196,16 @@ const TEXT_EXTENSIONS = [
   '.ini', '.cfg', '.sh', '.bash', '.zsh', '.example',
   '.rb', '.ex', '.exs', '.dart', '.swift', '.scala', '.sbt', '.cmake', '.make',
   '.properties', '.lock', '.sum', '.prisma', '.gql', '.graphql',
+  '.csproj', '.fsproj', '.vbproj', '.props', '.targets', '.sln', '.slnx',
   '.cs', '.c', '.cpp', '.cc', '.h', '.hpp', '.php',
 ];
 
-function isLikelyText(name: string): boolean {
+export function isLikelyText(name: string): boolean {
   const lower = name.toLowerCase();
   const base = lower.split('/').pop() ?? lower;
 
   if (/^(?:licen[cs]e|copying)(?:[-.][a-z0-9.-]+)?$/i.test(base)) return true;
+  if (/^readme(?:\.(?:rdoc|markdown|mdown))?$/i.test(base)) return true;
   if (TEXT_BASENAMES.has(base)) return true;
   return TEXT_EXTENSIONS.some((ext) => base.endsWith(ext));
 }

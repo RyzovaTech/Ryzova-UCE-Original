@@ -21,7 +21,7 @@ function detectLicenseFromContent(content: string): string | null {
   const normalized = content.replace(/\s+/g, ' ');
   if (/MIT License/i.test(content) || (/Permission is hereby granted, free of charge/i.test(normalized) && /to use, copy, modify, merge, publish, distribute, sublicense, and\/or sell/i.test(normalized) && /this permission notice shall be included/i.test(normalized) && /THE SOFTWARE IS PROVIDED ["“]AS IS/i.test(normalized))) return 'MIT';
   if (/Apache License\s*(?:,\s*)?(?:Version\s*)?2\.0/i.test(normalized)) return 'Apache-2.0';
-  if (/Redistribution and use in source and binary forms/i.test(content) && /Redistributions of source code/i.test(content) && /Redistributions in binary form/i.test(content)) return /Neither the name/i.test(content) ? 'BSD-3-Clause' : 'BSD-2-Clause';
+  if (/Redistribution and use in source and binary forms/i.test(content) && /Redistributions of source code/i.test(content) && /Redistributions in binary form/i.test(content)) return /Neither the name|(?:the )?names? of[^.]*may not be used to endorse or promote/i.test(normalized) ? 'BSD-3-Clause' : 'BSD-2-Clause';
   if (/BSD 2-Clause/i.test(content)) return 'BSD-2-Clause';
   if (/BSD 3-Clause/i.test(content)) return 'BSD-3-Clause';
   if (/GNU GENERAL PUBLIC LICENSE.*version 3/i.test(content)) return 'GPL-3.0';

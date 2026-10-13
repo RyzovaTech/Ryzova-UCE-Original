@@ -1,3 +1,4 @@
+import { isProjectEvidenceFile } from '../../analyzer/project-scope';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile } from './shared';
@@ -187,7 +188,7 @@ export const extendedEnvironmentRules: CompatibilityRule[] = [
       const issues: Issue[] = [];
       const gitignore = readFile(ctx, '.gitignore');
       if (!gitignore) return issues;
-      const envFiles = ctx.detectedFiles.filter((f) =>
+      const envFiles = ctx.files.filter(isProjectEvidenceFile).filter((f) =>
         f.path === '.env' || f.path.endsWith('/.env') ||
         f.path === '.env.local' || f.path.endsWith('/.env.local') ||
         f.path === '.env.production' || f.path.endsWith('/.env.production')

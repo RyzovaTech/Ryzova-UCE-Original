@@ -9,10 +9,6 @@ function hasPath(ctx: import('../types').RuleContext, candidates: string[]): boo
   );
 }
 
-function hasFile(ctx: import('../types').RuleContext, name: string): boolean {
-  return ctx.detectedFiles.some((f) => f.path === name || f.path.endsWith('/' + name));
-}
-
 const EXTENDED_EXPECTED: Record<
   string,
   { any?: string[]; all?: string[]; severity: 'critical' | 'warning' | 'info' }
@@ -263,7 +259,7 @@ export const extendedStructureRules: CompatibilityRule[] = [
       const issues: Issue[] = [];
       if (ctx.stack.packageManager !== 'npm' && ctx.stack.packageManager !== 'pnpm' &&
           ctx.stack.packageManager !== 'yarn' && ctx.stack.packageManager !== 'bun') return issues;
-      const gitignore = ctx.files.find((f) => !f.isDirectory && (f.path === '.gitignore' || f.path.endsWith('/.gitignore')));
+      const gitignore = ctx.files.find(f => !f.isDirectory && f.path === '.gitignore');
       if (!gitignore || !gitignore.content) return issues;
       if (!/node_modules/i.test(gitignore.content)) {
         issues.push({
@@ -289,10 +285,10 @@ export const extendedStructureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const gitignore = ctx.files.find((f) => !f.isDirectory && (f.path === '.gitignore' || f.path.endsWith('/.gitignore')));
+      const gitignore = ctx.files.find(f => !f.isDirectory && f.path === '.gitignore');
       if (!gitignore || !gitignore.content) return issues;
-      const buildOutputs = ['dist/', 'build/'];
-      const missing = buildOutputs.filter((d) => !gitignore.content!.includes(d));
+      const buildOutputs = ctx.stack.buildTool === 'Vite' || ctx.stack.buildTool === 'Webpack' ? ['dist'] : [];
+      const missing = buildOutputs.filter(d => !gitignore.content!.split(/\r?\n/).some(line => line.trim().replace(/^\//, '').replace(/\/$/, '') === d));
       if (missing.length > 0 && (ctx.stack.buildTool === 'Vite' || ctx.stack.buildTool === 'Webpack' || ctx.stack.buildTool === 'Rollup')) {
         issues.push({
           id: 'gitignore-build-output-missing',
@@ -345,7 +341,8 @@ export const extendedStructureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const pkgJsons = ctx.files.filter((f) => !f.isDirectory && f.path.endsWith('package.json'));
+      const pkgJsons = ctx.files.filter(f => !f.isDirectory && /(?:^|\/)package\.json$/.test(f.path) && ['production', 'configuration'].includes(classifyProjectFileScope(f.path)));
+      if (ctx.files.some(f => f.path === 'pnpm-workspace.yaml' && /^packages\s*:/m.test(f.content ?? ''))) return issues;
       if (pkgJsons.length > 1) {
         const hasWorkspaces = pkgJsons.some((f) => {
           try {
@@ -380,8 +377,8 @@ export const extendedStructureRules: CompatibilityRule[] = [
     category: 'structure',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const rootConfigs = ['package.json', 'tsconfig.json', 'Cargo.toml', 'go.mod', 'pyproject.toml', 'composer.json'];
-      const found = rootConfigs.some((c) => hasFile(ctx, c));
+      const rootConfigs = ['package.json', 'tsconfig.json', 'Cargo.toml', 'go.mod', 'pyproject.toml', 'composer.json', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'Gemfile', 'setup.py', 'setup.cfg', 'CMakeLists.txt', 'Makefile', 'Package.swift', 'mix.exs', 'pubspec.yaml', 'build.sbt'];
+      const found = ctx.files.some(f => !f.isDirectory && !f.path.includes('/') && (rootConfigs.includes(f.path) || /\.(?:csproj|fsproj|vbproj|sln|slnx|gemspec)$/i.test(f.path)));
       if (!found && ctx.stack.language !== 'Unknown') {
         issues.push({
           id: 'root-config-missing',
