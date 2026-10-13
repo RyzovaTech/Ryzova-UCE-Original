@@ -51,9 +51,9 @@ export function accuracyClaimReadiness(evidence) {
   if (fullRepositoryBoundariesVerified !== true) blockers.push('Full-repository scan boundaries have not been verified');
   if (!Number.isInteger(repositories) || repositories < 30) blockers.push('At least 30 independently selected repositories are required');
   if (metrics.tp + metrics.fn < 50 || metrics.tn + metrics.fp < 50) blockers.push('At least 50 positive and 50 negative decisions are required');
-  if (metrics.precision === null || metrics.precision < 95 || metrics.recall === null || metrics.recall < 90) blockers.push('Supported-benchmark targets require precision >=95% and recall >=90%');
+  if (metrics.precision === null || metrics.precision < 95 || metrics.recall === null || metrics.recall < 95) blockers.push('Supported-benchmark targets require precision >=95% and recall >=95%');
   if (!Array.isArray(coveredModules) || !coveredModules.includes('technology') || !coveredModules.includes('security') || !coveredModules.includes('compatibility')) blockers.push('Technology, security and compatibility need independent module evaluations');
   return { status: blockers.length ? 'not-established' : 'eligible-for-benchmark-review', globalAccuracy: null,
-    targets: { precision: 95, recall: 90 }, policy: { minimumRepositories: 30, minimumPositiveDecisions: 50, minimumNegativeDecisions: 50 }, blockers,
+    targets: { precision: 95, recall: 95 }, policy: { minimumRepositories: 30, minimumPositiveDecisions: 50, minimumNegativeDecisions: 50 }, blockers,
     automaticGlobalClaim: false };
 }

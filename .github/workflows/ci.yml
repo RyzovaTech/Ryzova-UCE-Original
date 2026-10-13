@@ -31,6 +31,9 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Evidence benchmark contracts
+        run: npm run test:benchmark && node testing/benchmark/run.mjs --check --output=uce-evidence-benchmark.json
+
       - name: Knowledge regression tests
         run: npm test
 
@@ -98,6 +101,7 @@ jobs:
         with:
           name: uce-analysis-reports
           path: |
+            uce-evidence-benchmark.json
             uce-accuracy-release.json
             uce-self-scan.json
             uce-self-scan.sarif

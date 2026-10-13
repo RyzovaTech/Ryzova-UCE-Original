@@ -182,26 +182,41 @@ export const extendedRuntimeRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.runtime !== '.NET') return issues;
-      const csproj = ctx.files.find(
-        (f) => !f.isDirectory && f.path.toLowerCase().endsWith('.csproj')
-      );
-      if (!csproj) return issues;
-      if (csproj.content === undefined) return issues;
-      const content = csproj.content;
-      if (!/<TargetFramework/i.test(content)) {
+      const stripComments = (text: string) => text.replace(/<!--[\s\S]*?-->/g, '');
+      const hasTarget = (text: string) => /<(TargetFrameworks?|TargetFrameworkVersion)\b[^>]*>\s*[^<\s][^<]*<\/\1\s*>/i.test(stripComments(text));
+      for (const csproj of ctx.files.filter(f => isProjectEvidenceFile(f) && /\.csproj$/i.test(f.path))) {
+        if (csproj.content === undefined) continue;
+        const content = stripComments(csproj.content);
+        if (hasTarget(content)) continue;
+        // Only the nearest file of each name is automatically inherited by MSBuild.
+        const inherited: typeof ctx.files = [];
+        for (const name of ['Directory.Build.props', 'Directory.Build.targets']) {
+          const parts = csproj.path.split('/'); parts.pop();
+          while (true) {
+            const file = ctx.files.find(f => f.path === [...parts, name].join('/'));
+            if (file) { inherited.push(file); break; }
+            if (!parts.length) break;
+            parts.pop();
+          }
+        }
+        const evidence = [content, ...inherited.map(f => stripComments(f.content ?? ''))];
+        if (inherited.some(f => f.content === undefined) || evidence.some(hasTarget)) continue;
+        // Dynamic imports/properties cannot be evaluated safely by this static check.
+        // An absent warning in this case is not proof of a valid effective target.
+        if (evidence.some(text => /<Import\b|\$\(|DirectoryBuild(?:Props|Targets)Path|ImportDirectoryBuild(?:Props|Targets)/i.test(text))) continue;
         issues.push({
           id: 'dotnet-targetframework-missing',
-          title: 'TargetFramework not declared in .csproj',
+          title: 'Target framework declaration not detected',
           category: 'runtime',
           severity: 'warning',
-          description: 'The .csproj file does not specify a TargetFramework.',
-          reason: 'Without a target framework, the build defaults may not match production.',
-          recommendation: 'Add <TargetFramework>net8.0</TargetFramework> to the .csproj.',
+          description: 'No target declaration was found in this production project or its nearest Directory.Build.props/targets.',
+          reason: 'The static evidence does not identify the intended .NET target.',
+          recommendation: 'Check the effective MSBuild configuration and declare the intended target framework if missing.',
           affectedFile: csproj.path,
-          detected: 'not declared',
-          expected: 'net8.0+',
-          impact: 'Build may target an unsupported framework version.',
-          suggestedAction: 'Add TargetFramework to the .csproj file.',
+          detected: 'no target declaration in inspected configuration',
+          expected: 'an explicit or inherited target framework',
+          impact: 'The project may not build with the intended framework.',
+          suggestedAction: 'Verify the effective target framework with MSBuild.',
         });
       }
       return issues;

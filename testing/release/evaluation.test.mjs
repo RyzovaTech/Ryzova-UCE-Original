@@ -45,3 +45,8 @@ test('project-level metrics group correlated decisions and retain null empty den
   const rows=[{repository:'a',expected:true,actual:true},{repository:'a',expected:false,actual:true},{repository:'b',expected:true,actual:true}];
   assert.deepEqual(projectMetrics(rows),{repositories:2,fullyCorrectProjects:1,projectPassRate:50,projectPassWilson95:[9.45,90.55]});
 });
+test('94 percent recall cannot meet the 95 percent release target',()=>{
+  const evidence=largerEvidence();for(let i=0;i<3;i++)evidence.results[i].actual=false;
+  const result=accuracyClaimReadiness(evidence);
+  assert.equal(result.targets.recall,95);assert.equal(result.status,'not-established');
+});
