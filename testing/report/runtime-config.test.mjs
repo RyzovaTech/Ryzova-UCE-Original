@@ -49,3 +49,9 @@ test('pinned Hapi manifest lower bound is not a deployed EOL runtime',async()=>{
  const mutant={...evidence.excerpt,engines:{node:'^14.15.0'}};
  assert.equal(run('runtime','node-engine-pinned',{'package.json':JSON.stringify(mutant)},{runtime:'Node.js'}).some(i=>i.id===evidence.expectedFinding),true);
 });
+test('actual EOL version pins remain visible even when the engine range permits modern Node',()=>{
+ const entries={'package.json':'{"engines":{"node":">=16"}}','.nvmrc':'v16.20.2 # selected runtime','packages/modern/.node-version':'24','examples/.nvmrc':'14'};
+ const issues=run('runtime','node-selected-runtime-eol',entries);
+ assert.equal(issues.length,1);assert.equal(issues[0].affectedFile,'.nvmrc');
+ for(const value of ['lts/*','node','>=16','22','24','26','28','1','3','16\n24'])assert.equal(run('runtime','node-selected-runtime-eol',{'.node-version':value}).length,0);
+});

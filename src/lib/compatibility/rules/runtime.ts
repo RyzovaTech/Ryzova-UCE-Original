@@ -65,6 +65,27 @@ export const runtimeRules: CompatibilityRule[] = [
     },
   },
   {
+    id: 'node-selected-runtime-eol',
+    category: 'runtime',
+    run: ctx => {
+      const issues: Issue[] = [];
+      for (const file of ctx.files.filter(f => isProjectEvidenceFile(f) && /(?:^|\/)(?:\.nvmrc|\.node-version)$/.test(f.path))) {
+        const value = (file.content ?? '').split(/\r?\n/).map(line => line.replace(/#.*$/, '').trim()).filter(Boolean).join(' ');
+        const match = /^v?(\d+)(?:\.\d+){0,2}$/.exec(value);
+        if (!match) continue;
+        const major = Number(match[1]);
+        if (!(major === 0 || (major >= 4 && major < 26 && ![22, 24].includes(major)))) continue;
+        issues.push({ id: `node-selected-runtime-eol:${file.path}`, title: 'Node version file selects an end-of-life release',
+          category: 'runtime', severity: 'warning', affectedFile: file.path, detected: value, expected: 'a maintained Node release',
+          description: `${file.path} selects Node ${major}, end-of-life in the 2026-10-13 release snapshot.`,
+          reason: 'This version file selects a runtime rather than merely declaring a minimum compatibility range.',
+          recommendation: 'Test with a maintained Node release and update the selected version.',
+          impact: 'Environments honoring this file may use an unmaintained runtime.' });
+      }
+      return issues;
+    },
+  },
+  {
     id: 'python-version-pinned',
     category: 'runtime',
     run: (ctx) => {
