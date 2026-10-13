@@ -1,3 +1,5 @@
+import { isProjectEvidenceFile } from '../../analyzer/project-scope';
+import { versionRangesDisjoint } from '../../analyzer/version-constraints';
 import { pythonVersionRequirement } from '../../analyzer/python-evidence';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
@@ -32,30 +34,31 @@ export const runtimeRules: CompatibilityRule[] = [
           severity: 'warning',
           description: 'package.json does not declare an engines.node constraint.',
           reason: 'Without an engine constraint, contributors may run an unsupported Node version.',
-          recommendation: 'Add an "engines.node" field matching your minimum supported Node version (>=20 recommended).',
+          recommendation: 'Add an "engines.node" field matching your minimum supported Node version after testing on a maintained release.',
           affectedFile: 'package.json',
           detected: 'not declared',
-          expected: '>=20',
+          expected: 'a maintained Node release',
           impact: 'Runtime drift across environments can cause build or runtime failures.',
-          suggestedAction: 'Pin "engines.node": ">=20" in package.json.',
+          suggestedAction: 'Declare the tested Node compatibility range in package.json.',
         });
         return issues;
       }
-      const match = required.match(/(\d+)/);
-      if (match && Number(match[1]) < 18) {
+      // 2026-10-13 release snapshot: 22/24 maintained; 26+ is current or unknown future.
+      // A lower bound is not the selected runtime. Unknown syntax is not an EOL finding.
+      if (versionRangesDisjoint(required, '22 || 24 || >=26') === true) {
         issues.push({
           id: 'node-engine-outdated',
-          title: 'Node.js engine version is below LTS',
+          title: 'Node.js engine range excludes maintained release lines',
           category: 'runtime',
-          severity: 'critical',
-          description: `Declared Node engine "${required}" is below the active LTS baseline.`,
-          reason: 'Node 16 and below are end-of-life and no longer receive security updates.',
-          recommendation: 'Upgrade the engine constraint to Node 20 LTS or newer.',
+          severity: 'warning',
+          description: `Declared Node engine "${required}" permits only release lines known to be end-of-life in the 2026-10-13 release snapshot.`,
+          reason: 'The declared compatibility range excludes maintained releases; it does not establish which runtime is deployed.',
+          recommendation: 'Test compatibility with a maintained Node release and update the engine range accordingly.',
           affectedFile: 'package.json',
           detected: required,
-          expected: '>=20',
-          impact: 'Security patches and modern syntax support will be missing.',
-          suggestedAction: 'Bump engines.node to ">=20" and test the build.',
+          expected: 'a maintained Node release',
+          impact: 'Consumers following this range may select an unsupported runtime.',
+          suggestedAction: 'Test and declare support for a maintained Node release.',
         });
       }
       return issues;
@@ -100,27 +103,23 @@ export const runtimeRules: CompatibilityRule[] = [
     category: 'runtime',
     run: (ctx) => {
       const issues: Issue[] = [];
-      const docker = ctx.detectedFiles.find((f) => f.path.endsWith('Dockerfile'));
-      if (!docker) return issues;
-      const content = readFile(ctx, 'Dockerfile');
-      if (!content) return issues;
-      if (/FROM\s+node:\d+/.test(content)) {
-        const m = content.match(/FROM\s+node:(\d+)/);
-        const v = m ? Number(m[1]) : null;
-        if (v && v < 20) {
+      for (const docker of ctx.files.filter(f => isProjectEvidenceFile(f) && /(?:^|\/)Dockerfile$/.test(f.path))) {
+        if (!docker.content) continue;
+        const stages = docker.content.split(/\r?\n/).flatMap((line, index) => {
+          const m = /^\s*FROM\s+(?:--platform=\S+\s+)?(?:docker\.io\/(?:library\/)?)?node:(\d+)(?:\.\d+){0,2}(?:-[\w.-]+)?(?:@sha256:[a-f0-9]{64})?(?:\s+AS\s+[\w.-]+)?\s*(?:#.*)?$/i.exec(line);
+          return m ? [{ major: Number(m[1]), line: index + 1 }] : [];
+        });
+        for (const stage of stages.filter(s => s.major < 26 && ![22, 24].includes(s.major))) {
           issues.push({
-            id: 'docker-node-outdated',
-            title: 'Dockerfile pins an outdated Node image',
-            category: 'runtime',
-            severity: 'warning',
-            description: `Dockerfile uses node:${v} which is below the LTS baseline.`,
-            reason: 'Running on an EOL Node image blocks security updates.',
-            recommendation: 'Bump the base image to node:20 or newer.',
-            affectedFile: 'Dockerfile',
-            detected: `node:${v}`,
-            expected: 'node:20+',
-            impact: 'Container builds may inherit unpatched vulnerabilities.',
-            suggestedAction: 'Update FROM node:20-alpine (or equivalent).',
+            id: `docker-node-outdated:${docker.path}:${stage.line}`,
+            title: 'Docker build stage selects an end-of-life Node release',
+            category: 'runtime', severity: 'warning', affectedFile: docker.path,
+            description: `${docker.path}:${stage.line} selects Node ${stage.major}, end-of-life in the 2026-10-13 release snapshot.`,
+            reason: 'This explicit build-stage selection has no upstream maintenance; it may be a build stage rather than the final deployed runtime.',
+            recommendation: 'Test the stage on a maintained Node release before updating its image.',
+            detected: `node:${stage.major}`, expected: 'a maintained Node release',
+            impact: 'Build tooling or application code may run on an unmaintained runtime.',
+            suggestedAction: 'Review this FROM instruction and its stage usage.',
           });
         }
       }

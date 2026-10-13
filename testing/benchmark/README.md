@@ -29,3 +29,11 @@ MSBuild evidence reference: https://learn.microsoft.com/en-us/visualstudio/msbui
 6. Require >=95% precision and recall on the declared scope, sufficient independent samples and confidence bounds, plus separate critical-finding review. A 99% critical precision target is not established by this corpus.
 
 Independent adjudication and a fresh full-repository holdout are outstanding. No overall accuracy percentage is established by this change.
+
+## Runtime/configuration repair expansion
+
+The current corpus has **30 decisions across 10 rule families**. The original 21-case snapshot above remains historical. `runtime-config-repair.json` records the same expanded corpus against PR54's engine and this repair: TP=10, FP=4, FN=0, TN=16 before; TP=10, FP=0, FN=0, TN=20 after. These development contracts still do not establish population accuracy or recall.
+
+The repair distinguishes Node compatibility ranges from deployed versions, anchors Docker evidence to active FROM instructions and labels build stages honestly, resolves bounded relative TypeScript JSONC inheritance, and filters comment/string environment examples with package-local templates. `hapi-engine.json` records an immutable upstream manifest excerpt and rationale; its mutated restrictive range is also tested. Node release status is a dated 2026-10-13 snapshot, based on https://github.com/nodejs/Release and https://nodejs.org/en/about/eol; future lines and unsupported range syntax do not prove EOL.
+
+Limits: the range evaluator handles documented bounded stable numeric syntax, not every npm semver expression. External TypeScript packages, cycles and unread bases remain unresolved; explicit child options remain usable. TypeScript compiler option value validity is not fully checked. Environment advice is heuristic, not proof that dotenv is required; Python multiline strings, aliases and dynamic access remain outside complete analysis. No independent adjudication or fresh blind holdout is claimed. The 100-repository workflow compares this engine with PR54 and records all coverage limits and changes for review.

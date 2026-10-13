@@ -1,3 +1,5 @@
+import { securityContext, matchIsProse } from '../../analyzer/security-context';
+import { packageOwner } from '../../analyzer/javascript-import-evidence';
 import type { CompatibilityRule } from '../types';
 import type { Issue } from '../../analyzer/types';
 import { readFile } from './shared';
@@ -53,10 +55,25 @@ export const configurationRules: CompatibilityRule[] = [
     run: (ctx) => {
       const issues: Issue[] = [];
       if (ctx.stack.architecture?.primary === 'Operating System Kernel') return issues;
-      const hasEnvExample = ctx.detectedFiles.some((f) => f.path.endsWith('.env.example'));
-      const hasEnv = ctx.files.some((f) => !f.isDirectory && /(^|\/)\.env$/i.test(f.path));
-      const usesEnv = ctx.files.some((f) => !f.isDirectory && classifyProjectFileScope(f.path) === 'production' && /\b(?:process\.env\.(?!NODE_ENV\b)|import\.meta\.env\.(?!MODE\b|DEV\b|PROD\b)|os\.getenv\s*\(|System\.getenv\s*\()/i.test(f.content ?? ''));
-      if (usesEnv && !hasEnvExample && !hasEnv) {
+      const evidenceFiles = ctx.files.filter(f => !f.isDirectory && ['production', 'configuration'].includes(classifyProjectFileScope(f.path)));
+      const manifests = evidenceFiles.filter(f => /(?:^|\/)(?:package\.json|pyproject\.toml|pom\.xml|build\.gradle(?:\.kts)?)$/.test(f.path)).map(f => f.path);
+      const owners = new Set<string>();
+      for (const file of evidenceFiles) {
+        if (classifyProjectFileScope(file.path) !== 'production') continue;
+        const source = file.content ?? '';
+        const pattern = /\.[cm]?[jt]sx?$/i.test(file.path) ? /\b(?:process\.env\.(?!NODE_ENV\b)|import\.meta\.env\.(?!MODE\b|DEV\b|PROD\b))[A-Za-z_$][\w$]*/g
+          : /\.(?:java|kt|kts)$/i.test(file.path) ? /\bSystem\.getenv\s*\(/g : /\.py$/i.test(file.path) ? /\bos\.getenv\s*\(/g : undefined;
+        if (!pattern) continue;
+        const context = securityContext(source, /\.kts?$/i.test(file.path) ? file.path + ".java" : file.path);
+        const used = [...source.matchAll(pattern)].some(m => {
+          if (context) return !matchIsProse(context, source, m.index!, m.index! + m[0].length, false);
+          return !source.slice(source.lastIndexOf('\n', m.index!) + 1, m.index).trimStart().startsWith('#');
+        });
+        if (used) owners.add(packageOwner(file.path, manifests));
+      }
+      for (const owner of owners) {
+        const hasTemplate = evidenceFiles.some(f => packageOwner(f.path, manifests) === owner && /(?:^|\/)\.env(?:\.example)?$/.test(f.path));
+        if (hasTemplate) continue;
         issues.push({
           id: 'env-example-missing',
           title: 'No .env.example file found',
@@ -65,7 +82,7 @@ export const configurationRules: CompatibilityRule[] = [
           description: 'The project does not include an .env.example template.',
           reason: 'Contributors need to know which environment variables the project expects.',
           recommendation: 'Add an .env.example file listing required variables with placeholder values.',
-          affectedFile: '.env.example',
+          affectedFile: owner + '.env.example',
           detected: 'missing',
           expected: '.env.example present',
           impact: 'Onboarding friction and misconfigured deployments.',
