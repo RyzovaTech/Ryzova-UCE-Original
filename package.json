@@ -40,7 +40,9 @@
     "audit:accuracy:correlation": "node testing/correlation/audit.mjs --check",
     "test:release-validation": "node --test testing/release/evaluation.test.mjs",
     "audit:accuracy:release": "node testing/release/run.mjs",
-    "audit:accuracy:manifest-validation": "node testing/release/manifest.mjs --check"
+    "audit:accuracy:manifest-validation": "node testing/release/manifest.mjs --check",
+    "test:benchmark": "node --test testing/benchmark/*.test.mjs",
+    "audit:benchmark": "node testing/benchmark/run.mjs --check"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",

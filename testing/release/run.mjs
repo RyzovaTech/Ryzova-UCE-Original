@@ -7,6 +7,7 @@ import { accuracyClaimReadiness } from './evaluation.mjs';
 
 const root = fileURLToPath(new URL('../../',import.meta.url));
 const suites = [
+  ['evidence-paired-development','testing/benchmark/run.mjs'],
   ['bounded-development','scripts/audit-accuracy.mjs'],
   ['mixed-development','testing/accuracy/run.mjs'],
   ['scope-development','testing/accuracy/scope.mjs'],
@@ -33,7 +34,7 @@ const reports = suites.map(([id,script])=>{
     ...(report.selectedManifestMetrics ? { selectedManifestMetrics:report.selectedManifestMetrics } : {}),
     failures };
 });
-const report = { schemaVersion:1, program:'90–95% accuracy engineering validation', engineeringGates:'passed',
+const report = { schemaVersion:1, program:'95% precision and recall engineering validation', engineeringGates:'passed',
   scope:'Separate development contracts and selected pinned manifest evaluations. Metrics are not pooled or averaged into global accuracy.',
   globalAccuracy:null, humanReviewedCases:0, benchmarks:reports,
   accuracyClaim:accuracyClaimReadiness({results:currentEvaluation.results,repositories:currentEvaluation.projects.repositories,coveredModules:['technology']}),

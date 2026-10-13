@@ -1,0 +1,69 @@
+{
+  "scope": "Initial 21 development rule-context decisions; not whole-engine accuracy",
+  "baselineEngineCommit": "b0ea503018e39b8618cb25885c89d064dcf9e627",
+  "corpusSha256": "90dda136e8f8252ea4df12981bb67be5dd95de7753e09322e56a8bbd858de341",
+  "before": {
+    "cases": 21,
+    "binaryCases": 21,
+    "categoricalCases": 0,
+    "correct": 19,
+    "decisionAccuracy": 90.48,
+    "decisionWilson95": [
+      71.09,
+      97.35
+    ],
+    "tp": 7,
+    "fp": 2,
+    "fn": 0,
+    "tn": 12,
+    "precision": 77.78,
+    "precisionWilson95": [
+      45.26,
+      93.68
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      64.57,
+      100
+    ],
+    "falsePositiveRate": 14.29
+  },
+  "beforePriorities": [
+    {
+      "rule": "dotnet-target-framework",
+      "fp": 2,
+      "fn": 0,
+      "cases": 3,
+      "precision": 33.33,
+      "recall": 100
+    }
+  ],
+  "after": {
+    "cases": 21,
+    "binaryCases": 21,
+    "categoricalCases": 0,
+    "correct": 21,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      84.54,
+      100
+    ],
+    "tp": 7,
+    "fp": 0,
+    "fn": 0,
+    "tn": 14,
+    "precision": 100,
+    "precisionWilson95": [
+      64.57,
+      100
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      64.57,
+      100
+    ],
+    "falsePositiveRate": 0
+  },
+  "independentlyReviewed": false,
+  "globalAccuracy": null
+}

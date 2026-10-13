@@ -1,0 +1,732 @@
+{
+  "schemaVersion": 1,
+  "split": "development",
+  "cases": [
+    {
+      "id": "go-sum-bug",
+      "family": "go-sum",
+      "ecosystem": "Go",
+      "module": "extended-dependencies",
+      "rule": "go-sum-present",
+      "finding": "go-sum-missing",
+      "stack": {
+        "packageManager": "go-modules"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Dependency declared without checksum file.",
+      "files": [
+        {
+          "path": "go.mod",
+          "content": "module example.test/app\ngo 1.22\nrequire example.test/dep v1.0.0"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "go.mod",
+          "line": 1,
+          "text": "module example.test/app"
+        },
+        {
+          "path": "go.mod",
+          "line": 2,
+          "text": "go 1.22"
+        },
+        {
+          "path": "go.mod",
+          "line": 3,
+          "text": "require example.test/dep v1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "go-sum-fixed",
+      "family": "go-sum",
+      "ecosystem": "Go",
+      "module": "extended-dependencies",
+      "rule": "go-sum-present",
+      "finding": "go-sum-missing",
+      "stack": {
+        "packageManager": "go-modules"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Checksum file present; content is a synthetic presence fixture, not a verified module hash.",
+      "files": [
+        {
+          "path": "go.mod",
+          "content": "module example.test/app\ngo 1.22\nrequire example.test/dep v1.0.0"
+        },
+        {
+          "path": "go.sum",
+          "content": "example.test/dep v1.0.0 h1:fixture"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "go.mod",
+          "line": 1,
+          "text": "module example.test/app"
+        },
+        {
+          "path": "go.mod",
+          "line": 2,
+          "text": "go 1.22"
+        },
+        {
+          "path": "go.mod",
+          "line": 3,
+          "text": "require example.test/dep v1.0.0"
+        },
+        {
+          "path": "go.sum",
+          "line": 1,
+          "text": "example.test/dep v1.0.0 h1:fixture"
+        }
+      ]
+    },
+    {
+      "id": "go-sum-negative",
+      "family": "go-sum",
+      "ecosystem": "Go",
+      "module": "extended-dependencies",
+      "rule": "go-sum-present",
+      "finding": "go-sum-missing",
+      "stack": {
+        "packageManager": "go-modules"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Comment is not a require directive; dependency-free module needs no checksum file.",
+      "files": [
+        {
+          "path": "go.mod",
+          "content": "module example.test/app\ngo 1.22\n// require example.test/dep v1.0.0"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "go.mod",
+          "line": 1,
+          "text": "module example.test/app"
+        },
+        {
+          "path": "go.mod",
+          "line": 2,
+          "text": "go 1.22"
+        },
+        {
+          "path": "go.mod",
+          "line": 3,
+          "text": "// require example.test/dep v1.0.0"
+        }
+      ]
+    },
+    {
+      "id": "dotnet-target-bug",
+      "family": "dotnet-target",
+      "ecosystem": "C#",
+      "module": "extended-runtime",
+      "rule": "dotnet-target-framework",
+      "finding": "dotnet-targetframework-missing",
+      "stack": {
+        "runtime": ".NET"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "SDK project without target or imports.",
+      "files": [
+        {
+          "path": "src/App/App.csproj",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup /></Project>"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/App/App.csproj",
+          "line": 1,
+          "text": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup /></Project>"
+        }
+      ]
+    },
+    {
+      "id": "dotnet-target-fixed",
+      "family": "dotnet-target",
+      "ecosystem": "C#",
+      "module": "extended-runtime",
+      "rule": "dotnet-target-framework",
+      "finding": "dotnet-targetframework-missing",
+      "stack": {
+        "runtime": ".NET"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Root Directory.Build.props supplies inherited target.",
+      "files": [
+        {
+          "path": "src/App/App.csproj",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup /></Project>"
+        },
+        {
+          "path": "Directory.Build.props",
+          "content": "<Project><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/App/App.csproj",
+          "line": 1,
+          "text": "<Project Sdk=\"Microsoft.NET.Sdk\"><PropertyGroup /></Project>"
+        },
+        {
+          "path": "Directory.Build.props",
+          "line": 1,
+          "text": "<Project><PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup></Project>"
+        }
+      ]
+    },
+    {
+      "id": "dotnet-target-negative",
+      "family": "dotnet-target",
+      "ecosystem": "C#",
+      "module": "extended-runtime",
+      "rule": "dotnet-target-framework",
+      "finding": "dotnet-targetframework-missing",
+      "stack": {
+        "runtime": ".NET"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Auxiliary test project must not replace production target evidence.",
+      "files": [
+        {
+          "path": "tests/Test.csproj",
+          "content": "<Project Sdk=\"Microsoft.NET.Sdk\" />"
+        },
+        {
+          "path": "src/App/App.csproj",
+          "content": "<Project><PropertyGroup><TargetFrameworks>net8.0;net9.0</TargetFrameworks></PropertyGroup></Project>"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "tests/Test.csproj",
+          "line": 1,
+          "text": "<Project Sdk=\"Microsoft.NET.Sdk\" />"
+        },
+        {
+          "path": "src/App/App.csproj",
+          "line": 1,
+          "text": "<Project><PropertyGroup><TargetFrameworks>net8.0;net9.0</TargetFrameworks></PropertyGroup></Project>"
+        }
+      ]
+    },
+    {
+      "id": "gradle-target-bug",
+      "family": "gradle-target",
+      "ecosystem": "Kotlin",
+      "module": "extended-runtime",
+      "rule": "java-version-pinned",
+      "finding": "java-version-missing",
+      "stack": {
+        "runtime": "JVM"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "No compiler target evidence.",
+      "files": [
+        {
+          "path": "build.gradle.kts",
+          "content": "plugins { java }"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "build.gradle.kts",
+          "line": 1,
+          "text": "plugins { java }"
+        }
+      ]
+    },
+    {
+      "id": "gradle-target-fixed",
+      "family": "gradle-target",
+      "ecosystem": "Kotlin",
+      "module": "extended-runtime",
+      "rule": "java-version-pinned",
+      "finding": "java-version-missing",
+      "stack": {
+        "runtime": "JVM"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Explicit Java toolchain target.",
+      "files": [
+        {
+          "path": "build.gradle.kts",
+          "content": "plugins { java }\njava { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "build.gradle.kts",
+          "line": 1,
+          "text": "plugins { java }"
+        },
+        {
+          "path": "build.gradle.kts",
+          "line": 2,
+          "text": "java { toolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }"
+        }
+      ]
+    },
+    {
+      "id": "gradle-target-negative",
+      "family": "gradle-target",
+      "ecosystem": "Kotlin",
+      "module": "extended-runtime",
+      "rule": "java-version-pinned",
+      "finding": "java-version-missing",
+      "stack": {
+        "runtime": "JVM"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Convention script supplies JVM target evidence.",
+      "files": [
+        {
+          "path": "build.gradle.kts",
+          "content": "plugins { java }"
+        },
+        {
+          "path": "buildSrc/src/main/kotlin/conventions.gradle.kts",
+          "content": "kotlin { jvmToolchain(17) }"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "build.gradle.kts",
+          "line": 1,
+          "text": "plugins { java }"
+        },
+        {
+          "path": "buildSrc/src/main/kotlin/conventions.gradle.kts",
+          "line": 1,
+          "text": "kotlin { jvmToolchain(17) }"
+        }
+      ]
+    },
+    {
+      "id": "workspace-bug",
+      "family": "workspace",
+      "ecosystem": "JavaScript",
+      "module": "extended-structure",
+      "rule": "multiple-package-json",
+      "finding": "multiple-pkg-json-no-workspaces",
+      "stack": {},
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Two production manifests without workspace declaration.",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{}"
+        },
+        {
+          "path": "packages/core/package.json",
+          "content": "{}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "package.json",
+          "line": 1,
+          "text": "{}"
+        },
+        {
+          "path": "packages/core/package.json",
+          "line": 1,
+          "text": "{}"
+        }
+      ]
+    },
+    {
+      "id": "workspace-fixed",
+      "family": "workspace",
+      "ecosystem": "JavaScript",
+      "module": "extended-structure",
+      "rule": "multiple-package-json",
+      "finding": "multiple-pkg-json-no-workspaces",
+      "stack": {},
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Root workspaces cover nested package.",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{\"workspaces\":[\"packages/*\"]}"
+        },
+        {
+          "path": "packages/core/package.json",
+          "content": "{}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "package.json",
+          "line": 1,
+          "text": "{\"workspaces\":[\"packages/*\"]}"
+        },
+        {
+          "path": "packages/core/package.json",
+          "line": 1,
+          "text": "{}"
+        }
+      ]
+    },
+    {
+      "id": "workspace-negative",
+      "family": "workspace",
+      "ecosystem": "JavaScript",
+      "module": "extended-structure",
+      "rule": "multiple-package-json",
+      "finding": "multiple-pkg-json-no-workspaces",
+      "stack": {},
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Example manifest is auxiliary.",
+      "files": [
+        {
+          "path": "package.json",
+          "content": "{}"
+        },
+        {
+          "path": "examples/demo/package.json",
+          "content": "{}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "package.json",
+          "line": 1,
+          "text": "{}"
+        },
+        {
+          "path": "examples/demo/package.json",
+          "line": 1,
+          "text": "{}"
+        }
+      ]
+    },
+    {
+      "id": "root-config-bug",
+      "family": "root-config",
+      "ecosystem": "Ruby",
+      "module": "extended-structure",
+      "rule": "config-file-at-root",
+      "finding": "root-config-missing",
+      "stack": {
+        "language": "Ruby"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "No recognized root build or dependency config.",
+      "files": [
+        {
+          "path": "main.rb",
+          "content": "puts \"hello\""
+        }
+      ],
+      "evidence": [
+        {
+          "path": "main.rb",
+          "line": 1,
+          "text": "puts \"hello\""
+        }
+      ]
+    },
+    {
+      "id": "root-config-fixed",
+      "family": "root-config",
+      "ecosystem": "Ruby",
+      "module": "extended-structure",
+      "rule": "config-file-at-root",
+      "finding": "root-config-missing",
+      "stack": {
+        "language": "Ruby"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Root Gemfile is recognized configuration.",
+      "files": [
+        {
+          "path": "main.rb",
+          "content": "puts \"hello\""
+        },
+        {
+          "path": "Gemfile",
+          "content": "source \"https://rubygems.org\""
+        }
+      ],
+      "evidence": [
+        {
+          "path": "main.rb",
+          "line": 1,
+          "text": "puts \"hello\""
+        },
+        {
+          "path": "Gemfile",
+          "line": 1,
+          "text": "source \"https://rubygems.org\""
+        }
+      ]
+    },
+    {
+      "id": "root-config-negative",
+      "family": "root-config",
+      "ecosystem": "Ruby",
+      "module": "extended-structure",
+      "rule": "config-file-at-root",
+      "finding": "root-config-missing",
+      "stack": {
+        "language": "Ruby"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Project using a root Makefile has root configuration.",
+      "files": [
+        {
+          "path": "Makefile",
+          "content": "all:\n\techo hello"
+        },
+        {
+          "path": "main.rb",
+          "content": "puts \"hello\""
+        }
+      ],
+      "evidence": [
+        {
+          "path": "Makefile",
+          "line": 1,
+          "text": "all:"
+        },
+        {
+          "path": "Makefile",
+          "line": 2,
+          "text": "\techo hello"
+        },
+        {
+          "path": "main.rb",
+          "line": 1,
+          "text": "puts \"hello\""
+        }
+      ]
+    },
+    {
+      "id": "root-ignore-bug",
+      "family": "root-ignore",
+      "ecosystem": "JavaScript",
+      "module": "extended-structure",
+      "rule": "gitignore-covers-node-modules",
+      "finding": "gitignore-node-modules-missing",
+      "stack": {
+        "packageManager": "npm"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Root ignore does not list node_modules.",
+      "files": [
+        {
+          "path": ".gitignore",
+          "content": "*.log"
+        }
+      ],
+      "evidence": [
+        {
+          "path": ".gitignore",
+          "line": 1,
+          "text": "*.log"
+        }
+      ]
+    },
+    {
+      "id": "root-ignore-fixed",
+      "family": "root-ignore",
+      "ecosystem": "JavaScript",
+      "module": "extended-structure",
+      "rule": "gitignore-covers-node-modules",
+      "finding": "gitignore-node-modules-missing",
+      "stack": {
+        "packageManager": "npm"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Root ignore covers dependencies.",
+      "files": [
+        {
+          "path": ".gitignore",
+          "content": "*.log\nnode_modules/"
+        }
+      ],
+      "evidence": [
+        {
+          "path": ".gitignore",
+          "line": 1,
+          "text": "*.log"
+        },
+        {
+          "path": ".gitignore",
+          "line": 2,
+          "text": "node_modules/"
+        }
+      ]
+    },
+    {
+      "id": "root-ignore-negative",
+      "family": "root-ignore",
+      "ecosystem": "JavaScript",
+      "module": "extended-structure",
+      "rule": "gitignore-covers-node-modules",
+      "finding": "gitignore-node-modules-missing",
+      "stack": {
+        "packageManager": "npm"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Nested ignore must not override the root ignore.",
+      "files": [
+        {
+          "path": "test/.gitignore",
+          "content": "*.tmp"
+        },
+        {
+          "path": ".gitignore",
+          "content": "node_modules/"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "test/.gitignore",
+          "line": 1,
+          "text": "*.tmp"
+        },
+        {
+          "path": ".gitignore",
+          "line": 1,
+          "text": "node_modules/"
+        }
+      ]
+    },
+    {
+      "id": "typescript-config-bug",
+      "family": "typescript-config",
+      "ecosystem": "TypeScript",
+      "module": "configuration",
+      "rule": "tsconfig-present",
+      "finding": "tsconfig-missing",
+      "stack": {
+        "language": "TypeScript"
+      },
+      "variant": "bug",
+      "expected": true,
+      "labelStatus": "agent-provisional",
+      "rationale": "Selected UCE configuration contract flags implementation without tsconfig; not a claim that every CLI compilation must fail.",
+      "files": [
+        {
+          "path": "src/main.ts",
+          "content": "export const value: number = 1;"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/main.ts",
+          "line": 1,
+          "text": "export const value: number = 1;"
+        }
+      ]
+    },
+    {
+      "id": "typescript-config-fixed",
+      "family": "typescript-config",
+      "ecosystem": "TypeScript",
+      "module": "configuration",
+      "rule": "tsconfig-present",
+      "finding": "tsconfig-missing",
+      "stack": {
+        "language": "TypeScript"
+      },
+      "variant": "fixed",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Explicit TypeScript configuration present.",
+      "files": [
+        {
+          "path": "src/main.ts",
+          "content": "export const value: number = 1;"
+        },
+        {
+          "path": "tsconfig.json",
+          "content": "{\"compilerOptions\":{\"strict\":true}}"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "src/main.ts",
+          "line": 1,
+          "text": "export const value: number = 1;"
+        },
+        {
+          "path": "tsconfig.json",
+          "line": 1,
+          "text": "{\"compilerOptions\":{\"strict\":true}}"
+        }
+      ]
+    },
+    {
+      "id": "typescript-config-negative",
+      "family": "typescript-config",
+      "ecosystem": "TypeScript",
+      "module": "configuration",
+      "rule": "tsconfig-present",
+      "finding": "tsconfig-missing",
+      "stack": {
+        "language": "TypeScript"
+      },
+      "variant": "negative",
+      "expected": false,
+      "labelStatus": "agent-provisional",
+      "rationale": "Declaration-only distribution does not imply missing build configuration.",
+      "files": [
+        {
+          "path": "index.d.ts",
+          "content": "export declare const value: number;"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "index.d.ts",
+          "line": 1,
+          "text": "export declare const value: number;"
+        }
+      ]
+    }
+  ]
+}
