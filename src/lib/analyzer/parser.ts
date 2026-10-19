@@ -157,6 +157,7 @@ const GLOBBISH_CONFIG = [
   'webpack.config.',
   'rollup.config.',
   'esbuild.config.',
+  'hardhat.config.',
   'jest.config.',
   'vitest.config.',
   'tailwind.config.',
