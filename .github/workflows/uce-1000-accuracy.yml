@@ -1,15 +1,15 @@
 name: UCE 1000 Public Repository Evidence Benchmark
 
 on:
-  push:
-    branches: [bench/uce-1000-realworld-v2]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: uce-1000-${{ github.ref }}
+  group: uce-1000-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
