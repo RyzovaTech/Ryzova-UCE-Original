@@ -4,6 +4,7 @@ import type {
 } from './types';
 import type { V3RuleFinding } from '../knowledge/v3-types';
 import { parseFiles } from './parser';
+import { isProjectEvidenceFile } from './project-scope';
 import { detectStack, buildSummary } from './detectors';
 import { detectLanguageProfile } from './language-profile';
 import { detectTechnologyProfiles } from './technology-profiles';
@@ -50,12 +51,27 @@ function buildNonSoftwareCategories(): CategoryResult[] { return CATEGORIES.map(
 const ZERO_SCORE: CompatibilityScore = { runtime: 0, dependencies: 0, configuration: 0, structure: 0, environment: 0, security: 0, deployment: 0, performance: 0, overall: 0 };
 const MIXED_LANGUAGE_MIN_PERCENT = 1;
 const MIXED_LANGUAGE_MIN_FILES = 2;
-function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]): TechnologyStack {
+function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[], files: ProjectFile[]): TechnologyStack {
   if (profiles.length === 0) return { ...stack, languages: [] };
   const meaningful = profiles.filter((profile, index) => index === 0 || profile.percentage >= MIXED_LANGUAGE_MIN_PERCENT || profile.files >= MIXED_LANGUAGE_MIN_FILES);
   // Data/config files can dwarf executable sources without defining the runtime.
   const supporting = new Set(['JSON', 'YAML', 'TOML', 'XML', 'CSS', 'SCSS', 'Sass', 'Less', 'Stylus']);
-  const primary = meaningful.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
+  // A root tsconfig plus multiple first-party TypeScript source files is stronger
+  // project-identity evidence than large JavaScript tooling or helper scripts.
+  // Do not let language-volume aggregation undo the primary stack detector.
+  const hasRootTypeScriptConfig = files.some((file) => !file.isDirectory && file.path === 'tsconfig.json');
+  const productionTypeScriptFiles = files.filter((file) =>
+    isProjectEvidenceFile(file) && /\.(?:ts|tsx)$/i.test(file.path) && !/\.d\.ts$/i.test(file.path) &&
+    (file.path.startsWith('src/') || file.path.startsWith('app/') ||
+      file.path.startsWith('lib/') || /(?:^|\/)src\//.test(file.path))
+  ).length;
+  // A valid TS project may expose a single src/index.ts and ship many JS build
+  // utilities (InversifyJS). Treat even one first-party TS entry point as real
+  // identity evidence when backed by a root tsconfig and the base stack.
+  const manifestPrimary = stack.language === 'TypeScript' && hasRootTypeScriptConfig && productionTypeScriptFiles >= 1
+    ? profiles.find((profile) => profile.language === 'TypeScript')
+    : undefined;
+  const primary = manifestPrimary ?? meaningful.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
   const secondary = meaningful.filter((profile) => profile !== primary);
   return { ...stack, languages: profiles, mixedLanguage: secondary.length > 0, primaryLanguage: primary.language, secondaryLanguages: secondary, language: primary.language };
 }
@@ -96,7 +112,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   const startTime = typeof performance !== 'undefined' ? performance.now() : Date.now();
   const detectedFiles = parseFiles(input.files); const classification = classifyProject(input.files, detectedFiles);
   const detectedLanguages = detectLanguageProfile(input.files); const baseStack = detectStack(input.files, detectedFiles);
-  const stack = enrichLanguageStack(baseStack, detectedLanguages); const registryDetections = detectRegisteredTechnologies(input.files); const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack, registryDetections);
+  const stack = enrichLanguageStack(baseStack, detectedLanguages, input.files); const registryDetections = detectRegisteredTechnologies(input.files); const technologyProfiles = detectTechnologyProfiles(input.files, detectedFiles, stack, registryDetections);
   stack.frameworks = technologyProfiles.frameworks; stack.runtimes = technologyProfiles.runtimes;
   stack.technologyDetections = uniqueTechnologyDetections(registryDetections); stack.knowledgeVersion = TECHNOLOGY_REGISTRY_VERSION;
   const technologyGraph = buildTechnologyGraph(stack.technologyDetections); stack.capabilities = technologyGraph.capabilities; stack.technologyRelationships = technologyGraph.relationships;

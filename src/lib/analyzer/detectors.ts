@@ -403,9 +403,24 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
   if (hasRootFile(scoped, 'pnpm-lock.yaml')) return 'pnpm';
   if (hasRootFile(scoped, 'yarn.lock')) return 'yarn';
   if (hasRootFile(scoped, 'bun.lockb') || hasRootFile(scoped, 'bun.lock')) return 'bun';
-  if (hasRootFile(scoped, 'package-lock.json') || hasRootFile(scoped, 'package.json')) return 'npm';
+  if (hasRootFile(scoped, 'package-lock.json')) return 'npm';
   const rootManagers: Array<[string, PackageManager]> = [['Cargo.toml', 'cargo'], ['go.mod', 'go-modules'], ['pom.xml', 'maven'], ['build.gradle', 'gradle'], ['build.gradle.kts', 'gradle'], ['composer.json', 'composer'], ['Gemfile', 'bundler'], ['mix.exs', 'mix'], ['pubspec.yaml', 'pub'], ['Package.swift', 'swift-package']];
+  // A metadata-only package.json is not sufficient to override an explicit native
+  // project manager. Real example: carbonyl has a Rust Cargo project and a
+  // minimal root package.json containing name/version/license but no JS tooling.
+  const nodePackage = safeJson(readPrimaryFileText(projectFiles, 'package.json'));
+  const hasNodeTooling = Boolean(nodePackage && (
+    ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies', 'scripts']
+      .some((key) => {
+        const value = nodePackage[key];
+        return value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length > 0;
+      }) ||
+    typeof nodePackage.packageManager === 'string' ||
+    nodePackage.workspaces !== undefined
+  ));
+  if (hasRootFile(scoped, 'package.json') && hasNodeTooling) return 'npm';
   for (const [manifest, manager] of rootManagers) if (hasRootFile(scoped, manifest)) return manager;
+  if (hasRootFile(scoped, 'package.json')) return 'npm';
   if (hasPrimaryFile(scoped, 'pyproject.toml')) {
     const content = readPrimaryFileText(projectFiles, 'pyproject.toml') ?? '';
     if (/\[tool\.poetry\]/i.test(content)) return 'poetry';

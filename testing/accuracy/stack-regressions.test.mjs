@@ -14,6 +14,78 @@ const file = (path, content) => ({
 });
 const stack = (...files) => detectStack(files, parseFiles(files));
 
+
+test('Cargo outranks metadata-only package.json in a native Rust project', () => {
+  // Reproduces source layout of fathyb/carbonyl (pinned live benchmark).
+  const result = stack(
+    file('Cargo.toml', '[package]\\nname="carbonyl"\\nversion="0.0.3"\\n'),
+    file('package.json', '{"name":"carbonyl","version":"0.0.3","license":"BSD-3-Clause"}'),
+    file('src/lib.rs', 'pub fn run() {}\\n'),
+  );
+  assert.equal(result.packageManager, 'cargo');
+});
+
+test('a meaningful Node wrapper still uses npm alongside Cargo sources', () => {
+  const result = stack(
+    file('Cargo.toml', '[package]\\nname="native-addon"\\n'),
+    file('package.json', '{"name":"wrapper","scripts":{"build":"node build.mjs"},"dependencies":{"express":"4"}}'),
+    file('index.js', 'export const wrapper = true;'),
+  );
+  assert.equal(result.packageManager, 'npm');
+});
+
+test('root TypeScript source remains primary despite larger JavaScript build scripts', () => {
+  // Reproduces the strong root tsconfig + production TS / JS tooling mixture
+  // seen in inversify/InversifyJS. Report-level enrichment must not override it.
+  const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+  const files = [
+    file('tsconfig.json', '{"compilerOptions":{"strict":true}}'),
+    file('package.json', '{"name":"example","scripts":{"build":"tsc"},"devDependencies":{"typescript":"5"}}'),
+    file('src/container.ts', 'export const container: string = "ok";\\n'),
+    file('src/index.ts', 'export * from "./container";\\n'),
+    file('scripts/generate.js', 'function helper() { return 1; }\\n'.repeat(150)),
+  ];
+  const analysis = analyzeProject({ files, fileName: 'ts-project', source: 'upload', scanStats: {
+    projectSize: files.reduce((sum, item) => sum + item.size, 0),
+    filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0,
+    ignoredCategories: [],
+  } });
+  assert.equal(analysis.stack.language, 'TypeScript');
+  assert.equal(analysis.stack.primaryLanguage, 'TypeScript');
+  assert.equal(analysis.stack.runtime, 'Node.js');
+});
+
+test('single root TypeScript entry point outranks JavaScript-only tooling', () => {
+  const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+  const files = [
+    file('tsconfig.json', '{"compilerOptions":{"rootDir":"src"}}'),
+    file('package.json', '{"name":"ts-single-entry","scripts":{"build":"tsc"}}'),
+    file('src/index.ts', 'export const entry: string = "ts";'),
+    file('scripts/build.js', 'const build = true;'.repeat(500)),
+  ];
+  const result = analyzeProject({ files, fileName: 'ts-single-entry', source: 'upload', scanStats: {
+    projectSize: files.reduce((total, item) => total + item.size, 0),
+    filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [],
+  } });
+  assert.equal(result.stack.language, 'TypeScript');
+  assert.equal(result.stack.primaryLanguage, 'TypeScript');
+  assert.equal(result.stack.runtime, 'Node.js');
+});
+
+test('tsconfig without production TypeScript does not override JavaScript source', () => {
+  const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+  const files = [
+    file('tsconfig.json', '{"compilerOptions":{"allowJs":true}}'),
+    file('src/main.js', 'export const js = true;\\n'),
+  ];
+  const analysis = analyzeProject({ files, fileName: 'js-project', source: 'upload', scanStats: {
+    projectSize: files.reduce((sum, item) => sum + item.size, 0),
+    filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0,
+    ignoredCategories: [],
+  } });
+  assert.equal(analysis.stack.language, 'JavaScript');
+});
+
 test('Hardhat configuration is recognized as Hardhat, never Turbopack', () => {
   const result = stack(
     file('hardhat.config.ts', 'export default { solidity: "0.8.20" };'),

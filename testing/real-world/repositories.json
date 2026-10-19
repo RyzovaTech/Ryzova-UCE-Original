@@ -1,0 +1,808 @@
+{
+  "schemaVersion": 1,
+  "description": "Preselected small public GitHub repositories from category-filtered GitHub repository search; NOT independent human-adjudicated truth labels.",
+  "selectionDate": "2026-10-19",
+  "labelScope": "GitHub-reported primary language and explicit root lockfile/tooling indicators only. Results are agreement proxies, not global UCE accuracy.",
+  "repositories": [
+    {
+      "repo": "MechanicalSoup/MechanicalSoup",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 778
+    },
+    {
+      "repo": "cdgriffith/Box",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 2761
+    },
+    {
+      "repo": "pndurette/gTTS",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 566
+    },
+    {
+      "repo": "achillesrasquinha/bulbea",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 2768
+    },
+    {
+      "repo": "sirfz/tesserocr",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 633
+    },
+    {
+      "repo": "celery/django-celery-beat",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 978
+    },
+    {
+      "repo": "Knio/dominate",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 784
+    },
+    {
+      "repo": "aerkalov/ebooklib",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 963
+    },
+    {
+      "repo": "alan-turing-institute/CleverCSV",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 3741
+    },
+    {
+      "repo": "BoboTiG/python-mss",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 1918
+    },
+    {
+      "repo": "onnx/onnxmltools",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 3806
+    },
+    {
+      "repo": "abcminiuser/python-elgato-streamdeck",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 3302
+    },
+    {
+      "repo": "jithurjacob/Windows-10-Toast-Notifications",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 42
+    },
+    {
+      "repo": "pavdmyt/yaspin",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 2058
+    },
+    {
+      "repo": "socialpoint-labs/sheetfu",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 403
+    },
+    {
+      "repo": "nose-devs/nose2",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 2301
+    },
+    {
+      "repo": "Nv7-GitHub/googlesearch",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 57
+    },
+    {
+      "repo": "n1nj4sec/memorpy",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 75
+    },
+    {
+      "repo": "ncclient/ncclient",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 3543
+    },
+    {
+      "repo": "kuzmoyev/google-calendar-simple-api",
+      "githubCategory": "Python",
+      "githubReportedSizeKB": 624
+    },
+    {
+      "repo": "leonardomso/33-js-concepts",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 2948
+    },
+    {
+      "repo": "standard/standard",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 3752
+    },
+    {
+      "repo": "jaredhanson/passport",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 847
+    },
+    {
+      "repo": "typicode/lowdb",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1103
+    },
+    {
+      "repo": "motdotla/dotenv",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 3341
+    },
+    {
+      "repo": "mysqljs/mysql",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 2682
+    },
+    {
+      "repo": "pinojs/pino",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 3436
+    },
+    {
+      "repo": "statsd/statsd",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 841
+    },
+    {
+      "repo": "alsotang/node-lessons",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 2073
+    },
+    {
+      "repo": "auchenberg/volkswagen",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 252
+    },
+    {
+      "repo": "shelljs/shelljs",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1632
+    },
+    {
+      "repo": "graphql/dataloader",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1268
+    },
+    {
+      "repo": "Netflix/pollyjs",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 3695
+    },
+    {
+      "repo": "aksakalli/gtop",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 410
+    },
+    {
+      "repo": "goofychris/art-template",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 3187
+    },
+    {
+      "repo": "jprichardson/node-fs-extra",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1318
+    },
+    {
+      "repo": "klaudiosinani/signale",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1039
+    },
+    {
+      "repo": "porsager/postgres",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1509
+    },
+    {
+      "repo": "mouredev/hello-javascript",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 1607
+    },
+    {
+      "repo": "tumobi/nideshop-mini-program",
+      "githubCategory": "JavaScript",
+      "githubReportedSizeKB": 118
+    },
+    {
+      "repo": "type-challenges/type-challenges",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3344
+    },
+    {
+      "repo": "typescript-cheatsheets/react",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3737
+    },
+    {
+      "repo": "JCodesMore/ai-website-cloner-template",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 1456
+    },
+    {
+      "repo": "alibaba/page-agent",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3794
+    },
+    {
+      "repo": "C4illin/ConvertX",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 2956
+    },
+    {
+      "repo": "gvergnaud/ts-pattern",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 2978
+    },
+    {
+      "repo": "SawyerHood/draw-a-ui",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 999
+    },
+    {
+      "repo": "piotrwitek/react-redux-typescript-guide",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 2743
+    },
+    {
+      "repo": "privatenumber/tsx",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3043
+    },
+    {
+      "repo": "inversify/InversifyJS",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3475
+    },
+    {
+      "repo": "aurelia/framework",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3253
+    },
+    {
+      "repo": "labs42io/clean-code-typescript",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 134
+    },
+    {
+      "repo": "blacksmithgu/obsidian-dataview",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3583
+    },
+    {
+      "repo": "mattpocock/ts-reset",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 344
+    },
+    {
+      "repo": "total-typescript/beginners-typescript-tutorial",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 634
+    },
+    {
+      "repo": "molefrog/wouter",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 1341
+    },
+    {
+      "repo": "supermacro/neverthrow",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 2007
+    },
+    {
+      "repo": "xiangsx/gpt4free-ts",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3092
+    },
+    {
+      "repo": "EutropicAI/Final2x",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 3590
+    },
+    {
+      "repo": "imgly/background-removal-js",
+      "githubCategory": "TypeScript",
+      "githubReportedSizeKB": 890
+    },
+    {
+      "repo": "vipshop/vjtools",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 2108
+    },
+    {
+      "repo": "majidgolshadi/Android-Download-Manager-Pro",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 210
+    },
+    {
+      "repo": "openmessaging/dledger",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 944
+    },
+    {
+      "repo": "wasmerio/wasmer-java",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 328
+    },
+    {
+      "repo": "patrickfav/bcrypt",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 2405
+    },
+    {
+      "repo": "niumoo/JavaNotes",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 1084
+    },
+    {
+      "repo": "Hakky54/log-captor",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 755
+    },
+    {
+      "repo": "bertrandmartel/speed-test-lib",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 777
+    },
+    {
+      "repo": "Deep-Symmetry/beat-link",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 3294
+    },
+    {
+      "repo": "TheElectronWill/night-config",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 2061
+    },
+    {
+      "repo": "3breadt/dd-plist",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 1401
+    },
+    {
+      "repo": "Dansoftowner/jSystemThemeDetector",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 509
+    },
+    {
+      "repo": "Deep-Symmetry/crate-digger",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 2154
+    },
+    {
+      "repo": "robinst/autolink-java",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 161
+    },
+    {
+      "repo": "CleverTap/apns-http2",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 185
+    },
+    {
+      "repo": "vsilaev/tascalate-concurrent",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 998
+    },
+    {
+      "repo": "renatoathaydes/rawhttp",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 3975
+    },
+    {
+      "repo": "marianobarrios/tls-channel",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 1521
+    },
+    {
+      "repo": "RomanIakovlev/timeshape",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 251
+    },
+    {
+      "repo": "aikar/TaskChain",
+      "githubCategory": "Java",
+      "githubReportedSizeKB": 547
+    },
+    {
+      "repo": "vinkla/hashids",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 300
+    },
+    {
+      "repo": "abraham/twitteroauth",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 2939
+    },
+    {
+      "repo": "SimpleSoftwareIO/simple-qrcode",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 710
+    },
+    {
+      "repo": "aimeos/aimeos-base",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 601
+    },
+    {
+      "repo": "laravolt/avatar",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 498
+    },
+    {
+      "repo": "hprose/hprose-php",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 1161
+    },
+    {
+      "repo": "khanamiryan/php-qrcode-detector-decoder",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 554
+    },
+    {
+      "repo": "m9rco/algorithm-php",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 234
+    },
+    {
+      "repo": "florianv/swap",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 964
+    },
+    {
+      "repo": "gumlet/php-image-resize",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 422
+    },
+    {
+      "repo": "rakit/validation",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 388
+    },
+    {
+      "repo": "jakubkulhan/bunny",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 584
+    },
+    {
+      "repo": "sqids/sqids-php",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 59
+    },
+    {
+      "repo": "lbuchs/WebAuthn",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 932
+    },
+    {
+      "repo": "darylldoyle/svg-sanitizer",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 385
+    },
+    {
+      "repo": "lodash-php/lodash-php",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 470
+    },
+    {
+      "repo": "globalcitizen/php-iban",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 1429
+    },
+    {
+      "repo": "Ne-Lexa/php-zip",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 3155
+    },
+    {
+      "repo": "PHLAK/Twine",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 1307
+    },
+    {
+      "repo": "ongr-io/ElasticsearchDSL",
+      "githubCategory": "PHP",
+      "githubReportedSizeKB": 1125
+    },
+    {
+      "repo": "rails/bootsnap",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 3228
+    },
+    {
+      "repo": "magnusvk/counter_culture",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 893
+    },
+    {
+      "repo": "welaika/wordmove",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 961
+    },
+    {
+      "repo": "fphilipe/premailer-rails",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 339
+    },
+    {
+      "repo": "salsify/goldiloader",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 266
+    },
+    {
+      "repo": "plentz/lol_dba",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 416
+    },
+    {
+      "repo": "geminabox/geminabox",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 1112
+    },
+    {
+      "repo": "dry-rb/dry-validation",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 2383
+    },
+    {
+      "repo": "bibendi/dip",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 628
+    },
+    {
+      "repo": "fazibear/colorize",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 207
+    },
+    {
+      "repo": "exAspArk/batch-loader",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 250
+    },
+    {
+      "repo": "bogdan/datagrid",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 1500
+    },
+    {
+      "repo": "nikolalsvk/render_async",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 612
+    },
+    {
+      "repo": "dry-rb/dry-monads",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 1367
+    },
+    {
+      "repo": "ku1ik/rainbow",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 212
+    },
+    {
+      "repo": "fatkodima/online_migrations",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 953
+    },
+    {
+      "repo": "unabridged/motion",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 1244
+    },
+    {
+      "repo": "panorama-ed/memo_wise",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 841
+    },
+    {
+      "repo": "oivoodoo/devise_masquerade",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 300
+    },
+    {
+      "repo": "stitchfix/stitches",
+      "githubCategory": "Ruby",
+      "githubReportedSizeKB": 355
+    },
+    {
+      "repo": "FiloSottile/mkcert",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1799
+    },
+    {
+      "repo": "spf13/cobra",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2107
+    },
+    {
+      "repo": "iawia002/lux",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2566
+    },
+    {
+      "repo": "spf13/viper",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1625
+    },
+    {
+      "repo": "XIU2/CloudflareSpeedTest",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 406
+    },
+    {
+      "repo": "tmrts/go-patterns",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 927
+    },
+    {
+      "repo": "stretchr/testify",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2066
+    },
+    {
+      "repo": "sirupsen/logrus",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1443
+    },
+    {
+      "repo": "gorilla/websocket",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 436
+    },
+    {
+      "repo": "uber-go/zap",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1983
+    },
+    {
+      "repo": "charmbracelet/gum",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1078
+    },
+    {
+      "repo": "FiloSottile/age",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1633
+    },
+    {
+      "repo": "gorilla/mux",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 543
+    },
+    {
+      "repo": "rakyll/hey",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1086
+    },
+    {
+      "repo": "go-playground/validator",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2783
+    },
+    {
+      "repo": "ahmetb/kubectx",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 1068
+    },
+    {
+      "repo": "golang-migrate/migrate",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2468
+    },
+    {
+      "repo": "TheAlgorithms/Go",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2619
+    },
+    {
+      "repo": "jmoiron/sqlx",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 877
+    },
+    {
+      "repo": "projectdiscovery/katana",
+      "githubCategory": "Go",
+      "githubReportedSizeKB": 2944
+    },
+    {
+      "repo": "sharkdp/fd",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2414
+    },
+    {
+      "repo": "sharkdp/hyperfine",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2455
+    },
+    {
+      "repo": "TheAlgorithms/Rust",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1548
+    },
+    {
+      "repo": "firecrawl/anydoc",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 756
+    },
+    {
+      "repo": "fathyb/carbonyl",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 283
+    },
+    {
+      "repo": "Rigellute/spotify-tui",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2403
+    },
+    {
+      "repo": "denisidoro/navi",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1573
+    },
+    {
+      "repo": "lsd-rs/lsd",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1699
+    },
+    {
+      "repo": "XAMPPRocky/tokei",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2906
+    },
+    {
+      "repo": "microsoft/RustTraining",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1589
+    },
+    {
+      "repo": "origin-brain/rust-by-practice",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2883
+    },
+    {
+      "repo": "microsoft/edit",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2659
+    },
+    {
+      "repo": "rathole-org/rathole",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 882
+    },
+    {
+      "repo": "hydra-db/hydradb",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1683
+    },
+    {
+      "repo": "bootandy/dust",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1384
+    },
+    {
+      "repo": "seanmonstar/reqwest",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 2826
+    },
+    {
+      "repo": "ekzhang/bore",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 67
+    },
+    {
+      "repo": "sigoden/dufs",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 996
+    },
+    {
+      "repo": "rustdesk/rustdesk-server",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 1960
+    },
+    {
+      "repo": "seanmonstar/warp",
+      "githubCategory": "Rust",
+      "githubReportedSizeKB": 969
+    }
+  ]
+}
