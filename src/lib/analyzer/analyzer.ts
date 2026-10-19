@@ -61,10 +61,15 @@ function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]
   // Do not let language-volume aggregation undo the primary stack detector.
   const hasRootTypeScriptConfig = files.some((file) => !file.isDirectory && file.path === 'tsconfig.json');
   const productionTypeScriptFiles = files.filter((file) =>
-    isProjectEvidenceFile(file) && /\.(?:ts|tsx)$/i.test(file.path) && !/\.d\.ts$/i.test(file.path)
+    isProjectEvidenceFile(file) && /\.(?:ts|tsx)$/i.test(file.path) && !/\.d\.ts$/i.test(file.path) &&
+    (file.path.startsWith('src/') || file.path.startsWith('app/') ||
+      file.path.startsWith('lib/') || /(?:^|\/)src\//.test(file.path))
   ).length;
-  const manifestPrimary = stack.language === 'TypeScript' && hasRootTypeScriptConfig && productionTypeScriptFiles >= 2
-    ? meaningful.find((profile) => profile.language === 'TypeScript')
+  // A valid TS project may expose a single src/index.ts and ship many JS build
+  // utilities (InversifyJS). Treat even one first-party TS entry point as real
+  // identity evidence when backed by a root tsconfig and the base stack.
+  const manifestPrimary = stack.language === 'TypeScript' && hasRootTypeScriptConfig && productionTypeScriptFiles >= 1
+    ? profiles.find((profile) => profile.language === 'TypeScript')
     : undefined;
   const primary = manifestPrimary ?? meaningful.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
   const secondary = meaningful.filter((profile) => profile !== primary);
