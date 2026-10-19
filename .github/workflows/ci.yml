@@ -46,6 +46,9 @@ jobs:
       - name: Security false-positive contracts and context checks
         run: npm run audit:accuracy:security && npm run test:security-context
 
+      - name: Provisional security and browser compatibility evidence metrics
+        run: node testing/accuracy/evidence-evaluation.mjs
+
       - name: Package-local version and configuration correlation contracts
         run: npm run test:correlation && npm run audit:accuracy:correlation
 
@@ -106,3 +109,4 @@ jobs:
             uce-self-scan.json
             uce-self-scan.sarif
             uce-ci-results.sarif
+            benchmark-output/evidence-evaluation.json
