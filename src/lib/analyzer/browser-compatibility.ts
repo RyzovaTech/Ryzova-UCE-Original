@@ -1,6 +1,7 @@
 import type { BrowserCompatibilityIntelligence, BrowserName, BrowserTarget, ProjectFile } from './types';
 import { BROWSER_FEATURES, BROWSER_KNOWLEDGE_VERSION } from './browser-knowledge';
 import { isProjectEvidenceFile } from './project-scope';
+import { securityContext, matchIsProse } from './security-context';
 
 const DEFAULT_TARGETS: BrowserTarget[] = [
   { browser: 'Chrome', version: 109 }, { browser: 'Firefox', version: 115 },
@@ -67,21 +68,51 @@ function isRelevantFile(file: ProjectFile, kind: 'javascript' | 'css' | 'web-api
   return /\.(?:[cm]?[jt]sx?|html?)$/.test(path);
 }
 
+function isBrowserComment(source: string, filePath: string, offset: number): boolean {
+  const lower = filePath.toLowerCase();
+  // JS/TS prose is handled by tokenizer-based securityContext. CSS and
+  // HTML comments have distinct delimiters and need no JS parser.
+  if (!/\.(?:css|scss|sass|less|html?|htm)$/i.test(lower)) return false;
+  const lastBlockOpen = source.lastIndexOf('/*', offset);
+  const lastBlockClose = source.lastIndexOf('*/', offset);
+  if (lastBlockOpen > lastBlockClose) return true;
+  if (/\.html?$/i.test(lower)) {
+    const lastHtmlOpen = source.lastIndexOf('<!--', offset);
+    if (lastHtmlOpen > source.lastIndexOf('-->', offset)) return true;
+  }
+  if (/\.(?:scss|sass|less)$/i.test(lower)) {
+    const lineStart = source.lastIndexOf('\n', offset - 1) + 1;
+    if (/^\s*\/\//.test(source.slice(lineStart, offset))) return true;
+  }
+  return false;
+}
+
 export function detectBrowserCompatibility(files: ProjectFile[], targetFiles = files, fixedTargets?: TargetResolution): BrowserCompatibilityIntelligence {
   const resolution = fixedTargets ?? resolveBrowserTargets(targetFiles); const findings: BrowserCompatibilityIntelligence['findings'] = [];
   const sourceFiles = files.filter(isSourceFile); const seen = new Set<string>();
   for (const file of sourceFiles) {
     const content = file.content ?? '';
+    const context = securityContext(content, file.path);
     for (const rule of BROWSER_FEATURES) {
       if (!isRelevantFile(file, rule.kind)) continue;
-      const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.replace('g', '')); const match = pattern.exec(content);
-      if (!match) continue;
+      const pattern = new RegExp(rule.pattern.source, rule.pattern.flags.replace('g', '') + 'g');
+      // The first textual hit can be a comment or string. Continue searching
+      // for a genuine code occurrence before concluding a feature is used.
+      let matchIndex: number | undefined;
+      for (const match of content.matchAll(pattern)) {
+        const offset = match.index ?? 0;
+        if (context && matchIsProse(context, content, offset, offset + match[0].length, false)) continue;
+        if (isBrowserComment(content, file.path, offset)) continue;
+        matchIndex = offset;
+        break;
+      }
+      if (matchIndex === undefined) continue;
       const affectedTargets = resolution.targets.filter((target) => isUnsupported(rule, target.browser) || (minimumFor(rule, target.browser) !== undefined && target.version < minimumFor(rule, target.browser)!));
       const affected = affectedTargets.map((target) => target.browser);
       if (!affected.length) continue;
       const key = `${file.path}|${rule.id}|${affected.join(',')}`; if (seen.has(key)) continue; seen.add(key);
       const status = affectedTargets.every((target) => !isUnsupported(rule, target.browser) && rule.partialMinimums?.[target.browser] !== undefined && target.version >= rule.partialMinimums[target.browser]!) ? 'partial' : 'unsupported';
-      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, match.index), status, affectedBrowsers: affected, recommendation: rule.recommendation, staticCheckOnly: true });
+      findings.push({ id: rule.id, feature: rule.feature, kind: rule.kind, file: file.path, line: findLine(content, matchIndex), status, affectedBrowsers: affected, recommendation: rule.recommendation, staticCheckOnly: true });
     }
   }
   const uniqueFeatureTargets = new Set(findings.map((finding) => `${finding.id}|${finding.affectedBrowsers.join(',')}`));
