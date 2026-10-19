@@ -55,7 +55,7 @@ function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]
   if (profiles.length === 0) return { ...stack, languages: [] };
   const meaningful = profiles.filter((profile, index) => index === 0 || profile.percentage >= MIXED_LANGUAGE_MIN_PERCENT || profile.files >= MIXED_LANGUAGE_MIN_FILES);
   // Data/config files can dwarf executable sources without defining the runtime.
-  const supporting = new Set(['JSON', 'YAML', 'TOML', 'XML', 'CSS', 'SCSS', 'Sass', 'Less', 'Stylus']);
+  const supporting = new Set(['JSON', 'YAML', 'TOML', 'XML', 'HTML', 'Jinja', 'CSS', 'SCSS', 'Sass', 'Less', 'Stylus']);
   // A root tsconfig plus multiple first-party TypeScript source files is stronger
   // project-identity evidence than large JavaScript tooling or helper scripts.
   // Do not let language-volume aggregation undo the primary stack detector.
@@ -71,7 +71,11 @@ function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]
   const manifestPrimary = stack.language === 'TypeScript' && hasRootTypeScriptConfig && productionTypeScriptFiles >= 1
     ? profiles.find((profile) => profile.language === 'TypeScript')
     : undefined;
-  const primary = manifestPrimary ?? meaningful.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
+  // Very large HTML/template assets can reduce a real source language below the
+  // meaningful-percentage threshold. Consider source profiles before falling
+  // back to any template/config language, but preserve the original volume
+  // ordering among actual source languages.
+  const primary = manifestPrimary ?? profiles.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
   const secondary = meaningful.filter((profile) => profile !== primary);
   return { ...stack, languages: profiles, mixedLanguage: secondary.length > 0, primaryLanguage: primary.language, secondaryLanguages: secondary, language: primary.language };
 }

@@ -1,0 +1,99 @@
+name: UCE 1000 Public Repository Evidence Benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uce-1000-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  select:
+    name: Select 1000 distinct public repositories
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch 20 balanced GitHub search strata, exclude previous 160
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          UCE_BENCHMARK_SELECT_OUTPUT: benchmark-input
+        run: node testing/real-world/select-1000.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uce-1000-frozen-corpus
+          path: benchmark-input/repositories-1000.json
+          if-no-files-found: error
+          retention-days: 30
+
+  scan:
+    name: Analyze repositories — shard ${{ matrix.shard }}
+    needs: select
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install UCE trusted analyzer dependencies only
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: uce-1000-frozen-corpus
+          path: benchmark-input
+      - name: Execute bounded UCE CLI scans (50 repositories)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          UCE_BENCHMARK_CORPUS: benchmark-input/repositories-1000.json
+          UCE_BENCHMARK_SHARD: ${{ matrix.shard }}
+          UCE_BENCHMARK_SHARDS: '20'
+          UCE_BENCHMARK_MAX_REPOS: '1000'
+          UCE_BENCHMARK_OUTPUT: benchmark-output
+        run: node testing/real-world/scan-benchmark.mjs
+      - name: Upload per-project scan records
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uce-1000-shard-${{ matrix.shard }}
+          path: benchmark-output/shard-${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  aggregate:
+    name: Summarize all 1000 and surface anomalies
+    needs: [select, scan]
+    if: always() && needs.select.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: uce-1000-shard-*
+          path: benchmark-output
+          merge-multiple: true
+      - name: Aggregate, preserve denominators and fail on insufficient scans
+        env:
+          UCE_BENCHMARK_SHARDS: '20'
+        run: node testing/real-world/summarize-1000.mjs benchmark-output benchmark-output/RESULTS-1000.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uce-1000-summary-and-review-queue
+          path: |
+            benchmark-output/RESULTS-1000.md
+            benchmark-output/RESULTS-1000.json
+          if-no-files-found: warn
+          retention-days: 30

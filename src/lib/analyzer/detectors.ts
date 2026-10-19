@@ -421,6 +421,8 @@ export function detectPackageManager(files: DetectedFile[], projectFiles: Projec
   if (hasRootFile(scoped, 'package.json') && hasNodeTooling) return 'npm';
   for (const [manifest, manager] of rootManagers) if (hasRootFile(scoped, manifest)) return manager;
   if (hasRootFile(scoped, 'package.json')) return 'npm';
+  // A committed Pipfile.lock is stronger manager evidence than generic PEP 621 metadata.
+  if (hasPrimaryFile(scoped, 'Pipfile.lock')) return 'pipenv';
   if (hasPrimaryFile(scoped, 'pyproject.toml')) {
     const content = readPrimaryFileText(projectFiles, 'pyproject.toml') ?? '';
     if (/\[tool\.poetry\]/i.test(content)) return 'poetry';

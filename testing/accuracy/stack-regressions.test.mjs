@@ -86,6 +86,40 @@ test('tsconfig without production TypeScript does not override JavaScript source
   assert.equal(analysis.stack.language, 'JavaScript');
 });
 
+test('C++ syntax in ambiguous .h counts as C++ but ordinary C remains C', () => {
+  const { detectLanguageProfile } = load('src/lib/analyzer/language-profile.ts');
+  const cpp = [
+    file('include/vector.h', 'namespace mystl {\n template <class T> class vector {};\n }\n'),
+    file('include/algorithm.h', 'template <class T> T max(T a,T b) { return a>b?a:b; }'),
+  ];
+  const cFiles = [file('include/point.h', 'typedef struct { int x; int y; } Point;'), file('src/main.c', 'int main(void) { return 0; }')];
+  assert.equal(detectLanguageProfile(cpp)[0].language, 'C++');
+  assert.equal(detectLanguageProfile(cFiles)[0].language, 'C');
+});
+
+test('HTML templates do not override a Go project source language', () => {
+  const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+  const files = [
+    file('go.mod', 'module github.com/example/goquery\ngo 1.25\n'),
+    file('query.go', 'package goquery\nfunc Parse() bool { return true }'),
+    file('fixtures/page.html', '<html><body>x</body></html>'.repeat(600)),
+    file('site/index.html', '<html><body>x</body></html>'.repeat(600)),
+  ];
+  const result = analyzeProject({files, fileName:'goquery',source:'upload',scanStats:{
+    projectSize:files.reduce((n,x)=>n+x.size,0),filesFound:files.length,filesAnalyzed:files.length,filesIgnored:0,ignoredCategories:[],
+  }});
+  assert.equal(result.stack.language, 'Go');
+});
+
+test('Pipfile.lock establishes pipenv even when generic pyproject exists', () => {
+  const result = stack(
+    file('Pipfile.lock', '{"_meta":{"pipfile-spec":6},"default":{}}'),
+    file('pyproject.toml', '[project]\nname="patterns"\nversion="1.0"'),
+    file('src/app.py', 'print("ok")'),
+  );
+  assert.equal(result.packageManager, 'pipenv');
+});
+
 test('Hardhat configuration is recognized as Hardhat, never Turbopack', () => {
   const result = stack(
     file('hardhat.config.ts', 'export default { solidity: "0.8.20" };'),

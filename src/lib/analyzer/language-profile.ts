@@ -27,7 +27,12 @@ export function detectLanguageProfile(files: ProjectFile[]): LanguageProfile[] {
     const lower = file.path.toLowerCase();
     const dot = lower.lastIndexOf('.');
     if (dot < 0) continue;
-    const language = EXTENSIONS[lower.slice(dot)];
+    // Plain .h is shared by C and C++; do not identify a template/class/namespace
+    // header as C solely because it has the C-compatible extension.
+    const ordinary = EXTENSIONS[lower.slice(dot)];
+    const cppHeader = lower.endsWith('.h') && typeof file.content === 'string' &&
+      /(?:^|\n)\s*(?:template\s*<|namespace\s+[A-Za-z_][\w]*|class\s+[A-Za-z_][\w]*\s*[:{]|#include\s*<(?:vector|string|memory|map|unordered_map|utility|type_traits)>)/m.test(file.content);
+    const language = cppHeader ? 'C++' : ordinary;
     if (!language) continue;
     const current = totals.get(language) ?? { bytes: 0, files: 0 };
     current.bytes += Math.max(0, file.size || 0);
