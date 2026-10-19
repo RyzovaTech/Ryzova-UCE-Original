@@ -65,15 +65,6 @@ function hasAnyFile(files: DetectedFile[] | ProjectFile[], names: string[]): boo
   return names.some((n) => hasFile(files, n));
 }
 
-function readFileText(files: ProjectFile[], target: string): string | null {
-  const matches = files.filter(
-    (f) => !f.isDirectory && (f.path === target || f.path.endsWith('/' + target))
-  );
-  if (matches.length === 0) return null;
-  matches.sort((a, b) => a.path.length - b.path.length);
-  return matches[0].content ?? null;
-}
-
 function safeJson(content: string | null): Record<string, unknown> | null {
   if (!content) return null;
   try {
