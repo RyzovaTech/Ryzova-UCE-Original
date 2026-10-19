@@ -120,6 +120,37 @@ test('Pipfile.lock establishes pipenv even when generic pyproject exists', () =>
   assert.equal(result.packageManager, 'pipenv');
 });
 
+
+test('browser detector ignores JavaScript comments and strings', () => {
+  const { detectBrowserCompatibility } = load('src/lib/analyzer/browser-compatibility.ts');
+  const source = [
+    '// navigator.gpu.requestAdapter() is not used here',
+    'const documentation = "navigator.gpu.requestAdapter()";',
+    '/* navigator.gpu.requestAdapter() */',
+  ].join('\n');
+  const input=[file('src/main.js', source),file('.browserslistrc','chrome 80')];
+  assert.ok(!detectBrowserCompatibility(input).findings.some(f => f.id === 'webgpu'));
+});
+
+test('browser detector ignores CSS and HTML comments but catches real occurrences', () => {
+  const { detectBrowserCompatibility } = load('src/lib/analyzer/browser-compatibility.ts');
+  const css=[file('src/style.css', '/* div:has(.x) { color: red; } */'),file('.browserslistrc','chrome 80')];
+  assert.ok(!detectBrowserCompatibility(css).findings.some(f => f.id === 'css-has'));
+  const html=[file('src/index.html', '<!-- <script type="importmap">x</script> -->'),file('.browserslistrc','chrome 80')];
+  assert.ok(!detectBrowserCompatibility(html).findings.some(f => f.id === 'import-maps'));
+  const realCss=[file('src/style.css', '/* div:has(.x) */\ndiv:has(>span) { color: red; }'),file('.browserslistrc','chrome 80')];
+  assert.ok(detectBrowserCompatibility(realCss).findings.some(f => f.id === 'css-has'));
+});
+
+test('browser detector continues after ignored prose to first real code occurrence', () => {
+  const { detectBrowserCompatibility } = load('src/lib/analyzer/browser-compatibility.ts');
+  const src='// navigator.gpu.requestAdapter()\nconst adapter = await navigator.gpu.requestAdapter();';
+  const result=detectBrowserCompatibility([file('src/app.js',src),file('.browserslistrc','chrome 80')]);
+  const found=result.findings.find(f=>f.id==='webgpu');
+  assert.ok(found);
+  assert.equal(found.line,2);
+});
+
 test('Hardhat configuration is recognized as Hardhat, never Turbopack', () => {
   const result = stack(
     file('hardhat.config.ts', 'export default { solidity: "0.8.20" };'),
