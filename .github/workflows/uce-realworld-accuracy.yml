@@ -1,8 +1,8 @@
 name: UCE 160 Real Repository Benchmark
 
 on:
-  push:
-    branches: [bench/uce-real-repository-accuracy-160]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -15,6 +15,7 @@ concurrency:
 jobs:
   scan:
     name: UCE real projects shard ${{ matrix.shard }}
+    if: github.head_ref == 'bench/uce-real-repository-accuracy-160'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
