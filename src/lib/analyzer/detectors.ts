@@ -154,6 +154,11 @@ export function detectLanguage(files: DetectedFile[], projectFiles: ProjectFile[
   if (hasKernelSignatures(projectFiles) && cBytes > 0 && cBytes >= cppBytes) {
     return 'C';
   }
+  // Hardhat's TypeScript config is tooling, not proof that the contracts use TypeScript.
+  if (hasExtension(sources, '.sol') &&
+      scoped.some((file) => /(?:^|\/)hardhat\.config\.(?:[cm]?[jt]s)$/i.test(file.path))) {
+    return 'Solidity';
+  }
 
   const manifestSaysTS = hasFile(scoped, 'tsconfig.json') || hasPrefix(scoped, 'tsconfig.');
   if (manifestSaysTS) {
