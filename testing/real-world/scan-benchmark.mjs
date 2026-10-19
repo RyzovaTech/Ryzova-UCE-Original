@@ -10,14 +10,17 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const corpus = JSON.parse(fs.readFileSync(new URL('./repositories.json', import.meta.url), 'utf8'));
+const corpusFile = process.env.UCE_BENCHMARK_CORPUS ? path.resolve(process.env.UCE_BENCHMARK_CORPUS) : new URL('./repositories.json', import.meta.url);
+const corpus = JSON.parse(fs.readFileSync(corpusFile, 'utf8'));
+if (!Array.isArray(corpus.repositories)) throw Error('Malformed benchmark repository list');
 const shard = Number(process.env.UCE_BENCHMARK_SHARD ?? '0');
 const shards = Number(process.env.UCE_BENCHMARK_SHARDS ?? '4');
-const maxRepos = Number(process.env.UCE_BENCHMARK_MAX_REPOS ?? '160');
+const maxRepos = Number(process.env.UCE_BENCHMARK_MAX_REPOS ?? String(corpus.repositories.length));
 if (!Number.isInteger(shard) || !Number.isInteger(shards) || shards < 1 || shard < 0 || shard >= shards || maxRepos < 1) throw Error('Invalid shard configuration');
 const outputDir = path.resolve(process.env.UCE_BENCHMARK_OUTPUT ?? 'benchmark-output');
 fs.mkdirSync(outputDir, { recursive: true });
 const all = corpus.repositories.slice(0, maxRepos);
+if (new Set(all.map(row => row.repo?.toLowerCase())).size !== all.length) throw Error('Duplicate repository identities in evaluation');
 const cases = all.filter((_, index) => index % shards === shard);
 const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'uce-realworld-'));
 const results = [];
@@ -79,7 +82,8 @@ try {
     try {
       if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(name)) throw Error('invalid-repository-name');
       const metadata = await githubMetadata(name);
-      row.githubLanguage = metadata.primaryLanguage ?? null;
+      row.githubLanguage = metadata.primaryLanguage ?? item.githubPrimaryLanguageAtSelection ?? null;
+      row.languageLabelSource = metadata.primaryLanguage ? 'live-github' : item.githubPrimaryLanguageAtSelection ? 'selection-snapshot' : 'unlabeled';
       row.githubMetadataError = metadata.error ?? null;
       const cloned = run('git', ['-c', 'advice.detachedHead=false', 'clone', '-q', '--depth=1', '--single-branch', '--no-tags', 'https://github.com/' + name + '.git', directory], { timeout: 90000 });
       if (cloned.status !== 0) throw Error('clone:' + (cloned.error?.code ?? String(cloned.stderr).trim().slice(-220) ?? cloned.status));
@@ -122,6 +126,8 @@ const summary = {
   schemaVersion: 1, shard, shards, totalSelected: all.length, attempted: results.length,
   scanned: results.filter(r => r.status === 'scanned').length, failed: results.filter(r => r.status === 'failed').length,
   completeScanCoverage: results.filter(r => r.status === 'scanned' && !r.limitedCoverage).length,
+  languageWithGithubLiveLabel: results.filter(r => r.languageLabelSource === 'live-github').length,
+  nonSoftwareReported: results.filter(r => r.status === 'scanned' && !['Software Project', 'Game Project'].includes(r.classification)).length,
   language: outcomeCounts(results, 'language'), manager: outcomeCounts(results, 'manager'), framework: outcomeCounts(results, 'framework'),
   note: 'Observational agreement with GitHub primary-language metadata and explicit root markers; not independently adjudicated, not general UCE accuracy.',
 };
