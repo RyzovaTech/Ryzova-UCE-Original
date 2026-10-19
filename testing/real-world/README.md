@@ -11,8 +11,10 @@ This is a **live experiment**, not a claim that UCE is 95% accurate.
 - The benchmark doesn't validate vulnerability findings, runtime compatibility, API correctness, or global precision/recall. Real human-reviewed positive/negative decisions for those modules still need independent evaluation.
 - The runner retains **metadata and aggregate findings only** in GitHub Actions artifacts; it deletes cloned source and detailed reports between repositories.
 
-Run: GitHub Actions → **UCE 160 Real Repository Benchmark** → Run workflow (after workflow is on default branch), or push to `bench/uce-real-repository-accuracy-160`.
+Run manually: GitHub Actions → **UCE 160 Real Repository Benchmark** → **Run workflow** (available when the workflow is on the default branch). No regular pushes or pull requests automatically launch the 160-repository experiment.
 
 Data: `testing/real-world/repositories.json`; runner: `testing/real-world/scan-benchmark.mjs`. Each of four output artifacts contains per-repository results with commit IDs and mismatch details.
 
 **Do not automatically change baseline labels or engine code to maximize agreement.** Investigate each mismatch against actual source, and add independent regression fixtures for confirmed defects.
+
+Historical measured results and triage: [RESULTS.md](RESULTS.md).
