@@ -1,0 +1,129 @@
+name: UCE Exact-Pinned 1000 Rerun and Evidence Precision
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: uce-pinned-1000-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Restore frozen input and original outcomes
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original corpus and baseline outcomes from reference run 39193372653
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p benchmark-input benchmark-baseline
+          gh run download 39193372653 -R RyzovaTech/Ryzova-UCE-Original -n uce-1000-frozen-corpus -D benchmark-input
+          gh run download 39193372653 -R RyzovaTech/Ryzova-UCE-Original -n uce-1000-summary-and-review-queue -D benchmark-baseline
+          test -s benchmark-input/repositories-1000.json
+          test -s benchmark-baseline/RESULTS-1000.json
+          node -e "const fs=require('fs');const c=JSON.parse(fs.readFileSync('benchmark-input/repositories-1000.json'));const b=JSON.parse(fs.readFileSync('benchmark-baseline/RESULTS-1000.json'));if(c.repositories.length!==1000||b.results.length!==1000)process.exit(1);console.log('RESTORED_BASELINE',c.repositories.length,b.results.length)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uce-pinned-1000-baseline
+          path: |
+            benchmark-input/repositories-1000.json
+            benchmark-baseline/RESULTS-1000.json
+          retention-days: 30
+
+  evidence:
+    name: Explicit security/browser TP FP FN TN (provisional labels)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Run labelled security/source-excerpt and browser compatibility controls
+        run: node testing/accuracy/evidence-evaluation.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uce-evidence-precision-recall-provisional
+          path: benchmark-output/evidence-evaluation.json
+          retention-days: 30
+
+  scan:
+    name: Recheck exact commits shard ${{ matrix.shard }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: uce-pinned-1000-baseline
+          path: .
+      - name: Run UCE on 50 identical source snapshots
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          UCE_BENCHMARK_CORPUS: benchmark-input/repositories-1000.json
+          UCE_BENCHMARK_PINNED_RESULTS: benchmark-baseline/RESULTS-1000.json
+          UCE_BENCHMARK_SHARD: ${{ matrix.shard }}
+          UCE_BENCHMARK_SHARDS: '20'
+          UCE_BENCHMARK_MAX_REPOS: '1000'
+          UCE_BENCHMARK_OUTPUT: benchmark-output
+        run: node testing/real-world/scan-benchmark.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uce-pinned-1000-shard-${{ matrix.shard }}
+          path: benchmark-output/shard-${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  compare:
+    name: Paired baseline/post-fix results and regression accounting
+    if: always() && needs.prepare.result == 'success'
+    needs: [prepare,scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: uce-pinned-1000-baseline
+          path: .
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: uce-pinned-1000-shard-*
+          merge-multiple: true
+          path: benchmark-output
+      - name: Aggregate pinned results
+        env:
+          UCE_BENCHMARK_SHARDS: '20'
+        run: node testing/real-world/summarize-1000.mjs benchmark-output benchmark-output/RESULTS-1000.md
+      - name: Compare exact source commits and frozen external labels
+        run: node testing/real-world/compare-pinned-1000.mjs benchmark-baseline/RESULTS-1000.json benchmark-output/RESULTS-1000.json benchmark-output/PAIRED-COMPARISON.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: uce-pinned-1000-comparison-report
+          path: |
+            benchmark-output/PAIRED-COMPARISON.md
+            benchmark-output/PAIRED-COMPARISON.json
+            benchmark-output/RESULTS-1000.md
+            benchmark-output/RESULTS-1000.json
+          if-no-files-found: warn
+          retention-days: 30

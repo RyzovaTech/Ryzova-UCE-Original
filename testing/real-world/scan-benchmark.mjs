@@ -22,6 +22,17 @@ fs.mkdirSync(outputDir, { recursive: true });
 const all = corpus.repositories.slice(0, maxRepos);
 if (new Set(all.map(row => row.repo?.toLowerCase())).size !== all.length) throw Error('Duplicate repository identities in evaluation');
 const cases = all.filter((_, index) => index % shards === shard);
+const baselinePath = process.env.UCE_BENCHMARK_PINNED_RESULTS;
+const baseline = baselinePath ? JSON.parse(fs.readFileSync(path.resolve(baselinePath), 'utf8')) : null;
+const baselineRows = baseline ? new Map((baseline.results ?? []).map(item => [item.repo?.toLowerCase(), item])) : null;
+const pinnedCommits = baselineRows ? new Map([...baselineRows].filter(([, row]) => row.status === 'scanned')
+  .map(([key, row]) => [key, row.sourceCommit])) : null;
+if (baselineRows && (baselineRows.size !== all.length || all.some(item => !baselineRows.has(item.repo.toLowerCase())) ||
+    [...pinnedCommits.values()].some(sha => !/^[a-f0-9]{40}$/.test(sha ?? '')))) {
+  throw Error('Baseline must contain all selected projects and exact SHAs for previously successful scans');
+}
+// The one original failure cannot be pinned without a source SHA.
+// Its reattempt is reported but excluded from paired before/after agreement.
 const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'uce-realworld-'));
 const results = [];
 const matchableLanguages = new Set(['Python', 'JavaScript', 'TypeScript', 'Go', 'Rust', 'PHP', 'Ruby', 'Java', 'Kotlin', 'C', 'C++', 'C#', 'Swift', 'Dart', 'Scala', 'Elixir', 'Erlang', 'Lua', 'Haskell', 'R', 'HTML', 'CSS', 'Shell', 'Solidity']);
@@ -82,12 +93,25 @@ try {
     try {
       if (!/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(name)) throw Error('invalid-repository-name');
       const metadata = await githubMetadata(name);
-      row.githubLanguage = metadata.primaryLanguage ?? item.githubPrimaryLanguageAtSelection ?? null;
-      row.languageLabelSource = metadata.primaryLanguage ? 'live-github' : item.githubPrimaryLanguageAtSelection ? 'selection-snapshot' : 'unlabeled';
+      const oldRow = baselineRows?.get(name.toLowerCase());
+      row.githubLanguage = oldRow?.githubLanguage ?? metadata.primaryLanguage ?? item.githubPrimaryLanguageAtSelection ?? null;
+      row.languageLabelSource = oldRow?.githubLanguage ? 'frozen-baseline' : metadata.primaryLanguage ? 'live-github' : item.githubPrimaryLanguageAtSelection ? 'selection-snapshot' : 'unlabeled';
+      row.pairedEligible = Boolean(oldRow?.status === 'scanned' && pinnedCommits.has(name.toLowerCase()));
       row.githubMetadataError = metadata.error ?? null;
       const cloned = run('git', ['-c', 'advice.detachedHead=false', 'clone', '-q', '--depth=1', '--single-branch', '--no-tags', 'https://github.com/' + name + '.git', directory], { timeout: 90000 });
       if (cloned.status !== 0) throw Error('clone:' + (cloned.error?.code ?? String(cloned.stderr).trim().slice(-220) ?? cloned.status));
+      if (pinnedCommits?.has(name.toLowerCase())) {
+        const pinned = pinnedCommits.get(name.toLowerCase());
+        const checkoutHead = run('git', ['-C', directory, 'rev-parse', 'HEAD'], { timeout: 5000 }).stdout.trim();
+        if (checkoutHead !== pinned) {
+          const fetchPinned = run('git', ['-C', directory, '-c', 'advice.detachedHead=false', 'fetch', '-q', '--no-tags', '--depth=1', 'origin', pinned], { timeout: 90000 });
+          if (fetchPinned.status !== 0) throw Error('pinned-fetch:' + String(fetchPinned.stderr).trim().slice(-230));
+          const checkoutPinned = run('git', ['-C', directory, 'checkout', '-q', '--detach', pinned], { timeout: 20000 });
+          if (checkoutPinned.status !== 0) throw Error('pinned-checkout:' + String(checkoutPinned.stderr).trim().slice(-200));
+        }
+      }
       row.sourceCommit = run('git', ['-C', directory, 'rev-parse', 'HEAD'], { timeout: 5000 }).stdout.trim();
+      if (pinnedCommits?.has(name.toLowerCase()) && row.sourceCommit !== pinnedCommits.get(name.toLowerCase())) throw Error('source-sha-mismatch');
       const markerManager = managerLabel(directory);
       const markerFramework = frameworkLabel(directory);
       const scan = run('node', ['--max-old-space-size=1024', 'scripts/uce-scan.mjs', directory, '--output=' + reportFile, '--max-files=4000', '--max-bytes=16777216'], { timeout: 180000 });
@@ -123,7 +147,7 @@ try {
   fs.rmSync(sandbox, { recursive: true, force: true });
 }
 const summary = {
-  schemaVersion: 1, shard, shards, totalSelected: all.length, attempted: results.length,
+  schemaVersion: 1, shard, shards, pinnedBaseline: Boolean(pinnedCommits), totalSelected: all.length, attempted: results.length,
   scanned: results.filter(r => r.status === 'scanned').length, failed: results.filter(r => r.status === 'failed').length,
   completeScanCoverage: results.filter(r => r.status === 'scanned' && !r.limitedCoverage).length,
   languageWithGithubLiveLabel: results.filter(r => r.languageLabelSource === 'live-github').length,
