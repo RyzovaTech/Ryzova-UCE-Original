@@ -1,7 +1,7 @@
 import type { AnalysisInput, AnalysisResult, AnalysisStage, ProjectFile } from './types';
 
 // Rules and report version changed; never reuse cached V2 findings in a V3 scan.
-export const ANALYSIS_CACHE_VERSION = 22;
+export const ANALYSIS_CACHE_VERSION = 23;
 export const DEFAULT_ANALYSIS_BUDGET = Object.freeze({
   maxFiles: 25_000,
   maxContentBytes: 96 * 1024 * 1024,
@@ -65,7 +65,8 @@ export function fingerprintAnalysisInput(input: AnalysisInput): string {
   update(`${ANALYSIS_CACHE_VERSION}|${input.fileName}|${input.source}|${input.scanStats.archiveIndexSignature ?? ''}|`);
   for (const file of input.files) {
     update(`${file.path}\0${file.size}\0${file.isDirectory ? 1 : 0}\0`);
-    if (file.content) update(file.content.length <= 4096 ? file.content : `${file.content.slice(0, 2048)}${file.content.slice(-2048)}`);
+    // All scanned content matters: two files with identical edges can differ in the middle.
+    if (file.content !== undefined) update(file.content);
   }
   return `uce${ANALYSIS_CACHE_VERSION}-${(hash >>> 0).toString(16).padStart(8, '0')}-${input.files.length}`;
 }
