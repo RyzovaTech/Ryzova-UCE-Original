@@ -1,8 +1,6 @@
 name: UCE Exact-Pinned 1000 Rerun and Evidence Precision
 
 on:
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
