@@ -1,0 +1,47 @@
+name: UCE 160 Real Repository Benchmark
+
+on:
+  push:
+    branches: [bench/uce-real-repository-accuracy-160]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uce-realworld-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    name: UCE real projects shard ${{ matrix.shard }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install UCE dependencies
+        run: npm install --no-audit --no-fund
+      - name: Analyze up to 40 real GitHub repositories
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          UCE_BENCHMARK_SHARD: ${{ matrix.shard }}
+          UCE_BENCHMARK_SHARDS: '4'
+          UCE_BENCHMARK_MAX_REPOS: '160'
+          UCE_BENCHMARK_OUTPUT: benchmark-output
+        run: node testing/real-world/scan-benchmark.mjs
+      - name: Upload repository-by-repository results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uce-realworld-shard-${{ matrix.shard }}
+          path: benchmark-output/shard-${{ matrix.shard }}.json
+          if-no-files-found: warn
+          retention-days: 14
