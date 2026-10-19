@@ -71,7 +71,11 @@ function enrichLanguageStack(stack: TechnologyStack, profiles: LanguageProfile[]
   const manifestPrimary = stack.language === 'TypeScript' && hasRootTypeScriptConfig && productionTypeScriptFiles >= 1
     ? profiles.find((profile) => profile.language === 'TypeScript')
     : undefined;
-  const primary = manifestPrimary ?? meaningful.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
+  // Very large HTML/template assets can reduce a real source language below the
+  // meaningful-percentage threshold. Consider source profiles before falling
+  // back to any template/config language, but preserve the original volume
+  // ordering among actual source languages.
+  const primary = manifestPrimary ?? profiles.find((profile) => !supporting.has(profile.language)) ?? meaningful[0] ?? profiles[0];
   const secondary = meaningful.filter((profile) => profile !== primary);
   return { ...stack, languages: profiles, mixedLanguage: secondary.length > 0, primaryLanguage: primary.language, secondaryLanguages: secondary, language: primary.language };
 }
