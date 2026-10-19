@@ -32,7 +32,7 @@
     "audit:accuracy:baseline": "node testing/accuracy/run.mjs --check",
     "audit:accuracy:holdout": "node testing/accuracy/holdout.mjs --check",
     "audit:accuracy:scopes": "node testing/accuracy/scope.mjs --check",
-    "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs",
+    "test:accuracy-metrics": "node --test testing/accuracy/metrics.test.mjs testing/accuracy/stack-regressions.test.mjs",
     "test:evidence": "node --test testing/evidence/phase2.test.mjs",
     "audit:accuracy:security": "node testing/security/false-positive.mjs --check",
     "test:security-context": "node --test testing/security/context.test.mjs",
