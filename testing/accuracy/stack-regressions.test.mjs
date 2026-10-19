@@ -55,6 +55,23 @@ test('root TypeScript source remains primary despite larger JavaScript build scr
   assert.equal(analysis.stack.runtime, 'Node.js');
 });
 
+test('single root TypeScript entry point outranks JavaScript-only tooling', () => {
+  const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+  const files = [
+    file('tsconfig.json', '{"compilerOptions":{"rootDir":"src"}}'),
+    file('package.json', '{"name":"ts-single-entry","scripts":{"build":"tsc"}}'),
+    file('src/index.ts', 'export const entry: string = "ts";'),
+    file('scripts/build.js', 'const build = true;'.repeat(500)),
+  ];
+  const result = analyzeProject({ files, fileName: 'ts-single-entry', source: 'upload', scanStats: {
+    projectSize: files.reduce((total, item) => total + item.size, 0),
+    filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0, ignoredCategories: [],
+  } });
+  assert.equal(result.stack.language, 'TypeScript');
+  assert.equal(result.stack.primaryLanguage, 'TypeScript');
+  assert.equal(result.stack.runtime, 'Node.js');
+});
+
 test('tsconfig without production TypeScript does not override JavaScript source', () => {
   const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
   const files = [
