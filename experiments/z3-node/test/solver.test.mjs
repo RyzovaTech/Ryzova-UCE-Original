@@ -32,6 +32,26 @@ test('Z3 detects UNSAT spanning multiple sources and identifies a contributing u
   assert.ok(r.unsatCore.every(f => f.source.startsWith('apps/api/')));
 });
 
+
+// Pairwise ranges can all overlap while the complete OR-constrained system
+// cannot. This is a real multi-constraint case that motivates SMT reasoning.
+test('three OR constraints can be jointly UNSAT despite every pair overlapping', async () => {
+  const ranges = ['20 || 22', '20 || 23', '22 || 23'];
+  for (let i = 0; i < ranges.length; i++) for (let j = i + 1; j < ranges.length; j++) {
+    assert.equal(versionRangesDisjoint(ranges[i], ranges[j]), false,
+      'Every pair must overlap: ' + ranges[i] + ' / ' + ranges[j]);
+  }
+  const result = await run(
+    fact('project', ranges[0], 'package.json#engines.node'),
+    fact('ci', ranges[1], '.nvmrc:1'),
+    fact('deployment', ranges[2], 'Dockerfile:1'),
+  );
+  assert.equal(result.status, 'conflict');
+  assert.equal(result.witness, null);
+  assert.deepEqual(new Set(result.unsatCore.map(f => f.id)),
+    new Set(['project', 'ci', 'deployment']));
+});
+
 test('alternative ranges retain OR logic, rather than flattening into a contradiction', async () => {
   const sat = await run(fact('allowed', '18 || >=22'), fact('chosen', '^22.0.0'));
   assert.equal(sat.status, 'satisfiable');
