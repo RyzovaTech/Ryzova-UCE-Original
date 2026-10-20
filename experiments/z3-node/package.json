@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "demo": "node cli.mjs fixtures/runtime-conflict.json"
+    "demo": "node cli.mjs fixtures/runtime-conflict.json",
+    "benchmark": "node benchmark.mjs"
   },
   "dependencies": {
     "semver": "7.8.5",
