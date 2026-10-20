@@ -16,7 +16,9 @@ const MAX_AST_NODES = 50_000;
 type JsxPluginFactory = () => (BaseParser: typeof Parser) => typeof Parser;
 const jsx = (jsxModule as unknown as { default?: JsxPluginFactory }).default ??
   (jsxModule as unknown as JsxPluginFactory);
-const TypedParser = Parser.extend(jsx(), tsPlugin() as unknown as (BaseParser: typeof Parser) => typeof Parser);
+const TypedParser = Parser.extend(tsPlugin() as unknown as (BaseParser: typeof Parser) => typeof Parser);
+const TsxParser = Parser.extend(jsx(), tsPlugin() as unknown as (BaseParser: typeof Parser) => typeof Parser);
+const PlainJsxParser = Parser.extend(jsx());
 
 interface AstNode {
   type: string;
@@ -88,15 +90,21 @@ export function scanAstDetector(detector: V3AstDetector, file: V3ProjectFile, li
     return { evidence: [], truncated: false };
   }
 
-  let root: AstNode;
-  try {
-    root = TypedParser.parse(file.content, {
-      ecmaVersion: 'latest', sourceType: 'module', locations: true, allowHashBang: true,
-    }) as unknown as AstNode;
-  } catch {
-    // Malformed or unsupported syntax never falls back to regex matching.
-    return { evidence: [], truncated: false };
+  let root: AstNode | undefined;
+  // Keep the TypeScript grammar separate from JSX. Composing parser plugins
+  // can change tokenization even in .ts files without any JSX.
+  const parsers = /\\.tsx$/i.test(file.path) ? [TsxParser, PlainJsxParser, TypedParser]
+    : /\\.jsx$/i.test(file.path) ? [PlainJsxParser, TsxParser]
+      : [TypedParser];
+  for (const parser of parsers) {
+    try {
+      root = parser.parse(file.content, {
+        ecmaVersion: 'latest', sourceType: 'module', locations: true, allowHashBang: true,
+      }) as unknown as AstNode;
+      break;
+    } catch { /* Only a successful full parse may establish syntax evidence. */ }
   }
+  if (!root) return { evidence: [], truncated: false };
 
   const pending: AstNode[] = [root];
   const evidence: V3RuleEvidence[] = [];
