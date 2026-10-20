@@ -26,6 +26,15 @@ interface AstNode {
   [key: string]: unknown;
 }
 export interface AstScanResult { evidence: V3RuleEvidence[]; truncated: boolean; }
+export type AstScanner = (detector: V3AstDetector, file: V3ProjectFile, limit: number) => AstScanResult;
+
+// Retain at most eight syntax trees during one V3 execution. Never keep ASTs
+// across separate project scans; content changes invalidate a cached parse.
+interface CachedParse { content: string; root: AstNode | null; }
+export function createAstScanner(): AstScanner {
+  const cache = new Map<V3ProjectFile, CachedParse>();
+  return (detector, file, limit) => scanWithCache(detector, file, limit, cache);
+}
 
 function isNode(value: unknown): value is AstNode {
   return !!value && typeof value === 'object' && typeof (value as AstNode).type === 'string';
@@ -83,6 +92,13 @@ function observedName(node: AstNode, query: V3AstDetector['query']): string | un
 }
 
 export function scanAstDetector(detector: V3AstDetector, file: V3ProjectFile, limit: number): AstScanResult {
+  return scanWithCache(detector, file, limit);
+}
+
+function scanWithCache(
+  detector: V3AstDetector, file: V3ProjectFile, limit: number,
+  cache?: Map<V3ProjectFile, CachedParse>,
+): AstScanResult {
   if (!sourcePath(file.path) || !file.content || limit <= 0) return { evidence: [], truncated: false };
   if (file.content.length > MAX_AST_FILE_CHARS) return { evidence: [], truncated: true };
   const names = new Set(detector.names);
@@ -91,18 +107,30 @@ export function scanAstDetector(detector: V3AstDetector, file: V3ProjectFile, li
   }
 
   let root: AstNode | undefined;
-  // Keep the TypeScript grammar separate from JSX. Composing parser plugins
-  // can change tokenization even in .ts files without any JSX.
-  const parsers = /\\.tsx$/i.test(file.path) ? [TsxParser, PlainJsxParser, TypedParser]
-    : /\\.jsx$/i.test(file.path) ? [PlainJsxParser, TsxParser]
-      : [TypedParser];
-  for (const parser of parsers) {
-    try {
-      root = parser.parse(file.content, {
-        ecmaVersion: 'latest', sourceType: 'module', locations: true, allowHashBang: true,
-      }) as unknown as AstNode;
-      break;
-    } catch { /* Only a successful full parse may establish syntax evidence. */ }
+  const previous = cache?.get(file);
+  if (previous && previous.content === file.content) {
+    root = previous.root ?? undefined;
+    cache!.delete(file);
+    cache!.set(file, previous);
+  } else {
+    // Keep TypeScript grammar separate from JSX to avoid tokenization changes
+    // in .ts files that have no JSX.
+    const parsers = /\.tsx$/i.test(file.path) ? [TsxParser, PlainJsxParser, TypedParser]
+      : /\.jsx$/i.test(file.path) ? [PlainJsxParser, TsxParser]
+        : [TypedParser];
+    for (const parser of parsers) {
+      try {
+        root = parser.parse(file.content, {
+          ecmaVersion: 'latest', sourceType: 'module', locations: true, allowHashBang: true,
+        }) as unknown as AstNode;
+        break;
+      } catch { /* Only a successful full parse may establish syntax evidence. */ }
+    }
+    if (cache) {
+      cache.delete(file);
+      cache.set(file, { content: file.content, root: root ?? null });
+      if (cache.size > 8) cache.delete(cache.keys().next().value!);
+    }
   }
   if (!root) return { evidence: [], truncated: false };
 
@@ -118,10 +146,16 @@ export function scanAstDetector(detector: V3AstDetector, file: V3ProjectFile, li
         detail: `${detector.query}:${name}` });
       if (evidence.length >= limit) break;
     }
+    // Visit earliest source locations first. A plain LIFO walk reverses
+    // statement arrays and can select the last match when maxMatches=1.
+    const children: AstNode[] = [];
     for (const value of Object.values(node)) {
-      if (isNode(value)) pending.push(value);
-      else if (Array.isArray(value)) for (const child of value) if (isNode(child)) pending.push(child);
+      if (isNode(value)) children.push(value);
+      else if (Array.isArray(value)) for (const child of value) if (isNode(child)) children.push(child);
     }
+    children.sort((left, right) =>
+      ((right.start as number | undefined) ?? 0) - ((left.start as number | undefined) ?? 0));
+    pending.push(...children);
   }
   return { evidence: evidence.sort((a, b) => (a.line ?? 0) - (b.line ?? 0)), truncated: false };
 }
