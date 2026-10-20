@@ -18,8 +18,11 @@ This proof of concept evaluates runtime version constraints as
 - Node 20–24 loads Z3 WASM via the npm Node binding; `killThreads`
   shuts down background solver workers before CLI exit.
 - The structured input has `workspace` and 1–12 independently sourced
-  `{ id, source, range }` declarations. Entries from sibling workspaces are
-  rejected; unsupported/dynamic/prerelease constraints cause `unknown`.
+  `{ id, source, range }` declarations. The empty workspace selects **root only**, not
+  all nested packages. Source references must be canonical same-directory
+  paths with an optional `#field` or `:line` marker; cross-workspace,
+  non-canonical and traversing paths are rejected as `unknown`.
+  Unsupported/dynamic/prerelease constraints also cause `unknown`.
 - An SMT conjunction combines each package, CI, runtime-pin or image
   requirement. `sat` yields a stable numeric witness validated by the
   original npm semver ranges. `unsat` yields a non-necessarily-minimal
