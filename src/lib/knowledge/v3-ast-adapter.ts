@@ -1,123 +1,111 @@
-import * as ts from 'typescript';
+import { Parser } from 'acorn';
+import tsPlugin from 'acorn-typescript';
 import type { V3AstDetector, V3ProjectFile, V3RuleEvidence } from './v3-types';
 
 /**
- * Synchronous, syntax-only adapter for JS/JSX/TS/TSX V3 AST rules.
- * No source is executed, no modules resolved, and no type-flow claims are made.
- *
- * A bounded parser is intentional: unsupported languages, malformed source, or
- * over-budget files produce no evidence, never a regex-based AST "match".
+ * Syntax-only AST adapter for JS/JSX/TS/TSX using the lightweight Acorn
+ * TypeScript plugin. Scanned project code is never executed or typechecked.
  */
 const MAX_AST_FILE_CHARS = 256 * 1024;
 const MAX_AST_NODES = 50_000;
+const TypedParser = Parser.extend(tsPlugin());
 
-export interface AstScanResult {
-  evidence: V3RuleEvidence[];
-  truncated: boolean;
+interface AstNode {
+  type: string;
+  loc?: { start: { line: number } };
+  [key: string]: unknown;
 }
+export interface AstScanResult { evidence: V3RuleEvidence[]; truncated: boolean; }
 
-function scriptKind(path: string): ts.ScriptKind | undefined {
-  const ext = path.toLowerCase().split('.').pop();
-  switch (ext) {
-    case 'js': case 'mjs': case 'cjs': return ts.ScriptKind.JS;
-    case 'jsx': return ts.ScriptKind.JSX;
-    case 'ts': case 'mts': case 'cts': return ts.ScriptKind.TS;
-    case 'tsx': return ts.ScriptKind.TSX;
-    default: return undefined;
-  }
+function isNode(value: unknown): value is AstNode {
+  return !!value && typeof value === 'object' && typeof (value as AstNode).type === 'string';
 }
-
-/** Syntactic property chain only; aliases and data flow are deliberately not inferred. */
-function expressionName(expression: ts.Expression): string | undefined {
-  if (ts.isIdentifier(expression)) return expression.text;
-  if (ts.isPropertyAccessExpression(expression)) {
-    const owner = expressionName(expression.expression);
-    return owner ? `${owner}.${expression.name.text}` : undefined;
+function sourcePath(path: string): boolean {
+  return /\.(?:[cm]?js|jsx|[cm]?ts|tsx)$/i.test(path);
+}
+function identifier(node: unknown): string | undefined {
+  return isNode(node) && node.type === 'Identifier' ? String(node.name) : undefined;
+}
+function literal(node: unknown): string | undefined {
+  return isNode(node) && node.type === 'Literal' && typeof node.value === 'string' ? node.value : undefined;
+}
+function expressionName(value: unknown): string | undefined {
+  if (!isNode(value)) return undefined;
+  if (value.type === 'Identifier') return identifier(value);
+  if (value.type !== 'MemberExpression' || !isNode(value.object)) return undefined;
+  const object = expressionName(value.object);
+  const name = value.computed ? literal(value.property) : identifier(value.property);
+  return object && name ? `${object}.${name}` : undefined;
+}
+function importSpecifier(node: AstNode): string | undefined {
+  if (['ImportDeclaration', 'ExportNamedDeclaration', 'ExportAllDeclaration', 'ImportExpression'].includes(node.type)) {
+    return literal(node.source);
   }
-  if (ts.isElementAccessExpression(expression) && expression.argumentExpression && ts.isStringLiteral(expression.argumentExpression)) {
-    const owner = expressionName(expression.expression);
-    return owner ? `${owner}.${expression.argumentExpression.text}` : undefined;
+  if (node.type === 'TSImportEqualsDeclaration' && isNode(node.moduleReference) && node.moduleReference.type === 'TSExternalModuleReference') {
+    return literal(node.moduleReference.expression);
   }
+  if (node.type !== 'CallExpression' || !Array.isArray(node.arguments) || node.arguments.length !== 1) return undefined;
+  if (!isNode(node.callee) || !['Import', 'Identifier'].includes(node.callee.type)) return undefined;
+  if (node.callee.type === 'Identifier' && identifier(node.callee) !== 'require') return undefined;
+  const arg = node.arguments[0];
+  return literal(arg) ?? (isNode(arg) && arg.type === 'TemplateLiteral' && Array.isArray(arg.expressions) && arg.expressions.length === 0 &&
+    Array.isArray(arg.quasis) && arg.quasis.length === 1 && isNode(arg.quasis[0]) ? String((arg.quasis[0].value as { cooked?: unknown })?.cooked) : undefined);
+}
+function observedName(node: AstNode, query: V3AstDetector['query']): string | undefined {
+  if (query === 'import') return importSpecifier(node);
+  if (query === 'call') return node.type === 'CallExpression' ? expressionName(node.callee) : undefined;
+  if (query === 'assignment') {
+    if (node.type !== 'AssignmentExpression' || node.operator !== '=') return undefined;
+    const left = node.left;
+    if (!isNode(left)) return undefined;
+    if (left.type === 'Identifier') return identifier(left);
+    if (left.type === 'MemberExpression') return left.computed ? literal(left.property) : identifier(left.property);
+    return undefined;
+  }
+  if (query === 'jsx-attribute') {
+    return node.type === 'JSXAttribute' ? identifier(node.name) : undefined;
+  }
+  if (query === 'declaration' && [
+    'VariableDeclarator', 'FunctionDeclaration', 'ClassDeclaration', 'TSInterfaceDeclaration',
+    'TSTypeAliasDeclaration', 'TSEnumDeclaration', 'EnumDeclaration',
+  ].includes(node.type)) return identifier(node.id);
   return undefined;
 }
 
-function exactIdentifier(expression: ts.Node): string | undefined {
-  return ts.isIdentifier(expression) ? expression.text : undefined;
-}
-
-function importSpecifier(node: ts.Node): string | undefined {
-  if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) {
-    const specifier = node.moduleSpecifier;
-    return specifier && ts.isStringLiteral(specifier) ? specifier.text : undefined;
-  }
-  if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) {
-    const specifier = node.moduleReference.expression;
-    return specifier && ts.isStringLiteral(specifier) ? specifier.text : undefined;
-  }
-  if (!ts.isCallExpression(node) || node.arguments.length !== 1) return undefined;
-  const expression = node.expression;
-  if (expression.kind !== ts.SyntaxKind.ImportKeyword && exactIdentifier(expression) !== 'require') return undefined;
-  const argument = node.arguments[0];
-  return ts.isStringLiteral(argument) || ts.isNoSubstitutionTemplateLiteral(argument) ? argument.text : undefined;
-}
-
-function observedName(node: ts.Node, query: V3AstDetector['query']): string | undefined {
-  switch (query) {
-    case 'call':
-      return ts.isCallExpression(node) ? expressionName(node.expression) : undefined;
-    case 'import':
-      return importSpecifier(node);
-    case 'assignment':
-      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
-        return ts.isIdentifier(node.left) ? node.left.text :
-          ts.isPropertyAccessExpression(node.left) ? node.left.name.text :
-            ts.isElementAccessExpression(node.left) && node.left.argumentExpression && ts.isStringLiteral(node.left.argumentExpression)
-              ? node.left.argumentExpression.text : undefined;
-      }
-      return undefined;
-    case 'jsx-attribute':
-      return ts.isJsxAttribute(node) ? node.name.getText() : undefined;
-    case 'declaration':
-      if (ts.isVariableDeclaration(node)) return exactIdentifier(node.name);
-      if (ts.isFunctionDeclaration(node) || ts.isClassDeclaration(node) ||
-          ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node) ||
-          ts.isEnumDeclaration(node)) return node.name?.text;
-      return undefined;
-  }
-}
-
 export function scanAstDetector(detector: V3AstDetector, file: V3ProjectFile, limit: number): AstScanResult {
-  const kind = scriptKind(file.path);
-  if (kind === undefined || !file.content || limit <= 0) return { evidence: [], truncated: false };
+  if (!sourcePath(file.path) || !file.content || limit <= 0) return { evidence: [], truncated: false };
   if (file.content.length > MAX_AST_FILE_CHARS) return { evidence: [], truncated: true };
-
   const names = new Set(detector.names);
-  // Cheap pre-filter saves AST allocations on source files without target identifiers.
   if (!detector.names.some(name => file.content!.includes(name.split('.').pop()!))) {
     return { evidence: [], truncated: false };
   }
 
-  // TypeScript's parser supports JS/JSX/TS/TSX without executing or typechecking.
-  // Parse errors are not valid AST evidence; do not attempt a regex fallback.
-  const root = ts.createSourceFile(file.path, file.content, ts.ScriptTarget.Latest, true, kind);
-  // TypeScript records parser diagnostics on SourceFile at runtime; the public
-  // SourceFile type omits this internal field, so read it conservatively.
-  const parsed = root as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] };
-  if (parsed.parseDiagnostics?.length) return { evidence: [], truncated: false };
-
-  const stack: ts.Node[] = [root];
-  const matches: V3RuleEvidence[] = [];
-  let visited = 0;
-  while (stack.length) {
-    if (++visited > MAX_AST_NODES) return { evidence: [], truncated: true };
-    const node = stack.pop()!;
-    const found = observedName(node, detector.query);
-    if (found && names.has(found)) {
-      const line = root.getLineAndCharacterOfPosition(node.getStart(root)).line + 1;
-      matches.push({ detector: 'ast', file: file.path, line, detail: `${detector.query}:${found}` });
-      if (matches.length >= limit) return { evidence: matches, truncated: false };
-    }
-    ts.forEachChild(node, child => { stack.push(child); });
+  let root: AstNode;
+  try {
+    root = TypedParser.parse(file.content, {
+      ecmaVersion: 'latest', sourceType: 'module', locations: true, allowHashBang: true,
+    }) as unknown as AstNode;
+  } catch {
+    // Malformed or unsupported syntax never falls back to regex matching.
+    return { evidence: [], truncated: false };
   }
-  return { evidence: matches, truncated: false };
+
+  const pending: AstNode[] = [root];
+  const evidence: V3RuleEvidence[] = [];
+  let visited = 0;
+  while (pending.length) {
+    if (++visited > MAX_AST_NODES) return { evidence: [], truncated: true };
+    const node = pending.pop()!;
+    const name = observedName(node, detector.query);
+    if (name && names.has(name)) {
+      evidence.push({ detector: 'ast', file: file.path, line: node.loc?.start.line,
+        detail: `${detector.query}:${name}` });
+      if (evidence.length >= limit) break;
+    }
+    for (const value of Object.values(node)) {
+      if (isNode(value)) pending.push(value);
+      else if (Array.isArray(value)) for (const child of value) if (isNode(child)) pending.push(child);
+    }
+  }
+  return { evidence: evidence.sort((a, b) => (a.line ?? 0) - (b.line ?? 0)), truncated: false };
 }
