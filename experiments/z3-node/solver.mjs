@@ -30,6 +30,21 @@ function unsupported(problem) {
   return { status: 'unknown', engine: 'Z3', reason: problem, witness: null, unsatCore: [] };
 }
 
+// Reject non-canonical workspace paths, relative traversal and directory
+// aliases before using an asserted origin as solver evidence.
+function canonicalRelativePath(value) {
+  return typeof value === 'string' && value.length > 0 && value.length <= 160 &&
+    /^[A-Za-z0-9_.-]+(?:\/[A-Za-z0-9_.-]+)*$/.test(value) &&
+    value.split('/').every(part => part !== '.' && part !== '..');
+}
+
+function sourceFile(reference) {
+  // Only literal file paths with an optional JSON field or positive line number.
+  // No absolute paths, URL schemes, Windows drives or dynamically resolved paths.
+  const matched = /^([A-Za-z0-9_.\/-]+)(?:#([A-Za-z0-9_.-]+)|:([1-9]\d{0,7}))?$/.exec(reference);
+  return matched && canonicalRelativePath(matched[1]) ? matched[1] : undefined;
+}
+
 function parsedRange(value) {
   if (typeof value !== 'string' || !value.trim() || value.length > 160) return null;
   // This pilot only models stable numeric releases. Arbitrary tags, aliases,
@@ -94,8 +109,8 @@ export async function solveNodeConstraints(session, input, timeoutMs = DEFAULT_T
       typeof input.constraints !== 'object' || !Array.isArray(input.constraints) ||
       input.constraints.length < 1 || input.constraints.length > MAX_CONSTRAINTS ||
       !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 5000 ||
-      input.workspace.length > 120 || !/^[a-zA-Z0-9_./-]*$/.test(input.workspace) ||
-      input.workspace.split('/').includes('..')) {
+      input.workspace.length > 120 ||
+      (input.workspace !== '' && !canonicalRelativePath(input.workspace))) {
     return unsupported('Input or bounded solver options invalid.');
   }
   const names = new Set();
@@ -104,10 +119,15 @@ export async function solveNodeConstraints(session, input, timeoutMs = DEFAULT_T
     if (!item || typeof item.id !== 'string' || !/^[a-zA-Z0-9_.-]{1,60}$/.test(item.id) ||
         names.has(item.id) || typeof item.source !== 'string' || !item.source ||
         item.source.length > 256) return unsupported('Invalid, missing or repeated evidence identifiers.');
-    const path = item.source.split(/[#:]/, 1)[0].replace(/\\/g, '/');
-    if (path.split('/').includes('..') ||
-        (input.workspace && !path.startsWith(input.workspace.replace(/\/$/, '') + '/'))) {
-      return unsupported('Evidence is outside the explicitly selected workspace: ' + item.id);
+    const path = sourceFile(item.source);
+    // Pair only direct files in the selected package directory. The empty
+    // workspace is the project root, not a wildcard for nested workspaces.
+    const scoped = path !== undefined && (input.workspace
+      ? path.startsWith(input.workspace + '/') &&
+        !path.slice(input.workspace.length + 1).includes('/')
+      : !path.includes('/'));
+    if (!scoped) {
+      return unsupported('Evidence is invalid or outside the explicitly selected workspace: ' + item.id);
     }
     names.add(item.id);
     const range = parsedRange(item.range);
