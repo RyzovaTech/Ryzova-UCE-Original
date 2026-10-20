@@ -1,4 +1,5 @@
 import { Parser } from 'acorn';
+import jsx from 'acorn-jsx';
 import tsPlugin from 'acorn-typescript';
 import type { V3AstDetector, V3ProjectFile, V3RuleEvidence } from './v3-types';
 
@@ -10,7 +11,7 @@ const MAX_AST_FILE_CHARS = 256 * 1024;
 const MAX_AST_NODES = 50_000;
 // The plugin's AcornParseClass constructor declaration differs from Acorn's
 // protected Parser constructor type; the documented runtime API is compatible.
-const TypedParser = Parser.extend(tsPlugin() as unknown as (BaseParser: typeof Parser) => typeof Parser);
+const TypedParser = Parser.extend(jsx(), tsPlugin() as unknown as (BaseParser: typeof Parser) => typeof Parser);
 
 interface AstNode {
   type: string;
