@@ -106,3 +106,27 @@ test('oversized input is not parsed as evidence', () => {
   assert.equal(r.decisions.length, 0);
   assert.equal(r.limited, true);
 });
+
+test('UCE analyzeProject exposes symbolic conflicts and original file evidence in report notes', () => {
+  const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+  const files = [
+    json('package.json', { name: 'fixture', type: 'module', engines: { node: '>=22' },
+      dependencies: { react: '^18.2.0' } }),
+    file('.nvmrc', '20'),
+    json('package-lock.json', { lockfileVersion: 3,
+      packages: { 'node_modules/react': { version: '19.0.0' } } }),
+    json('tsconfig.json', { compilerOptions: { module: 'CommonJS' } }),
+    file('src/index.ts', 'export const value: string = "ok";'),
+  ];
+  const report = analyzeProject({
+    fileName: 'symbolic-fixture', files, source: 'upload',
+    scanStats: { projectSize: 1000, filesFound: files.length, filesAnalyzed: files.length,
+      filesIgnored: 0, ignoredCategories: [] },
+  });
+  assert.equal(report.classification.isSoftware, true);
+  assert.ok(report.stack.symbolicReasoning);
+  assert.equal(report.stack.symbolicReasoning.counts.conflict, 3);
+  assert.ok(report.notes.some(note => note.includes('Symbolic constraint reasoning: 3 evidenced conflict')));
+  assert.ok(report.notes.some(note => note.includes('package-lock.json')));
+  assert.ok(report.notes.some(note => note.includes('tsconfig.json')));
+});
