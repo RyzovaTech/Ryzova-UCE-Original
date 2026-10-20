@@ -34,7 +34,7 @@ function sourcePath(path: string): boolean {
   return /\.(?:[cm]?js|jsx|[cm]?ts|tsx)$/i.test(path);
 }
 function identifier(node: unknown): string | undefined {
-  return isNode(node) && node.type === 'Identifier' ? String(node.name) : undefined;
+  return isNode(node) && (node.type === 'Identifier' || node.type === 'JSXIdentifier') ? String(node.name) : undefined;
 }
 function literal(node: unknown): string | undefined {
   return isNode(node) && node.type === 'Literal' && typeof node.value === 'string' ? node.value : undefined;
