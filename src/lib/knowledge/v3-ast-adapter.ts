@@ -100,7 +100,10 @@ export function scanAstDetector(detector: V3AstDetector, file: V3ProjectFile, li
   // TypeScript's parser supports JS/JSX/TS/TSX without executing or typechecking.
   // Parse errors are not valid AST evidence; do not attempt a regex fallback.
   const root = ts.createSourceFile(file.path, file.content, ts.ScriptTarget.Latest, true, kind);
-  if (root.parseDiagnostics.length) return { evidence: [], truncated: false };
+  // TypeScript records parser diagnostics on SourceFile at runtime; the public
+  // SourceFile type omits this internal field, so read it conservatively.
+  const parsed = root as ts.SourceFile & { parseDiagnostics?: readonly ts.Diagnostic[] };
+  if (parsed.parseDiagnostics?.length) return { evidence: [], truncated: false };
 
   const stack: ts.Node[] = [root];
   const matches: V3RuleEvidence[] = [];
