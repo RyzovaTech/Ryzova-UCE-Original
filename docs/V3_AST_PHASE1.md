@@ -4,7 +4,7 @@
 
 ## What changed
 
-The old V3 `astEvidence()` used regular expressions despite the `ast` label. The bounded TypeScript compiler parser now produces actual syntax nodes for the five existing query families:
+The old V3 `astEvidence()` used regular expressions despite the `ast` label. The bounded Acorn TypeScript parser now produces actual syntax nodes for the five existing query families:
 
 - `call`: actual call expressions with exact identifier/property chains (e.g. `document.write(...)`).
 - `import`: static imports/re-exports, literal dynamic imports and literal `require(...)`.
@@ -20,7 +20,7 @@ Comments, strings, object keys and malformed source are no longer accepted as AS
 - Files over **256 KiB of characters** and parses visiting over **50,000 syntax nodes** return no AST evidence and mark the applicable rule as truncated. Existing per-rule file, time and byte budgets remain in effect.
 - Syntax errors return no AST match. Unsupported languages also produce no AST match rather than silently falling back to regex.
 - AST chains are **syntactic**. The engine does not track aliases, trust boundaries, taint or actual runtime behavior; other V3 regex detectors remain independent and may still produce review-only observations.
-- The project already used `typescript` as a build-time dependency. This implementation bundles the compiler parser into the browser worker. Verify worker bundle size, startup and memory before wider AST adoption.
+- UCE uses existing `acorn` with the pinned `acorn-typescript` plugin for JS/TS/JSX/TSX, keeping the heavyweight TypeScript compiler out of the browser worker. Verify worker bundle size, startup and memory before wider AST adoption.
 
 ## Validation
 
