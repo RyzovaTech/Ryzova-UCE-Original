@@ -44,6 +44,17 @@ The CLI outputs a JSON record with `status`, `witness` (only on SAT) and
 and has exit code 0. Unknown returns exit 3; malformed inputs or loader
 failures return exit 2.
 
+To measure the Node-only experimental WASM initialization and solving costs:
+
+```sh
+npm --prefix experiments/z3-node run benchmark
+```
+
+The result records cold initialization, first and warm solves, and process RSS.
+It is diagnostic, dependent on the runner, and **not** a browser performance
+or real-project accuracy measurement. A three-constraint case also proves
+joint UNSAT where all three pairwise intersections remain nonempty.
+
 The GitHub CI workflow installs the isolated experiment dependencies and
 runs the real Node/WASM Z3 tests. These tests also compare supported
 two-range examples against UCE's existing deterministic constraint helper.
