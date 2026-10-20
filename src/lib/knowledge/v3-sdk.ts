@@ -1,6 +1,6 @@
 import { classifyProjectFileScope, normalizeProjectPath } from '../analyzer/project-scope';
 import { correlationEvidence } from './v3-correlations';
-import { scanAstDetector } from './v3-ast-adapter';
+import { createAstScanner, type AstScanner } from './v3-ast-adapter';
 import { V3_RULE_SCHEMA_VERSION } from './v3-types';
 import { analyzeV3RuleGraph, validateV3RulePack } from './v3-validator';
 import type {
@@ -19,11 +19,12 @@ export function executeV3RulePacks(packs: V3RulePack[], context: V3ExecutionCont
   const rules = new Map(packs.flatMap((pack) => pack.rules.map((rule) => [rule.id, { rule, packId: pack.id }] as const)));
   const findings: V3RuleFinding[] = []; const metrics: V3RuleMetric[] = []; let skipped = 0;
   const candidates = createCandidateIndex(context.files);
+  const astScanner = createAstScanner();
   for (const id of graph.order) {
     const entry = rules.get(id); if (!entry) continue;
     const { rule, packId } = entry;
     if (!applicable(rule, context)) { skipped++; continue; }
-    const output = executeRule(rule, packId, context, candidates);
+    const output = executeRule(rule, packId, context, candidates, astScanner);
     findings.push(...output.findings); metrics.push(output.metric);
   }
   return {
@@ -60,13 +61,13 @@ function createCandidateIndex(files: V3ProjectFile[]): CandidateIndex {
   };
 }
 
-function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext, candidates: CandidateIndex): { findings: V3RuleFinding[]; metric: V3RuleMetric } {
+function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext, candidates: CandidateIndex, astScanner: AstScanner): { findings: V3RuleFinding[]; metric: V3RuleMetric } {
   const budget = { ...DEFAULT_BUDGET, ...rule.budget }; const started = now();
   const state = { filesVisited: 0, contentBytes: 0, matches: 0, truncated: false };
   const detectorEvidence: V3RuleEvidence[][] = [];
   for (const detector of rule.detectors) {
     if (now() - started >= budget.maxMilliseconds || state.matches >= budget.maxMatches) { state.truncated = true; break; }
-    detectorEvidence.push(runDetector(detector, context, rule, budget, state, started, candidates));
+    detectorEvidence.push(runDetector(detector, context, rule, budget, state, started, candidates, astScanner));
   }
   const nonEmpty = detectorEvidence.filter((items) => items.length);
   const requiredKinds = rule.evidenceRequirements.requireDetectorKinds ?? [];
@@ -84,14 +85,14 @@ function executeRule(rule: V3Rule, packId: string, context: V3ExecutionContext, 
   return { findings, metric: { ruleId: rule.id, ...state, durationMs: Math.max(0, now() - started) } };
 }
 
-function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3Rule, budget: V3RuleBudget, state: MutableState, started: number, candidates: CandidateIndex): V3RuleEvidence[] {
+function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3Rule, budget: V3RuleBudget, state: MutableState, started: number, candidates: CandidateIndex, astScanner: AstScanner): V3RuleEvidence[] {
   if (detector.kind === 'correlation') return correlationEvidence(detector, context, rule, budget, state, started);
   if (detector.kind === 'dependency') return dependencyEvidence(detector, candidates(rule, detector), budget, state, started);
   const evidence: V3RuleEvidence[] = [];
   for (const file of candidates(rule, detector)) {
     if (stop(state, budget, started) || state.filesVisited >= budget.maxFiles || state.contentBytes + (file.content?.length ?? 0) > budget.maxContentBytes) { state.truncated = true; break; }
     state.filesVisited++; state.contentBytes += file.content?.length ?? 0;
-    const ast = detector.kind === 'ast' ? scanAstDetector(detector, file, budget.maxMatches - state.matches) : undefined;
+    const ast = detector.kind === 'ast' ? astScanner(detector, file, budget.maxMatches - state.matches) : undefined;
     if (ast?.truncated) state.truncated = true;
     const found = detector.kind === 'regex' ? regexEvidence(detector, file, budget.maxMatches - state.matches)
       : detector.kind === 'ast' ? ast!.evidence
