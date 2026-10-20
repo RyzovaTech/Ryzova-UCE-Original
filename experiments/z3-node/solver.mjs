@@ -93,7 +93,9 @@ export async function solveNodeConstraints(session, input, timeoutMs = DEFAULT_T
   if (!input || typeof input !== 'object' || typeof input.workspace !== 'string' ||
       typeof input.constraints !== 'object' || !Array.isArray(input.constraints) ||
       input.constraints.length < 1 || input.constraints.length > MAX_CONSTRAINTS ||
-      !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 5000) {
+      !Number.isInteger(timeoutMs) || timeoutMs < 100 || timeoutMs > 5000 ||
+      input.workspace.length > 120 || !/^[a-zA-Z0-9_./-]*$/.test(input.workspace) ||
+      input.workspace.split('/').includes('..')) {
     return unsupported('Input or bounded solver options invalid.');
   }
   const names = new Set();
@@ -102,6 +104,11 @@ export async function solveNodeConstraints(session, input, timeoutMs = DEFAULT_T
     if (!item || typeof item.id !== 'string' || !/^[a-zA-Z0-9_.-]{1,60}$/.test(item.id) ||
         names.has(item.id) || typeof item.source !== 'string' || !item.source ||
         item.source.length > 256) return unsupported('Invalid, missing or repeated evidence identifiers.');
+    const path = item.source.split(/[#:]/, 1)[0].replace(/\\/g, '/');
+    if (path.split('/').includes('..') ||
+        (input.workspace && !path.startsWith(input.workspace.replace(/\/$/, '') + '/'))) {
+      return unsupported('Evidence is outside the explicitly selected workspace: ' + item.id);
+    }
     names.add(item.id);
     const range = parsedRange(item.range);
     if (!range) return unsupported('Unsupported, dynamic, prerelease, or overly complex constraint: ' + item.id);
