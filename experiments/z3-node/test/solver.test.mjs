@@ -123,3 +123,68 @@ test('a conflict is a modeled contradiction, never evidence that project source 
   assert.match(r.reason, /modeled/);
   assert.equal(r.witness, null);
 });
+
+test('root workspace is not a wildcard that accepts another package runtime', async () => {
+  // An unsat pair across package boundaries must never be reported as a
+  // real runtime conflict for the project root.
+  const result = await solveNodeConstraints(session, {
+    workspace: '',
+    constraints: [
+      fact('root-engine', '>=22', 'package.json#engines.node'),
+      fact('other-app-pin', '18', 'apps/other/.nvmrc:1'),
+    ],
+  });
+  assert.equal(result.status, 'unknown');
+  assert.match(result.reason, /outside/);
+  assert.deepEqual(result.unsatCore, []);
+});
+
+test('nested workspaces exclude deeper descendants and similar-name siblings', async () => {
+  for (const source of [
+    'apps/api/src/another-package/.nvmrc:1',
+    'apps/api-v2/.nvmrc:1',
+    'apps/other/.nvmrc:1',
+    'apps/api2/package.json#engines.node',
+  ]) {
+    const result = await solveNodeConstraints(session, {
+      workspace: 'apps/api', constraints: [fact('foreign', '<20', source)],
+    });
+    assert.equal(result.status, 'unknown', source);
+    assert.deepEqual(result.unsatCore, []);
+  }
+});
+
+test('noncanonical paths, absolute paths and ambiguous evidence references are unknown', async () => {
+  for (const workspace of ['/apps/api', './apps/api', 'apps//api', 'apps/api/', 'apps/../api', 'apps\\api']) {
+    const result = await solveNodeConstraints(session, {
+      workspace,
+      constraints: [fact('engine', '>=22', 'apps/api/package.json#engines.node')],
+    });
+    assert.equal(result.status, 'unknown', workspace);
+  }
+  for (const source of [
+    '../package.json#engines.node',
+    './package.json#engines.node',
+    '/package.json#engines.node',
+    'apps/../package.json#engines.node',
+    'apps//api/package.json#engines.node',
+    'C:/package.json',
+    'package.json:dynamic-line',
+    'https://example.test/package.json',
+  ]) {
+    assert.equal((await run(fact('bad-origin', '>=22', source))).status, 'unknown', source);
+  }
+});
+
+test('canonical root and canonical package-local facts still solve normally', async () => {
+  assert.equal((await run(
+    fact('engine', '>=22', 'package.json#engines.node'),
+    fact('local-pin', '20', '.nvmrc:1'))).status, 'conflict');
+  assert.equal((await solveNodeConstraints(session, {
+    workspace: 'apps/api',
+    constraints: [
+      fact('engine', '>=22', 'apps/api/package.json#engines.node'),
+      fact('local-pin', '22', 'apps/api/.nvmrc:1'),
+    ],
+  })).status, 'satisfiable');
+});
