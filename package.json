@@ -10,6 +10,7 @@
     "test:report-regressions": "node --test testing/report/*.test.mjs",
     "test": "node scripts/test-knowledge.mjs",
     "test:v3-fixtures": "node testing/v3/v3-rule-fixtures.mjs",
+    "test:v3-ast": "node --test testing/v3/v3-ast-adapter.test.mjs",
     "test:integration": "node scripts/test-knowledge.mjs",
     "test:fixtures": "node scripts/test-knowledge.mjs",
     "test:accessibility": "node scripts/phase5-gates.mjs",
