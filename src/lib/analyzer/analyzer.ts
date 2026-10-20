@@ -24,6 +24,7 @@ import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
 import { UCE_VERSION } from '@/lib/app-version';
 import { executeV3RulePacks } from '../knowledge/v3-sdk';
+import { evaluateSymbolicReasoning } from '../symbolic/reasoner';
 import { V3_DEFAULT_RULE_PACKS } from '../knowledge/v3-default-packs';
 
 const ANALYSIS_VERSION = `uce-${UCE_VERSION}`;
@@ -125,6 +126,7 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   stack.codeIntelligence = detectCodeIntelligence(input.files); stack.securityIntelligence = detectSecurityIntelligence(input.files);
   stack.browserCompatibility = detectBrowserCompatibility(input.files);
   if (classification.isSoftware) stack.extendedIntelligence = detectExtendedIntelligence(input.files, stack);
+  if (classification.isSoftware) stack.symbolicReasoning = evaluateSymbolicReasoning(input.files);
   stack.intelligenceInsights = buildCorrelatedInsights(stack);
   if (classification.isSoftware) {
     const technologies = [stack.language, stack.framework, stack.runtime, stack.buildTool, ...(stack.frameworks ?? []), ...(stack.runtimes ?? []), ...(stack.technologyDetections ?? []).flatMap((item) => [item.id, item.name])]
@@ -156,6 +158,18 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
   if (stack.browserCompatibility) { const findingCount = stack.browserCompatibility.findings.length; notes.push(stack.browserCompatibility.filesScanned === 0 ? "Browser compatibility: not applicable to analyzed files; no browser source files checked." : `Browser compatibility: ${findingCount} compatibility finding${findingCount === 1 ? '' : 's'}; score ${stack.browserCompatibility.score}%.`); }
   if (stack.intelligenceInsights?.length) notes.push(`Correlated intelligence: ${stack.intelligenceInsights.length} prioritized cross-engine insight${stack.intelligenceInsights.length === 1 ? '' : 's'}.`);
   if (stack.extendedIntelligence) notes.push(`Phase 3.5 intelligence: ${Object.keys(stack.extendedIntelligence.modules).length} modules; combined static score ${stack.extendedIntelligence.overallScore}%.`);
+  if (stack.symbolicReasoning) {
+    const symbolic = stack.symbolicReasoning;
+    notes.push('Symbolic constraint reasoning: ' + symbolic.counts.conflict + ' evidenced conflict(s), ' +
+      symbolic.counts.satisfiable + ' satisfiable constraint comparison(s), ' +
+      symbolic.counts.unknown + ' unknown comparison(s). Satisfiable does not prove runtime compatibility.');
+    for (const item of symbolic.decisions.filter(item => item.status === 'conflict').slice(0, 5)) {
+      notes.push('Symbolic ' + item.domain + ' conflict in ' + (item.workspace || 'root') + ' (' + item.subject + '): ' +
+        item.explanation + ' Evidence: ' + item.facts.map(f => f.file + (f.line ? ':' + f.line : '') +
+          ' ' + f.key + '=' + f.value).join('; ') + '.');
+    }
+    if (symbolic.limited) notes.push('Symbolic reasoning coverage is partial; unmodeled or truncated inputs cannot be assumed compatible.');
+  }
   if (stack.v3RulePlatform) notes.push(`V3 rule platform: ${stack.v3RulePlatform.rulesExecuted} of ${stack.v3RulePlatform.rulesConsidered} core rules were applicable across ${stack.v3RulePlatform.packIds.length} packs; ${stack.v3RulePlatform.findings.length} static observation${stack.v3RulePlatform.findings.length === 1 ? '' : 's'} require context before treating them as risks.${limitedRules ? ` ${limitedRules} applicable rules reached their evaluation budgets.` : ''}`);
   if (summary.analysisCoverage) notes.push(`Analysis coverage: ${summary.analysisCoverage.status}; ${summary.analysisCoverage.fileCoveragePercent}% of discovered files entered the analysis set. Some selected files may have metadata only.`);
   if (summary.scanStats.truncated) notes.push(`Analysis was truncated or sampled (${summary.scanStats.truncationReason ?? 'configured resource limits'}); absence of findings outside the analyzed content is not guaranteed.`);
