@@ -1,5 +1,6 @@
 import { classifyProjectFileScope, normalizeProjectPath } from '../analyzer/project-scope';
 import { correlationEvidence } from './v3-correlations';
+import { scanAstDetector } from './v3-ast-adapter';
 import { V3_RULE_SCHEMA_VERSION } from './v3-types';
 import { analyzeV3RuleGraph, validateV3RulePack } from './v3-validator';
 import type {
@@ -35,7 +36,7 @@ export function executeV3RulePacks(packs: V3RulePack[], context: V3ExecutionCont
     metrics,
     limitations: [
       'V3 rules perform deterministic static checks and do not prove runtime behavior.',
-      'AST detectors use bounded syntax signatures until a language parser adapter is registered.',
+      'JavaScript and TypeScript AST detectors use bounded syntax trees without type/data-flow resolution; unsupported or malformed inputs yield no AST evidence.',
       'Budget-truncated rules label their metrics and cannot guarantee absence outside the evaluated input.',
     ],
   };
@@ -90,8 +91,10 @@ function runDetector(detector: V3Detector, context: V3ExecutionContext, rule: V3
   for (const file of candidates(rule, detector)) {
     if (stop(state, budget, started) || state.filesVisited >= budget.maxFiles || state.contentBytes + (file.content?.length ?? 0) > budget.maxContentBytes) { state.truncated = true; break; }
     state.filesVisited++; state.contentBytes += file.content?.length ?? 0;
+    const ast = detector.kind === 'ast' ? scanAstDetector(detector, file, budget.maxMatches - state.matches) : undefined;
+    if (ast?.truncated) state.truncated = true;
     const found = detector.kind === 'regex' ? regexEvidence(detector, file, budget.maxMatches - state.matches)
-      : detector.kind === 'ast' ? astEvidence(detector, file)
+      : detector.kind === 'ast' ? ast!.evidence
         : detector.kind === 'manifest' ? manifestEvidence(detector, file, context.manifests)
           : configEvidence(detector, file, context.manifests);
     for (const item of found) { evidence.push(item); state.matches++; if (stop(state, budget, started)) break; }
@@ -115,21 +118,6 @@ function regexEvidence(detector: V3RegexDetector, file: V3ProjectFile, limit: nu
     if (!match[0].length) regex.lastIndex++;
   }
   return evidence;
-}
-function astEvidence(detector: V3AstDetector, file: V3ProjectFile): V3RuleEvidence[] {
-  if (detector.include?.length && !detector.include.some((glob) => globMatch(file.path, glob))) return [];
-  const language = languageForPath(file.path);
-  if (language && !detector.languages.some((item) => item.toLowerCase() === language)) return [];
-  const content = file.content ?? ''; const output: V3RuleEvidence[] = [];
-  for (const name of detector.names) {
-    const escaped = escapeRegExp(name); const source = detector.query === 'call' ? `\\b${escaped}\\s*\\(`
-      : detector.query === 'import' ? `(?:from\\s*['"]${escaped}['"]|require\\s*\\(\\s*['"]${escaped}['"])`
-        : detector.query === 'assignment' ? `\\b${escaped}\\s*=`
-          : detector.query === 'jsx-attribute' ? `\\b${escaped}\\s*=` : `\\b(?:class|function|interface|type|const|let|var)\\s+${escaped}\\b`;
-    const match = new RegExp(source).exec(content);
-    if (match) output.push({ detector: 'ast', file: file.path, line: lineAt(content, match.index), detail: `${detector.query}:${name}` });
-  }
-  return output;
 }
 function manifestEvidence(detector: V3ManifestDetector, file: V3ProjectFile, supplied?: Record<string, unknown>): V3RuleEvidence[] {
   if (!detector.files.some((pattern) => globMatch(file.path, pattern))) return [];
@@ -276,6 +264,5 @@ function globMatch(path: string, glob: string): boolean { const escaped = glob.r
 function uniqueFlags(value: string): string { return [...new Set(value)].join(''); }
 function lineAt(content: string, index: number): number { return content.slice(0, index).split('\n').length; }
 function safeDetail(value: string): string { return value.replace(/\s+/g, ' ').slice(0, 160); }
-function escapeRegExp(value: string): string { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function now(): number { return typeof performance !== 'undefined' ? performance.now() : Date.now(); }
 interface MutableState { filesVisited: number; contentBytes: number; matches: number; truncated: boolean; }

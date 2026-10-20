@@ -10,6 +10,7 @@
     "test:report-regressions": "node --test testing/report/*.test.mjs",
     "test": "node scripts/test-knowledge.mjs",
     "test:v3-fixtures": "node testing/v3/v3-rule-fixtures.mjs",
+    "test:v3-ast": "node --test testing/v3/v3-ast-adapter.test.mjs",
     "test:integration": "node scripts/test-knowledge.mjs",
     "test:fixtures": "node scripts/test-knowledge.mjs",
     "test:accessibility": "node scripts/phase5-gates.mjs",
@@ -91,7 +92,9 @@
     "recharts": "^2.13.3",
     "sonner": "^1.7.0",
     "tailwind-merge": "^2.5.4",
-    "vaul": "^0.9.1"
+    "vaul": "^0.9.1",
+    "acorn-typescript": "1.4.13",
+    "acorn-jsx": "5.3.2"
   },
   "devDependencies": {
     "@eslint-community/regexpp": "^4.12.2",
