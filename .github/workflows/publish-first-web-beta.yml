@@ -1,0 +1,54 @@
+name: Publish first UCE web beta release
+
+# The initial push to main containing this workflow publishes one pinned
+# prerelease. Later pushes to application code do not create new releases.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/publish-first-web-beta.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: first-uce-web-beta-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.repository == 'RyzovaTech/Ryzova-UCE-Original' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release documentation
+        uses: actions/checkout@v4
+
+      - name: Publish pinned, idempotent web prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="v3.0.0-beta.1"
+          pinned_sha="71856185231e7a5abe9b20cac008b25587cc272f"
+
+          # Release the same source version that passed CI and reached production.
+          gh api "repos/${GH_REPO}/commits/${pinned_sha}" --jq '.sha' | grep -Fx "${pinned_sha}"
+          test -s docs/RELEASE_NOTES_V3_WEB_BETA.md
+
+          if gh release view "${tag}" --repo "${GH_REPO}" >/dev/null 2>&1; then
+            echo "Release ${tag} already exists; not rewriting or moving its tag."
+            exit 0
+          fi
+
+          gh release create "${tag}" \
+            --repo "${GH_REPO}" \
+            --target "${pinned_sha}" \
+            --title "Ryzova UCE v3.0.0-beta.1 — Web Beta" \
+            --prerelease \
+            --notes-file docs/RELEASE_NOTES_V3_WEB_BETA.md
+
+          gh release view "${tag}" --repo "${GH_REPO}" --json url,isPrerelease,tagName \
+            --jq '{url, isPrerelease, tagName}'
