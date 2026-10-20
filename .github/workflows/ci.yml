@@ -85,6 +85,9 @@ jobs:
       - name: Smoke-test Z3 CLI on explicit conflict fixture
         run: node experiments/z3-node/cli.mjs experiments/z3-node/fixtures/runtime-conflict.json
 
+      - name: Measure experimental Z3 WASM startup and solver overhead
+        run: npm --prefix experiments/z3-node run benchmark
+
       - name: JSON schema, accessibility, and trust gates
         run: npm run validate:schema
 
