@@ -29,3 +29,16 @@ Every PR runs `npm run test:v3-ast`, the existing 10,000-rule fixtures, and accu
 **Accuracy claim boundary:** These are agent-authored regression tests, **not** independent human-adjudicated precision/recall. The pinned 1,000-project language-label benchmark tests a separate metric and should not be reported as validation of AST/security accuracy.
 
 Follow-on work: measure bundle/worker memory and real-project AST findings against independently reviewed source sites; decide whether a smaller/lazy parser adapter is needed before adding new languages or symbolic constraints.
+
+## Phase 1 source-order and parse-reuse hardening
+
+To keep rule findings actionable when `maxMatches` is small, AST traversal visits
+earlier source nodes before later ones. A `maxMatches: 1` AST rule therefore
+returns its **first** source occurrence rather than an arbitrary later match.
+
+A V3 rule-pack execution also reuses parsed JS/TS syntax trees across AST
+detectors, with a scan-local cache limited to eight files. Cache entries are
+invalidated if the file's source content changes. The cache is not shared
+between independent project scans, so it does not retain project source
+after the execution completes. This is a performance/selection correctness
+change, **not** a type-checker, taint engine, or independent accuracy study.

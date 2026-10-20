@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 
-const { scanAstDetector } = load('src/lib/knowledge/v3-ast-adapter.ts');
+const { scanAstDetector, createAstScanner } = load('src/lib/knowledge/v3-ast-adapter.ts');
 const { executeV3RulePacks } = load('src/lib/knowledge/v3-sdk.ts');
 const { V3_CORE_RULE_PACK } = load('src/lib/knowledge/v3-core-pack.ts');
 
@@ -90,7 +90,7 @@ test('unsupported, malformed and over-budget source never claims verified AST ev
 test('AST result lines are exact and bounded by maxMatches', () => {
   const result = find('src/app.ts', '// hi\nconst a = 1;\nelement.innerHTML = a;\nelement.innerHTML = a;', 'assignment', ['innerHTML'], 1);
   assert.equal(result.evidence.length, 1);
-  assert.ok([3, 4].includes(result.evidence[0].line));
+  assert.equal(result.evidence[0].line, 3, 'A bounded match must select the earliest source occurrence');
   assert.equal(result.truncated, false);
 });
 
@@ -103,4 +103,34 @@ test('V3 core AST rule no longer raises comment/string false positives', () => {
   assert.equal(result.length, 1);
   assert.deepEqual(result[0].evidence.map(x => x.detail), ['assignment:innerHTML']);
   assert.equal(result[0].line, 2);
+});
+
+test('scan-local AST reuse preserves exact queries, source lines and content invalidation', () => {
+  const scan = createAstScanner();
+  const target = file('src/app.ts', 'document.write(first);\nconst value: number = 1;\ndocument.write(second);');
+  const call = detector('call', ['document.write']);
+  assert.deepEqual(scan(call, target, 1).evidence.map(x => x.line), [1]);
+  assert.deepEqual(scan(call, target, 2).evidence.map(x => x.line), [1, 3]);
+
+  const declarations = scan(detector('declaration', ['value']), target, 10);
+  assert.deepEqual(declarations.evidence.map(x => [x.detail, x.line]), [['declaration:value', 2]]);
+
+  target.content = 'const value: number = 2;\ndocument.write(changed);';
+  target.size = Buffer.byteLength(target.content);
+  assert.deepEqual(scan(call, target, 10).evidence.map(x => x.line), [2],
+    'Changing the content of a reused file object must invalidate its old syntax tree');
+
+  // An additional 9 distinct files evict earlier entries from the 8-tree LRU.
+  for (let i = 0; i < 9; i++) {
+    assert.equal(scan(call, file(`src/file${i}.js`, 'document.write(value);'), 1).evidence.length, 1);
+  }
+  assert.deepEqual(scan(call, target, 10).evidence.map(x => x.line), [2]);
+});
+
+test('bounded AST scans return source-first evidence even when nested in later statements', () => {
+  const target = file('src/view.tsx',
+    'function first() { element.innerHTML = firstValue; }\n' +
+    'function second() { element.innerHTML = secondValue; }');
+  const result = scanAstDetector(detector('assignment', ['innerHTML']), target, 1);
+  assert.deepEqual(result.evidence.map(x => x.line), [1]);
 });
