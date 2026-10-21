@@ -125,3 +125,7 @@ UCE's compatibility rating. This is **experimental Node tooling**, not
 a new web toggle or a remote report API. Production/browser integration
 remains blocked until native/COOP/COEP and privacy constraints can be met,
 and until independently adjudicated real repositories have been evaluated.
+
+## Trilogy accuracy evaluation
+
+See [Trilogy Accuracy Validation](../../docs/TRILOGY_ACCURACY_VALIDATION.md) for held-out authored semantic cases, metric definitions, provenance and independent human review gates. Run the audit:holdout script only with solver-equipped Node CI. No browser or compatibility-scoring changes.
