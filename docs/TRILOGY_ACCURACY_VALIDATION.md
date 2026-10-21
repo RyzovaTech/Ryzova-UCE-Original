@@ -43,7 +43,7 @@ Reference conflict is positive. Reference satisfiable is negative.
 - **Conservative recall** = TP/(TP+FN+abstainedPositive).
 - **Recall on decided positives** = TP/(TP+FN) separately disclosed.
 - **False-positive rate on decided negatives** = FP/(FP+TN).
-- **Conservative FPR** = FP/(FP+TN+abstainedNegative).
+- **All-labeled-negative FPR** = FP/(FP+TN+abstainedNegative). Not a conservative error upper bound: adding abstentions to the denominator can lower the apparent rate; always report the decided-negative FPR and coverage alongside it.
 - **Known-label coverage** = all decided positive+negative / 28 known cases.
 - **Selective accuracy** = (TP+TN)/known decided, null if none.
 - Unknown-reference predictions are separately inspected for unjustified

@@ -138,6 +138,8 @@ export function scoreTrilogyHoldout(cases, results) {
     ap=confusion.conflict.unknown, an=confusion.satisfiable.unknown;
   const known=tp+fp+fn+tn+ap+an, decided=tp+fp+fn+tn;
   const ratio=(top,bottom)=> bottom===0?null:finite(top/bottom);
+  const positiveRecall=ratio(tp,tp+fn+ap);
+  const negativeRecall=ratio(tn,tn+fp+an);
   const unknownTruth=confusion.unknown;
   const unknownCount=unknownTruth.conflict+unknownTruth.satisfiable+unknownTruth.unknown;
   const unsafe=unknownTruth.conflict+unknownTruth.satisfiable;
@@ -159,8 +161,8 @@ export function scoreTrilogyHoldout(cases, results) {
       conflictRecallConservative:ratio(tp,tp+fn+ap),
       conflictRecallOnDecided:ratio(tp,tp+fn),
       falsePositiveRateOnDecidedNegatives:ratio(fp,fp+tn),
-      falsePositiveRateConservative:ratio(fp,fp+tn+an),
-      balancedAccuracyConservative:ratio(ratio(tp,tp+fn+ap)+ratio(tn,tn+fp+an),2),
+      falsePositiveRateAllLabeledNegatives:ratio(fp,fp+tn+an),
+      balancedAccuracyConservative:positiveRecall===null||negativeRecall===null?null:finite((positiveRecall+negativeRecall)/2),
       labeledCoverage:ratio(decided,known),
       selectiveAccuracy:ratio(tp+tn,decided),
       unknownReferenceAbstentionRate:ratio(unknownTruth.unknown,unknownCount),

@@ -35,6 +35,7 @@ test('precision, conservative recall and abstention metrics correctly handle Unk
   assert.equal(m.metrics.unknownReferenceAbstentionRate,0.5);
   assert.equal(m.metrics.unsupportedAssertionCount,1);
   assert.equal(m.metrics.falsePositiveRateOnDecidedNegatives,0.5);
+  assert.equal(m.metrics.falsePositiveRateAllLabeledNegatives,0.5);
 });
 test('zero classified positives have undefined precision, not artificial perfect precision',()=>{
   const cases=[{id:'C',label:'conflict',title:'fixture'}, {id:'N',label:'satisfiable',title:'fixture'}];
@@ -53,4 +54,18 @@ test('false negatives and withheld benign decisions are not conflated',()=>{
 });
 test('case alignment and duplicate predictions are mandatory',()=>{
   assert.throws(()=>scoreTrilogyHoldout([{id:'A',label:'conflict'}],[{id:'B',status:'conflict'}]),/Unknown\/duplicate\/missing/);
+});
+
+test('unknown negatives stay out of decided-negative FPR but enter clearly named all-negative FPR',()=>{
+  const cases=[{id:'S1',label:'satisfiable',title:'a'},{id:'S2',label:'satisfiable',title:'b'},{id:'C',label:'conflict',title:'c'}];
+  const seen=[{id:'S1',status:'conflict'},{id:'S2',status:'unknown'},{id:'C',status:'unknown'}];
+  const m=scoreTrilogyHoldout(cases,seen);
+  assert.equal(m.metrics.falsePositiveRateOnDecidedNegatives,1);
+  assert.equal(m.metrics.falsePositiveRateAllLabeledNegatives,0.5);
+  assert.equal(m.metrics.balancedAccuracyConservative,0);
+});
+test('balanced accuracy is undefined if a reference class is absent',()=>{
+  const cases=[{id:'C',label:'conflict',title:'only conflict'}];
+  const m=scoreTrilogyHoldout(cases,[{id:'C',status:'conflict'}]);
+  assert.equal(m.metrics.balancedAccuracyConservative,null);
 });
