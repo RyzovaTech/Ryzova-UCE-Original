@@ -1,0 +1,8 @@
+.decl Edge(from: symbol, to: symbol)
+.input Edge
+.decl Root(node: symbol)
+.input Root
+.decl Reach(node: symbol)
+Reach(node) :- Root(node).
+Reach(next) :- Reach(node), Edge(node, next).
+.output Reach

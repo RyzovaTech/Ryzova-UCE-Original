@@ -1,0 +1,13 @@
+{
+  "workspace": "",
+  "files": [
+    {
+      "path": "package.json",
+      "content": "{\"name\":\"fixture\",\"engines\":{\"node\":\">=18\"},\"dependencies\":{\"alpha\":\"^1.0.0\"}}"
+    },
+    {
+      "path": "package-lock.json",
+      "content": "{\"lockfileVersion\":3,\"packages\":{\"\":{\"name\":\"fixture\",\"version\":\"1.0.0\",\"dependencies\":{\"alpha\":\"^1.0.0\"}},\"node_modules/alpha\":{\"version\":\"1.1.0\",\"engines\":{\"node\":\">=22\"},\"dependencies\":{\"beta\":\"^2.0.0\"}},\"node_modules/beta\":{\"version\":\"2.1.0\",\"engines\":{\"node\":\"<21\"}}}}"
+    }
+  ]
+}

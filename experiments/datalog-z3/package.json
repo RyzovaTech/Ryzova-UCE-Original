@@ -1,0 +1,14 @@
+{
+  "name": "@ryzovatech/uce-datalog-z3-experiment",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Souffle Datalog dependency reachability with bounded Z3 Node SMT proofs; CI-only experiment",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "demo": "node cli.mjs fixtures/conflict.json"
+  },
+  "dependencies": {
+    "semver": "7.8.5"
+  }
+}
