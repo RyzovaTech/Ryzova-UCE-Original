@@ -47,6 +47,13 @@ jobs:
           done
           curl -fsS http://127.0.0.1:4174/experiments/trilogy-browser/index.html > /dev/null
           npm --prefix experiments/trilogy-browser run test:browser
+      - name: Upload actual Chromium process-tree memory diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uce-trilogy-browser-memory-diagnostic
+          path: experiments/trilogy-browser/metrics/latest-browser-memory.json
+          if-no-files-found: warn
       - name: Publish honest benchmark methodology
         if: always()
         run: |
