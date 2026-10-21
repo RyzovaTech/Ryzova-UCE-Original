@@ -36,14 +36,27 @@ try {
   assert.equal(first.result.nativeSolversAvailable,false);
   assert.equal(first.workerStarted,true);
   assert.equal(first.terminated,true);
+  assert.equal(first.zeroCopyTransfer,true,'Large and small manifest buffers must be transferred, not copied');
   assert.ok(first.transferredBytes<4096);
   const samples=[first.elapsedMs];
   for(let i=0;i<19;i++){
     const r=await page.evaluate(()=>window.trilogyWorkerTest.run());
     assert.equal(r.result.status,'candidate',JSON.stringify(r));
     assert.equal(r.terminated,true);
+    assert.equal(r.zeroCopyTransfer,true);
     samples.push(r.elapsedMs);
   }
+  const heavy=await page.evaluate(()=>window.trilogyWorkerTest.heavy());
+  assert.equal(heavy.result.status,'candidate');
+  assert.equal(heavy.zeroCopyTransfer,true);
+  assert.ok(heavy.transferredBytes>100*1024);
+  const concurrent=await page.evaluate(()=>window.trilogyWorkerTest.concurrent());
+  assert.equal(concurrent[0].result.status,'candidate');
+  assert.equal(concurrent[1].result.status,'unknown');
+  assert.equal(concurrent[1].workerStarted,false);
+  const aborted=await page.evaluate(()=>window.trilogyWorkerTest.abortInFlight());
+  assert.equal(aborted.result.status,'unknown');
+  assert.equal(aborted.terminated,true);
   const timeout=await page.evaluate(()=>window.trilogyWorkerTest.deadline());
   assert.equal(timeout.workerStarted,true);
   assert.equal(timeout.terminated,true);
@@ -69,6 +82,9 @@ try {
     pageHeapDeltaMiB:heapIncreaseMiB,
     externalRequests:external.length,
     payloadBytes:first.transferredBytes,
+    testedZeroCopyTransfer:first.zeroCopyTransfer,
+    heavyPayloadBytes:heavy.transferredBytes,
+    concurrencyRejected:concurrent[1].workerStarted===false,
     nativeSolversLoaded:false,
     note:'Real Chromium dedicated-worker triage only, NOT Souffle/Z3/cvc5 WASM solver memory or performance.',
     totalSuiteMs:Math.round(performance.now()-started),

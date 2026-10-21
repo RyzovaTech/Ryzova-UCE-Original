@@ -45,6 +45,9 @@ export function inspectTrilogyCandidate(files: Pick<ProjectFile, 'path'|'content
   for (const f of files) {
     if (!f || f.isDirectory || typeof f.path !== 'string' || typeof f.content !== 'string' ||
         !expected.includes(f.path) || map.has(f.path)) return result(workspace, 'unknown', 'Unexpected/duplicate source path.');
+    if (f.content.length > TRILOGY_PREFLIGHT_LIMITS.maxFileBytes) {
+      return result(workspace, 'unknown', 'Source exceeds preflight file budget.');
+    }
     const bytes = new TextEncoder().encode(f.content).byteLength;
     if (bytes > TRILOGY_PREFLIGHT_LIMITS.maxFileBytes) return result(workspace, 'unknown', 'Source exceeds preflight file budget.');
     totalBytes += bytes;

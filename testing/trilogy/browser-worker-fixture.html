@@ -22,6 +22,18 @@
       return runBrowserTrilogyPreflight(files,{signal:controller.signal});
     },
     deadline: () => runBrowserTrilogyPreflight(files,{timeoutMs:1}),
+    concurrent: () => Promise.all([runBrowserTrilogyPreflight(files),runBrowserTrilogyPreflight(files)]),
+    abortInFlight: () => {
+      const controller=new AbortController();
+      const pending=runBrowserTrilogyPreflight(files,{signal:controller.signal});
+      controller.abort();
+      return pending;
+    },
+    heavy: () => {
+      const obj=JSON.parse(files[1].content);
+      obj.testingPadding='.'.repeat(110*1024);
+      return runBrowserTrilogyPreflight([files[0],build('package-lock.json',JSON.stringify(obj))]);
+    },
     heap: () => performance.memory?.usedJSHeapSize??null,
   };
 </script></body></html>

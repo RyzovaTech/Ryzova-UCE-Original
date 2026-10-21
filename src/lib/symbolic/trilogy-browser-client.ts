@@ -8,6 +8,8 @@ export interface BrowserTrilogyPreflightOutcome {
   elapsedMs: number;
   workerMs: number | null;
   transferredBytes: number;
+  /** Transfer-list buffer ownership detached from main thread after postMessage. */
+  zeroCopyTransfer: boolean;
 }
 export interface BrowserTrilogyPreflightOptions {
   workspace?: string;
@@ -28,7 +30,7 @@ const fallback = (reason: string, workspace: string, elapsedMs: number,
   workerStarted = false, bytes = 0): BrowserTrilogyPreflightOutcome => ({
   result: unknown(reason, workspace), workerStarted,
   terminated: workerStarted, elapsedMs, workerMs: null,
-  transferredBytes: bytes,
+  transferredBytes: bytes, zeroCopyTransfer: false,
 });
 
 /**
@@ -60,10 +62,18 @@ export async function runBrowserTrilogyPreflight(
     return fallback('Two unique same-workspace evidence files required.', workspace, performance.now() - start);
   }
   let bytes = 0;
-  const reduced: { path: string; content: string; isDirectory: false }[] = [];
+  const reduced: { path: string; bytes: ArrayBuffer }[] = [];
+  const transfer: ArrayBuffer[] = [];
+  const encoder = new TextEncoder();
   for (const file of selected) {
     if (typeof file.content !== 'string') return fallback('Evidence text unavailable.', workspace, performance.now() - start);
-    const size = new TextEncoder().encode(file.content).byteLength;
+    // A JS string longer than this bound cannot encode into <= maxFileBytes.
+    // Reject before TextEncoder allocates an unbounded Uint8Array.
+    if (file.content.length > TRILOGY_PREFLIGHT_LIMITS.maxFileBytes) {
+      return fallback('Evidence exceeds individual transfer budget.', workspace, performance.now() - start);
+    }
+    const encoded = encoder.encode(file.content);
+    const size = encoded.byteLength;
     if (size > TRILOGY_PREFLIGHT_LIMITS.maxFileBytes) {
       return fallback('Evidence exceeds individual transfer budget.', workspace, performance.now() - start);
     }
@@ -71,7 +81,8 @@ export async function runBrowserTrilogyPreflight(
     if (bytes > TRILOGY_PREFLIGHT_LIMITS.maxTotalBytes) {
       return fallback('Evidence exceeds transfer budget.', workspace, performance.now() - start);
     }
-    reduced.push({ path: file.path, content: file.content, isDirectory: false });
+    reduced.push({ path: file.path, bytes: encoded.buffer });
+    transfer.push(encoded.buffer);
   }
   if (typeof Worker === 'undefined') return fallback('Browser Worker unavailable.', workspace, performance.now() - start);
   running = true;
@@ -89,6 +100,7 @@ export async function runBrowserTrilogyPreflight(
     let finished = false;
     let workerResult: TrilogyPreflight | null = null;
     let workerMs: number | null = null;
+    let zeroCopyTransfer = false;
     let error = 'Preflight worker deadline exceeded.';
     const cleanup = () => {
       clearTimeout(timer);
@@ -106,7 +118,7 @@ export async function runBrowserTrilogyPreflight(
         result: workerResult ?? unknown(error, workspace),
         workerStarted: true, terminated: true,
         elapsedMs: Math.round((performance.now() - start) * 100) / 100,
-        workerMs, transferredBytes: bytes,
+        workerMs, transferredBytes: bytes, zeroCopyTransfer,
       });
     };
     const onAbort = () => { error = 'Preflight cancelled.'; finish(); };
@@ -132,7 +144,12 @@ export async function runBrowserTrilogyPreflight(
     };
     worker.onerror = () => { error = 'Browser preflight worker error.'; finish(); };
     if (options.signal?.aborted) { onAbort(); return; }
-    try { worker.postMessage({ type: 'preflight', requestId, workspace, files: reduced }); }
+    try {
+      worker.postMessage({ type: 'preflight', requestId, workspace, files: reduced }, transfer);
+      // Structured clone transfer detaches sender buffers, avoiding an extra
+      // cross-thread payload copy. The original source strings are untouched.
+      zeroCopyTransfer = transfer.length === 2 && transfer.every(buffer => buffer.byteLength === 0);
+    }
     catch { error = 'Preflight transfer failed.'; finish(); }
   });
 }

@@ -31,3 +31,16 @@ Run the Chromium smoke only after installing Playwright Chromium into the experi
 ## Release decision
 
 Production browser Trilogy remains NO-GO. Only disabled-by-default preflight plumbing is eligible for technical review. Retain deterministic local UCE as fast default, and keep Soufflé + Z3 + cvc5 as a separately opted-in local Node analysis for advanced, evidence-complete Node dependency constraints. No native trio results appear in normal browser UCE reports.
+
+## Zero-copy transfer hardening
+
+The preflight client now rejects JavaScript source strings before encoding
+if they exceed the 128 KiB per-file limit, preventing an accidental giant
+TextEncoder allocation. It creates bounded transferable ArrayBuffers and
+transfers ownership with Worker.postMessage(..., transferList), avoiding a
+second cross-thread copy of evidence text. The Worker checks byte lengths
+before TextDecoder or JSON.parse. Real Chromium smoke covers >100 KiB
+payloads, verifies sender buffers were detached, tests one-active-worker
+concurrency and abort-after-start, and confirms worker recovery after abort.
+This is still **not** a native Soufflé/Z3/cvc5 browser solve or a portable
+peak worker-memory bound.
