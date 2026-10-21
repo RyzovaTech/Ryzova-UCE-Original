@@ -1,6 +1,7 @@
 import type { AdditionalLanguage } from './language-knowledge';
 import type { V3ExecutionResult } from '../knowledge/v3-types';
 import type { SymbolicReasoningResult } from '../symbolic/reasoner';
+import type { OptionalTrilogySolverDiagnostic } from '../symbolic/optional-solver-contract';
 export type Severity = 'critical' | 'warning' | 'info';
 export type CategoryId = 'runtime' | 'dependencies' | 'configuration' | 'structure' | 'environment' | 'security' | 'deployment' | 'performance';
 export type CategoryStatus = 'good' | 'warning' | 'unknown';
@@ -65,5 +66,5 @@ export interface CompatibilityScore { runtime: number; dependencies: number; con
 export interface AnalysisTrustMetadata { localOnly: boolean; networkAccessUsed: boolean; sourceUploaded: boolean; scoringFormula: string; scoreWeights: Record<string, number>; knowledgePacks: Array<{ id: string; version: string; schemaVersion: number; signed: boolean }>; limitations: string[]; execution?: { worker: boolean; cached: boolean; sampled: boolean; truncated: boolean; incremental?: boolean; changedFiles?: number; reusedFiles?: number }; }
 export type AnalysisStage = 'idle' | 'uploading' | 'reading' | 'detecting' | 'analyzing' | 'scoring' | 'reporting' | 'completed' | 'error';
 export interface TimelineStep { step: number; label: string; description: string; status: 'done' | 'active' | 'pending'; }
-export interface AnalysisResult { id: string; createdAt: string; analysisVersion: string; classification: ProjectClassification; summary: ProjectSummary; stack: TechnologyStack; detectedFiles: DetectedFile[]; categories: CategoryResult[]; issues: Issue[]; score: CompatibilityScore; timeline: TimelineStep[]; notes: string[]; source: 'upload' | 'demo' | 'github'; trust?: AnalysisTrustMetadata; }
+export interface AnalysisResult { id: string; createdAt: string; analysisVersion: string; classification: ProjectClassification; summary: ProjectSummary; stack: TechnologyStack; detectedFiles: DetectedFile[]; categories: CategoryResult[]; issues: Issue[]; score: CompatibilityScore; timeline: TimelineStep[]; notes: string[]; source: 'upload' | 'demo' | 'github'; trust?: AnalysisTrustMetadata; optionalSolver?: OptionalTrilogySolverDiagnostic; }
 export interface AnalysisInput { fileName: string; files: ProjectFile[]; source: 'upload' | 'demo' | 'github'; scanStats: ScanStats; }
