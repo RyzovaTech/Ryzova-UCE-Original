@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {chromium} from 'playwright';
 import {readFileSync,mkdirSync,writeFileSync} from 'node:fs';
 import {resolve} from 'node:path';
+import {fileURLToPath} from 'node:url';
 const base='http://127.0.0.1:4174/experiments/trilogy-browser/index.html';
 
 test('real Chromium: lazy Worker and fail-closed solver gate',async()=>{
@@ -130,7 +131,7 @@ test('real Chromium Linux sampled browser-process tree RSS during Worker churn',
       rssSamples:samples.length,
       caveat:'Linux sum of Chromium process-family RSS includes renderer, utilities and shared pages, may double-count; NOT standalone Worker RSS, unique memory, peak WASM heap, or a hard cap.',
     };
-    const dir=resolve('experiments/trilogy-browser/metrics');
+    const dir=fileURLToPath(new URL('../metrics/',import.meta.url));
     mkdirSync(dir,{recursive:true});
     writeFileSync(resolve(dir,'latest-browser-memory.json'),JSON.stringify(diagnostic,null,2)+'\n');
     console.log('UCE real Chromium sampled browser process-family RSS: '+JSON.stringify(diagnostic));
