@@ -57,3 +57,20 @@ Run with isolated Playwright dependency and installed Chromium:
 
 The browser tests need Vite running in another terminal. Native solver
 code must NOT be imported by the new browser controller or Worker.
+
+## Linux browser process memory diagnostic
+
+The final real-Chromium test measures the Linux /proc process-family VmRSS
+across **16 additional fresh 256-KiB Worker runs**, sampling every ~25ms
+where scheduling permits. It writes an Actions artifact at
+experiments/trilogy-browser/metrics/latest-browser-memory.json with
+baseline, highest sampled and after-test aggregate process-family RSS.
+
+The sum of per-process RSS may **double-count shared memory**. It includes
+Chromium renderer, GPU/utility and browser processes; it is not a
+standalone Web Worker resident-set measurement, physical unique bytes,
+a guaranteed peak or a solver memory budget. A single process-wide
+snapshot cannot establish memory reclamation of an individual Worker.
+This is a helpful comparative trend diagnostic only. A real Trilogy
+WASM pilot still needs browser-level heap and process instrumentation
+under realistic workloads and low-memory devices.
