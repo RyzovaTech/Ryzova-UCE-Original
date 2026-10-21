@@ -1,0 +1,46 @@
+name: Souffle Datalog and Z3 Experimental CI
+
+on:
+  push:
+    branches: [experiment/uce-datalog-z3]
+  pull_request:
+    paths:
+      - 'experiments/datalog-z3/**'
+      - '.github/workflows/datalog-z3-experiment.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  datalog-z3:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install UCE and isolated solver dependencies
+        run: |
+          npm install --no-audit --no-fund
+          npm install --prefix experiments/z3-node --no-package-lock --no-audit --no-fund
+          npm install --prefix experiments/datalog-z3 --no-package-lock --no-audit --no-fund
+      - name: Install verified official Souffle 2.5 Ubuntu 24.04 package
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          release=https://github.com/souffle-lang/souffle/releases/download/2.5
+          asset=x86_64-ubuntu-2404-souffle-2.5-Linux.deb
+          curl -fLsS --retry 3 --max-time 100 "$release/$asset" -o "$asset"
+          curl -fLsS --retry 3 --max-time 40 "$release/sha512sum.txt" -o upstream-sha512sum.txt
+          grep -F "$asset" upstream-sha512sum.txt | sha512sum -c -
+          sudo apt-get update -qq
+          sudo apt-get install -y "./$asset"
+          souffle --version
+      - name: Test actual Souffle dependency recursion and Z3 SMT proofs
+        run: npm --prefix experiments/datalog-z3 test
+      - name: Verify CLI source-linked conflict fixture
+        run: npm --prefix experiments/datalog-z3 run demo
+      - name: Measure three repeated Node-only solver samples
+        run: node experiments/datalog-z3/benchmark.mjs
