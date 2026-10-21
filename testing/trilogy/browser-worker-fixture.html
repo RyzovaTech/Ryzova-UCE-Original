@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>UCE browser Trilogy worker smoke (test only)</title></head>
+<body><p>Browser Trilogy preflight test fixture — never production UI.</p>
+<script type="module">
+  import { runBrowserTrilogyPreflight } from '../../src/lib/symbolic/trilogy-browser-client.ts';
+  const manifest = {name:'worker-fixture',engines:{node:'>=20'},dependencies:{alpha:'^1.0.0'}};
+  const lock = {lockfileVersion:3,packages:{
+    '':{name:'worker-fixture',version:'1.0.0',dependencies:manifest.dependencies},
+    'node_modules/alpha':{version:'1.2.0',engines:{node:'>=22'},dependencies:{beta:'^2.0.0'}},
+    'node_modules/beta':{version:'2.1.0',engines:{node:'<21'}},
+  }};
+  const build = (path, content) => ({path,content,isDirectory:false,size:new TextEncoder().encode(content).byteLength});
+  const files = [build('package.json',JSON.stringify(manifest)),build('package-lock.json',JSON.stringify(lock)),
+    build('src/index.ts','export const x: number = 1;')];
+  window.trilogyWorkerTest = {
+    run: (options={}) => runBrowserTrilogyPreflight(files,options),
+    oversized: () => runBrowserTrilogyPreflight(
+      [files[0],build('package-lock.json','x'.repeat(128*1024+1))]),
+    cancel: () => {
+      const controller = new AbortController();
+      controller.abort();
+      return runBrowserTrilogyPreflight(files,{signal:controller.signal});
+    },
+    deadline: () => runBrowserTrilogyPreflight(files,{timeoutMs:1}),
+    heap: () => performance.memory?.usedJSHeapSize??null,
+  };
+</script></body></html>
