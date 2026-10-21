@@ -1,0 +1,54 @@
+name: Trilogy Browser Worker Performance Experiment
+
+on:
+  push:
+    branches: [experiment/uce-trilogy-browser-performance]
+  pull_request:
+    paths:
+      - 'experiments/trilogy-browser/**'
+      - '.github/workflows/trilogy-browser-performance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-worker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install UCE and isolated Playwright browser harness
+        run: |
+          npm install --no-audit --no-fund
+          npm install --prefix experiments/trilogy-browser --no-audit --no-fund
+      - name: Node Worker lifecycle and budget contracts
+        run: npm --prefix experiments/trilogy-browser run test:unit
+      - name: Assert native Trilogy is never browser-bundled
+        run: node experiments/trilogy-browser/release-gate.mjs
+      - name: Install real Chromium for performance measurement
+        timeout-minutes: 8
+        run: ./experiments/trilogy-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Real Chromium Worker cold startup, cancellation and memory-reporting safety
+        timeout-minutes: 4
+        run: |
+          set -euo pipefail
+          npm run dev -- --host 127.0.0.1 --port 4174 --strictPort > /tmp/trilogy-vite.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" || true' EXIT
+          for i in $(seq 1 50); do
+            if curl -fsS http://127.0.0.1:4174/experiments/trilogy-browser/index.html > /dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:4174/experiments/trilogy-browser/index.html > /dev/null
+          npm --prefix experiments/trilogy-browser run test:browser
+      - name: Publish honest benchmark methodology
+        if: always()
+        run: |
+          echo 'Browser Trilogy release remains BLOCKED. Worker overhead != solver performance.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'No peak worker RSS is measured by portable browser JavaScript.' >> "$GITHUB_STEP_SUMMARY"
