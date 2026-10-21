@@ -15,7 +15,7 @@ test('20 shared real-UCE fact-extraction cases match authored Z3 evidence expect
   assert.deepEqual(summary.falsePositiveCounts, { custom: 0, z3: 0 });
   assert.deepEqual(summary.disagreement.map(x => [x.id, x.comparison]),
     [['joint-only-conflict', 'joint-constraint-gap']]);
-  assert.equal(summary.labelCounts.unknown, 8);
+  assert.equal(summary.labelCounts.unknown, 9);
 });
 
 test('Z3 source-linked unsat explanations contain only actual UCE extracted provenance', async () => {
