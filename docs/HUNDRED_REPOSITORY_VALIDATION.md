@@ -2,7 +2,7 @@
 
 The corpus spans JavaScript/TypeScript, Python, Go, Rust, PHP, Ruby, Java/Kotlin, .NET and C/C++. `testing/repositories/selection.json` contains exactly 100 distinct repositories.
 
-The GitHub Actions **100 repository validation** workflow scans each checkout with baseline engine `61b355bb67a54aa7ba546cb07993b9b771f52df9` and the PR engine. It records commit SHAs, complete reports, coverage limits, and deduplicated compatibility/extended rule-file deltas as a 90-day artifact. Scanned code and dependencies are not executed. Both engines scan the same checkout. The baseline intentionally retains its original narrower CLI text policy.
+The GitHub Actions **100 repository validation** workflow scans each checkout with the baseline engine pinned in `.github/workflows/repository-corpus.yml` and the PR engine. It records commit SHAs, complete reports, coverage limits, and deduplicated compatibility/extended rule-file deltas as a 90-day artifact. Scanned code and dependencies are not executed. Both engines scan the same checkout. The baseline intentionally retains its original narrower CLI text policy.
 
 Fixes address declaration-only TypeScript packages, test/example build configs, auxiliary package manifests, pnpm workspaces, BSD contributor clauses, Python vendoring, Kotlin/.NET/Java test scopes, dependency-free Go modules, ecosystem root configs, root ignore-file selection, Gradle convention targets, and browser/CLI text-reading parity including .NET metadata.
 

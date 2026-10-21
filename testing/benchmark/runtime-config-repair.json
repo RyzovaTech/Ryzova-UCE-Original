@@ -1,0 +1,85 @@
+{
+  "baselineEngineCommit": "742867a382f8fcddd5607898f6c17444f4113125",
+  "corpusSha256": "bcb13917cfeaa5527fe88119a5cffe4b405e841d3c14aa9e03218c71f9060753",
+  "scope": "Selected compatibility rule/context contracts; other emitted findings are retained but not labeled or scored.",
+  "before": {
+    "cases": 30,
+    "binaryCases": 30,
+    "categoricalCases": 0,
+    "correct": 26,
+    "decisionAccuracy": 86.67,
+    "decisionWilson95": [
+      70.32,
+      94.69
+    ],
+    "tp": 10,
+    "fp": 4,
+    "fn": 0,
+    "tn": 16,
+    "precision": 71.43,
+    "precisionWilson95": [
+      45.35,
+      88.28
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      72.25,
+      100
+    ],
+    "falsePositiveRate": 20
+  },
+  "beforePriorities": [
+    {
+      "rule": "tsconfig-strict-mode",
+      "fp": 2,
+      "fn": 0,
+      "cases": 3,
+      "precision": 33.33,
+      "recall": 100
+    },
+    {
+      "rule": "env-example-present",
+      "fp": 1,
+      "fn": 0,
+      "cases": 3,
+      "precision": 50,
+      "recall": 100
+    },
+    {
+      "rule": "node-engine-pinned",
+      "fp": 1,
+      "fn": 0,
+      "cases": 3,
+      "precision": 50,
+      "recall": 100
+    }
+  ],
+  "after": {
+    "cases": 30,
+    "binaryCases": 30,
+    "categoricalCases": 0,
+    "correct": 30,
+    "decisionAccuracy": 100,
+    "decisionWilson95": [
+      88.65,
+      100
+    ],
+    "tp": 10,
+    "fp": 0,
+    "fn": 0,
+    "tn": 20,
+    "precision": 100,
+    "precisionWilson95": [
+      72.25,
+      100
+    ],
+    "recall": 100,
+    "recallWilson95": [
+      72.25,
+      100
+    ],
+    "falsePositiveRate": 0
+  },
+  "globalAccuracy": null,
+  "independentlyReviewed": false
+}
