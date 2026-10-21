@@ -2,7 +2,12 @@
 import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
 import { createServer } from 'vite';
-import { chromium } from 'playwright';
+import { pathToFileURL } from 'node:url';
+import { join } from 'node:path';
+const playwright = process.env.UCE_PLAYWRIGHT_DIR
+  ? await import(pathToFileURL(join(process.env.UCE_PLAYWRIGHT_DIR,'node_modules/playwright/index.mjs')).href)
+  : await import('playwright');
+const { chromium } = playwright;
 
 const started=performance.now();
 const server=await createServer({root:process.cwd(),server:{host:'127.0.0.1',port:0},logLevel:'error'});

@@ -33,9 +33,12 @@ jobs:
         run: node --test testing/trilogy/browser-preflight.test.mjs
       - name: Install isolated test-only Playwright Chromium
         run: |
-          npm install --no-save --no-package-lock --no-audit --no-fund playwright@1.56.1
-          npx playwright install --with-deps chromium
+          mkdir -p "$RUNNER_TEMP/uce-trilogy-playwright"
+          npm install --prefix "$RUNNER_TEMP/uce-trilogy-playwright" --no-audit --no-fund playwright@1.56.1
+          "$RUNNER_TEMP/uce-trilogy-playwright/node_modules/.bin/playwright" install --with-deps chromium
       - name: Run actual Chromium worker cancellation, memory, latency smoke
+        env:
+          UCE_PLAYWRIGHT_DIR: ${{ runner.temp }}/uce-trilogy-playwright
         run: node testing/trilogy/browser-worker-smoke.mjs
       - name: Verify no production COOP/COEP or native runtime imports
         run: |
