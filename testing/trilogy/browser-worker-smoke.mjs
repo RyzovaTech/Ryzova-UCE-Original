@@ -2,12 +2,36 @@
 import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
 import { createServer } from 'vite';
+import { readFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 const playwright = process.env.UCE_PLAYWRIGHT_DIR
   ? await import(pathToFileURL(join(process.env.UCE_PLAYWRIGHT_DIR,'node_modules/playwright/index.mjs')).href)
   : await import('playwright');
 const { chromium } = playwright;
+
+function sampledChromiumDescendantsRssMiB() {
+  // Linux-only diagnostic. Node launches Chromium as child process; sample
+  // descendants in /proc, and subtract the Node coordinator's own RSS.
+  // The result double-counts shared pages and is NOT per-worker heap/RSS.
+  if(process.platform!=='linux') return null;
+  const visited=new Set(), queue=[process.pid];
+  let kb=0;
+  while(queue.length && visited.size<128){
+    const pid=queue.shift();
+    if(visited.has(pid)) continue;
+    visited.add(pid);
+    try{
+      const status=readFileSync('/proc/'+pid+'/status','utf8');
+      const found=/^VmRSS:\s+(\d+)\s+kB/m.exec(status);
+      if(found) kb+=Number(found[1]);
+      const children=readFileSync('/proc/'+pid+'/task/'+pid+'/children','utf8').trim();
+      if(children) queue.push(...children.split(/\s+/).map(Number).filter(Number.isInteger));
+    }catch{ /* Chromium process may exit during sampling. */ }
+  }
+  if(kb===0) return null;
+  return Math.round(Math.max(0,kb/1024-process.memoryUsage().rss/1024/1024)*100)/100;
+}
 
 const started=performance.now();
 const server=await createServer({root:process.cwd(),server:{host:'127.0.0.1',port:0},logLevel:'error'});
@@ -29,6 +53,12 @@ try {
   const oversized=await page.evaluate(()=>window.trilogyWorkerTest.oversized());
   assert.equal(oversized.result.status,'unknown');
   assert.equal(oversized.workerStarted,false);
+  const beforeBrowserRss=sampledChromiumDescendantsRssMiB();
+  const browserRssSamples=beforeBrowserRss===null?[]:[beforeBrowserRss];
+  const sampler=setInterval(()=>{
+    const value=sampledChromiumDescendantsRssMiB();
+    if(value!==null) browserRssSamples.push(value);
+  },20);
   const before=await page.evaluate(()=>{window.gc?.();return window.trilogyWorkerTest.heap();});
   const first=await page.evaluate(()=>window.trilogyWorkerTest.run());
   assert.equal(first.result.status,'candidate',JSON.stringify(first));
@@ -63,6 +93,12 @@ try {
   assert.ok(['unknown','candidate'].includes(timeout.result.status));
   const final=await page.evaluate(()=>window.trilogyWorkerTest.run());
   assert.equal(final.result.status,'candidate','New worker must recover after cancellation/timeout');
+  clearInterval(sampler);
+  const afterBrowserRss=sampledChromiumDescendantsRssMiB();
+  if(afterBrowserRss!==null) browserRssSamples.push(afterBrowserRss);
+  if(process.platform==='linux') {
+    assert.ok(browserRssSamples.length>=2,'Linux Chromium descendants RSS diagnostics unavailable');
+  }
   const after=await page.evaluate(()=>{window.gc?.();return window.trilogyWorkerTest.heap();});
   const sorted=[...samples].sort((a,b)=>a-b);
   const p95=sorted[Math.ceil(sorted.length*0.95)-1];
@@ -80,13 +116,17 @@ try {
     beforePageHeapMiB:before===null?null:Math.round(before/1024/1024*100)/100,
     afterPageHeapMiB:after===null?null:Math.round(after/1024/1024*100)/100,
     pageHeapDeltaMiB:heapIncreaseMiB,
+    browserProcessTreeRssBaselineMiB:beforeBrowserRss,
+    browserProcessTreeRssMaxSampledMiB:browserRssSamples.length?Math.max(...browserRssSamples):null,
+    browserProcessTreeRssAfterMiB:afterBrowserRss,
+    browserProcessTreeRssSamples:browserRssSamples.length,
     externalRequests:external.length,
     payloadBytes:first.transferredBytes,
     testedZeroCopyTransfer:first.zeroCopyTransfer,
     heavyPayloadBytes:heavy.transferredBytes,
     concurrencyRejected:concurrent[1].workerStarted===false,
     nativeSolversLoaded:false,
-    note:'Real Chromium dedicated-worker triage only, NOT Souffle/Z3/cvc5 WASM solver memory or performance.',
+    note:'Real Chromium dedicated-worker triage only. Linux browser descendant-process summed RSS includes shared pages/other Chromium services (double counting). NOT standalone Worker RSS, peak WASM heap, a hard memory bound, or Souffle/Z3/cvc5 performance.',
     totalSuiteMs:Math.round(performance.now()-started),
   },null,2));
 }finally{

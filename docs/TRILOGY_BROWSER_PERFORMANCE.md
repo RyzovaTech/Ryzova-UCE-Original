@@ -44,3 +44,14 @@ payloads, verifies sender buffers were detached, tests one-active-worker
 concurrency and abort-after-start, and confirms worker recovery after abort.
 This is still **not** a native Soufflé/Z3/cvc5 browser solve or a portable
 peak worker-memory bound.
+
+## Browser-process RSS diagnostic (Linux only)
+
+The Chromium smoke also samples `/proc` RSS for the Node test runner's
+browser child process tree during worker churn (including renderer and
+utility processes, potentially double-counting shared pages). It reports
+baseline, maximum **sampled** and post-run process-family RSS. This
+supplements the main-page JavaScript heap sample but is **not a dedicated
+Worker RSS measurement** or a browser memory-cap guarantee, and neither
+represents native Trilogy solver memory. The max may miss peaks shorter
+than the 20ms sample interval. This diagnostic runs only on Linux CI.
