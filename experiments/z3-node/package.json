@@ -10,7 +10,10 @@
   "scripts": {
     "test": "node --test test/*.test.mjs",
     "demo": "node cli.mjs fixtures/runtime-conflict.json",
-    "benchmark": "node benchmark.mjs"
+    "benchmark": "node benchmark.mjs",
+    "validate:evidence": "node validation.mjs",
+    "audit": "node audit.mjs",
+    "browser:gate": "node browser-gate.mjs"
   },
   "dependencies": {
     "semver": "7.8.5",
