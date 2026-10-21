@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { makeFiles,validateHoldout,scoreTrilogyHoldout } from '../holdout-lib.mjs';
+import { makeFiles,validateHoldout,scoreTrilogyHoldout } from './holdout-lib.mjs';
 
-const corpus=JSON.parse(await readFile(new URL('../holdout-v1.json',import.meta.url),'utf8'));
+const corpus=JSON.parse(await readFile(new URL('./holdout-v1.json',import.meta.url),'utf8'));
 
 test('frozen independent-from-solver holdout contains 14 conflicts, 14 satisfiable and 12 Unknown',()=>{
   assert.deepEqual(validateHoldout(corpus),{conflict:14,satisfiable:14,unknown:12});
