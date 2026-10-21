@@ -137,3 +137,38 @@ headers or import Z3 into Vite until a separate browser test deployment proves:
 **Node-only experiments remain unmerged. No production score, detection rules,
 web-worker imports, deployment headers or app version have been changed.**
 
+
+## Opt-in Hybrid UCE Node runner
+
+`hybrid.mjs` combines UCE's **actual production symbolic evidence extraction**
+with a short-lived, bounded Z3 child process. This is an *experimental opt-in
+Node/CLI entry point*, not an import in the web analyzer. By default only the
+original native reasoner runs. Even with `enableZ3: true`, Z3 is consulted
+only for **three or more complete explicit runtime constraints** within the
+same package workspace; simpler checks use the existing engine.
+
+```sh
+npm --prefix experiments/z3-node run hybrid
+node experiments/z3-node/hybrid-cli.mjs experiments/z3-node/fixtures/hybrid-joint.json
+node experiments/z3-node/hybrid-cli.mjs experiments/z3-node/fixtures/hybrid-joint.json --z3
+```
+
+The experimental overlay keeps `base` decisions and scores unmodified.
+On supported jointly unsatisfiable runtime declarations, `effectiveStatus`
+can become `conflict` with an original source-linked UNSAT explanation.
+Solver `unknown`, incomplete metadata, malformed output, invalid resource
+budgets, worker timeout, excessive sampled Linux RSS or process exit **all
+preserve the native result**. The parent never imports Z3 or keeps its WASM
+alive between analyses.
+
+Current guards: max 12 facts, 16KiB serialized worker request,
+2s Z3 solver-time setting, 5s default child wall-clock deadline and
+512MiB default sampled child RSS limit (Linux only). These are experimental
+resource guards, **not formal process-memory enforcement on all operating
+systems**, and do not make browser startup/COOP/COEP safe. Do not deploy
+this as a long-running service or merge it into the web Worker until a
+separately reviewed browser test and independent real-project labels pass.
+
+Test via `npm --prefix experiments/z3-node test`. The tests exercise the
+real Z3 WASM child, timeout-kill, RSS-kill, fallback and preserved source
+provenance. All UCE compatibility scoring remains unchanged.

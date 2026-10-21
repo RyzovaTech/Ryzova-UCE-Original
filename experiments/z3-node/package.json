@@ -13,7 +13,8 @@
     "benchmark": "node benchmark.mjs",
     "validate:evidence": "node validation.mjs",
     "audit": "node audit.mjs",
-    "browser:gate": "node browser-gate.mjs"
+    "browser:gate": "node browser-gate.mjs",
+    "hybrid": "node hybrid-cli.mjs fixtures/hybrid-joint.json --z3"
   },
   "dependencies": {
     "semver": "7.8.5",

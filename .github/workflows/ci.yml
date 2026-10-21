@@ -91,6 +91,9 @@ jobs:
       - name: Compare production UCE facts with Z3 and verify authored confusion matrix
         run: npm --prefix experiments/z3-node run validate:evidence
 
+      - name: Verify opt-in isolated Hybrid Z3 fallback and source evidence
+        run: npm --prefix experiments/z3-node test && npm --prefix experiments/z3-node run hybrid
+
       - name: Capture experimental Node/WASM resource and timeout guard metrics
         run: npm --prefix experiments/z3-node run audit
 
