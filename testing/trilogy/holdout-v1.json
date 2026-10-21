@@ -1,0 +1,664 @@
+{
+  "schema": "uce-trilogy-heldout-v1",
+  "frozenAt": "2026-10-21",
+  "provenance": {
+    "type": "independently-constructed-frozen-synthetic-holdout",
+    "authoring": "Case declarations and positive/negative labels were recorded separately from solver outputs; no cases copied from original 12/13 solver unit tests verbatim.",
+    "humanReviewed": false,
+    "realWorldRepositorySample": false,
+    "independentExternalAdjudication": false,
+    "source": "Curated semantic version / lockfile edge-case designs. These are authored oracle cases, NOT an independently adjudicated real-project dataset.",
+    "policy": "Do not report these precision/recall values as real-world UCE compatibility precision."
+  },
+  "labelSemantics": {
+    "conflict": "All supported modeled Node engines.node requirements in the complete reachable production graph cannot share one stable version.",
+    "satisfiable": "There exists a stable numeric Node version satisfying all supported reachable requirements.",
+    "unknown": "The graph, source or version evidence is incomplete/unsupported, so neither conflict nor satisfiability is justified."
+  },
+  "cases": [
+    {
+      "id": "C01",
+      "label": "conflict",
+      "title": "Transitive strict upper bound",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=20",
+        "beta": "<21"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "beta"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C02",
+      "label": "conflict",
+      "title": "Root max versus reachable minimum",
+      "engines": {
+        "root": "<=20",
+        "alpha": ">=22",
+        "beta": ">=22"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "alpha"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C03",
+      "label": "conflict",
+      "title": "Two exact incompatible majors",
+      "engines": {
+        "root": "20",
+        "alpha": "22",
+        "beta": ">=18"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "alpha"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C04",
+      "label": "conflict",
+      "title": "Caret release versus transitive upper",
+      "engines": {
+        "root": ">=20",
+        "alpha": "^22",
+        "beta": "<22"
+      },
+      "certificate": {
+        "disjoint": [
+          "alpha",
+          "beta"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C05",
+      "label": "conflict",
+      "title": "Zero-major caret boundary",
+      "engines": {
+        "root": "^0.2.3",
+        "alpha": "<0.3.0",
+        "beta": ">=0.3"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "beta"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C06",
+      "label": "conflict",
+      "title": "Pairwise-overlap but joint UNSAT",
+      "engines": {
+        "root": "20 || 22",
+        "alpha": "20 || 23",
+        "beta": "22 || 23"
+      },
+      "certificate": {
+        "finiteDomains": {
+          "root": [
+            20,
+            22
+          ],
+          "alpha": [
+            20,
+            23
+          ],
+          "beta": [
+            22,
+            23
+          ]
+        }
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C07",
+      "label": "conflict",
+      "title": "Minor release strict cutoff",
+      "engines": {
+        "root": ">=22.4",
+        "alpha": "<22.4",
+        "beta": "<22.5"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "alpha"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C08",
+      "label": "conflict",
+      "title": "Older root versus modern package",
+      "engines": {
+        "root": "<21",
+        "alpha": ">=22",
+        "beta": "^22"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "alpha"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C09",
+      "label": "conflict",
+      "title": "Cycle reachable contradiction",
+      "engines": {
+        "root": ">=22",
+        "alpha": "<21",
+        "beta": ">=18"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "alpha"
+        ]
+      },
+      "mutations": {
+        "cycle": true
+      }
+    },
+    {
+      "id": "C10",
+      "label": "conflict",
+      "title": "Scoped transitive contradictory pin",
+      "engines": {
+        "root": ">=22",
+        "alpha": "^22",
+        "beta": "18 || 20"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "beta"
+        ]
+      },
+      "mutations": {
+        "scoped": true
+      }
+    },
+    {
+      "id": "C11",
+      "label": "conflict",
+      "title": "One-sided root upper bound",
+      "engines": {
+        "root": "<19",
+        "alpha": ">=20",
+        "beta": "*"
+      },
+      "certificate": {
+        "disjoint": [
+          "root",
+          "alpha"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C12",
+      "label": "conflict",
+      "title": "No root engine; transitive cross-conflict",
+      "engines": {
+        "root": null,
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "disjoint": [
+          "alpha",
+          "beta"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C13",
+      "label": "conflict",
+      "title": "Exact transitive mismatch",
+      "engines": {
+        "root": "20",
+        "alpha": "20",
+        "beta": "21"
+      },
+      "certificate": {
+        "disjoint": [
+          "alpha",
+          "beta"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "C14",
+      "label": "conflict",
+      "title": "Transitive incompatible minor",
+      "engines": {
+        "root": ">=18",
+        "alpha": ">=23",
+        "beta": "<22"
+      },
+      "certificate": {
+        "disjoint": [
+          "alpha",
+          "beta"
+        ]
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S01",
+      "label": "satisfiable",
+      "title": "Overlapping bounded major",
+      "engines": {
+        "root": ">=20 <23",
+        "alpha": "^22",
+        "beta": "22.1.x"
+      },
+      "certificate": {
+        "witness": "22.1.3"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S02",
+      "label": "satisfiable",
+      "title": "Open bound with caret",
+      "engines": {
+        "root": ">=22",
+        "alpha": "^22",
+        "beta": ">=22"
+      },
+      "certificate": {
+        "witness": "22.1.0"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S03",
+      "label": "satisfiable",
+      "title": "Zero-major constrained overlap",
+      "engines": {
+        "root": "^0.2.3",
+        "alpha": "<0.3",
+        "beta": ">=0.2.4"
+      },
+      "certificate": {
+        "witness": "0.2.6"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S04",
+      "label": "satisfiable",
+      "title": "Disjunction including exact witness",
+      "engines": {
+        "root": "18 || >=22",
+        "alpha": "^22",
+        "beta": "22.1.1"
+      },
+      "certificate": {
+        "witness": "22.1.1"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S05",
+      "label": "satisfiable",
+      "title": "Unreachable contradictory package ignored",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": ">=22"
+      },
+      "certificate": {
+        "witness": "22.0.0"
+      },
+      "mutations": {
+        "unusedEngine": "<10"
+      }
+    },
+    {
+      "id": "S06",
+      "label": "satisfiable",
+      "title": "Dependency cycle terminates",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": ">=22"
+      },
+      "certificate": {
+        "witness": "22.0.0"
+      },
+      "mutations": {
+        "cycle": true
+      }
+    },
+    {
+      "id": "S07",
+      "label": "satisfiable",
+      "title": "Scoped production graph",
+      "engines": {
+        "root": ">=22",
+        "alpha": "^22",
+        "beta": "22.7.x"
+      },
+      "certificate": {
+        "witness": "22.7.3"
+      },
+      "mutations": {
+        "scoped": true
+      }
+    },
+    {
+      "id": "S08",
+      "label": "satisfiable",
+      "title": "LTS major compatible",
+      "engines": {
+        "root": ">=20",
+        "alpha": "^20",
+        "beta": "20.12.x"
+      },
+      "certificate": {
+        "witness": "20.12.1"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S09",
+      "label": "satisfiable",
+      "title": "No root engine but two reachable constraints",
+      "engines": {
+        "root": null,
+        "alpha": ">=22",
+        "beta": "^22"
+      },
+      "certificate": {
+        "witness": "22.2.0"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S10",
+      "label": "satisfiable",
+      "title": "Compatible exact Node18",
+      "engines": {
+        "root": "18",
+        "alpha": "^18",
+        "beta": "18.x"
+      },
+      "certificate": {
+        "witness": "18.2.0"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S11",
+      "label": "satisfiable",
+      "title": "Minor-specific release",
+      "engines": {
+        "root": ">=22",
+        "alpha": "22.10",
+        "beta": "22.x"
+      },
+      "certificate": {
+        "witness": "22.10.0"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S12",
+      "label": "satisfiable",
+      "title": "Both upper and lower bounds",
+      "engines": {
+        "root": ">=19 <21",
+        "alpha": "^20",
+        "beta": "20.9.x"
+      },
+      "certificate": {
+        "witness": "20.9.2"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S13",
+      "label": "satisfiable",
+      "title": "Root disjunction, shared caret",
+      "engines": {
+        "root": ">=18 || ^22",
+        "alpha": "^22",
+        "beta": "^22"
+      },
+      "certificate": {
+        "witness": "22.0.0"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "S14",
+      "label": "satisfiable",
+      "title": "Sibling package contradiction must be isolated",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": ">=22"
+      },
+      "certificate": {
+        "witness": "22.0.0"
+      },
+      "mutations": {
+        "sibling": true
+      }
+    },
+    {
+      "id": "U01",
+      "label": "unknown",
+      "title": "Absent same-workspace lockfile",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "No npm lockfile"
+      },
+      "mutations": {
+        "missingLock": true
+      }
+    },
+    {
+      "id": "U02",
+      "label": "unknown",
+      "title": "Malformed lockfile JSON",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Lockfile is malformed"
+      },
+      "mutations": {
+        "malformedLock": true
+      }
+    },
+    {
+      "id": "U03",
+      "label": "unknown",
+      "title": "Workspace alias dependency declaration",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Non-numeric workspace protocol"
+      },
+      "mutations": {
+        "workspaceAlias": true
+      }
+    },
+    {
+      "id": "U04",
+      "label": "unknown",
+      "title": "Manifest version not resolved in lock",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Locked package outside declared range"
+      },
+      "mutations": {
+        "mismatchVersion": true
+      }
+    },
+    {
+      "id": "U05",
+      "label": "unknown",
+      "title": "Nested npm installation requires resolution",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Nested installed package not modeled"
+      },
+      "mutations": {
+        "nested": true
+      }
+    },
+    {
+      "id": "U06",
+      "label": "unknown",
+      "title": "Unsupported prerelease constraint",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22.0.0-rc.1",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Prerelease semver unsupported"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "U07",
+      "label": "unknown",
+      "title": "Root lock dependencies drift",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Manifest lock root mismatch"
+      },
+      "mutations": {
+        "staleRoot": true
+      }
+    },
+    {
+      "id": "U08",
+      "label": "unknown",
+      "title": "No production dependencies",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "No production dependencies"
+      },
+      "mutations": {
+        "noDependencies": true
+      }
+    },
+    {
+      "id": "U09",
+      "label": "unknown",
+      "title": "Unsupported lockfile version",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Unsupported lockfile version"
+      },
+      "mutations": {
+        "lockV4": true
+      }
+    },
+    {
+      "id": "U10",
+      "label": "unknown",
+      "title": "Transitive lockfile package missing",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Unresolvable transitive dependency"
+      },
+      "mutations": {
+        "missingBeta": true
+      }
+    },
+    {
+      "id": "U11",
+      "label": "unknown",
+      "title": "Dynamic engine declaration",
+      "engines": {
+        "root": ">=22",
+        "alpha": "latest",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Dynamic semver input unsupported"
+      },
+      "mutations": {}
+    },
+    {
+      "id": "U12",
+      "label": "unknown",
+      "title": "Locked dependency version missing",
+      "engines": {
+        "root": ">=22",
+        "alpha": ">=22",
+        "beta": "<21"
+      },
+      "certificate": {
+        "reason": "Missing installed version"
+      },
+      "mutations": {
+        "noLockedVersion": true
+      }
+    }
+  ]
+}
