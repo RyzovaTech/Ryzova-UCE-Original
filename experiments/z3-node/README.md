@@ -78,6 +78,62 @@ two-range examples against UCE's existing deterministic constraint helper.
 - No browser WASM or COOP/COEP headers are deployed. Browser integration
   needs a separate risk/size/security study and an explicit rollout.
 
-If the experiment proves accurate and cost-effective, the next step is an
-evidence-to-constraint adapter that compares Z3 and the existing Phase 2
-reasoner on frozen real projects **before** any end-user behavior changes.
+## Real UCE evidence parity and UCE-specific tuning (21 October 2026)
+
+The optional Node-only `evidence-comparison.mjs` imports the **production UCE
+symbolic evidence extractor** via the existing trusted TypeScript module loader.
+It passes exactly the same same-workspace original `package.json engines.node`,
+`.nvmrc` and `.node-version` source facts to both engines, without reading
+or running untrusted project code in Z3. Unknown, unsupported, missing or
+truncated facts block a partial Z3 proof; an UNSAT source explanation includes
+the exact source ID and range. A `satisfiable` result is not real-world runtime
+compatibility. A source pin is a declared selection, not proof of enforcement.
+
+Run the authored, labeled comparison and the full bounded resource audit:
+
+```sh
+npm --prefix experiments/z3-node run validate:evidence
+npm --prefix experiments/z3-node run audit
+npm --prefix experiments/z3-node run browser:gate
+```
+
+- `validation.mjs`: 20 static authored positive, negative and incomplete
+  fixtures, including nested workspace boundaries and a joint 3-constraint
+  conflict that pairwise checks miss. The output records the explicit
+  **custom vs Z3 disagreements**, expected labels, authored-only confusion
+  counts and false-conflict counts. It tests facts extracted by production
+  UCE, not a second hand-written fact parser.
+- `audit.mjs`: per-run initialisation, first-solve and 10 warm-solve samples,
+  full labeled-matrix time, RSS/heap/JS external memory snapshots, configured
+  bounded solver time, reported unknowns and the number of authored false
+  conflicts. CI attaches `experiments/z3-node/metrics/latest-audit.json`
+  as `uce-z3-node-audit`. This JSON is excluded from commits.
+- A configured solver timeout is **not** a real wall-clock kill guarantee.
+  An invalid budget must return unknown, but a genuine timed-out hard
+  Z3 problem has not been demonstrated unless the measured audit says so.
+- A disagreement due to **joint unsatisfiability** is recorded as a
+  `joint-constraint-gap`; it is not silently asserted to be a custom false
+  positive or evidence of overall user-facing accuracy.
+- False-positive numbers refer **only to these authored fixtures**. An
+  independent, blinded real-project adjudication is still mandatory.
+
+## Browser production gate — blocked until independently demonstrated
+
+`browser-gate.mjs` inspects the root `vercel.json` and runtime dependencies
+without modifying either. It deliberately records a **blocked** status when
+COOP/COEP and actual browser worker loading/memory/ZIP-import tests have not
+been demonstrated. COOP/COEP static headers by themselves are **not**
+sufficient; `Cross-Origin-Embedder-Policy` can block ZIP import,
+GitHub archive rewrites, or third-party resources. Do not change production
+headers or import Z3 into Vite until a separate browser test deployment proves:
+
+1. Chrome/Firefox actual isolated-worker Z3 WASM cold init and constrained solve.
+2. No build-time main-bundle growth; worker lazy load only when requested.
+3. Measured peak worker memory/latency, cancellation and strict timeouts.
+4. ZIP upload, GitHub codeload/archive path, accessibility and CSP regressions.
+5. A robust deterministic-engine fallback if WASM fails, times out or exceeds
+   the memory budget.
+
+**Node-only experiments remain unmerged. No production score, detection rules,
+web-worker imports, deployment headers or app version have been changed.**
+
