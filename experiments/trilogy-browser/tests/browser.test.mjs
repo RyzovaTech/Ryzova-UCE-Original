@@ -98,14 +98,19 @@ test('real Chromium Linux sampled browser-process tree RSS during Worker churn',
   if(process.platform!=='linux'){t.skip('RSS sampling is Linux /proc-specific');return;}
   const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
   try{
-    const pid=browser.process()?.pid;
-    assert.ok(Number.isInteger(pid),'Chromium process PID not exposed');
+    // Playwright does not expose browser.process(); sample descendants of
+    // the current Node test runner, excluding its own RSS.
+    const descendantRss = () => {
+      const total = processTreeRssMiB(process.pid);
+      if (total === null) return null;
+      return Math.max(0,Math.round((total - process.memoryUsage().rss/1024/1024)*100)/100);
+    };
     const page=await browser.newPage();await page.goto(base,{waitUntil:'networkidle'});
-    const before=processTreeRssMiB(pid);
+    const before=descendantRss();
     assert.ok(before!==null,'Cannot sample Linux browser process memory');
     const samples=[before];
     const sampler=setInterval(()=>{
-      const rss=processTreeRssMiB(pid);
+      const rss=descendantRss();
       if(rss!==null) samples.push(rss);
     },25);
     let runs;
@@ -117,7 +122,7 @@ test('real Chromium Linux sampled browser-process tree RSS during Worker churn',
         return data.map(x=>({status:x.status,ms:x.totalMs,terminated:x.workerTerminated}));
       });
     }finally{clearInterval(sampler);}
-    const after=processTreeRssMiB(pid);
+    const after=descendantRss();
     if(after!==null) samples.push(after);
     assert.ok(runs.every(x=>x.status==='probe-complete'&&x.terminated));
     const diagnostic={
@@ -125,11 +130,11 @@ test('real Chromium Linux sampled browser-process tree RSS during Worker churn',
       samples:runs.length,
       bytesTransferred:runs.length*256*1024,
       workerMeanRoundTripMs:Math.round(runs.reduce((s,x)=>s+x.ms,0)/runs.length*100)/100,
-      baselineAggregateProcessRssMiB:before,
-      maxSampledAggregateProcessRssMiB:Math.max(...samples),
-      afterAggregateProcessRssMiB:after,
+      baselineSampledChildProcessRssMiB:before,
+      maxSampledChildProcessRssMiB:Math.max(...samples),
+      afterSampledChildProcessRssMiB:after,
       rssSamples:samples.length,
-      caveat:'Linux sum of Chromium process-family RSS includes renderer, utilities and shared pages, may double-count; NOT standalone Worker RSS, unique memory, peak WASM heap, or a hard cap.',
+      caveat:'Linux sum of the Node test runner descendant process RSS (primarily Chromium, excluding Node parent) includes renderer, utilities and shared pages; may double-count. NOT standalone Worker RSS, unique memory, peak WASM heap or a hard cap.',
     };
     const dir=fileURLToPath(new URL('../metrics/',import.meta.url));
     mkdirSync(dir,{recursive:true});
