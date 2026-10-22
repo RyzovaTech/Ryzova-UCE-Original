@@ -5,6 +5,8 @@ import { spawn } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
+import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 
 if (process.platform!=='linux') {
   console.log(JSON.stringify({status:'unsupported',reason:'Linux /proc required'}));
@@ -34,7 +36,8 @@ async function measure(mode) {
   return new Promise((resolve,reject)=>{
     const started=performance.now();
     const child=spawn(process.execPath,[script,mode],{
-      stdio:['ignore','pipe','pipe'],shell:false,
+      stdio:['ignore','pipe','pipe'],shell:false,detached:true,
+      env:solverProcessEnv({ UCE_TRILOGY_EXPERIMENT:'1' }),
     });
     let output='',stderrBytes=0,peakKiB=0,busy=false;
     const sample=setInterval(async()=>{
@@ -43,19 +46,21 @@ async function measure(mode) {
       try{peakKiB=Math.max(peakKiB,await treeRssKiB(child.pid));}
       finally{busy=false;}
     },20);
-    const kill=setTimeout(()=>child.kill('SIGKILL'),20000);
+    const kill=setTimeout(()=>terminateSolverProcessTree(child),20000);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data',x=>{
       output+=x;
-      if(output.length>32768) child.kill('SIGKILL');
+      if(output.length>32768) terminateSolverProcessTree(child);
     });
     child.stderr.on('data',x=>{
       stderrBytes+=x.length;
-      if(stderrBytes>8192) child.kill('SIGKILL');
+      if(stderrBytes>8192) terminateSolverProcessTree(child);
     });
-    child.on('error',reject);
+    child.on('error',error=>{clearInterval(sample);clearTimeout(kill);terminateSolverProcessTree(child);reject(error);});
     child.on('close',code=>{
       clearInterval(sample);clearTimeout(kill);
+      // Reap remaining descendants in the isolated POSIX benchmark group.
+      terminateSolverProcessTree(child);
       if(code!==0) return reject(Error('benchmark mode failed: '+mode));
       try{
         const parsed=JSON.parse(output);
