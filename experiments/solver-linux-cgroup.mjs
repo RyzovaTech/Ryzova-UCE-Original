@@ -56,29 +56,31 @@ export async function createStrictSolverCgroup({ root, memoryMiB }) {
       } catch { return false; }
     },
     async destroy() {
-      if (destroyed) return { verified: true, peakMiB: null, oomKills: 0 };
-      let peakMiB = null, oomKills = 0;
-      try {
-        const peak = Number((await readFile(join(location, 'memory.peak'), 'utf8')).trim());
-        if (Number.isFinite(peak)) peakMiB = Math.round(peak / 1048576 * 100) / 100;
-        const events = await readFile(join(location, 'memory.events'), 'utf8');
-        oomKills = Number(/^oom_kill\s+(\d+)/m.exec(events)?.[1] ?? 0);
-      } catch { /* Counters are diagnostic, not the cleanup proof. */ }
+      if (destroyed) return { verified: true, peakMiB: null, oomKills: null };
       try { await writeFile(join(location, 'cgroup.kill'), '1'); }
       catch { /* An empty group or unsupported kill is checked below. */ }
       for (let i = 0; i < 60; i++) {
         try {
           const events = await readFile(join(location, 'cgroup.events'), 'utf8');
-          const empty = /^populated\s+0$/m.test(events);
-          if (empty) {
+          if (/^populated\s+0$/m.test(events)) {
+            // Read the kernel's final peak after all descendants have exited,
+            // rather than sampling before kill and missing late allocations.
+            let peakMiB = null, oomKills = null;
+            try {
+              const peak = Number((await readFile(join(location, 'memory.peak'), 'utf8')).trim());
+              if (Number.isFinite(peak)) peakMiB = Math.round(peak / 1048576 * 100) / 100;
+              const memoryEvents = await readFile(join(location, 'memory.events'), 'utf8');
+              const count = /^oom_kill\s+(\d+)/m.exec(memoryEvents);
+              if (count) oomKills = Number(count[1]);
+            } catch { /* Unknown counters are never assumed to be zero. */ }
             await rmdir(location);
             destroyed = true;
             return { verified: true, peakMiB, oomKills };
           }
-        } catch { /* Do not declare cleanup success without kernel proof. */ }
+        } catch { /* Never declare cleanup success without kernel proof. */ }
         await sleep(25);
       }
-      return { verified: false, peakMiB, oomKills };
+      return { verified: false, peakMiB: null, oomKills: null };
     },
   };
 }
