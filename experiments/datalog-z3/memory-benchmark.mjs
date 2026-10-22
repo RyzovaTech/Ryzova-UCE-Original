@@ -92,6 +92,10 @@ for(let i=0;i<repetitions;i++){
   // as a win or allowed to hide the validated default-arm comparison.
   try { samples.push(await measure('sequential-heap128')); }
   catch { samples.push({mode:'sequential-heap128',error:'candidate-failed'}); }
+  // Experimental independent Z3 executable. A missing native binary or an
+  // invalid model is recorded as a failed arm, never compared as improvement.
+  try { samples.push(await measure('sequential-native-z3')); }
+  catch { samples.push({mode:'sequential-native-z3',error:'candidate-failed'}); }
 }
 const clean=mode=>samples.filter(x=>x.mode===mode && Number.isFinite(x.sampledTreePeakMiB));
 const summary=mode=>{
@@ -125,11 +129,13 @@ console.log(JSON.stringify({
   repetitions,
   samples,
   byMode: { legacy:summary('legacy'), sequential:summary('sequential'),
-    sequentialHeap128Experimental:summary('sequential-heap128') },
+    sequentialHeap128Experimental:summary('sequential-heap128'),
+    sequentialNativeZ3Experimental:summary('sequential-native-z3') },
   meanSampledTreePeakMiB:{
     legacy:summary('legacy').meanPeakMiB,
     sequential:summary('sequential').meanPeakMiB,
     sequentialHeap128Experimental:summary('sequential-heap128').meanPeakMiB,
+    sequentialNativeZ3Experimental:summary('sequential-native-z3').meanPeakMiB,
   },
   meanDirectStageWorkerRssMiB:byStage(),
   caveat:'20ms /proc child-tree sampling may miss peaks; this is NOT cgroup memory.peak, NOT an enforced limit, and fixture is synthetic.',
