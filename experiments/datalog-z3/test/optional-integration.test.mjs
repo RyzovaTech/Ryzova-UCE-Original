@@ -108,6 +108,8 @@ test('two supported same-workspace requirements trigger verification regardless 
   assert.equal(r.optionalSolver.status,'satisfiable',JSON.stringify(r.optionalSolver));
   assert.equal(r.optionalSolver.verification,'independent-smt-agreement');
   assert.deepEqual(r.optionalSolver.stages,{souffle:'succeeded',z3:'succeeded',cvc5:'succeeded'});
+  assert.deepEqual(r.optionalSolver.stageTrace.map(x=>x.stage),['souffle','z3','cvc5']);
+  assert.ok(r.optionalSolver.stageTrace.every((x,i,a)=>i===0 || a[i-1].closedMs<=x.startedMs));
   assert.ok(r.optionalSolver.eligibilityRules.includes('D2'));
 });
 
@@ -177,4 +179,15 @@ test('failed Souffle proof never starts Z3 or cvc5',async()=>{
   assert.equal(r.optionalSolver.attempted,true);
   assert.equal(r.optionalSolver.stages.z3,'not-run');
   assert.equal(r.optionalSolver.stages.cvc5,'not-run');
+});
+
+test('two simultaneous opt-in scans are serialized and do not change native scores',async()=>{
+  const [a,b]=await Promise.all([
+    analyzeProjectWithOptionalTrilogy(input(),{enableTrilogy:true}),
+    analyzeProjectWithOptionalTrilogy(input(),{enableTrilogy:true}),
+  ]);
+  assert.equal(a.optionalSolver.status,'conflict',JSON.stringify(a.optionalSolver));
+  assert.equal(b.optionalSolver.status,'conflict',JSON.stringify(b.optionalSolver));
+  assert.equal(a.score.overall,b.score.overall);
+  assert.deepEqual(a.issues,b.issues);
 });
