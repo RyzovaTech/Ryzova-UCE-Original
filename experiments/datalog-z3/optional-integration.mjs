@@ -242,7 +242,6 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
       wallMs, workerRssLimitMiB,
       souffleBinary: options.souffleBinary,
       cvc5Binary: options.cvc5Binary,
-      wallMs,
     },
   );
   diagnostic.runtimeMs = runtimeMs;
