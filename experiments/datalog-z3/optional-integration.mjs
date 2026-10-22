@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { solverProcessEnv } from '../solver-process-env.mjs';
 import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +52,8 @@ function runWorker(files, workspace, config) {
       child = spawn(process.execPath, [WORKER], {
         stdio: ['pipe', 'pipe', 'pipe'],
         detached: process.platform !== 'win32',
-        env: { ...process.env, UCE_TRILOGY_EXPERIMENT: '1' },
+        env: solverProcessEnv({ UCE_TRILOGY_EXPERIMENT: '1' }),
+        shell: false,
         windowsHide: true,
       });
     } catch {
