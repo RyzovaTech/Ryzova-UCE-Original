@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
@@ -61,13 +62,7 @@ function runWorker(files, workspace, config) {
       return;
     }
     let finished = false, failure = null, output = '', peak = null;
-    const killGroup = () => {
-      if (child.exitCode !== null || child.signalCode !== null) return;
-      try {
-        if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL');
-        else child.kill('SIGKILL');
-      } catch { /* Already stopped. */ }
-    };
+    const killGroup = () => terminateSolverProcessTree(child);
     const finish = (result = null, error = failure) => {
       if (finished) return;
       finished = true;
