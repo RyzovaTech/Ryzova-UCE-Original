@@ -1,0 +1,53 @@
+# Controlled, manually authorized kernel proof; NEVER run untrusted PRs on a
+# privileged self-hosted machine. Runner must be independently provisioned.
+name: Trilogy Delegated Linux Cgroup Proof
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  prove-delegated-memory-and-teardown:
+    runs-on: [self-hosted, linux, uce-cgroup-v2-ubuntu2404]
+    timeout-minutes: 20
+    env:
+      UCE_TRILOGY_TEST_CGROUP_PARENT: ${{ vars.UCE_TRILOGY_CGROUP_PARENT }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify trusted, preconfigured runner prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$UCE_TRILOGY_TEST_CGROUP_PARENT" || { echo "Missing trusted delegated cgroup parent"; exit 1; }
+          case "$UCE_TRILOGY_TEST_CGROUP_PARENT" in
+            /sys/fs/cgroup/*) ;;
+            *) echo "Cgroup parent must be within the kernel cgroup-v2 mount"; exit 1;;
+          esac
+          test -w "$UCE_TRILOGY_TEST_CGROUP_PARENT"
+          test -r "$UCE_TRILOGY_TEST_CGROUP_PARENT/cgroup.controllers"
+          grep -qw memory "$UCE_TRILOGY_TEST_CGROUP_PARENT/cgroup.subtree_control"
+          grep -qw pids "$UCE_TRILOGY_TEST_CGROUP_PARENT/cgroup.subtree_control"
+          command -v souffle
+          command -v cvc5
+          souffle --version | grep -F '2.5'
+          cvc5 --version | grep -F '1.1.2'
+          echo "Kernel: $(uname -a)"
+          node --version
+      - name: Verify exact npm locks on clean runner
+        run: |
+          npm ci --no-audit --no-fund
+          npm ci --prefix experiments/z3-node --no-audit --no-fund
+          npm ci --prefix experiments/datalog-z3 --no-audit --no-fund
+      - name: Exercise real delegated cgroup and force descendant OOM
+        run: node --test experiments/datalog-z3/test/strict-resource.test.mjs
+      - name: Re-run strict local UCE CLI under delegated kernel memory isolation
+        env:
+          UCE_TRILOGY_CGROUP_ROOT: ${{ vars.UCE_TRILOGY_CGROUP_PARENT }}
+        run: |
+          node experiments/datalog-z3/optional-cli.mjs \
+            experiments/datalog-z3/fixtures/optional-project.json \
+            --trilogy --strict-resource-limits

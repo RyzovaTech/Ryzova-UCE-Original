@@ -55,6 +55,8 @@ jobs:
         run: npm --prefix experiments/datalog-z3 run test:triple
       - name: Benchmark full Souffle plus Z3 plus native cvc5 confirmation
         run: npm --prefix experiments/datalog-z3 run benchmark:triple
+      - name: Compare sampled process-tree memory, old versus serial verifiers
+        run: npm --prefix experiments/datalog-z3 run benchmark:memory
       - name: Optional Trilogy integration into complete UCE reports
         run: npm --prefix experiments/datalog-z3 run test:optional
       - name: Verify explicit Trilogy opt-in and default-disabled CLI
@@ -63,6 +65,8 @@ jobs:
           npm --prefix experiments/datalog-z3 run demo:optional
       - name: Validate frozen holdout ground-truth certificates and metrics math
         run: npm --prefix experiments/datalog-z3 run test:holdout-metrics
+      - name: Verify pinned real repository provenance and blind human-review gate
+        run: node --test testing/trilogy/real-repository-intake.test.mjs testing/trilogy/independent-review-gate.test.mjs
       - name: Measure Trilogy precision, recall, FP, FN, Unknown, and coverage
         run: npm --prefix experiments/datalog-z3 run audit:holdout
       - name: Publish versioned holdout metrics, even on validation failures

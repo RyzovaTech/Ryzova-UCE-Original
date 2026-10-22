@@ -13,11 +13,14 @@ const stageState = () => ({ souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' }
 // Resolves ONLY after the specific stage worker has emitted 'close'.
 // On any abnormal termination, orchestration returns Unknown and never starts
 // the next stage. All workers inherit the outer isolated POSIX process group.
-function runStage(stage, input, timeoutMs = 4000, rssBudgetMiB = 512) {
+function runStage(stage, input, timeoutMs = 4000, rssBudgetMiB = 512, z3HeapLimitMiB = null) {
   return new Promise(resolve => {
     let child;
     try {
-      child = spawn(process.execPath, [WORKER, stage], {
+      const argv = stage === 'z3' && z3HeapLimitMiB !== null
+        ? ['--max-old-space-size=' + z3HeapLimitMiB, '--optimize-for-size', WORKER, stage]
+        : [WORKER, stage];
+      child = spawn(process.execPath, argv, {
         shell: false, detached: false, windowsHide: true,
         stdio: ['pipe', 'pipe', 'pipe'],
         env: solverProcessEnv({ UCE_TRILOGY_EXPERIMENT: '1' }),
@@ -109,6 +112,10 @@ export async function evaluateSmartSequential(files, options = {}) {
   const graph = plan.graph;
   const deadlineMs = options.wallMs ?? 14000;
   const workerRssBudgetMiB = options.workerRssLimitMiB ?? 512;
+  // Benchmark-only opt-in: never applied to user verification by default.
+  const z3HeapLimitMiB = options.z3HeapLimitMiB ?? null;
+  if (z3HeapLimitMiB !== null && ![96, 128, 192, 256].includes(z3HeapLimitMiB))
+    return unknown('unsupported-z3-heap-experiment');
   if (!Number.isInteger(deadlineMs) || deadlineMs < 1 || deadlineMs > 30000)
     return unknown('invalid-total-deadline');
   const start = performance.now();
@@ -117,7 +124,8 @@ export async function evaluateSmartSequential(files, options = {}) {
     const ms = remaining();
     if (ms < 100) { stages[name] = 'unknown'; return { status: 'unknown', reason: 'end-to-end-deadline' }; }
     const began = performance.now();
-    const r = await runStage(name, { ...payload, timeoutMs: ms }, ms + 50, workerRssBudgetMiB);
+    const r = await runStage(name, { ...payload, timeoutMs: ms }, ms + 50,
+      workerRssBudgetMiB, z3HeapLimitMiB);
     const closed = performance.now();
     stageTrace.push({ stage: name, startedMs: Math.round(began-start),
       closedMs: Math.round(closed-start),

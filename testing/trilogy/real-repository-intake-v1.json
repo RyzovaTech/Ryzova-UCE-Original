@@ -1,0 +1,90 @@
+{
+  "schema": "uce-trilogy-real-repo-intake-v1",
+  "purpose": "Unlabelled pinned public-repository candidates for independent human review; never treat as verified accuracy labels.",
+  "frozenAt": "2026-10-22",
+  "provenance": {
+    "humanReviewed": false,
+    "independentlyAdjudicated": false,
+    "labelsComplete": false,
+    "selectionNote": "Candidate-only sample combining lock-present and lock-absent public repositories; no solver outputs or human labels used for selection. Not representative."
+  },
+  "cases": [
+    {
+      "id": "RR01",
+      "repository": "RyzovaTech/Ryzova-UCE-Original",
+      "commit": "6f1ae44e5e08d1be11545fd0e63287a7a55394ea",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "f4c5947fc1a1e9e7f1b950953bd3c3d9a530b9cc",
+      "lockfileBlobSha": "5e5a129fc2feb432ff444f9d3d5384a6b7ff7862",
+      "label": null
+    },
+    {
+      "id": "RR02",
+      "repository": "expressjs/express",
+      "commit": "0dee2c52c7c873498f8ed7d8ee4ddd0a04d3ada8",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": null,
+      "manifestBlobSha": "a7fae5a21b005a1684e94eb09bb8156aaaa388ba",
+      "lockfileBlobSha": null,
+      "label": null
+    },
+    {
+      "id": "RR03",
+      "repository": "fastify/fastify",
+      "commit": "ce41dc0fbb4ed75e9a42f3972ac896333f6a7396",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": null,
+      "manifestBlobSha": "abe9146b184545d98719f6c63b5165bf8dfbe030",
+      "lockfileBlobSha": null,
+      "label": null
+    },
+    {
+      "id": "RR04",
+      "repository": "sindresorhus/slugify",
+      "commit": "3b17b2e84b97624a683aafaa38184bf2746fab22",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": null,
+      "manifestBlobSha": "4bde75b38a65434cc9cb4b4ec469fa687f25cd9f",
+      "lockfileBlobSha": null,
+      "label": null
+    },
+    {
+      "id": "RR05",
+      "repository": "axios/axios",
+      "commit": "e6b79d9cef796ca3a903bb83e51d4752b019fd67",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "b4e3d1e48866809f4098494516806afdf1a8bcb5",
+      "lockfileBlobSha": "0fc1d3dcf01f09e50bf34a538e16de1743151516",
+      "label": null
+    },
+    {
+      "id": "RR06",
+      "repository": "npm/cli",
+      "commit": "ae98c62586b6fea44114f72e249e246a2981de70",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "68a2c8ce7130ea67b29090a05c1ec7346556c506",
+      "lockfileBlobSha": "c813c9987e5856c61278bb295214a06063e4e3a5",
+      "label": null
+    },
+    {
+      "id": "RR07",
+      "repository": "uuidjs/uuid",
+      "commit": "3b70ec29ef9067be33384a16dcd48dc77a0efdf4",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "69d70baa053e3e91d815ed8bafc9a4de4f720b5e",
+      "lockfileBlobSha": "00240fb0267d8bbcbdee7a7c34524039bf4d1b76",
+      "label": null
+    }
+  ]
+}
