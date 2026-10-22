@@ -66,14 +66,26 @@ async function measure(mode) {
         const parsed=JSON.parse(output);
         if(parsed.status!=='conflict'||parsed.verification!=='independent-smt-agreement')
           return reject(Error('benchmark result mismatch: '+mode));
+        if(mode!=='legacy') {
+          const stages=parsed.stageTrace??[];
+          if(stages.length!==3 || stages.map(x=>x.stage).join(',')!=='souffle,z3,cvc5' ||
+            stages.some((x,i)=>!Number.isFinite(x.startedMs)||!Number.isFinite(x.closedMs)||
+              x.closedMs<x.startedMs||(i>0&&stages[i-1].closedMs>x.startedMs)))
+            return reject(Error('stage-close-before-next-start invariant failed: '+mode));
+        }
         resolve({mode,wallMs:Math.round(performance.now()-started),
-          sampledTreePeakMiB:Math.round(peakKiB/1024*100)/100});
+          sampledTreePeakMiB:Math.round(peakKiB/1024*100)/100,
+          stageTrace: parsed.stageTrace??[]});
       } catch(e){reject(e);}
     });
   });
 }
+const requestedRepeats = process.env.UCE_BENCH_REPEATS ?? '10';
+if (!/^(?:[3-9]|1[0-9]|20)$/.test(requestedRepeats))
+  throw Error('UCE_BENCH_REPEATS must be a supported integer from 3 to 20');
+const repetitions=Number(requestedRepeats);
 const samples=[];
-for(let i=0;i<3;i++){
+for(let i=0;i<repetitions;i++){
   samples.push(await measure('legacy'));
   samples.push(await measure('sequential'));
   // This is an exploratory third arm. A failure is recorded, not misreported
@@ -81,17 +93,44 @@ for(let i=0;i<3;i++){
   try { samples.push(await measure('sequential-heap128')); }
   catch { samples.push({mode:'sequential-heap128',error:'candidate-failed'}); }
 }
-const avg=mode=>{
-  const a=samples.filter(x=>x.mode===mode);
-  if (!a.length || a.some(x=>!Number.isFinite(x.sampledTreePeakMiB))) return null;
-  return Math.round(a.reduce((n,x)=>n+x.sampledTreePeakMiB,0)/a.length*100)/100;
+const clean=mode=>samples.filter(x=>x.mode===mode && Number.isFinite(x.sampledTreePeakMiB));
+const summary=mode=>{
+  const xs=samples.filter(x=>x.mode===mode);
+  if(xs.length!==repetitions||xs.some(x=>!Number.isFinite(x.sampledTreePeakMiB)))
+    return {runs:xs.length,failures:xs.filter(x=>x.error).length,meanPeakMiB:null};
+  const vals=xs.map(x=>x.sampledTreePeakMiB).sort((a,b)=>a-b);
+  const times=xs.map(x=>x.wallMs).sort((a,b)=>a-b);
+  const round=x=>Math.round(x*100)/100;
+  const median=v=>(v[Math.floor((v.length-1)/2)]+v[Math.floor(v.length/2)])/2;
+  return { runs:xs.length,failures:0,
+    meanPeakMiB:round(vals.reduce((a,b)=>a+b,0)/vals.length),
+    medianPeakMiB:round(median(vals)),p95SampledPeakMiB:round(vals[Math.ceil(vals.length*.95)-1]),
+    medianWallMs:round(median(times)),
+  };
+};
+const byStage=()=>{
+  const result={};
+  for(const name of ['souffle','z3','cvc5']){
+    const values=samples.filter(x=>x.mode==='sequential').map(x=>
+      x.stageTrace.find(y=>y.stage===name)?.sampledWorkerPeakRssMiB);
+    result[name]=(values.length===repetitions && values.every(Number.isFinite))
+      ? Math.round(values.reduce((a,b)=>a+b,0)/values.length*100)/100 : null;
+  }
+  return result;
 };
 console.log(JSON.stringify({
   suite:'uce-trilogy-memory-comparison',
   host:{node:process.version,platform:process.platform,arch:process.arch,
     gitSha:process.env.GITHUB_SHA??null},
+  repetitions,
   samples,
-  meanSampledTreePeakMiB:{legacy:avg('legacy'),sequential:avg('sequential'),
-    sequentialHeap128Experimental:avg('sequential-heap128')},
+  byMode: { legacy:summary('legacy'), sequential:summary('sequential'),
+    sequentialHeap128Experimental:summary('sequential-heap128') },
+  meanSampledTreePeakMiB:{
+    legacy:summary('legacy').meanPeakMiB,
+    sequential:summary('sequential').meanPeakMiB,
+    sequentialHeap128Experimental:summary('sequential-heap128').meanPeakMiB,
+  },
+  meanDirectStageWorkerRssMiB:byStage(),
   caveat:'20ms /proc child-tree sampling may miss peaks; this is NOT cgroup memory.peak, NOT an enforced limit, and fixture is synthetic.',
 },null,2));
