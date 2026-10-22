@@ -1,0 +1,72 @@
+{
+  "schema": "uce-real-repo-preflight-v1",
+  "date": "2026-10-22",
+  "source": "Verified immutable GitHub root tree entries for pinned commits in real-repository-intake-v1.json",
+  "method": "Metadata-only manifest/lock presence and byte counts; DOES NOT execute extractLockedDependencyGraph, native solvers, or human ground truth.",
+  "modelPerFileCharLimit": 262144,
+  "sampleSize": 7,
+  "preflight": [
+    {
+      "id": "RR01",
+      "repository": "RyzovaTech/Ryzova-UCE-Original",
+      "manifestBytes": 5247,
+      "lockBytes": 216675,
+      "status": "needs-graph-inspection",
+      "notes": "Both root files exist; bytes within 256KiB per-file cap, but lock graph semantics and package/edge counts have not been tested."
+    },
+    {
+      "id": "RR02",
+      "repository": "expressjs/express",
+      "manifestBytes": 2731,
+      "lockBytes": null,
+      "status": "unsupported-missing-root-lock",
+      "notes": "No root package-lock at pinned commit; cannot establish a complete supported npm lock graph."
+    },
+    {
+      "id": "RR03",
+      "repository": "fastify/fastify",
+      "manifestBytes": 7066,
+      "lockBytes": null,
+      "status": "unsupported-missing-root-lock",
+      "notes": "No root package-lock at pinned commit; cannot establish a complete supported npm lock graph."
+    },
+    {
+      "id": "RR04",
+      "repository": "sindresorhus/slugify",
+      "manifestBytes": 1066,
+      "lockBytes": null,
+      "status": "unsupported-missing-root-lock",
+      "notes": "No root package-lock at pinned commit; cannot establish a complete supported npm lock graph."
+    },
+    {
+      "id": "RR05",
+      "repository": "axios/axios",
+      "manifestBytes": 6658,
+      "lockBytes": 344460,
+      "status": "input-budget-risk",
+      "notes": "Lockfile exceeds 256KiB byte preflight; model enforces 256KiB JavaScript-character cap. No solver invoked."
+    },
+    {
+      "id": "RR06",
+      "repository": "npm/cli",
+      "manifestBytes": 6860,
+      "lockBytes": 437638,
+      "status": "input-budget-risk",
+      "notes": "Lockfile exceeds 256KiB byte preflight and root declares workspaces; model does not infer cross-workspace obligations. No solver invoked."
+    },
+    {
+      "id": "RR07",
+      "repository": "uuidjs/uuid",
+      "manifestBytes": 3611,
+      "lockBytes": 480551,
+      "status": "input-budget-risk",
+      "notes": "Lockfile exceeds 256KiB byte preflight; model enforces 256KiB JavaScript-character cap. No solver invoked."
+    }
+  ],
+  "humanGroundTruthCases": 0,
+  "claims": {
+    "modelCoverageEvaluated": false,
+    "accuracyMeasured": false,
+    "realWorldCompatibilityProven": false
+  }
+}
