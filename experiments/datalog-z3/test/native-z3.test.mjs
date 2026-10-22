@@ -37,3 +37,10 @@ test('native Z3 option cannot be accidentally combined with WASM heap flags',asy
   });
   assert.equal(r.status,'unknown');
 });
+
+test('smart verifier rejects user-supplied native Z3 executable paths before startup',async()=>{
+  const r=await evaluateSmartSequential(data.files,{nativeZ3Binary:'/tmp/untrusted-z3'});
+  assert.equal(r.status,'unknown');
+  assert.equal(r.reason,'invalid-native-z3-experiment-options');
+  assert.equal(r.stageTrace.length,0);
+});
