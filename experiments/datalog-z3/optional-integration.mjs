@@ -118,6 +118,7 @@ function runWorker(files, workspace, config) {
     });
     const payload = JSON.stringify({ files, workspace, options: {
       souffleBinary: config.souffleBinary, cvc5Binary: config.cvc5Binary,
+      wallMs: config.wallMs, workerRssLimitMiB: config.workerRssLimitMiB,
     } });
     if (payload.length > MAX_PAYLOAD) {
       failure = 'trilogy-input-budget-exceeded';
