@@ -9,6 +9,7 @@ import { load } from '../../scripts/trusted-module-loader.mjs';
 import { extractLockedDependencyGraph } from './graph.mjs';
 import { dependencyPath } from './datalog.mjs';
 import { inspectSmartEvidence } from './evidence-inspector.mjs';
+import { createStrictSolverCgroup } from '../solver-linux-cgroup.mjs';
 
 // Node-only opt-in report adapter. The normal browser analyzer never imports
 // this module, native solvers or Node builtins.
@@ -25,6 +26,7 @@ const defaultDiagnostic = (enabled, workspace) => ({
   evidence: [], unsatCore: [], witness: null,
   stages: { souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' },
   eligibilityRules: [], evidenceDigest: null, stageTrace: [],
+  hardIsolation: 'not-requested', hardTreePeakMiB: null, hardOomKills: null,
   runtimeMs: null, sampledNodeWorkerRssMiB: null,
   limitations: [
     'Modelled Node engine requirements only; real install/build/runtime and engine-strict enforcement are not proven.',
@@ -48,7 +50,24 @@ async function processRssMiB(pid) {
   } catch { return null; }
 }
 
-function runWorker(files, workspace, config) {
+let unsafeSolverCleanup = false;
+async function runWorker(files, workspace, config) {
+  if (unsafeSolverCleanup) return {
+    result: null, failure: 'previous-native-cleanup-unverified',
+    runtimeMs: 0, sampledNodeWorkerRssMiB: null,
+  };
+  let isolation = null;
+  if (config.strictResourceLimits) {
+    const guard = await createStrictSolverCgroup({
+      root: config.cgroupRoot,
+      memoryMiB: config.workerRssLimitMiB,
+    });
+    if (!guard.ok) return {
+      result: null, failure: guard.reason, runtimeMs: 0,
+      sampledNodeWorkerRssMiB: null, hardIsolation: 'unavailable',
+    };
+    isolation = guard;
+  }
   return new Promise(resolve => {
     const started = performance.now();
     let child;
@@ -61,7 +80,12 @@ function runWorker(files, workspace, config) {
         windowsHide: true,
       });
     } catch {
-      resolve({ failure: 'worker-spawn-failed', result: null, runtimeMs: 0, sampledNodeWorkerRssMiB: null });
+      void (async () => {
+        const cleaned = isolation ? await isolation.destroy() : null;
+        if (cleaned && !cleaned.verified) unsafeSolverCleanup = true;
+        resolve({ failure: 'worker-spawn-failed', result: null, runtimeMs: 0,
+          sampledNodeWorkerRssMiB: null, hardIsolation: isolation ? 'unavailable' : 'not-requested' });
+      })();
       return;
     }
     let finished = false, failure = null, output = '', peak = null;
@@ -71,13 +95,29 @@ function runWorker(files, workspace, config) {
       finished = true;
       clearTimeout(deadline);
       clearInterval(monitor);
-      // Also reap any nested native descendants when Node exited cleanly.
-      // They inherit this isolated group in optional mode.
       killGroup();
-      resolve({
-        failure: error, result,
-        runtimeMs: Math.round((performance.now() - started) * 100) / 100,
-        sampledNodeWorkerRssMiB: peak === null ? null : Math.round(peak * 100) / 100,
+      void (async () => {
+        // Queue remains occupied until the kernel confirms the native
+        // worker AND its descendants left the delegated cgroup.
+        const cleaned = isolation ? await isolation.destroy() : null;
+        if (cleaned && !cleaned.verified) unsafeSolverCleanup = true;
+        const cleanupFailure = cleaned && !cleaned.verified
+          ? 'hard-process-tree-cleanup-unverified'
+          : cleaned?.oomKills > 0 ? 'hard-memory-budget-exceeded' : null;
+        resolve({
+          failure: cleanupFailure ?? error,
+          result: cleanupFailure ? null : result,
+          runtimeMs: Math.round((performance.now() - started) * 100) / 100,
+          sampledNodeWorkerRssMiB: peak === null ? null : Math.round(peak * 100) / 100,
+          hardIsolation: isolation ? (cleaned?.verified ? 'enforced' : 'unverified') : 'not-requested',
+          hardTreePeakMiB: cleaned?.peakMiB ?? null,
+          hardOomKills: cleaned?.oomKills ?? null,
+        });
+      })().catch(() => {
+        unsafeSolverCleanup = true;
+        resolve({ failure: 'hard-process-tree-cleanup-unverified', result: null,
+          runtimeMs: Math.round(performance.now() - started), sampledNodeWorkerRssMiB: null,
+          hardIsolation: 'unverified' });
       });
     };
     const deadline = setTimeout(() => {
@@ -120,13 +160,26 @@ function runWorker(files, workspace, config) {
       souffleBinary: config.souffleBinary, cvc5Binary: config.cvc5Binary,
       wallMs: config.wallMs, workerRssLimitMiB: config.workerRssLimitMiB,
     } });
-    if (payload.length > MAX_PAYLOAD) {
-      failure = 'trilogy-input-budget-exceeded';
-      killGroup();
-    } else {
-      child.stdin.on('error', () => { /* Worker close determines fallback. */ });
+    const startOnlyAfterIsolation = async () => {
+      if (payload.length > MAX_PAYLOAD) {
+        failure = 'trilogy-input-budget-exceeded';
+        killGroup();
+        return;
+      }
+      // Worker cannot import any native stage before receiving stdin.
+      if (isolation && !(await isolation.attach(child.pid))) {
+        failure = 'hard-memory-attach-failed';
+        killGroup();
+        return;
+      }
+      if (failure) return;
+      child.stdin.on('error', () => { /* Close handler determines fallback. */ });
       child.stdin.end(payload);
-    }
+    };
+    void startOnlyAfterIsolation().catch(() => {
+      failure = 'hard-memory-attach-failed';
+      killGroup();
+    });
   });
 }
 
@@ -136,6 +189,9 @@ function runWorker(files, workspace, config) {
 let verificationTail = Promise.resolve();
 let pendingVerifications = 0;
 function queuedVerification(files, workspace, config) {
+  if (unsafeSolverCleanup) return Promise.resolve({ result: null,
+    failure: 'previous-native-cleanup-unverified', runtimeMs: 0,
+    sampledNodeWorkerRssMiB: null });
   if (pendingVerifications >= 4) return Promise.resolve({
     result: null, failure: 'verification-queue-busy',
     runtimeMs: 0, sampledNodeWorkerRssMiB: null,
@@ -236,15 +292,26 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
     diagnostic.reason = 'Invalid solver resource budget.';
     return report;
   }
+  if (options.strictResourceLimits !== undefined && typeof options.strictResourceLimits !== 'boolean') {
+    diagnostic.status = 'unknown';
+    diagnostic.reason = 'Invalid strict-resource configuration.';
+    return report;
+  }
   diagnostic.attempted = true;
-  const { result, failure, runtimeMs, sampledNodeWorkerRssMiB } = await queuedVerification(
+  const { result, failure, runtimeMs, sampledNodeWorkerRssMiB,
+    hardIsolation, hardTreePeakMiB, hardOomKills } = await queuedVerification(
     relevant, workspace, {
       wallMs, workerRssLimitMiB,
       souffleBinary: options.souffleBinary,
       cvc5Binary: options.cvc5Binary,
+      strictResourceLimits: options.strictResourceLimits === true,
+      cgroupRoot: options.cgroupRoot ?? process.env.UCE_TRILOGY_CGROUP_ROOT ?? '',
     },
   );
   diagnostic.runtimeMs = runtimeMs;
+  diagnostic.hardIsolation = hardIsolation ?? 'not-requested';
+  diagnostic.hardTreePeakMiB = hardTreePeakMiB ?? null;
+  diagnostic.hardOomKills = hardOomKills ?? null;
   if (result?.stages) diagnostic.stages = result.stages;
   if (Array.isArray(result?.stageTrace)) diagnostic.stageTrace = result.stageTrace;
   if (Array.isArray(result?.eligibilityRules)) diagnostic.eligibilityRules = result.eligibilityRules;
