@@ -68,6 +68,16 @@ test('reachable peer/link/platform/optional/alias semantics remain unsupported',
     assert.equal(graph.status,'unknown',JSON.stringify(graph));
   }
 });
+test('optional peer hint without a real peer requirement does not invent a dependency',()=>{
+  const input=small((pkg,lock)=>{
+    lock.packages['node_modules/alpha'].peerDependenciesMeta={
+      debug:{optional:true},
+    };
+  });
+  const graph=extractLockedDependencyGraph(input);
+  assert.equal(graph.status,'ok',graph.reason);
+  assert.equal(graph.packages.length,3);
+});
 test('unreachable dev-only package metadata does not contaminate mandatory source graph',()=>{
   const graph=extractLockedDependencyGraph(small((pkg,lock)=>{
     for(let i=0;i<120;i++)
