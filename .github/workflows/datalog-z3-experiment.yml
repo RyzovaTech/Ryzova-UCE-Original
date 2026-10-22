@@ -55,6 +55,8 @@ jobs:
         run: npm --prefix experiments/datalog-z3 run test:triple
       - name: Benchmark full Souffle plus Z3 plus native cvc5 confirmation
         run: npm --prefix experiments/datalog-z3 run benchmark:triple
+      - name: Compare sampled process-tree memory, old versus serial verifiers
+        run: npm --prefix experiments/datalog-z3 run benchmark:memory
       - name: Optional Trilogy integration into complete UCE reports
         run: npm --prefix experiments/datalog-z3 run test:optional
       - name: Verify explicit Trilogy opt-in and default-disabled CLI
