@@ -1,4 +1,5 @@
-// Pure validation of human-signed/blinded reference votes.
+// Structure-level validation of independently collected blinded reference votes.
+// Reviewer identity and true independence require EXTERNAL human verification.
 // No solver access and no repository fetching. This cannot invent labels.
 const STATUS = new Set(['conflict', 'satisfiable', 'unknown']);
 const SIG = /^[a-f0-9]{40}$/;
@@ -20,7 +21,10 @@ export function adjudicateBlindReview(corpus, reviews) {
       r.lockfileBlobSha !== entry.lockfileBlobSha ||
       r.workspace !== entry.workspace ||
       typeof r.reviewerId !== 'string' || !r.reviewerId.trim() ||
-      r.blindedToSolverOutput !== true ||
+      r.blindedToSolverOutput !== true || r.independenceDeclared !== true ||
+      !Array.isArray(r.sourceEvidence) || r.sourceEvidence.length < 1 ||
+      r.sourceEvidence.some(e => !e || typeof e.file !== 'string' ||
+        typeof e.field !== 'string' || !SIG.test(e.sourceBlobSha)) ||
       !STATUS.has(r.label) || typeof r.rationale !== 'string' ||
       r.rationale.trim().length < 20 ||
       typeof r.reviewedAt !== 'string' ||
