@@ -16,15 +16,22 @@ try {
       souffleBinary: payload.binary, timeoutMs: payload.timeoutMs,
     });
   } else if (stage === 'z3') {
-    const { createZ3Session, solveNodeConstraints } = await import('../z3-node/solver.mjs');
-    let session;
-    try {
-      session = await createZ3Session();
-      result = await solveNodeConstraints(session, {
-        workspace: payload.workspace, constraints: payload.constraints,
-      }, payload.timeoutMs);
-    } finally {
-      if (session) await session.close();
+    if (payload.backend === 'native-cli-experiment') {
+      const { solveWithNativeZ3 } = await import('./native-z3.mjs');
+      result = await solveWithNativeZ3(payload.constraints, {
+        binary: payload.binary, wallMs: payload.timeoutMs,
+      });
+    } else {
+      const { createZ3Session, solveNodeConstraints } = await import('../z3-node/solver.mjs');
+      let session;
+      try {
+        session = await createZ3Session();
+        result = await solveNodeConstraints(session, {
+          workspace: payload.workspace, constraints: payload.constraints,
+        }, payload.timeoutMs);
+      } finally {
+        if (session) await session.close();
+      }
     }
   } else {
     const { solveWithCvc5 } = await import('./cvc5.mjs');
