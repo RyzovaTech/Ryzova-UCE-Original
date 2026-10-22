@@ -98,16 +98,17 @@ test('sampled or truncated scan never claims complete formal proof',async()=>{
   }
 });
 
-test('simple direct two-range checks remain on native reasoner without solver process',async()=>{
+test('two supported same-workspace requirements trigger verification regardless of simple size',async()=>{
   const files=revise((pkg,lock)=>{
     lock.packages['node_modules/alpha'].dependencies={};
     delete lock.packages['node_modules/beta'];
-    delete lock.packages['node_modules/alpha'].engines;
     lock.packages['node_modules/alpha'].engines={node:'>=22'};
   });
   const r=await analyzeProjectWithOptionalTrilogy(input(files),{enableTrilogy:true});
-  assert.equal(r.optionalSolver.status,'skipped');
-  assert.equal(r.optionalSolver.attempted,false);
+  assert.equal(r.optionalSolver.status,'satisfiable',JSON.stringify(r.optionalSolver));
+  assert.equal(r.optionalSolver.verification,'independent-smt-agreement');
+  assert.deepEqual(r.optionalSolver.stages,{souffle:'succeeded',z3:'succeeded',cvc5:'succeeded'});
+  assert.ok(r.optionalSolver.eligibilityRules.includes('D2'));
 });
 
 test('incomplete locked graph returns Unknown without attempting a partial solve',async()=>{
@@ -133,4 +134,47 @@ test('invalid resource budgets produce Unknown without attempting native process
   const r=await analyzeProjectWithOptionalTrilogy(input(),{enableTrilogy:true,workerRssLimitMiB:0});
   assert.equal(r.optionalSolver.status,'unknown');
   assert.equal(r.optionalSolver.attempted,false);
+});
+
+test('one self-contradictory root engines.node is cross-verified without Souffle',async()=>{
+  const files=revise((pkg,lock)=>{
+    pkg.engines.node='>=22 <21';
+    delete lock.packages['node_modules/alpha'].engines;
+    delete lock.packages['node_modules/beta'].engines;
+  });
+  const r=await analyzeProjectWithOptionalTrilogy(input(files),{enableTrilogy:true});
+  assert.equal(r.optionalSolver.status,'conflict',JSON.stringify(r.optionalSolver));
+  assert.deepEqual(r.optionalSolver.stages,{souffle:'not-run',z3:'succeeded',cvc5:'succeeded'});
+  assert.ok(r.optionalSolver.eligibilityRules.includes('D3'));
+  assert.equal(r.optionalSolver.unsatCore.length,1);
+});
+
+test('no supported joint proof obligation starts no native solver',async()=>{
+  const files=revise((pkg,lock)=>{
+    delete lock.packages['node_modules/alpha'].engines;
+    delete lock.packages['node_modules/beta'].engines;
+  });
+  const r=await analyzeProjectWithOptionalTrilogy(input(files),{enableTrilogy:true});
+  assert.equal(r.optionalSolver.status,'skipped');
+  assert.equal(r.optionalSolver.attempted,false);
+  assert.deepEqual(r.optionalSolver.stages,{souffle:'not-run',z3:'not-run',cvc5:'not-run'});
+});
+
+test('invalid supported-domain semver refuses partial solver proof before native startup',async()=>{
+  const files=revise((pkg,lock)=>{
+    lock.packages['node_modules/alpha'].engines.node='>=22.0.0-beta.1';
+  });
+  const r=await analyzeProjectWithOptionalTrilogy(input(files),{enableTrilogy:true});
+  assert.equal(r.optionalSolver.status,'unknown');
+  assert.equal(r.optionalSolver.attempted,false);
+});
+
+test('failed Souffle proof never starts Z3 or cvc5',async()=>{
+  const r=await analyzeProjectWithOptionalTrilogy(input(),{
+    enableTrilogy:true,souffleBinary:'/nonexistent/uce-souffle-test',
+  });
+  assert.equal(r.optionalSolver.status,'unknown');
+  assert.equal(r.optionalSolver.attempted,true);
+  assert.equal(r.optionalSolver.stages.z3,'not-run');
+  assert.equal(r.optionalSolver.stages.cvc5,'not-run');
 });
