@@ -2,7 +2,7 @@ name: Souffle Datalog Z3 and cvc5 Experimental CI
 
 on:
   push:
-    branches: [experiment/uce-datalog-z3, experiment/uce-datalog-z3-cvc5]
+    branches: [experiment/uce-datalog-z3, experiment/uce-datalog-z3-cvc5, experiment/uce-trilogy-optional-solver]
   pull_request:
     paths:
       - 'experiments/datalog-z3/**'
@@ -54,3 +54,13 @@ jobs:
         run: npm --prefix experiments/datalog-z3 run test:triple
       - name: Benchmark full Souffle plus Z3 plus native cvc5 confirmation
         run: npm --prefix experiments/datalog-z3 run benchmark:triple
+      - name: Optional Trilogy integration into complete UCE reports
+        run: npm --prefix experiments/datalog-z3 run test:optional
+      - name: Verify explicit Trilogy opt-in and default-disabled CLI
+        run: |
+          npm --prefix experiments/datalog-z3 run demo:default
+          npm --prefix experiments/datalog-z3 run demo:optional
+      - name: Prevent browser root dependency leakage
+        run: |
+          node --input-type=module -e "import fs from 'node:fs'; const p=JSON.parse(fs.readFileSync('package.json','utf8')); for (const n of ['z3-solver','cvc5','souffle']) if(p.dependencies?.[n] || p.devDependencies?.[n]) throw Error('Native solver leaked into browser dependencies');"
+

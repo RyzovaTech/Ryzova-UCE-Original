@@ -83,3 +83,45 @@ experiment, **not** independently adjudicated real-world accuracy.
 High RSS, native cvc5 portability, npm engine-enforcement semantics,
 lockfile edge cases and browser isolation still prohibit a production
 rollout. No UCE findings, scoring, or default web behavior are changed.
+
+## Optional Trilogy integration into a normal UCE analysis report
+
+The Node-only adapter `optional-integration.mjs` now invokes the real
+production `analyzeProject()` and, **only with `enableTrilogy: true`**,
+adds a typed `report.optionalSolver` diagnostic plus a clearly marked
+note when independently verified. Default browser and normal Node scans
+do not load the native solver. The native `score`, `issues`,
+`categories` and `stack.symbolicReasoning` remain unchanged.
+
+A native solver is attempted only for a complete non-sampled same-workspace
+npm v2/v3 hoisted dependency graph with 2–12 numeric Node engine
+requirements **and** transitive dependencies or at least three
+independent requirements. Simpler situations remain in UCE's fast
+deterministic Phase 2 engine.
+
+The native adapter validates the Z3/cvc5 agreement and original
+unsatisfiable evidence against the lockfile graph again before attaching
+a result. A worker error, disagreement, missing native binary, missing
+lock evidence, truncated UCE scan, over-budget inputs or wall-clock
+timeout produces `Unknown` without changing any existing finding.
+
+The subprocess uses an 8-second default wall deadline, bounded input and
+output, and best-effort Linux Node worker RSS sampling (512 MiB default).
+On POSIX a deadline kills the worker's process **group** including
+Soufflé and cvc5 subprocesses. Sampled Node-worker RSS is **not**
+peak memory for the solver children and is not a hard total-memory limit.
+
+Use this local-only opt-in CLI (requires Soufflé, Z3 and cvc5 installed):
+
+```sh
+npm --prefix experiments/datalog-z3 run demo:default
+npm --prefix experiments/datalog-z3 run demo:optional
+npm --prefix experiments/datalog-z3 run test:optional
+```
+
+The default report's `optionalSolver.status` is `disabled`.
+The opted-in example reports a source-backed `conflict` without altering
+UCE's compatibility rating. This is **experimental Node tooling**, not
+a new web toggle or a remote report API. Production/browser integration
+remains blocked until native/COOP/COEP and privacy constraints can be met,
+and until independently adjudicated real repositories have been evaluated.
