@@ -1,4 +1,4 @@
-import { evaluateDatalogZ3Cvc5 } from './triple.mjs';
+import { evaluateSmartSequential } from './smart-sequential.mjs';
 
 // One payload, one native-analysis process, no project source execution.
 let input = '';
@@ -17,7 +17,7 @@ try {
         typeof f.content !== 'string' || f.content.length > 256 * 1024)) {
     process.stdout.write(JSON.stringify({ status: 'unknown', reason: 'invalid-input' }));
   } else {
-    const r = await evaluateDatalogZ3Cvc5(payload.files, {
+    const r = await evaluateSmartSequential(payload.files, {
       workspace: payload.workspace,
       ...(payload.options ?? {}),
     });
