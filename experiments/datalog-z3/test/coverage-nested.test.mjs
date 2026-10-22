@@ -6,6 +6,7 @@ import { extractLockedDependencyGraph } from '../graph.mjs';
 import { inspectSmartEvidence } from '../evidence-inspector.mjs';
 import { dependencyPath } from '../datalog.mjs';
 import { evaluateSmartSequential } from '../smart-sequential.mjs';
+import { analyzeProjectWithOptionalTrilogy } from '../optional-integration.mjs';
 
 function file(path,content){return{path,content,isDirectory:false,size:Buffer.byteLength(content)};}
 function small(update=()=>{}) {
@@ -119,4 +120,23 @@ test('real pinned axios mandatory constraints are serially cross-verified by all
   assert.deepEqual(r.stageTrace.map(x=>x.stage),['souffle','z3','cvc5']);
   assert.ok(r.stageTrace.every((s,i,items)=>i===0 || items[i-1].closedMs<=s.startedMs));
   assert.ok(r.witness);
+});
+
+test('large real pinned npm lockfile passes the full opt-in UCE adapter without score mutation',{
+  timeout:45000,
+},async()=>{
+  const files=[...axiosFiles,file('src/index.js','module.exports = true;')];
+  const input={fileName:'source-pinned-axios',source:'upload',files,
+    scanStats:{projectSize:axiosPkg.length+axiosLock.length+32,
+      filesFound:files.length,filesAnalyzed:files.length,filesIgnored:0,
+      ignoredCategories:[]}};
+  const [base,enabled]=await Promise.all([
+    analyzeProjectWithOptionalTrilogy(input),
+    analyzeProjectWithOptionalTrilogy(input,{enableTrilogy:true,wallMs:15000}),
+  ]);
+  assert.deepEqual(enabled.score,base.score);
+  assert.deepEqual(enabled.issues,base.issues);
+  assert.deepEqual(enabled.stack.symbolicReasoning,base.stack.symbolicReasoning);
+  assert.equal(enabled.optionalSolver.status,'satisfiable',JSON.stringify(enabled.optionalSolver));
+  assert.equal(enabled.optionalSolver.verification,'independent-smt-agreement');
 });
