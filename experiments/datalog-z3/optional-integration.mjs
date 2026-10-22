@@ -214,7 +214,7 @@ function verifyResult(raw, graph) {
       witness: raw.witness, unsatCore: [], evidence: [] };
   }
   if (!Array.isArray(raw.unsatCore) || raw.unsatCore.length < 1 ||
-      raw.unsatCore.length > 12 || !Array.isArray(raw.paths) ||
+      raw.unsatCore.length > 32 || !Array.isArray(raw.paths) ||
       raw.paths.length !== raw.unsatCore.length) return null;
   const seen = new Set();
   const evidence = [];
