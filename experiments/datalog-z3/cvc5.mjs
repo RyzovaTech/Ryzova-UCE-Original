@@ -1,5 +1,6 @@
 import semver from 'semver';
 import { spawn } from 'node:child_process';
+import { solverProcessEnv } from '../solver-process-env.mjs';
 import { performance } from 'node:perf_hooks';
 
 // Independent SMT-LIB encoding for the *same semver requirements* sent to Z3.
@@ -115,6 +116,7 @@ export async function solveWithCvc5(constraints, options = {}) {
     try {
       child = spawn(executable, ['--lang=smt2', '--tlimit=' + solverMs, '-'], {
         stdio: ['pipe', 'pipe', 'pipe'], shell: false,
+        env: solverProcessEnv(),
       });
     } catch { resolve(unknown('cvc5 process could not start.')); return; }
     let stdout = '', stderrBytes = 0, failure = null, finished = false;
