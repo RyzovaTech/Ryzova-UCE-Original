@@ -2,11 +2,12 @@ name: Souffle Datalog Z3 and cvc5 Experimental CI
 
 on:
   push:
-    branches: [experiment/uce-datalog-z3, experiment/uce-datalog-z3-cvc5, experiment/uce-trilogy-optional-solver]
+    branches: [experiment/uce-datalog-z3, experiment/uce-datalog-z3-cvc5, experiment/uce-trilogy-optional-solver, experiment/uce-trilogy-accuracy-validation]
   pull_request:
     paths:
       - 'experiments/datalog-z3/**'
       - '.github/workflows/datalog-z3-experiment.yml'
+      - 'testing/trilogy/**'
 
 permissions:
   contents: read
@@ -60,6 +61,17 @@ jobs:
         run: |
           npm --prefix experiments/datalog-z3 run demo:default
           npm --prefix experiments/datalog-z3 run demo:optional
+      - name: Validate frozen holdout ground-truth certificates and metrics math
+        run: npm --prefix experiments/datalog-z3 run test:holdout-metrics
+      - name: Measure Trilogy precision, recall, FP, FN, Unknown, and coverage
+        run: npm --prefix experiments/datalog-z3 run audit:holdout
+      - name: Publish versioned holdout metrics, even on validation failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uce-trilogy-holdout-metrics
+          path: testing/trilogy/reports/latest-holdout.json
+          if-no-files-found: warn
       - name: Prevent browser root dependency leakage
         run: |
           node --input-type=module -e "import fs from 'node:fs'; const p=JSON.parse(fs.readFileSync('package.json','utf8')); for (const n of ['z3-solver','cvc5','souffle']) if(p.dependencies?.[n] || p.devDependencies?.[n]) throw Error('Native solver leaked into browser dependencies');"

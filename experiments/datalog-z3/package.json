@@ -12,7 +12,9 @@
     "benchmark:triple": "node benchmark-cvc5.mjs",
     "test:optional": "node --test test/optional-integration.test.mjs",
     "demo:optional": "node optional-cli.mjs fixtures/optional-project.json --trilogy",
-    "demo:default": "node optional-cli.mjs fixtures/optional-project.json"
+    "demo:default": "node optional-cli.mjs fixtures/optional-project.json",
+    "test:holdout-metrics": "node --test ../../testing/trilogy/metrics.test.mjs",
+    "audit:holdout": "node ../../testing/trilogy/run.mjs"
   },
   "dependencies": {
     "semver": "7.8.5"
