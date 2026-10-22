@@ -8,6 +8,7 @@ import semver from 'semver';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 import { extractLockedDependencyGraph } from './graph.mjs';
 import { dependencyPath } from './datalog.mjs';
+import { inspectSmartEvidence } from './evidence-inspector.mjs';
 
 // Node-only opt-in report adapter. The normal browser analyzer never imports
 // this module, native solvers or Node builtins.
@@ -22,6 +23,8 @@ const defaultDiagnostic = (enabled, workspace) => ({
   workspace, status: enabled ? 'skipped' : 'disabled',
   verification: 'not-run', reason: enabled ? '' : 'Trilogy solver disabled by default.',
   evidence: [], unsatCore: [], witness: null,
+  stages: { souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' },
+  eligibilityRules: [], evidenceDigest: null,
   runtimeMs: null, sampledNodeWorkerRssMiB: null,
   limitations: [
     'Modelled Node engine requirements only; real install/build/runtime and engine-strict enforcement are not proven.',
@@ -137,7 +140,7 @@ function verifyResult(raw, graph) {
     return { status: raw.status, verification: raw.verification,
       witness: raw.witness, unsatCore: [], evidence: [] };
   }
-  if (!Array.isArray(raw.unsatCore) || raw.unsatCore.length < 2 ||
+  if (!Array.isArray(raw.unsatCore) || raw.unsatCore.length < 1 ||
       raw.unsatCore.length > 12 || !Array.isArray(raw.paths) ||
       raw.paths.length !== raw.unsatCore.length) return null;
   const seen = new Set();
@@ -198,16 +201,16 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
     diagnostic.reason = 'No complete supported same-workspace npm lock graph: ' + graph.reason;
     return report;
   }
-  // Only complex, same-workspace constraints trigger native solver startup.
-  // A simple pairwise comparison remains the deterministic engine's job.
-  const transitive = graph.edges.some(([source]) => source !== '__uce_root__');
-  if (graph.constraints.length < 2 ||
-      graph.constraints.length > 12 ||
-      (!transitive && graph.constraints.length < 3)) {
-    diagnostic.reason = 'No eligible multi-constraint or transitive Node engine relationship.';
+  // Evidence-driven activation; neither size nor native UCE verdict determines eligibility.
+  const inspected = inspectSmartEvidence(relevant, workspace);
+  diagnostic.eligibilityRules = inspected.rules;
+  diagnostic.evidenceDigest = inspected.digest;
+  if (!inspected.eligible) {
+    diagnostic.status = inspected.status;
+    diagnostic.reason = inspected.reason;
     return report;
   }
-  const wallMs = options.wallMs ?? 8000;
+  const wallMs = options.wallMs ?? 15000;
   const workerRssLimitMiB = options.workerRssLimitMiB ?? 512;
   if (!Number.isInteger(wallMs) || wallMs < 1 || wallMs > 30000 ||
       !Number.isInteger(workerRssLimitMiB) || workerRssLimitMiB < 16 ||
@@ -222,9 +225,13 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
       wallMs, workerRssLimitMiB,
       souffleBinary: options.souffleBinary,
       cvc5Binary: options.cvc5Binary,
+      wallMs,
     },
   );
   diagnostic.runtimeMs = runtimeMs;
+  if (result?.stages) diagnostic.stages = result.stages;
+  if (Array.isArray(result?.eligibilityRules)) diagnostic.eligibilityRules = result.eligibilityRules;
+  if (typeof result?.evidenceDigest === 'string') diagnostic.evidenceDigest = result.evidenceDigest;
   diagnostic.sampledNodeWorkerRssMiB = sampledNodeWorkerRssMiB;
   // Sampled RSS only covers the Node child process, not Soufflé/cvc5
   // descendants; timeouts kill the POSIX child process group.
