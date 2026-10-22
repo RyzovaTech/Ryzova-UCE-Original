@@ -45,6 +45,17 @@ jobs:
           sudo apt-get install -y cvc5=1.1.2-1build1
           cvc5 --version
           cvc5 --version | grep -F '1.1.2'
+      - name: Install native Z3 CLI for experimental isolated-memory comparison
+        timeout-minutes: 5
+        run: |
+          set -euo pipefail
+          sudo apt-get install -y z3
+          z3 -version
+          dpkg-query -W z3
+
+      - name: Test native Z3 semver witness and independent cvc5 cross-check
+        run: node --test experiments/datalog-z3/test/native-z3.test.mjs
+
       - name: Test actual Souffle dependency recursion and Z3 SMT proofs
         run: npm --prefix experiments/datalog-z3 test
       - name: Verify CLI source-linked conflict fixture
@@ -65,8 +76,8 @@ jobs:
           npm --prefix experiments/datalog-z3 run demo:optional
       - name: Validate frozen holdout ground-truth certificates and metrics math
         run: npm --prefix experiments/datalog-z3 run test:holdout-metrics
-      - name: Verify pinned real repository provenance and blind human-review gate
-        run: node --test testing/trilogy/real-repository-intake.test.mjs testing/trilogy/independent-review-gate.test.mjs
+      - name: Verify pinned real repository provenance, Phase 4 preflight, and blind human-review gate
+        run: node --test testing/trilogy/real-repository-intake.test.mjs testing/trilogy/real-repository-preflight.test.mjs testing/trilogy/independent-review-gate.test.mjs
       - name: Measure Trilogy precision, recall, FP, FN, Unknown, and coverage
         run: npm --prefix experiments/datalog-z3 run audit:holdout
       - name: Publish versioned holdout metrics, even on validation failures

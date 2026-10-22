@@ -119,7 +119,9 @@ jobs:
         run: npm run benchmark:v3-memory
 
       - name: Dependency security audit
-        run: npm audit --omit=dev
+        # Audit exactly the locked production dependency set. Never swallow
+        # registry errors or vulnerability findings to manufacture green CI.
+        run: npm audit --omit=dev --package-lock-only --fetch-retries=1 --fetch-timeout=45000
 
       - name: UCE repository self-scan
         run: npm run security:self-scan
@@ -132,7 +134,9 @@ jobs:
         run: npm run uce:ci -- testing/fixtures/phase5/ci-pass-report.json --min-score=80 --max-critical=0 --sarif=uce-ci-results.sarif
 
       - name: Upload UCE SARIF
-        if: always()
+        # Avoid a second unrelated error if a preceding security gate failed
+        # before generating SARIF. The original audit failure still fails CI.
+        if: ${{ success() && hashFiles('uce-self-scan.sarif') != '' }}
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: uce-self-scan.sarif

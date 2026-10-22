@@ -114,6 +114,10 @@ export async function evaluateSmartSequential(files, options = {}) {
   const workerRssBudgetMiB = options.workerRssLimitMiB ?? 512;
   // Benchmark-only opt-in: never applied to user verification by default.
   const z3HeapLimitMiB = options.z3HeapLimitMiB ?? null;
+  const nativeZ3Binary = options.nativeZ3Binary ?? null;
+  if(nativeZ3Binary !== null && (typeof nativeZ3Binary !== 'string' ||
+      nativeZ3Binary.length < 1 || nativeZ3Binary.length > 256 ||
+      z3HeapLimitMiB !== null)) return unknown('invalid-native-z3-experiment-options');
   if (z3HeapLimitMiB !== null && ![96, 128, 192, 256].includes(z3HeapLimitMiB))
     return unknown('unsupported-z3-heap-experiment');
   if (!Number.isInteger(deadlineMs) || deadlineMs < 1 || deadlineMs > 30000)
@@ -143,7 +147,9 @@ export async function evaluateSmartSequential(files, options = {}) {
   const constraints = graph.constraints.filter(c => reachable.has(c.package));
   if (constraints.length !== graph.constraints.length) return unknown('unreachable-requirement');
   const facts = constraints.map(c => ({ id: c.id, source: c.source, range: c.range }));
-  const z3 = await stage('z3', { workspace: graph.workspace, constraints: facts });
+  const z3 = await stage('z3', { workspace: graph.workspace, constraints: facts,
+    ...(nativeZ3Binary ? {backend:'native-cli-experiment',binary:nativeZ3Binary} : {}),
+  });
   if (!['conflict', 'satisfiable'].includes(z3.status)) return unknown('z3: ' + (z3.reason || 'unknown'));
   // Z3 witness/provenance must be source-backed before starting cvc5.
   let core = [];
