@@ -14,8 +14,10 @@ export function adjudicateBlindReview(corpus, reviews) {
       return { ready: false, reason: 'unverified-source-pins', labels: [] };
     const votes = reviews.filter(r => r.caseId === entry.id);
     if (votes.some(r =>
+      !['primary', 'adjudicator'].includes(r.role) ||
       r.repository !== entry.repository || r.commit !== entry.commit ||
       r.manifestBlobSha !== entry.manifestBlobSha ||
+      r.lockfileBlobSha !== entry.lockfileBlobSha ||
       r.workspace !== entry.workspace ||
       typeof r.reviewerId !== 'string' || !r.reviewerId.trim() ||
       r.blindedToSolverOutput !== true ||
