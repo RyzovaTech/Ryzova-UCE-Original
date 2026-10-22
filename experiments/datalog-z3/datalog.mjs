@@ -22,7 +22,9 @@ export async function deriveReachability(graph, options = {}) {
     const solved = await new Promise(resolve => {
       let child;
       try { child = spawn(binary, ['-F', dir, '-D', dir, RULES], {
-        stdio: ['ignore', 'ignore', 'pipe'], shell: false, detached: process.platform !== 'win32',
+        stdio: ['ignore', 'ignore', 'pipe'], shell: false, // In the optional worker, inherit its isolated process group so the
+        // outer deadline can kill all nested native descendants together.
+        detached: process.platform !== 'win32' && process.env.UCE_TRILOGY_EXPERIMENT !== '1',
         env: solverProcessEnv(),
       }); }
       catch { return resolve({ error: 'Souffle executable unavailable.' }); }
