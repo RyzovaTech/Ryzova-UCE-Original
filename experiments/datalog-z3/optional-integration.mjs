@@ -109,7 +109,7 @@ function runWorker(files, workspace, config) {
       }
     });
     child.stderr.on('data', () => { /* Do not echo potentially sensitive project paths. */ });
-    child.on('error', () => finish(null, 'trilogy-worker-start-error'));
+    child.on('error', () => { failure = 'trilogy-worker-start-error'; });
     child.on('close', code => {
       if (failure) return finish(null, failure);
       if (code !== 0) return finish(null, 'trilogy-worker-exit-' + code);
@@ -127,6 +127,22 @@ function runWorker(files, workspace, config) {
       child.stdin.end(payload);
     }
   });
+}
+
+// Maximum one active Trilogy worker tree across simultaneous local scans.
+// Pending jobs do not spawn any native solver. Saturation yields Unknown,
+// never silently suppresses an eligible verification opportunity.
+let verificationTail = Promise.resolve();
+let pendingVerifications = 0;
+function queuedVerification(files, workspace, config) {
+  if (pendingVerifications >= 4) return Promise.resolve({
+    result: null, failure: 'verification-queue-busy',
+    runtimeMs: 0, sampledNodeWorkerRssMiB: null,
+  });
+  pendingVerifications++;
+  const task = verificationTail.then(() => runWorker(files, workspace, config));
+  verificationTail = task.then(() => undefined, () => undefined);
+  return task.finally(() => { pendingVerifications--; });
 }
 
 function verifyResult(raw, graph) {
@@ -220,7 +236,7 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
     return report;
   }
   diagnostic.attempted = true;
-  const { result, failure, runtimeMs, sampledNodeWorkerRssMiB } = await runWorker(
+  const { result, failure, runtimeMs, sampledNodeWorkerRssMiB } = await queuedVerification(
     relevant, workspace, {
       wallMs, workerRssLimitMiB,
       souffleBinary: options.souffleBinary,
