@@ -16,8 +16,8 @@ import { createStrictSolverCgroup } from '../solver-linux-cgroup.mjs';
 const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
 const WORKER = fileURLToPath(new URL('./optional-worker.mjs', import.meta.url));
 const ENGINE = 'Souffle+Z3+cvc5';
-const MAX_PAYLOAD = 700 * 1024;
-const MAX_OUTPUT = 32 * 1024;
+const MAX_PAYLOAD = 2500 * 1024;
+const MAX_OUTPUT = 128 * 1024;
 
 const defaultDiagnostic = (enabled, workspace) => ({
   version: 1, engine: ENGINE, enabled, attempted: false,
