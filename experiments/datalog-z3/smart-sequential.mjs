@@ -36,7 +36,7 @@ function runStage(stage, input, timeoutMs = 4000, rssBudgetMiB = 512) {
       try {
         const body = await readFile('/proc/' + child.pid + '/status', 'utf8');
         if (completed) return;
-        const found = /^VmRSS:\\s+(\\d+)\\s+kB/m.exec(body);
+        const found = /^VmRSS:\s+(\d+)\s+kB/m.exec(body);
         if (found) {
           const mib = Number(found[1]) / 1024;
           sampledPeak = Math.max(sampledPeak ?? 0, mib);
