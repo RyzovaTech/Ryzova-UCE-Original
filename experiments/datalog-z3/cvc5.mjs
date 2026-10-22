@@ -1,6 +1,7 @@
 import semver from 'semver';
 import { spawn } from 'node:child_process';
 import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 import { performance } from 'node:perf_hooks';
 
 // Independent SMT-LIB encoding for the *same semver requirements* sent to Z3.
@@ -117,6 +118,7 @@ export async function solveWithCvc5(constraints, options = {}) {
       child = spawn(executable, ['--lang=smt2', '--tlimit=' + solverMs, '-'], {
         stdio: ['pipe', 'pipe', 'pipe'], shell: false,
         env: solverProcessEnv(),
+        detached: process.platform !== 'win32',
       });
     } catch { resolve(unknown('cvc5 process could not start.')); return; }
     let stdout = '', stderrBytes = 0, failure = null, finished = false;
@@ -124,29 +126,30 @@ export async function solveWithCvc5(constraints, options = {}) {
       if (finished) return;
       finished = true;
       clearTimeout(timer);
-      if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+      if (child.exitCode === null && child.signalCode === null) terminateSolverProcessTree(child);
       resolve({
         ...result, elapsedMs: Math.round((performance.now() - started) * 100) / 100,
       });
     };
     const timer = setTimeout(() => {
       failure = 'cvc5 process wall-clock timeout.';
-      child.kill('SIGKILL');
+      terminateSolverProcessTree(child);
     }, wallMs);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
       stdout += chunk;
       if (stdout.length > MAX_OUTPUT_CHARS) {
         failure = 'cvc5 output exceeds budget.';
-        child.kill('SIGKILL');
+        terminateSolverProcessTree(child);
       }
     });
     child.stderr.on('data', chunk => {
       stderrBytes += chunk.length;
-      if (stderrBytes > 4096) { failure = 'cvc5 stderr exceeds budget.'; child.kill('SIGKILL'); }
+      if (stderrBytes > 4096) { failure = 'cvc5 stderr exceeds budget.'; terminateSolverProcessTree(child); }
     });
     child.on('error', () => finish(unknown('cvc5 executable unavailable.')));
     child.on('close', code => {
+      terminateSolverProcessTree(child);
       if (failure) return finish(unknown(failure));
       if (code !== 0) return finish(unknown('cvc5 exited nonzero.'));
       const answer = stdout.trim();
