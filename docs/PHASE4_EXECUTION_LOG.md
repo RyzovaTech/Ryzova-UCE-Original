@@ -69,3 +69,24 @@ Before estimating covered real-world opportunity groups, freeze a larger prospec
 | Production merge/sign-off | **NO-GO** |
 
 **Decision:** Phase 4 has started as a controlled experimental evaluation. Neither source-bounded empirical coverage, human accuracy, lower memory peaks, nor production safety may be inferred from the existence of this document or CI tests alone.
+
+## 2026-10-22 — Native-Z3 optimization experiment (NOT default-enabled)
+
+- A bounded native `z3 -in -smt2` stage has been added in `experiments/datalog-z3/native-z3.mjs` behind an **explicit experimental option**, with fixed argv, `shell:false`, bounded stdin/stdout/time, restricted child environment and a source-validated semver witness.
+- This test path uses the same validated SMT-LIB facts as cvc5; the **Z3 solver** and **cvc5 solver** remain distinct executables, but the shared encoding must NOT be mislabeled as independent model construction.
+- For UNSAT, the return includes the complete original source-constraint set as a source-backed UNSAT **subset**, not a claimed minimal unsat core. The existing optional smart report independently verifies source mapping and cvc5 result.
+- The benchmark now includes a **fourth arm**: legacy monolithic, serial WASM Z3, serial WASM Z3 with experimental 128MiB V8 heap, and serial **native Z3 CLI**. Baseline behavior and optional UCE scoring remain unchanged.
+- CI installs the Ubuntu native `z3` package for this experiment and exercises native-z3 witness plus cvc5 independent status cross-check and exact stage ordering. **Neither the CI result nor new 4-arm memory values have been verified at this checkpoint.**
+- Native-Z3 is a potential response to the repeated ~34% extra peak memory with the serial WASM path. Do NOT promote the alternative or assert memory savings before matching-source benchmark and evidence validation.
+
+### Full UCE audit blocker
+
+On the preceding PR #82 head, Full UCE CI failed on an HTTP 400 npm security-audit backend response (`Invalid package tree`) and then a secondary missing SARIF upload. The experimental CI workflow now requests a `--package-lock-only` production-dependency audit with bounded registry retries; it **still fails closed** on a registry error or vulnerability finding. The SARIF upload requires an existing generated report, avoiding a misleading secondary failure. The true success/failure of the updated audit requires a fresh CI run; do not claim green before checking it.
+
+### Independent release gates remain open
+
+- [#77](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/77) — delegated kernel cgroup forced-OOM/no-survivor proof and authorized platform sign-off
+- [#80](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/80) — two genuinely independent blinded reviewers, adjudicated real-case labels and scoped real-world accuracy
+- [#81](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/81) — accepted hard process-tree memory and latency evidence, not just direct-child RSS
+
+**No production, main-branch, or browser merge has occurred.**
