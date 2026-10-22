@@ -65,8 +65,8 @@ jobs:
           npm --prefix experiments/datalog-z3 run demo:optional
       - name: Validate frozen holdout ground-truth certificates and metrics math
         run: npm --prefix experiments/datalog-z3 run test:holdout-metrics
-      - name: Verify pinned real repository provenance and blind human-review gate
-        run: node --test testing/trilogy/real-repository-intake.test.mjs testing/trilogy/independent-review-gate.test.mjs
+      - name: Verify pinned real repository provenance, Phase 4 preflight, and blind human-review gate
+        run: node --test testing/trilogy/real-repository-intake.test.mjs testing/trilogy/real-repository-preflight.test.mjs testing/trilogy/independent-review-gate.test.mjs
       - name: Measure Trilogy precision, recall, FP, FN, Unknown, and coverage
         run: npm --prefix experiments/datalog-z3 run audit:holdout
       - name: Publish versioned holdout metrics, even on validation failures
