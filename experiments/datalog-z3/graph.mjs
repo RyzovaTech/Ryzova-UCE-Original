@@ -41,7 +41,7 @@ function lockVersionAndDeps(data) {
  * peers, optional activation and conditional platform edges fail closed.
  * A missing edge or ambiguous resolution is UNKNOWN, never partial SAT.
  */
-export function extractLockedDependencyGraph(files, workspace = '') {
+export function extractLockedDependencyGraph(files, workspace = '', options = {}) {
   if (!Array.isArray(files) || files.length > MAX_FILES ||
       typeof workspace !== 'string' || workspace.length > 120 ||
       (workspace !== '' && (!VALID_PATH.test(workspace) || workspace.split('/').some(x => !x || x === '.' || x === '..')))) {
@@ -81,6 +81,13 @@ export function extractLockedDependencyGraph(files, workspace = '') {
   }
   if (!direct.length) return unknown('No direct production dependency edges in this workspace.');
 
+  // The historical v1 benchmark explicitly opts into its original
+  // hoisted-only model; expanded nested resolution remains available to
+  // the new Smart Verification path without changing frozen v1 labels.
+  if (options.hoistedOnly === true && Object.keys(lock.packages).some(key =>
+      key.startsWith('node_modules/') &&
+      key.slice('node_modules/'.length).includes('/node_modules/')))
+    return unknown('Historical hoisted-only graph does not model nested installations.');
   // npm resolves each required package from its requiring package's own
   // node_modules, then climbs to the nearest ancestor node_modules. A nested
   // copy can shadow a hoisted package, so bare-name lookup is unsound.
