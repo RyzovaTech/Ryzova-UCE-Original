@@ -5,8 +5,8 @@ import { analyzeProjectWithOptionalTrilogy } from './optional-integration.mjs';
 // Explicit local JSON payload. No project source execution, network calls,
 // browser imports or solver startup unless --trilogy is passed.
 const file = process.argv[2];
-if (!file || process.argv.slice(3).some(x => x !== '--trilogy')) {
-  console.error('Usage: node optional-cli.mjs <local-project-files.json> [--trilogy]');
+if (!file || process.argv.slice(3).some(x => x !== '--trilogy' && x !== '--strict-resource-limits')) {
+  console.error('Usage: node optional-cli.mjs <local-project-files.json> [--trilogy] [--strict-resource-limits]');
   process.exit(2);
 }
 try {
@@ -33,6 +33,7 @@ try {
   };
   const report = await analyzeProjectWithOptionalTrilogy(input, {
     enableTrilogy: process.argv.includes('--trilogy'),
+    strictResourceLimits: process.argv.includes('--strict-resource-limits'),
     workspace: data.workspace ?? '',
   });
   // Compact report excerpt; no copying of manifests or uploaded project data.
