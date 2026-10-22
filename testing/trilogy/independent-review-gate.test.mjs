@@ -10,7 +10,8 @@ function vote(label='unknown', reviewerId='reviewer-a', role='primary') {
   return { caseId:e.id, repository:e.repository, commit:e.commit,
     manifestBlobSha:e.manifestBlobSha, lockfileBlobSha:e.lockfileBlobSha,
     workspace:e.workspace, reviewerId, role, label,
-    blindedToSolverOutput:true, rationale:'Independently reviewed source-backed stable semver and locked graph.',
+    blindedToSolverOutput:true, independenceDeclared:true,
+    sourceEvidence:[{file:e.manifest,field:'engines.node',sourceBlobSha:e.manifestBlobSha}], rationale:'Independently reviewed source-backed stable semver and locked graph.',
     reviewedAt:'2026-10-22T01:00:00Z' };
 }
 test('no human votes means no claim of independent accuracy',()=>{
