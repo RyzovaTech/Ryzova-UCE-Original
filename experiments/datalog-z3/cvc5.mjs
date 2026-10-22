@@ -68,7 +68,7 @@ function comparison(comparator) {
  * Never splice raw project/lockfile strings or paths into SMT-LIB.
  */
 export function buildCvc5SmtLib(constraints) {
-  if (!Array.isArray(constraints) || constraints.length < 2 || constraints.length > MAX_FACTS) return null;
+  if (!Array.isArray(constraints) || constraints.length < 1 || constraints.length > MAX_FACTS) return null;
   const requirements = [];
   for (const item of constraints) {
     if (!item || typeof item !== 'object') return null;
