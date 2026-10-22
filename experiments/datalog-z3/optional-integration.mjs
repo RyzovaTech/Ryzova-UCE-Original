@@ -8,6 +8,7 @@ import semver from 'semver';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 import { extractLockedDependencyGraph } from './graph.mjs';
 import { dependencyPath } from './datalog.mjs';
+import { inspectSmartEvidence } from './evidence-inspector.mjs';
 
 // Node-only opt-in report adapter. The normal browser analyzer never imports
 // this module, native solvers or Node builtins.
@@ -22,6 +23,8 @@ const defaultDiagnostic = (enabled, workspace) => ({
   workspace, status: enabled ? 'skipped' : 'disabled',
   verification: 'not-run', reason: enabled ? '' : 'Trilogy solver disabled by default.',
   evidence: [], unsatCore: [], witness: null,
+  stages: { souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' },
+  eligibilityRules: [], evidenceDigest: null, stageTrace: [],
   runtimeMs: null, sampledNodeWorkerRssMiB: null,
   limitations: [
     'Modelled Node engine requirements only; real install/build/runtime and engine-strict enforcement are not proven.',
@@ -106,7 +109,7 @@ function runWorker(files, workspace, config) {
       }
     });
     child.stderr.on('data', () => { /* Do not echo potentially sensitive project paths. */ });
-    child.on('error', () => finish(null, 'trilogy-worker-start-error'));
+    child.on('error', () => { failure = 'trilogy-worker-start-error'; });
     child.on('close', code => {
       if (failure) return finish(null, failure);
       if (code !== 0) return finish(null, 'trilogy-worker-exit-' + code);
@@ -115,6 +118,7 @@ function runWorker(files, workspace, config) {
     });
     const payload = JSON.stringify({ files, workspace, options: {
       souffleBinary: config.souffleBinary, cvc5Binary: config.cvc5Binary,
+      wallMs: config.wallMs, workerRssLimitMiB: config.workerRssLimitMiB,
     } });
     if (payload.length > MAX_PAYLOAD) {
       failure = 'trilogy-input-budget-exceeded';
@@ -124,6 +128,22 @@ function runWorker(files, workspace, config) {
       child.stdin.end(payload);
     }
   });
+}
+
+// Maximum one active Trilogy worker tree across simultaneous local scans.
+// Pending jobs do not spawn any native solver. Saturation yields Unknown,
+// never silently suppresses an eligible verification opportunity.
+let verificationTail = Promise.resolve();
+let pendingVerifications = 0;
+function queuedVerification(files, workspace, config) {
+  if (pendingVerifications >= 4) return Promise.resolve({
+    result: null, failure: 'verification-queue-busy',
+    runtimeMs: 0, sampledNodeWorkerRssMiB: null,
+  });
+  pendingVerifications++;
+  const task = verificationTail.then(() => runWorker(files, workspace, config));
+  verificationTail = task.then(() => undefined, () => undefined);
+  return task.finally(() => { pendingVerifications--; });
 }
 
 function verifyResult(raw, graph) {
@@ -137,7 +157,7 @@ function verifyResult(raw, graph) {
     return { status: raw.status, verification: raw.verification,
       witness: raw.witness, unsatCore: [], evidence: [] };
   }
-  if (!Array.isArray(raw.unsatCore) || raw.unsatCore.length < 2 ||
+  if (!Array.isArray(raw.unsatCore) || raw.unsatCore.length < 1 ||
       raw.unsatCore.length > 12 || !Array.isArray(raw.paths) ||
       raw.paths.length !== raw.unsatCore.length) return null;
   const seen = new Set();
@@ -198,16 +218,16 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
     diagnostic.reason = 'No complete supported same-workspace npm lock graph: ' + graph.reason;
     return report;
   }
-  // Only complex, same-workspace constraints trigger native solver startup.
-  // A simple pairwise comparison remains the deterministic engine's job.
-  const transitive = graph.edges.some(([source]) => source !== '__uce_root__');
-  if (graph.constraints.length < 2 ||
-      graph.constraints.length > 12 ||
-      (!transitive && graph.constraints.length < 3)) {
-    diagnostic.reason = 'No eligible multi-constraint or transitive Node engine relationship.';
+  // Evidence-driven activation; neither size nor native UCE verdict determines eligibility.
+  const inspected = inspectSmartEvidence(relevant, workspace);
+  diagnostic.eligibilityRules = inspected.rules;
+  diagnostic.evidenceDigest = inspected.digest;
+  if (!inspected.eligible) {
+    diagnostic.status = inspected.status;
+    diagnostic.reason = inspected.reason;
     return report;
   }
-  const wallMs = options.wallMs ?? 8000;
+  const wallMs = options.wallMs ?? 15000;
   const workerRssLimitMiB = options.workerRssLimitMiB ?? 512;
   if (!Number.isInteger(wallMs) || wallMs < 1 || wallMs > 30000 ||
       !Number.isInteger(workerRssLimitMiB) || workerRssLimitMiB < 16 ||
@@ -217,7 +237,7 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
     return report;
   }
   diagnostic.attempted = true;
-  const { result, failure, runtimeMs, sampledNodeWorkerRssMiB } = await runWorker(
+  const { result, failure, runtimeMs, sampledNodeWorkerRssMiB } = await queuedVerification(
     relevant, workspace, {
       wallMs, workerRssLimitMiB,
       souffleBinary: options.souffleBinary,
@@ -225,6 +245,10 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
     },
   );
   diagnostic.runtimeMs = runtimeMs;
+  if (result?.stages) diagnostic.stages = result.stages;
+  if (Array.isArray(result?.stageTrace)) diagnostic.stageTrace = result.stageTrace;
+  if (Array.isArray(result?.eligibilityRules)) diagnostic.eligibilityRules = result.eligibilityRules;
+  if (typeof result?.evidenceDigest === 'string') diagnostic.evidenceDigest = result.evidenceDigest;
   diagnostic.sampledNodeWorkerRssMiB = sampledNodeWorkerRssMiB;
   // Sampled RSS only covers the Node child process, not Soufflé/cvc5
   // descendants; timeouts kill the POSIX child process group.
