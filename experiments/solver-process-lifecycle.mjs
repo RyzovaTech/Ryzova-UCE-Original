@@ -13,7 +13,9 @@ export function terminateSolverProcessTree(child) {
       process.kill(-child.pid, 'SIGKILL');
       return;
     } catch (error) {
-      if (error?.code === 'ESRCH') return;
+      // When the child is not a group leader (nested Trilogy worker),
+      // fall back to killing its direct PID. The outer isolated worker
+      // owns the inherited group and will clean up remaining descendants.
     }
   }
   try {
