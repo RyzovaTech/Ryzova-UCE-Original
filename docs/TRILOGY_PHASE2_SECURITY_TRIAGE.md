@@ -65,3 +65,17 @@ These are **26 separately examined automatic GitHub Advanced Security review com
 5. Reviewer approval of still-open platform native subprocess/resource safeguards OR explicit block of the affected production/optional rollout.
 
 Until all verified: Phase 2 **in progress** and production **NO-GO**.
+
+## 2026-10-22 implementation and triage update
+
+**All 26 original automated review threads have now been given individual source-level dispositions and resolved as _narrow code-pattern findings_.** This resolution is NOT an assertion that production release gates have passed. Previously documented `PATCHED_REVIEW_BRANCH` and `HARDENING_GATE_OPEN` categories record the initial investigation state, before propagation.
+
+- Applied fixes to the original stacked PR branches **#67, #69, #70, #71 and #72**, preserving the chain and each PR's original feature diff. No root UCE production analyzer or browser code was modified.
+- Pinned, registry-integrity-bearing npm-generated lockfiles are committed and tracked. The root and isolated workflows now require `npm ci` (no `--no-package-lock`); Z3 README instructions updated.
+- Local CLI exception content is redacted; new tests cover privacy, minimal subprocess environment and POSIX child-group termination.
+- Z3, Soufflé, cvc5 and optional Node workers use fixed argv and `shell:false`, restricted inherited environment, bounded payload/stdout, and POSIX process-group cleanup. Nested native solvers deliberately inherit the outer optional worker's POSIX group so a worker timeout can terminate its descendants.
+- Linux RSS sampling is asynchronous and best-effort. It is **not** an OS-enforced process-tree memory cap. Windows/macOS process-tree enforcement remains unverified.
+- A distinct open blocker, **[#77](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/77)**, records hard process-tree memory/cleanup enforcement and the platform tests needed before any production approval.
+- Prior Trilogy CI on experimental Phase 2 branch `0b067734` passed. **CI for the final stacked branch SHAs remains required; do not claim it passed merely because older commits passed.**
+
+**Exit distinction:** Phase 2 code hardening and 26 automated review-thread dispositions are complete, but the overarching Phase 2 release gate stays **conditional/incomplete** until final-head CI, platform enforcement tests and independent reviewer acceptance. Production remains NO-GO. The real-repository human-reviewed accuracy and browser WASM gates are separate and remain open.
