@@ -1,0 +1,41 @@
+name: Trilogy Strict Resource Isolation CI
+on:
+  pull_request:
+    paths:
+      - 'experiments/datalog-z3/**'
+      - 'experiments/solver-linux-cgroup.mjs'
+      - '.github/workflows/trilogy-strict-resources.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fail-closed-platform-matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install clean locked dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          npm ci --prefix experiments/z3-node --no-audit --no-fund
+          npm ci --prefix experiments/datalog-z3 --no-audit --no-fund
+      - name: Validate fail-closed strict resource mode
+        run: node --test experiments/datalog-z3/test/strict-resource.test.mjs
+      - name: Verify Linux kernel delegated-memory test availability
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat /sys/fs/cgroup/cgroup.controllers || true
+          cat /sys/fs/cgroup/cgroup.subtree_control || true
+          echo "Note: hosted runners may not delegate writable cgroups; unexecuted conditional tests do not prove hard caps."
