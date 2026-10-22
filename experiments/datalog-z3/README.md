@@ -1,0 +1,54 @@
+# UCE Souffle Datalog + Z3 (Node-only experiment)
+
+This experiment is stacked on the existing Node-only Z3 PR #67.
+**It is not deployed to UCE's website or browser and changes no production scoring.**
+
+## How it works
+
+The **real official Souffle Datalog 2.5** engine executes the fixed
+'rules/reachability.dl' program, recursively deriving all reachable
+installed npm packages from explicit production dependency facts.
+
+Real **Z3 5.2.0 Node/WASM** then reasons about the 'engines.node'
+requirements of reachable, locked packages and the root manifest.
+For a modeled UNSAT answer, outputs include original package-lock
+entry keys and root-to-package paths reconstructed from the verified edges.
+
+All project source is treated as inert file data and never executed.
+Only same-workspace 'package.json' and 'package-lock.json' are used.
+Only v2/v3 hoisted-only npm production dependencies are modeled; aliases,
+missing/mismatched ranges, nested copies, peer/optional/dev edges,
+unsupported lock layouts, malformed input and over-budget files produce
+UNKNOWN rather than incomplete formal proofs.
+
+Safety limits: 32 input file records, 96 installed packages,
+192 dependency edges, graph depth 16, 256 KiB per manifest and 12 Z3
+constraints. Temporary Souffle facts are removed after analysis.
+A conflict is only a **modelled Node requirement contradiction**,
+not proof of runtime failure. Actual npm engine enforcement is not known.
+
+## How to test on Ubuntu 24.04
+
+CI downloads official pinned Souffle 2.5 Ubuntu 24.04 package and verifies
+it against the upstream SHA512 manifest. After installing root UCE deps,
+the isolated Z3 and Datalog experiment dependencies:
+
+    npm --prefix experiments/datalog-z3 test
+    npm --prefix experiments/datalog-z3 run demo
+    npm --prefix experiments/datalog-z3 run benchmark
+
+12 authored regression cases include transitive paths, unreachable
+packages, invalid/missing lock evidence, cycles, cross-workspace
+separation, optional dependencies and Souffle failure fallback.
+
+The three-run benchmark is a process-level diagnostic, **not** an
+independent human-reviewed real-world accuracy estimate or a browser
+memory measurement.
+
+## Gates before release
+
+No browser/Web Worker integration, dependency-graph accuracy claims
+or production score changes. Evaluate blinded real-project examples,
+engine-strict semantics, resolution of nested/peer/aliased npm edges,
+reproducible dependency locks, memory/time budget and security review
+separately before considering wider adoption.
