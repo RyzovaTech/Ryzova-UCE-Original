@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import semver from 'semver';
@@ -34,10 +34,10 @@ function sourceFiles(files, workspace) {
   return candidates;
 }
 
-function processRssMiB(pid) {
+async function processRssMiB(pid) {
   if (process.platform !== 'linux') return null;
   try {
-    const body = readFileSync('/proc/' + pid + '/status', 'utf8');
+    const body = await readFile('/proc/' + pid + '/status', 'utf8');
     const match = /^VmRSS:\s+(\d+)\s+kB/m.exec(body);
     return match ? Number(match[1]) / 1024 : null;
   } catch { return null; }
@@ -82,15 +82,21 @@ function runWorker(files, workspace, config) {
       failure = 'trilogy-worker-wall-timeout';
       killGroup();
     }, config.wallMs);
-    const monitor = setInterval(() => {
-      const rss = processRssMiB(child.pid);
-      if (rss !== null) {
-        peak = Math.max(peak ?? 0, rss);
-        if (rss > config.workerRssLimitMiB) {
-          failure = 'trilogy-node-worker-rss-budget-exceeded';
-          killGroup();
+    let monitorBusy = false;
+    const monitor = setInterval(async () => {
+      if (finished || monitorBusy) return;
+      monitorBusy = true;
+      try {
+        const rss = await processRssMiB(child.pid);
+        if (finished) return;
+        if (rss !== null) {
+          peak = Math.max(peak ?? 0, rss);
+          if (rss > config.workerRssLimitMiB) {
+            failure = 'trilogy-node-worker-rss-budget-exceeded';
+            killGroup();
+          }
         }
-      }
+      } finally { monitorBusy = false; }
     }, 25);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
