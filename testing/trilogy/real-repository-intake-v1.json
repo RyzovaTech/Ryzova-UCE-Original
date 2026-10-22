@@ -5,7 +5,8 @@
   "provenance": {
     "humanReviewed": false,
     "independentlyAdjudicated": false,
-    "labelsComplete": false
+    "labelsComplete": false,
+    "selectionNote": "Candidate-only sample combining lock-present and lock-absent public repositories; no solver outputs or human labels used for selection. Not representative."
   },
   "cases": [
     {
@@ -50,6 +51,39 @@
       "lockfile": null,
       "manifestBlobSha": "4bde75b38a65434cc9cb4b4ec469fa687f25cd9f",
       "lockfileBlobSha": null,
+      "label": null
+    },
+    {
+      "id": "RR05",
+      "repository": "axios/axios",
+      "commit": "e6b79d9cef796ca3a903bb83e51d4752b019fd67",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "b4e3d1e48866809f4098494516806afdf1a8bcb5",
+      "lockfileBlobSha": "0fc1d3dcf01f09e50bf34a538e16de1743151516",
+      "label": null
+    },
+    {
+      "id": "RR06",
+      "repository": "npm/cli",
+      "commit": "ae98c62586b6fea44114f72e249e246a2981de70",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "68a2c8ce7130ea67b29090a05c1ec7346556c506",
+      "lockfileBlobSha": "c813c9987e5856c61278bb295214a06063e4a5",
+      "label": null
+    },
+    {
+      "id": "RR07",
+      "repository": "uuidjs/uuid",
+      "commit": "3b70ec29ef9067be33384a16dcd48dc77a0efdf4",
+      "workspace": "",
+      "manifest": "package.json",
+      "lockfile": "package-lock.json",
+      "manifestBlobSha": "69d70baa053e3e91d815ed8bafc9a4de4f720b5e",
+      "lockfileBlobSha": "00240fb0267d8bbcbdee7a7c34524039bf4d1b76",
       "label": null
     }
   ]
