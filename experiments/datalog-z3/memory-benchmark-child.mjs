@@ -15,4 +15,5 @@ if(mode==='legacy') {
 process.stdout.write(JSON.stringify({
   status:output.status, verification:output.verification,
   stages:output.stages??null,
+  stageTrace:Array.isArray(output.stageTrace)?output.stageTrace:[],
 })+'\n');
