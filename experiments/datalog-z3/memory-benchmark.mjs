@@ -76,9 +76,14 @@ const samples=[];
 for(let i=0;i<3;i++){
   samples.push(await measure('legacy'));
   samples.push(await measure('sequential'));
+  // This is an exploratory third arm. A failure is recorded, not misreported
+  // as a win or allowed to hide the validated default-arm comparison.
+  try { samples.push(await measure('sequential-heap128')); }
+  catch { samples.push({mode:'sequential-heap128',error:'candidate-failed'}); }
 }
 const avg=mode=>{
   const a=samples.filter(x=>x.mode===mode);
+  if (!a.length || a.some(x=>!Number.isFinite(x.sampledTreePeakMiB))) return null;
   return Math.round(a.reduce((n,x)=>n+x.sampledTreePeakMiB,0)/a.length*100)/100;
 };
 console.log(JSON.stringify({
@@ -86,6 +91,7 @@ console.log(JSON.stringify({
   host:{node:process.version,platform:process.platform,arch:process.arch,
     gitSha:process.env.GITHUB_SHA??null},
   samples,
-  meanSampledTreePeakMiB:{legacy:avg('legacy'),sequential:avg('sequential')},
+  meanSampledTreePeakMiB:{legacy:avg('legacy'),sequential:avg('sequential'),
+    sequentialHeap128Experimental:avg('sequential-heap128')},
   caveat:'20ms /proc child-tree sampling may miss peaks; this is NOT cgroup memory.peak, NOT an enforced limit, and fixture is synthetic.',
 },null,2));
