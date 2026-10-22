@@ -7,7 +7,7 @@ import { dependencyPath } from './datalog.mjs';
 import { inspectSmartEvidence } from './evidence-inspector.mjs';
 
 const WORKER = fileURLToPath(new URL('./smart-stage-worker.mjs', import.meta.url));
-const MAX_OUTPUT = 32 * 1024;
+const MAX_OUTPUT = 128 * 1024;
 const stageState = () => ({ souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' });
 
 // Resolves ONLY after the specific stage worker has emitted 'close'.
@@ -83,7 +83,7 @@ function runStage(stage, input, timeoutMs = 4000, rssBudgetMiB = 512, z3HeapLimi
     });
     try {
       const bytes = JSON.stringify(input);
-      if (bytes.length > 700 * 1024) {
+      if (bytes.length > 2500 * 1024) {
         failure = 'stage-input-budget';
         child.kill('SIGKILL');
       } else {
