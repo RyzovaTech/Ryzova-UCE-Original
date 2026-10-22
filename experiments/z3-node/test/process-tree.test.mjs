@@ -44,7 +44,9 @@ test('POSIX isolated solver group termination stops a spawned descendant', {
         const data = await readFile('/proc/' + grandchildPid + '/stat', 'utf8');
         state = data.slice(data.lastIndexOf(')') + 2)[0];
       } catch (err) {
-        if (err.code === 'ENOENT') { state = null; break; }
+        // A process may disappear between /proc lookup and read; both
+        // ENOENT and ESRCH mean that the descendant no longer exists.
+        if (err.code === 'ENOENT' || err.code === 'ESRCH') { state = null; break; }
         throw err;
       }
       if (state === 'Z' || state === 'X') break;
