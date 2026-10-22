@@ -73,7 +73,7 @@ test('delegated cgroup enforces OOM and reaps descendant process tree', {
     'setInterval(()=>{},1000);',
     '});',
   ].join('')], {stdio:['pipe','ignore','ignore'],shell:false});
-  let close;
+  let close, cleaned;
   try {
     assert.equal(await guard.attach(worker.pid),true,'worker must join cgroup before stress starts');
     close = new Promise(resolve=>worker.once('close',resolve));
@@ -86,8 +86,9 @@ test('delegated cgroup enforces OOM and reaps descendant process tree', {
     assert.equal(exited,true,'kernel OOM group should terminate root worker and child');
   } finally {
     try { worker.kill('SIGKILL'); } catch {}
+    // Cleanup is mandatory even if an assertion or timeout fails.
+    cleaned = await guard.destroy();
   }
-  const cleaned = await guard.destroy();
   assert.equal(cleaned.verified,true,'kernel must prove no surviving descendants');
   assert.ok(cleaned.oomKills >= 1,'memory.events must report real kernel OOM kill');
 });
