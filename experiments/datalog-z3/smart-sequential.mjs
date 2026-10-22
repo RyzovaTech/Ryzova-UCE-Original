@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { readFile } from 'node:fs/promises';
 import semver from 'semver';
 import { solverProcessEnv } from '../solver-process-env.mjs';
 import { dependencyPath } from './datalog.mjs';
@@ -12,7 +13,7 @@ const stageState = () => ({ souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' }
 // Resolves ONLY after the specific stage worker has emitted 'close'.
 // On any abnormal termination, orchestration returns Unknown and never starts
 // the next stage. All workers inherit the outer isolated POSIX process group.
-function runStage(stage, input, timeoutMs = 4000) {
+function runStage(stage, input, timeoutMs = 4000, rssBudgetMiB = 512) {
   return new Promise(resolve => {
     let child;
     try {
@@ -23,15 +24,36 @@ function runStage(stage, input, timeoutMs = 4000) {
       });
     } catch { resolve({ status: 'unknown', reason: 'stage-spawn-failed' }); return; }
     let output = '', failure = null, completed = false;
+    let sampledPeak = null, monitorBusy = false;
     const deadline = setTimeout(() => {
       failure = 'stage-time-budget';
       child.kill('SIGKILL');
     }, timeoutMs);
+    // Soft, sampled Linux-only stage guard (not an OS-enforced tree limit).
+    const memoryMonitor = setInterval(async () => {
+      if (completed || monitorBusy || process.platform !== 'linux') return;
+      monitorBusy = true;
+      try {
+        const body = await readFile('/proc/' + child.pid + '/status', 'utf8');
+        if (completed) return;
+        const found = /^VmRSS:\\s+(\\d+)\\s+kB/m.exec(body);
+        if (found) {
+          const mib = Number(found[1]) / 1024;
+          sampledPeak = Math.max(sampledPeak ?? 0, mib);
+          if (mib > rssBudgetMiB) {
+            failure = 'stage-sampled-rss-budget';
+            child.kill('SIGKILL');
+          }
+        }
+      } catch { /* Exited between sampling and read; close is authoritative. */ }
+      finally { monitorBusy = false; }
+    }, 25);
     const finish = data => {
       if (completed) return;
       completed = true;
       clearTimeout(deadline);
-      resolve(data);
+      clearInterval(memoryMonitor);
+      resolve({ ...data, sampledWorkerPeakRssMiB: sampledPeak });
     };
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
@@ -86,6 +108,7 @@ export async function evaluateSmartSequential(files, options = {}) {
   if (!plan.eligible) return unknown(plan.reason);
   const graph = plan.graph;
   const deadlineMs = options.wallMs ?? 14000;
+  const workerRssBudgetMiB = options.workerRssLimitMiB ?? 512;
   if (!Number.isInteger(deadlineMs) || deadlineMs < 1 || deadlineMs > 30000)
     return unknown('invalid-total-deadline');
   const start = performance.now();
@@ -94,10 +117,11 @@ export async function evaluateSmartSequential(files, options = {}) {
     const ms = remaining();
     if (ms < 100) { stages[name] = 'unknown'; return { status: 'unknown', reason: 'end-to-end-deadline' }; }
     const began = performance.now();
-    const r = await runStage(name, { ...payload, timeoutMs: ms }, ms + 50);
+    const r = await runStage(name, { ...payload, timeoutMs: ms }, ms + 50, workerRssBudgetMiB);
     const closed = performance.now();
     stageTrace.push({ stage: name, startedMs: Math.round(began-start),
-      closedMs: Math.round(closed-start) });
+      closedMs: Math.round(closed-start),
+      sampledWorkerPeakRssMiB: r.sampledWorkerPeakRssMiB });
     stages[name] = r.status === 'unknown' ? 'unknown' : 'succeeded';
     return r;
   };
