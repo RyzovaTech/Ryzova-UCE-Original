@@ -4,7 +4,7 @@
 
 ## Scope and validity
 1. Lock the project commit, workspace root, and exact byte-level `package.json` plus any committed `package-lock.json` as seen at that commit. Verify Git blob SHA and provenance before analysis. Never run `npm install`, scripts, code or arbitrary repository executables as part of sampling.
-2. Prefer broad sampling over eligible and ineligible repos and freeze the selection *before seeing solver outputs*. Record the selection criteria and exclusions. Initial candidate manifest `real-repository-intake-v1.json` contains 4 **unlabeled** public repositories and must NOT be scored as a labeled corpus.
+2. Prefer broad sampling over eligible and ineligible repos and freeze the selection *before seeing solver outputs*. Record the selection criteria and exclusions. Initial candidate manifest `real-repository-intake-v1.json` contains 7 **unlabeled** public repositories and must NOT be scored as a labeled corpus.
 3. Supported model question: can all source-backed, applicable production-path `engines.node` stable numeric ranges in a *complete supported* npm hoisted v2/v3 lock graph share one valid stable numeric Node version? A "SAT" modeled result does not establish actual runtime compatibility, npm enforcement or successful installation.
 4. If the lock is absent, stale, workspace ambiguous, nonnpm or too large/unsupported, the model's correct status may be **Unknown**. Do not infer SAT from no observed conflict.
 5. Each eligible case is labeled by **two independent reviewers blinded to solver outputs**. Each reviewer records source paths, root/transitive applicability, semver reasoning, evidence completeness, label (`conflict`, `satisfiable`, or `unknown`), full reasoning and reviewer timestamp.
@@ -20,7 +20,9 @@
 - `fastify/fastify@ce41dc0fbb4ed75e9a42f3972ac896333f6a7396`: root manifest; no root package-lock observed at this exact pinned commit. **Label pending.**
 - `sindresorhus/slugify@3b17b2e84b97624a683aafaa38184bf2746fab22`: root manifest; no root package-lock observed at this exact pinned commit. **Label pending.**
 
-These four intake candidates are **not representative**, not a statistically valid sample, and contain no verified TP/TN/FP/FN counts.
+Additional commit-pinned, root-lockfile-present intake candidates have been added: `axios/axios@e6b79d9cef796ca3a903bb83e51d4752b019fd67`, `npm/cli@ae98c62586b6fea44114f72e249e246a2981de70`, and `uuidjs/uuid@3b70ec29ef9067be33384a16dcd48dc77a0efdf4`. Their exact manifest and lockfile Git blob IDs are stored in the frozen intake JSON. **No human reference labels are assigned.**
+
+These seven intake candidates are **not representative**, not a statistically valid sample, and contain no verified TP/TN/FP/FN counts.
 
 ## Reviewer worksheet — create one per reviewer per case, outside model outputs
 ```json
@@ -31,6 +33,9 @@ These four intake candidates are **not representative**, not a statistically val
   "reviewerId": "<independent reviewer identifier>",
   "reviewedAt": "<ISO8601 timestamp>",
   "blindedToSolverOutput": true,
+  "independenceDeclared": true,
+  "role": "primary",
+  "lockfileBlobSha": "<exact lockfile blob SHA or null>",
   "scope": "<workspace>",
   "sourceEvidence": [{"file":"package.json","field":"engines.node","range":"...","sourceBlobSha":"..."}],
   "applicabilityProof": "<how each reachable production dependency was established>",
@@ -42,3 +47,7 @@ These four intake candidates are **not representative**, not a statistically val
 ```
 
 **Gate:** human review/adjudication and independent accuracy remain open. An AI-generated label, an unreviewed repository or a high synthetic benchmark score must never satisfy this gate.
+
+## Technical gating
+
+`independent-review-gate.mjs` checks strict reviewer vote structure, commit and blob identity, two distinct blinded primary reviewers per case, source-backed evidence and a distinct third adjudicator for disagreements. It **cannot authenticate real human identity, verify independence, or establish representativeness** by itself; those require offline reviewer identity verification and signed-off adjudication. The whole corpus remains unscorable until every case has accepted votes. Test-only synthetic reviewer objects used in CI are **not** real reference labels.
