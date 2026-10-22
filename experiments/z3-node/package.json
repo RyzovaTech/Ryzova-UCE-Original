@@ -1,0 +1,23 @@
+{
+  "name": "@ryzovatech/uce-z3-poc",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Isolated Node-only Z3 SMT proof of concept; never bundled into UCE web",
+  "engines": {
+    "node": ">=20 <25"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "demo": "node cli.mjs fixtures/runtime-conflict.json",
+    "benchmark": "node benchmark.mjs",
+    "validate:evidence": "node validation.mjs",
+    "audit": "node audit.mjs",
+    "browser:gate": "node browser-gate.mjs",
+    "hybrid": "node hybrid-cli.mjs fixtures/hybrid-joint.json --z3"
+  },
+  "dependencies": {
+    "semver": "7.8.5",
+    "z3-solver": "5.2.0"
+  }
+}
