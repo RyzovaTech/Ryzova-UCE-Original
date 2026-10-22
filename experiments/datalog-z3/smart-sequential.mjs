@@ -115,9 +115,11 @@ export async function evaluateSmartSequential(files, options = {}) {
   // Benchmark-only opt-in: never applied to user verification by default.
   const z3HeapLimitMiB = options.z3HeapLimitMiB ?? null;
   const nativeZ3Binary = options.nativeZ3Binary ?? null;
-  if(nativeZ3Binary !== null && (typeof nativeZ3Binary !== 'string' ||
-      nativeZ3Binary.length < 1 || nativeZ3Binary.length > 256 ||
-      z3HeapLimitMiB !== null)) return unknown('invalid-native-z3-experiment-options');
+  // Do not expose an arbitrary executable path through the report adapter.
+  // The native CLI arm is benchmark-only; executable provenance is a release gate.
+  if(nativeZ3Binary !== null &&
+      (nativeZ3Binary !== 'z3' || z3HeapLimitMiB !== null))
+    return unknown('invalid-native-z3-experiment-options');
   if (z3HeapLimitMiB !== null && ![96, 128, 192, 256].includes(z3HeapLimitMiB))
     return unknown('unsupported-z3-heap-experiment');
   if (!Number.isInteger(deadlineMs) || deadlineMs < 1 || deadlineMs > 30000)
