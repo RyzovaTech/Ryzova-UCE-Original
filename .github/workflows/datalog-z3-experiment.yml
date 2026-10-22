@@ -56,6 +56,10 @@ jobs:
       - name: Test native Z3 semver witness and independent cvc5 cross-check
         run: node --test experiments/datalog-z3/test/native-z3.test.mjs
 
+      - name: Independently cross-check 86 bounded semver cases against native Z3 and cvc5
+        timeout-minutes: 4
+        run: node --test experiments/datalog-z3/test/independent-semver-oracle.test.mjs
+
       - name: Test actual Souffle dependency recursion and Z3 SMT proofs
         run: npm --prefix experiments/datalog-z3 test
       - name: Verify CLI source-linked conflict fixture
