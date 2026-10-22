@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
@@ -40,7 +41,7 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
     let child;
     try {
       child = spawn(process.execPath, [WORKER_PATH], {
-        stdio: ['pipe', 'pipe', 'pipe'], shell: false,
+        stdio: ['pipe', 'pipe', 'pipe'], shell: false, detached: process.platform !== 'win32',
         env: solverProcessEnv({ UCE_Z3_EXPERIMENT: '1' }),
       });
     } catch {
@@ -58,14 +59,14 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
       clearTimeout(timer);
       clearInterval(monitor);
       // A child that has completed must not persist across project scans.
-      if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+      terminateSolverProcessTree(child);
       resolve({
         result, failure: error,
         elapsedMs: Math.round((performance.now() - start) * 100) / 100,
         peakSampledRssMiB: samples ? Math.round(peak * 100) / 100 : null,
       });
     };
-    const timer = setTimeout(() => { failure = 'wall-time-budget-exceeded'; child.kill('SIGKILL'); }, wallMs);
+    const timer = setTimeout(() => { failure = 'wall-time-budget-exceeded'; terminateSolverProcessTree(child); }, wallMs);
     let monitorBusy = false;
     const monitor = setInterval(async () => {
       if (settled || monitorBusy) return;
@@ -78,7 +79,7 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
           peak = Math.max(peak, rss);
           if (rss > rssLimitMiB) {
             failure = 'sampled-rss-budget-exceeded';
-            child.kill('SIGKILL');
+            terminateSolverProcessTree(child);
           }
         }
       } finally { monitorBusy = false; }
@@ -88,7 +89,7 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
       stdout += chunk;
       if (stdout.length > MAX_STDOUT) {
         failure = 'worker-output-budget-exceeded';
-        child.kill('SIGKILL');
+        terminateSolverProcessTree(child);
       }
     });
     child.stderr.on('data', () => { /* Never echo potentially sensitive source metadata. */ });
@@ -102,7 +103,7 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
     const input = JSON.stringify(payload);
     if (input.length > MAX_JSON) {
       failure = 'constraint-input-budget-exceeded';
-      child.kill('SIGKILL');
+      terminateSolverProcessTree(child);
     } else {
       child.stdin.on('error', () => { /* The exit handler records worker termination. */ });
       child.stdin.end(input);
