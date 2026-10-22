@@ -6,6 +6,7 @@ import { extractLockedDependencyGraph } from '../graph.mjs';
 import { inspectSmartEvidence } from '../evidence-inspector.mjs';
 import { dependencyPath } from '../datalog.mjs';
 import { evaluateSmartSequential } from '../smart-sequential.mjs';
+import { evaluateDatalogZ3Cvc5 } from '../triple.mjs';
 import { analyzeProjectWithOptionalTrilogy } from '../optional-integration.mjs';
 
 function file(path,content){return{path,content,isDirectory:false,size:Buffer.byteLength(content)};}
@@ -139,4 +140,17 @@ test('large real pinned npm lockfile passes the full opt-in UCE adapter without 
   assert.deepEqual(enabled.stack.symbolicReasoning,base.stack.symbolicReasoning);
   assert.equal(enabled.optionalSolver.status,'satisfiable',JSON.stringify(enabled.optionalSolver));
   assert.equal(enabled.optionalSolver.verification,'independent-smt-agreement');
+});
+
+test('historical Trilogy holdout keeps v1 hoisted-only abstention while Smart path expands',async()=>{
+  const data=small((pkg,lock)=>{
+    lock.packages['node_modules/alpha/node_modules/beta'].engines.node='>=22';
+  });
+  const v1=await evaluateDatalogZ3Cvc5(data);
+  assert.equal(v1.status,'unknown');
+  assert.match(v1.reason,/hoisted-only|nested/i);
+  const newer=inspectSmartEvidence(data);
+  assert.equal(newer.eligible,true,newer.reason);
+  const g=newer.graph;
+  assert.ok(g.packages.includes('node_modules/alpha/node_modules/beta'));
 });
