@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { solverProcessEnv } from '../solver-process-env.mjs';
 import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
@@ -39,7 +40,8 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
     let child;
     try {
       child = spawn(process.execPath, [WORKER_PATH], {
-        stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, UCE_Z3_EXPERIMENT: '1' },
+        stdio: ['pipe', 'pipe', 'pipe'], shell: false,
+        env: solverProcessEnv({ UCE_Z3_EXPERIMENT: '1' }),
       });
     } catch {
       resolve({ result: null, failure: 'worker-spawn-failed', elapsedMs: 0, peakSampledRssMiB: null });
