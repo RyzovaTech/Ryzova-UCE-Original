@@ -1,8 +1,8 @@
-name: Souffle Datalog and Z3 Experimental CI
+name: Souffle Datalog Z3 and cvc5 Experimental CI
 
 on:
   push:
-    branches: [experiment/uce-datalog-z3]
+    branches: [experiment/uce-datalog-z3, experiment/uce-datalog-z3-cvc5]
   pull_request:
     paths:
       - 'experiments/datalog-z3/**'
@@ -38,9 +38,19 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y "./$asset"
           souffle --version
+      - name: Install pinned cvc5 1.1.2 from Ubuntu 24.04 universe
+        timeout-minutes: 5
+        run: |
+          sudo apt-get install -y cvc5=1.1.2-1build1
+          cvc5 --version
+          cvc5 --version | grep -F '1.1.2'
       - name: Test actual Souffle dependency recursion and Z3 SMT proofs
         run: npm --prefix experiments/datalog-z3 test
       - name: Verify CLI source-linked conflict fixture
         run: npm --prefix experiments/datalog-z3 run demo
       - name: Measure three repeated Node-only solver samples
-        run: node experiments/datalog-z3/benchmark.mjs
+        run: npm --prefix experiments/datalog-z3 run benchmark
+      - name: Test independent cvc5 SMT-LIB verification on identical Souffle-derived facts
+        run: npm --prefix experiments/datalog-z3 run test:triple
+      - name: Benchmark full Souffle plus Z3 plus native cvc5 confirmation
+        run: npm --prefix experiments/datalog-z3 run benchmark:triple

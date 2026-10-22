@@ -6,7 +6,10 @@
   "description": "Souffle Datalog dependency reachability with bounded Z3 Node SMT proofs; CI-only experiment",
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "demo": "node cli.mjs fixtures/conflict.json"
+    "demo": "node cli.mjs fixtures/conflict.json",
+    "benchmark": "node benchmark.mjs",
+    "test:triple": "node --test test/cvc5.test.mjs",
+    "benchmark:triple": "node benchmark-cvc5.mjs"
   },
   "dependencies": {
     "semver": "7.8.5"

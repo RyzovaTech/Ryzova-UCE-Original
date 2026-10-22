@@ -52,3 +52,34 @@ or production score changes. Evaluate blinded real-project examples,
 engine-strict semantics, resolution of nested/peer/aliased npm edges,
 reproducible dependency locks, memory/time budget and security review
 separately before considering wider adoption.
+
+## Independent cvc5 SMT verifier — stacked experiment
+
+This branch adds a **real native cvc5 1.1.2** verifier (Ubuntu 24.04
+package version `1.1.2-1build1`) after Soufflé and Z3. This is **not**
+a browser WASM build or deployment. To compare the same bounded facts:
+
+    npm --prefix experiments/datalog-z3 test
+    npm --prefix experiments/datalog-z3 run test:triple
+    npm --prefix experiments/datalog-z3 run benchmark:triple
+
+`cvc5.mjs` generates SMT-LIB QF_LIA equations for stable numeric
+`engines.node` semver comparisons using the independently parsed same
+requirements as Z3. No untrusted source/lockfile text is spliced into
+SMT-LIB. The actual cvc5 CLI is spawned with a fixed argument array
+and strict bounded stdin/stdout plus a wall-clock timeout.
+
+`triple.mjs` uses the previously verified Soufflé reachability and
+source-linked Z3 proof, then makes an independent cvc5 check. It
+returns **only agreement** as confirmed modeled SAT/UNSAT. If either
+solver is unavailable, returns `unknown`, times out, or disagrees,
+the full triple result **abstains (Unknown)**. The original Z3 core
+and root-to-dependency paths are retained only after independent
+agreement; cvc5 does not independently certify the minimal source
+explanation.
+
+This comparison is an authored-fixture security and correctness
+experiment, **not** independently adjudicated real-world accuracy.
+High RSS, native cvc5 portability, npm engine-enforcement semantics,
+lockfile edge cases and browser isolation still prohibit a production
+rollout. No UCE findings, scoring, or default web behavior are changed.
