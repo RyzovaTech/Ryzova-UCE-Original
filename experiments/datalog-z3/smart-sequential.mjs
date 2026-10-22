@@ -76,9 +76,10 @@ function runStage(stage, input, timeoutMs = 4000) {
 export async function evaluateSmartSequential(files, options = {}) {
   const plan = inspectSmartEvidence(files, options.workspace ?? '');
   const stages = stageState();
+  const stageTrace = [];
   const unknown = reason => ({
     engine: 'Souffle+Z3+cvc5 (sequential)', status: 'unknown',
-    reason, verification: 'incomplete', stages, eligibilityRules: plan.rules,
+    reason, verification: 'incomplete', stages, stageTrace, eligibilityRules: plan.rules,
     evidenceDigest: plan.digest, witness: null, unsatCore: [], paths: [],
     z3Status: stages.z3, cvc5Status: stages.cvc5,
   });
@@ -92,7 +93,11 @@ export async function evaluateSmartSequential(files, options = {}) {
   const stage = async (name, payload) => {
     const ms = remaining();
     if (ms < 100) { stages[name] = 'unknown'; return { status: 'unknown', reason: 'end-to-end-deadline' }; }
+    const began = performance.now();
     const r = await runStage(name, { ...payload, timeoutMs: ms }, ms + 50);
+    const closed = performance.now();
+    stageTrace.push({ stage: name, startedMs: Math.round(began-start),
+      closedMs: Math.round(closed-start) });
     stages[name] = r.status === 'unknown' ? 'unknown' : 'succeeded';
     return r;
   };
@@ -132,7 +137,7 @@ export async function evaluateSmartSequential(files, options = {}) {
     verification: 'independent-smt-agreement',
     witness: z3.status === 'satisfiable' ? z3.witness : null,
     unsatCore: core.map(c => ({ id: c.id, source: c.source, key: c.key, range: c.range })),
-    paths, stages, eligibilityRules: plan.rules, evidenceDigest: plan.digest,
+    paths, stages, stageTrace, eligibilityRules: plan.rules, evidenceDigest: plan.digest,
     z3Status: z3.status, cvc5Status: cvc5.status,
   };
 }
