@@ -36,8 +36,8 @@ This proof of concept evaluates runtime version constraints as
 From the repository root:
 
 ```sh
-npm install --no-audit --no-fund
-npm install --prefix experiments/z3-node --no-package-lock --no-audit --no-fund
+npm ci --no-audit --no-fund
+npm ci --prefix experiments/z3-node --no-audit --no-fund
 npm --prefix experiments/z3-node test
 node experiments/z3-node/cli.mjs experiments/z3-node/fixtures/runtime-conflict.json
 ```
