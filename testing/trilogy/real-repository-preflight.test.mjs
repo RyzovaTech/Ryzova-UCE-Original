@@ -33,8 +33,12 @@ test('Phase 4 preflight retains exact frozen case identities and no fabricated a
 });
 test('file byte budgets indicate screening risks, not a solver verdict or human label',()=>{
   assert.equal(screen.modelPerFileCharLimit,256*1024);
-  for(const row of screen.preflight.filter(x=>x.status==='input-budget-risk'))
+  for(const row of screen.preflight.filter(x=>x.status==='unsupported-input-char-limit'))
     assert.ok(row.lockBytes>screen.modelPerFileCharLimit);
-  assert.equal(screen.preflight.filter(x=>x.status==='input-budget-risk').length,3);
-  assert.equal(screen.preflight.filter(x=>x.status==='needs-graph-inspection').length,1);
+  assert.equal(screen.preflight.filter(x=>x.status==='unsupported-input-char-limit').length,3);
+  assert.equal(screen.preflight.filter(x=>x.status==='unsupported-graph-capability').length,1);
+  assert.equal(screen.screenedCount,7);
+  assert.equal(screen.potentiallySupportedCount,0);
+  assert.equal(screen.claims.capabilityScreened,true);
+  assert.equal(screen.claims.modelCoverageEvaluated,false);
 });
