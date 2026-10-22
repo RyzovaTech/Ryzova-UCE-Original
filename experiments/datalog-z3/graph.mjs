@@ -169,7 +169,7 @@ export function extractLockedDependencyGraph(files, workspace = '') {
       constraints.push({
         id: 'package_' + constraints.length,
         source: expected('package-lock.json') + '#packages',
-        key: 'packages["node_modules/' + name + '"].engines.node',
+        key: 'packages["' + name + '"].engines.node',
         package: name,
         range: entry.engine,
       });
