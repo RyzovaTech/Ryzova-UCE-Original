@@ -118,7 +118,9 @@ export async function solveWithCvc5(constraints, options = {}) {
       child = spawn(executable, ['--lang=smt2', '--tlimit=' + solverMs, '-'], {
         stdio: ['pipe', 'pipe', 'pipe'], shell: false,
         env: solverProcessEnv(),
-        detached: process.platform !== 'win32',
+        // Standalone execution uses a new group; nested optional workers share
+        // their parent isolated group for whole-tree deadline termination.
+        detached: process.platform !== 'win32' && process.env.UCE_TRILOGY_EXPERIMENT !== '1',
       });
     } catch { resolve(unknown('cvc5 process could not start.')); return; }
     let stdout = '', stderrBytes = 0, failure = null, finished = false;

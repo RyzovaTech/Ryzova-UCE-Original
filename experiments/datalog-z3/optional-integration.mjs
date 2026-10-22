@@ -68,7 +68,9 @@ function runWorker(files, workspace, config) {
       finished = true;
       clearTimeout(deadline);
       clearInterval(monitor);
-      if (error) killGroup();
+      // Also reap any nested native descendants when Node exited cleanly.
+      // They inherit this isolated group in optional mode.
+      killGroup();
       resolve({
         failure: error, result,
         runtimeMs: Math.round((performance.now() - started) * 100) / 100,
