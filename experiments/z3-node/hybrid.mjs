@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { prepareSharedRuntimeEvidence } from './evidence-comparison.mjs';
@@ -25,10 +25,10 @@ function validateOptions(o) {
     ? { wallMs, rssLimitMiB } : null;
 }
 
-function linuxRssMiB(pid) {
+async function linuxRssMiB(pid) {
   if (process.platform !== 'linux') return null;
   try {
-    const match = /^VmRSS:\s+(\d+)\s+kB/m.exec(readFileSync('/proc/' + pid + '/status', 'utf8'));
+    const match = /^VmRSS:\s+(\d+)\s+kB/m.exec(await readFile('/proc/' + pid + '/status', 'utf8'));
     return match ? Number(match[1]) / 1024 : null;
   } catch { return null; }
 }
@@ -64,16 +64,22 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
       });
     };
     const timer = setTimeout(() => { failure = 'wall-time-budget-exceeded'; child.kill('SIGKILL'); }, wallMs);
-    const monitor = setInterval(() => {
-      const rss = linuxRssMiB(child.pid);
-      if (rss !== null) {
-        samples++;
-        peak = Math.max(peak, rss);
-        if (rss > rssLimitMiB) {
-          failure = 'sampled-rss-budget-exceeded';
-          child.kill('SIGKILL');
+    let monitorBusy = false;
+    const monitor = setInterval(async () => {
+      if (settled || monitorBusy) return;
+      monitorBusy = true;
+      try {
+        const rss = await linuxRssMiB(child.pid);
+        if (settled) return;
+        if (rss !== null) {
+          samples++;
+          peak = Math.max(peak, rss);
+          if (rss > rssLimitMiB) {
+            failure = 'sampled-rss-budget-exceeded';
+            child.kill('SIGKILL');
+          }
         }
-      }
+      } finally { monitorBusy = false; }
     }, 25);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
