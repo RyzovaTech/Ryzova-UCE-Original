@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { evaluateHybridNodeReasoning } from './hybrid.mjs';
 
 // Explicit JSON-only project-file input. Never evaluate scanned project code.
@@ -10,7 +10,7 @@ if (!file || process.argv.slice(3).some(x => x !== '--z3')) {
   process.exit(2);
 }
 try {
-  const bytes = readFileSync(file);
+  const bytes = await readFile(file);
   if (bytes.length > 256 * 1024) throw Error('Input is too large');
   const data = JSON.parse(bytes.toString('utf8'));
   if (!Array.isArray(data.files) || data.files.length > 32 ||
@@ -29,6 +29,7 @@ try {
   const { base, ...rest } = result;
   console.log(JSON.stringify({ ...rest, baseCounts: base.counts }, null, 2));
 } catch (error) {
-  console.error('Hybrid input error: ' + (error instanceof Error ? error.message : 'unknown'));
+  // JSON parse errors can quote user-supplied manifest contents; never echo them.
+  console.error('Hybrid input invalid, over budget, or could not be processed.');
   process.exit(2);
 }

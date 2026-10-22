@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
+import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import semver from 'semver';
@@ -34,10 +36,10 @@ function sourceFiles(files, workspace) {
   return candidates;
 }
 
-function processRssMiB(pid) {
+async function processRssMiB(pid) {
   if (process.platform !== 'linux') return null;
   try {
-    const body = readFileSync('/proc/' + pid + '/status', 'utf8');
+    const body = await readFile('/proc/' + pid + '/status', 'utf8');
     const match = /^VmRSS:\s+(\d+)\s+kB/m.exec(body);
     return match ? Number(match[1]) / 1024 : null;
   } catch { return null; }
@@ -51,7 +53,8 @@ function runWorker(files, workspace, config) {
       child = spawn(process.execPath, [WORKER], {
         stdio: ['pipe', 'pipe', 'pipe'],
         detached: process.platform !== 'win32',
-        env: { ...process.env, UCE_TRILOGY_EXPERIMENT: '1' },
+        env: solverProcessEnv({ UCE_TRILOGY_EXPERIMENT: '1' }),
+        shell: false,
         windowsHide: true,
       });
     } catch {
@@ -59,13 +62,7 @@ function runWorker(files, workspace, config) {
       return;
     }
     let finished = false, failure = null, output = '', peak = null;
-    const killGroup = () => {
-      if (child.exitCode !== null || child.signalCode !== null) return;
-      try {
-        if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL');
-        else child.kill('SIGKILL');
-      } catch { /* Already stopped. */ }
-    };
+    const killGroup = () => terminateSolverProcessTree(child);
     const finish = (result = null, error = failure) => {
       if (finished) return;
       finished = true;
@@ -82,15 +79,21 @@ function runWorker(files, workspace, config) {
       failure = 'trilogy-worker-wall-timeout';
       killGroup();
     }, config.wallMs);
-    const monitor = setInterval(() => {
-      const rss = processRssMiB(child.pid);
-      if (rss !== null) {
-        peak = Math.max(peak ?? 0, rss);
-        if (rss > config.workerRssLimitMiB) {
-          failure = 'trilogy-node-worker-rss-budget-exceeded';
-          killGroup();
+    let monitorBusy = false;
+    const monitor = setInterval(async () => {
+      if (finished || monitorBusy) return;
+      monitorBusy = true;
+      try {
+        const rss = await processRssMiB(child.pid);
+        if (finished) return;
+        if (rss !== null) {
+          peak = Math.max(peak ?? 0, rss);
+          if (rss > config.workerRssLimitMiB) {
+            failure = 'trilogy-node-worker-rss-budget-exceeded';
+            killGroup();
+          }
         }
-      }
+      } finally { monitorBusy = false; }
     }, 25);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
