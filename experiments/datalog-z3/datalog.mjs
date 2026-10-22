@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -21,13 +22,14 @@ export async function deriveReachability(graph, options = {}) {
     const solved = await new Promise(resolve => {
       let child;
       try { child = spawn(binary, ['-F', dir, '-D', dir, RULES], {
-        stdio: ['ignore', 'ignore', 'pipe'], shell: false, env: solverProcessEnv(),
+        stdio: ['ignore', 'ignore', 'pipe'], shell: false, detached: process.platform !== 'win32',
+        env: solverProcessEnv(),
       }); }
       catch { return resolve({ error: 'Souffle executable unavailable.' }); }
       let finished = false;
       let errLength = 0;
       let timeout = false;
-      const timer = setTimeout(() => { timeout = true; child.kill('SIGKILL'); }, timeoutMs);
+      const timer = setTimeout(() => { timeout = true; terminateSolverProcessTree(child); }, timeoutMs);
       const end = result => {
         if (finished) return;
         finished = true;
@@ -36,12 +38,15 @@ export async function deriveReachability(graph, options = {}) {
       };
       child.stderr.on('data', chunk => {
         errLength += chunk.length;
-        if (errLength > 8192) child.kill('SIGKILL');
+        if (errLength > 8192) terminateSolverProcessTree(child);
       });
       child.on('error', () => end({ error: 'Souffle executable unavailable or could not start.' }));
-      child.on('close', code => end(timeout || code !== 0 || errLength > 8192
+      child.on('close', code => {
+        terminateSolverProcessTree(child);
+        end(timeout || code !== 0 || errLength > 8192
         ? { error: timeout ? 'Souffle timeout.' : 'Souffle execution failed.' }
-        : { ok: true }));
+        : { ok: true });
+      });
     });
     if (!solved.ok) return { status: 'unknown', reason: solved.error, reachable: [] };
     const output = await readFile(join(dir, 'Reach.csv'), 'utf8');
