@@ -53,7 +53,7 @@ export async function deriveReachability(graph, options = {}) {
     if (!solved.ok) return { status: 'unknown', reason: solved.error, reachable: [] };
     const output = await readFile(join(dir, 'Reach.csv'), 'utf8');
     const entries = [...new Set(output.trim().split(/\r?\n/).filter(Boolean))].sort();
-    if (entries.length > 97 || entries.some(x => !graph.packages.includes(x))) {
+    if (entries.length > 513 || entries.some(x => !graph.packages.includes(x))) {
       return { status: 'unknown', reason: 'Unexpected or oversized Souffle output.', reachable: [] };
     }
     if (!entries.includes('__uce_root__')) {
