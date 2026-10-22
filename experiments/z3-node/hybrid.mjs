@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { solverProcessEnv } from '../solver-process-env.mjs';
+import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
+import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath } from 'node:url';
 import { prepareSharedRuntimeEvidence } from './evidence-comparison.mjs';
@@ -25,10 +27,10 @@ function validateOptions(o) {
     ? { wallMs, rssLimitMiB } : null;
 }
 
-function linuxRssMiB(pid) {
+async function linuxRssMiB(pid) {
   if (process.platform !== 'linux') return null;
   try {
-    const match = /^VmRSS:\s+(\d+)\s+kB/m.exec(readFileSync('/proc/' + pid + '/status', 'utf8'));
+    const match = /^VmRSS:\s+(\d+)\s+kB/m.exec(await readFile('/proc/' + pid + '/status', 'utf8'));
     return match ? Number(match[1]) / 1024 : null;
   } catch { return null; }
 }
@@ -39,7 +41,8 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
     let child;
     try {
       child = spawn(process.execPath, [WORKER_PATH], {
-        stdio: ['pipe', 'pipe', 'pipe'], env: { ...process.env, UCE_Z3_EXPERIMENT: '1' },
+        stdio: ['pipe', 'pipe', 'pipe'], shell: false, detached: process.platform !== 'win32',
+        env: solverProcessEnv({ UCE_Z3_EXPERIMENT: '1' }),
       });
     } catch {
       resolve({ result: null, failure: 'worker-spawn-failed', elapsedMs: 0, peakSampledRssMiB: null });
@@ -56,31 +59,37 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
       clearTimeout(timer);
       clearInterval(monitor);
       // A child that has completed must not persist across project scans.
-      if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
+      terminateSolverProcessTree(child);
       resolve({
         result, failure: error,
         elapsedMs: Math.round((performance.now() - start) * 100) / 100,
         peakSampledRssMiB: samples ? Math.round(peak * 100) / 100 : null,
       });
     };
-    const timer = setTimeout(() => { failure = 'wall-time-budget-exceeded'; child.kill('SIGKILL'); }, wallMs);
-    const monitor = setInterval(() => {
-      const rss = linuxRssMiB(child.pid);
-      if (rss !== null) {
-        samples++;
-        peak = Math.max(peak, rss);
-        if (rss > rssLimitMiB) {
-          failure = 'sampled-rss-budget-exceeded';
-          child.kill('SIGKILL');
+    const timer = setTimeout(() => { failure = 'wall-time-budget-exceeded'; terminateSolverProcessTree(child); }, wallMs);
+    let monitorBusy = false;
+    const monitor = setInterval(async () => {
+      if (settled || monitorBusy) return;
+      monitorBusy = true;
+      try {
+        const rss = await linuxRssMiB(child.pid);
+        if (settled) return;
+        if (rss !== null) {
+          samples++;
+          peak = Math.max(peak, rss);
+          if (rss > rssLimitMiB) {
+            failure = 'sampled-rss-budget-exceeded';
+            terminateSolverProcessTree(child);
+          }
         }
-      }
+      } finally { monitorBusy = false; }
     }, 25);
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', chunk => {
       stdout += chunk;
       if (stdout.length > MAX_STDOUT) {
         failure = 'worker-output-budget-exceeded';
-        child.kill('SIGKILL');
+        terminateSolverProcessTree(child);
       }
     });
     child.stderr.on('data', () => { /* Never echo potentially sensitive source metadata. */ });
@@ -94,7 +103,7 @@ function runIsolatedZ3(payload, { wallMs, rssLimitMiB }) {
     const input = JSON.stringify(payload);
     if (input.length > MAX_JSON) {
       failure = 'constraint-input-budget-exceeded';
-      child.kill('SIGKILL');
+      terminateSolverProcessTree(child);
     } else {
       child.stdin.on('error', () => { /* The exit handler records worker termination. */ });
       child.stdin.end(input);

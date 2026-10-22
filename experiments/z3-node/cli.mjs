@@ -20,7 +20,8 @@ if (!inputPath || process.argv.length !== 3) {
     if (result.status === 'unknown') process.exitCode = 3;
     // "conflict" is a valid computed analysis result, not a CLI execution failure.
   } catch (error) {
-    console.error('Z3 PoC could not analyze the input: ' + String(error.message ?? error));
+    // Avoid reflecting arbitrary local input content from JSON parser errors into logs.
+    console.error('Z3 PoC could not analyze the input (invalid data or solver failure).');
     process.exitCode = 2;
   } finally {
     if (session) await session.close();
