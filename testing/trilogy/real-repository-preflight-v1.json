@@ -1,8 +1,8 @@
 {
   "schema": "uce-real-repo-preflight-v1",
   "date": "2026-10-22",
-  "source": "Verified immutable GitHub root tree entries for pinned commits in real-repository-intake-v1.json",
-  "method": "Metadata-only manifest/lock presence and byte counts; DOES NOT execute extractLockedDependencyGraph, native solvers, or human ground truth.",
+  "source": "Pinned immutable GitHub file blobs verified against stored blob SHAs for all 7 cases",
+  "method": "Pinned-source manifest and lockfile parsing plus source-backed scope/capability preflight; NO native solvers and NO independently human-adjudicated model labels. Package and character counts obtained from exact immutable GitHub file blobs.",
   "modelPerFileCharLimit": 262144,
   "sampleSize": 7,
   "preflight": [
@@ -11,8 +11,11 @@
       "repository": "RyzovaTech/Ryzova-UCE-Original",
       "manifestBytes": 5247,
       "lockBytes": 216675,
-      "status": "needs-graph-inspection",
-      "notes": "Both root files exist; bytes within 256KiB per-file cap, but lock graph semantics and package/edge counts have not been tested."
+      "status": "unsupported-graph-capability",
+      "notes": "386 lock package entries (>97 budget) and 28 nested node_modules copies; complete supported hoisted graph cannot be proven.",
+      "lockChars": 216675,
+      "lockPackages": 386,
+      "nestedPackages": 28
     },
     {
       "id": "RR02",
@@ -43,30 +46,43 @@
       "repository": "axios/axios",
       "manifestBytes": 6658,
       "lockBytes": 344460,
-      "status": "input-budget-risk",
-      "notes": "Lockfile exceeds 256KiB byte preflight; model enforces 256KiB JavaScript-character cap. No solver invoked."
+      "status": "unsupported-input-char-limit",
+      "notes": "Source lockfile has 344460 JavaScript characters, exceeding the 262144-character bound.",
+      "lockChars": 344460,
+      "lockPackages": 687,
+      "nestedPackages": 54
     },
     {
       "id": "RR06",
       "repository": "npm/cli",
       "manifestBytes": 6860,
       "lockBytes": 437638,
-      "status": "input-budget-risk",
-      "notes": "Lockfile exceeds 256KiB byte preflight and root declares workspaces; model does not infer cross-workspace obligations. No solver invoked."
+      "status": "unsupported-input-char-limit",
+      "notes": "Source lockfile has 437638 JavaScript characters, exceeding the 262144-character bound; root workspace scope also requires careful isolation.",
+      "lockChars": 437638,
+      "lockPackages": 1202,
+      "nestedPackages": 392
     },
     {
       "id": "RR07",
       "repository": "uuidjs/uuid",
       "manifestBytes": 3611,
       "lockBytes": 480551,
-      "status": "input-budget-risk",
-      "notes": "Lockfile exceeds 256KiB byte preflight; model enforces 256KiB JavaScript-character cap. No solver invoked."
+      "status": "unsupported-input-char-limit",
+      "notes": "Source lockfile has 480551 JavaScript characters, exceeding the 262144-character bound.",
+      "lockChars": 480551,
+      "lockPackages": 938,
+      "nestedPackages": 228
     }
   ],
   "humanGroundTruthCases": 0,
   "claims": {
     "modelCoverageEvaluated": false,
     "accuracyMeasured": false,
-    "realWorldCompatibilityProven": false
-  }
+    "realWorldCompatibilityProven": false,
+    "capabilityScreened": true
+  },
+  "screenedCount": 7,
+  "potentiallySupportedCount": 0,
+  "caveat": "This is a capability preflight for a deliberately small nonrepresentative candidate set, not a solver execution, independently labeled accuracy benchmark, or estimated ecosystem-wide coverage."
 }
