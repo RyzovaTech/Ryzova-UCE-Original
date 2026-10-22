@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
 import { createStrictSolverCgroup } from '../../solver-linux-cgroup.mjs';
 import { analyzeProjectWithOptionalTrilogy } from '../optional-integration.mjs';
 
@@ -54,4 +55,39 @@ test('strict mode can be exercised when an independently delegated cgroup exists
   assert.equal(r.optionalSolver.status,'conflict',JSON.stringify(r.optionalSolver));
   assert.ok(Number.isFinite(r.optionalSolver.hardTreePeakMiB));
   assert.equal(r.optionalSolver.hardOomKills,0);
+});
+
+test('delegated cgroup enforces OOM and reaps descendant process tree', {
+  skip: process.platform !== 'linux' || !process.env.UCE_TRILOGY_TEST_CGROUP_PARENT,
+  timeout: 15000,
+}, async () => {
+  const guard = await createStrictSolverCgroup({
+    root: process.env.UCE_TRILOGY_TEST_CGROUP_PARENT, memoryMiB: 64,
+  });
+  assert.equal(guard.ok, true, guard.reason);
+  const worker = spawn(process.execPath, ['-e', [
+    'const {spawn}=require("node:child_process");',
+    'process.stdin.once("data",()=>{',
+    'const code="const b=[]; setInterval(()=>b.push(Buffer.alloc(8*1024*1024,1)),10);";',
+    'spawn(process.execPath,["-e",code],{stdio:"ignore"});',
+    'setInterval(()=>{},1000);',
+    '});',
+  ].join('')], {stdio:['pipe','ignore','ignore'],shell:false});
+  let close;
+  try {
+    assert.equal(await guard.attach(worker.pid),true,'worker must join cgroup before stress starts');
+    close = new Promise(resolve=>worker.once('close',resolve));
+    worker.stdin.write('go\n');
+    const timed = Promise.race([
+      close.then(()=>true),
+      new Promise(resolve=>setTimeout(()=>resolve(false),7000)),
+    ]);
+    const exited = await timed;
+    assert.equal(exited,true,'kernel OOM group should terminate root worker and child');
+  } finally {
+    try { worker.kill('SIGKILL'); } catch {}
+  }
+  const cleaned = await guard.destroy();
+  assert.equal(cleaned.verified,true,'kernel must prove no surviving descendants');
+  assert.ok(cleaned.oomKills >= 1,'memory.events must report real kernel OOM kill');
 });
