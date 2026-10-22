@@ -72,7 +72,7 @@
       "manifest": "package.json",
       "lockfile": "package-lock.json",
       "manifestBlobSha": "68a2c8ce7130ea67b29090a05c1ec7346556c506",
-      "lockfileBlobSha": "c813c9987e5856c61278bb295214a06063e4a5",
+      "lockfileBlobSha": "c813c9987e5856c61278bb295214a06063e4e3a5",
       "label": null
     },
     {
