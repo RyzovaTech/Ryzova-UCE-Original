@@ -5,10 +5,11 @@ let output;
 if(mode==='legacy') {
   const {evaluateDatalogZ3Cvc5}=await import('./triple.mjs');
   output=await evaluateDatalogZ3Cvc5(data.files);
-} else if(mode==='sequential' || mode==='sequential-heap128') {
+} else if(mode==='sequential' || mode==='sequential-heap128' || mode==='sequential-native-z3') {
   const {evaluateSmartSequential}=await import('./smart-sequential.mjs');
   output=await evaluateSmartSequential(data.files,
-    mode === 'sequential-heap128' ? { z3HeapLimitMiB: 128 } : {});
+    mode === 'sequential-heap128' ? { z3HeapLimitMiB: 128 } :
+      mode === 'sequential-native-z3' ? { nativeZ3Binary: 'z3' } : {});
 } else {
   throw Error('unknown-benchmark-mode');
 }
