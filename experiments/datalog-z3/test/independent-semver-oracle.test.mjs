@@ -61,10 +61,10 @@ test('Z3 CLI and cvc5 agree with an independent finite node-semver oracle', {
     const facts=ranges.map((range,j)=>({
       id:'oracle_'+i+'_'+j,source:'package.json#engines.node',range,
     }));
-    const [z3,cvc5]=await Promise.all([
-      solveWithNativeZ3(facts,{binary:'z3',wallMs:2500}),
-      solveWithCvc5(facts,{binary:'cvc5',wallMs:2500,solverMs:2000}),
-    ]);
+    // Even in test code, never run the native verifier executables together.
+    // Each first solver promise settles after its process emits 'close'.
+    const z3=await solveWithNativeZ3(facts,{binary:'z3',wallMs:2500});
+    const cvc5=await solveWithCvc5(facts,{binary:'cvc5',wallMs:2500,solverMs:2000});
     assert.equal(z3.status,expected,
       `native Z3 mismatch case ${i}: ${JSON.stringify({ranges,expected,z3})}`);
     assert.equal(cvc5.status,expected,
