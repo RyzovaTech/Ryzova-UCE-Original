@@ -14,7 +14,8 @@
     "demo:optional": "node optional-cli.mjs fixtures/optional-project.json --trilogy",
     "demo:default": "node optional-cli.mjs fixtures/optional-project.json",
     "test:holdout-metrics": "node --test ../../testing/trilogy/metrics.test.mjs",
-    "audit:holdout": "node ../../testing/trilogy/run.mjs"
+    "audit:holdout": "node ../../testing/trilogy/run.mjs",
+    "benchmark:memory": "node memory-benchmark.mjs"
   },
   "dependencies": {
     "semver": "7.8.5"
