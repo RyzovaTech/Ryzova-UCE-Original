@@ -49,3 +49,15 @@ npm --prefix experiments/datalog-z3 run benchmark:memory
 ```
 
 Only a real execution of the delegated-kernel tests and recorded `memory.peak`/`memory.events` counters can close Linux hard isolation gate. No privilege elevation or automatic cgroup delegation is attempted.
+
+## Executable Phase 4 controlled-validation handoff — 2026-10-22
+
+- The workflow `.github/workflows/trilogy-delegated-cgroup-validation.yml` has a **manual `workflow_dispatch` trigger only** and requires a trusted pre-provisioned `self-hosted, linux, uce-cgroup-v2-ubuntu2404` runner. Configure the trusted repository variable `UCE_TRILOGY_CGROUP_PARENT` with an actually delegated writable cgroup-v2 subtree.
+- **GitHub workflow_dispatch caveat:** manual-dispatch workflows must exist on the repository default branch for normal UI/API dispatch. This new workflow is currently ONLY on the **experimental PR #79 branch**, so it is *prepared but not dispatchable through the usual workflow UI until separately reviewed and deliberately installed on default*. No production or browser runtime should be merged for the sake of installing this manual workflow.
+- Until a trusted maintainer has provisioned the runner and enabled a reviewed dispatch path, use the controlled-host **local commands** above (after checking out this pinned experimental commit). Keep the full test output and kernel `memory.peak`, `memory.events` counters in privately reviewed artifacts.
+- Do **not** enable automatic `pull_request` triggers for an elevated self-hosted runner; that could execute untrusted PR-supplied code.
+- The Linux memory benchmark process now starts a dedicated process group, restricts inherited environment, and terminates descendants after each run or timeout. This is separate from mandatory kernel-backed strict-mode validation.
+- The final kernel `memory.peak` counter is read only **after** all descendants have exited and `populated=0` has been confirmed, avoiding underreporting from a pre-kill sample.
+- The blinded-review vote gate checks supplied metadata and prohibits 0/1-reviewer results, unsupported source hashes and unadjudicated disagreements. It cannot prove reviewers are real people; human identity verification, independence, representativeness and sign-off remain separate.
+
+**Phase 4 experiment entry:** Ready to execute on an appropriately provisioned test runner *when final-head CI is green*. **Issue #77 and #80 remain open and production is NO-GO.**
