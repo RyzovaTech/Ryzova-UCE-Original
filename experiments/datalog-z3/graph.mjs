@@ -123,10 +123,20 @@ export function extractLockedDependencyGraph(files, workspace = '') {
       let resolved = metadata.get(next);
       if (!resolved) {
         const source = declared.get(next);
+        // A peerDependenciesMeta optional hint without any declared peer
+        // requirement does not create an installation obligation. Actual
+        // peerDependencies (even optional ones) still require npm resolution
+        // semantics outside this bounded mandatory-production proof.
+        const peers = source.peerDependencies;
+        const meta = source.peerDependenciesMeta;
+        const declaredPeers = peers !== undefined &&
+          (!record(peers) || Object.keys(peers).length > 0);
+        const badHints = meta !== undefined &&
+          (!record(meta) || Object.values(meta).some(hint =>
+            !record(hint) || hint.optional !== true));
         if (source.link === true || source.optional === true ||
             source.os !== undefined || source.cpu !== undefined ||
-            source.libc !== undefined || source.peerDependencies !== undefined ||
-            source.peerDependenciesMeta !== undefined) {
+            source.libc !== undefined || declaredPeers || badHints) {
           return unknown('Reachable link/optional/platform/peer semantics require additional proof.');
         }
         resolved = lockVersionAndDeps(source);
