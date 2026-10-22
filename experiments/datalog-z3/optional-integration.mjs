@@ -24,7 +24,7 @@ const defaultDiagnostic = (enabled, workspace) => ({
   verification: 'not-run', reason: enabled ? '' : 'Trilogy solver disabled by default.',
   evidence: [], unsatCore: [], witness: null,
   stages: { souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' },
-  eligibilityRules: [], evidenceDigest: null,
+  eligibilityRules: [], evidenceDigest: null, stageTrace: [],
   runtimeMs: null, sampledNodeWorkerRssMiB: null,
   limitations: [
     'Modelled Node engine requirements only; real install/build/runtime and engine-strict enforcement are not proven.',
@@ -246,6 +246,7 @@ export async function analyzeProjectWithOptionalTrilogy(input, options = {}) {
   );
   diagnostic.runtimeMs = runtimeMs;
   if (result?.stages) diagnostic.stages = result.stages;
+  if (Array.isArray(result?.stageTrace)) diagnostic.stageTrace = result.stageTrace;
   if (Array.isArray(result?.eligibilityRules)) diagnostic.eligibilityRules = result.eligibilityRules;
   if (typeof result?.evidenceDigest === 'string') diagnostic.evidenceDigest = result.evidenceDigest;
   diagnostic.sampledNodeWorkerRssMiB = sampledNodeWorkerRssMiB;
