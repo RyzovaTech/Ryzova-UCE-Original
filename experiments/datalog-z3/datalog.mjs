@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { solverProcessEnv } from '../solver-process-env.mjs';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -19,7 +20,9 @@ export async function deriveReachability(graph, options = {}) {
     await writeFile(join(dir, 'Root.facts'), '__uce_root__\n');
     const solved = await new Promise(resolve => {
       let child;
-      try { child = spawn(binary, ['-F', dir, '-D', dir, RULES], { stdio: ['ignore', 'ignore', 'pipe'] }); }
+      try { child = spawn(binary, ['-F', dir, '-D', dir, RULES], {
+        stdio: ['ignore', 'ignore', 'pipe'], shell: false, env: solverProcessEnv(),
+      }); }
       catch { return resolve({ error: 'Souffle executable unavailable.' }); }
       let finished = false;
       let errLength = 0;
