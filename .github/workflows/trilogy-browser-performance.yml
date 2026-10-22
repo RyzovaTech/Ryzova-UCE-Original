@@ -1,0 +1,56 @@
+name: Trilogy Browser Worker Performance Gate
+
+on:
+  push:
+    branches: [experiment/uce-trilogy-worker-performance]
+  pull_request:
+    paths:
+      - 'src/lib/symbolic/trilogy-preflight*'
+      - 'src/lib/symbolic/trilogy-browser-client.ts'
+      - 'testing/trilogy/browser-*'
+      - '.github/workflows/trilogy-browser-performance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  browser-worker-performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked browser application dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check app types and build without native solver dependencies
+        run: |
+          npm run check
+          npm run build
+      - name: Verify pure bounded browser preflight contracts
+        run: node --test testing/trilogy/browser-preflight.test.mjs
+      - name: Install isolated test-only Playwright Chromium
+        run: |
+          mkdir -p "$RUNNER_TEMP/uce-trilogy-playwright"
+          npm install --prefix "$RUNNER_TEMP/uce-trilogy-playwright" --no-audit --no-fund playwright@1.56.1
+          "$RUNNER_TEMP/uce-trilogy-playwright/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Run actual Chromium worker cancellation, memory, latency smoke
+        env:
+          UCE_PLAYWRIGHT_DIR: ${{ runner.temp }}/uce-trilogy-playwright
+        run: node testing/trilogy/browser-worker-smoke.mjs
+      - name: Verify no production COOP/COEP or native runtime imports
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const config=JSON.parse(fs.readFileSync('vercel.json','utf8'));
+          const root=JSON.parse(fs.readFileSync('package.json','utf8'));
+          const forbidden=['souffle','cvc5','z3-solver'];
+          for(const name of forbidden) {
+            if(root.dependencies?.[name] || root.devDependencies?.[name]) throw Error('Native solver injected into web bundle: '+name);
+          }
+          if((config.headers??[]).some(h=>(h.headers??[]).some(x=>['cross-origin-embedder-policy','cross-origin-opener-policy'].includes(x.key.toLowerCase())))) {
+            throw Error('Do not change COOP/COEP without ZIP and GitHub import integration smoke');
+          }
+          NODE
