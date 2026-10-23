@@ -42,7 +42,7 @@ const sourcePath = (value: unknown): value is string => clean(value) &&
   /^[a-zA-Z0-9_.@/-]+(?:#[-a-zA-Z0-9_.]+)?$/.test(value) &&
   value.split('#')[0].split('/').every(part => part !== '.' && part !== '..' && part.length > 0);
 const evidencePath = (value: string) => value.split('#')[0];
-const AUXILIARY_SCOPE = /(^|\\/)(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(\\/|$)/i;
+const AUXILIARY_SCOPE = /(^|\/)(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(\/|$)/i;
 const projectEvidencePath = (value: unknown): value is string =>
   sourcePath(value) && !AUXILIARY_SCOPE.test(evidencePath(value));
 const keyOf = (f: UnifiedBrowserFinding) => [norm(f.domain), norm(f.title), norm(f.file), norm(f.evidence)].join('|');
