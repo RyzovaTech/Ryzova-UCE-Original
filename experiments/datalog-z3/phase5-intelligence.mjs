@@ -180,17 +180,20 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
     }
   }
 
-  // Preserve every source issue; only merge identical normalized claims
-  // with identical affected file and category. No title-only fuzzy merges.
-  const fused = [];
-  const byKey = new Map();
-  for (const item of [...originals, ...found]) {
+  // Original UCE issues are canonical; never drop or silently rescore them.
+  // A shared label requires exactly one unambiguous native candidate, the
+  // same severity and independently corroborated literal pin/range values.
+  // Source file/title alone or a conflicting severity is insufficient.
+  const fused = originals.map(item => ({ ...item }));
+  const nativeByKey = new Map();
+  for (const item of fused) {
     const key = findingIdentity(item);
-    const other = byKey.get(key);
-    // Cross-engine wording/paths alone do not prove identical source claims.
-    // In V1 only a matching literal pin and exact violated source range can
-    // establish equivalence; otherwise retain both distinct findings.
-    const exactPinClaim = other && other.origin === 'UCE' &&
+    nativeByKey.set(key, [...(nativeByKey.get(key) ?? []), item]);
+  }
+  for (const item of found) {
+    const candidates = nativeByKey.get(findingIdentity(item)) ?? [];
+    const other = candidates.length === 1 ? candidates[0] : null;
+    const exactPinClaim = other && other.severity === item.severity &&
       item.origin === 'Trilogy' && Array.isArray(item.violatingRanges) &&
       other.detectedValue === item.pinnedVersion &&
       item.violatingRanges.includes(other.expectedValue);
@@ -199,13 +202,12 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
       other.origins = ['UCE', 'Trilogy'];
       other.evidenceRefs = [...new Set([...other.evidenceRefs, ...item.evidenceRefs])];
       other.sourceIssueIds = [...new Set([...other.sourceIssueIds, ...item.sourceIssueIds])];
-      // Preserve native issue severity, original text and confidence; never
-      // promote a UCE finding to formally verified from shared wording.
+      // Preserve native severity, original text, record identity and
+      // verification state; correlation never becomes formal proof.
       other.relatedTrilogyIds = [...(other.relatedTrilogyIds ?? []), item.id];
       other.rootCauseId = item.rootCauseId;
     } else {
       fused.push({ ...item });
-      if (!other) byKey.set(key, fused[fused.length - 1]);
     }
   }
 
