@@ -162,7 +162,7 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
   const eligiblePins = pins.length === 1 && hasPinMismatch && !hasDisjointDeclarations
     ? pins.filter(p => simpleFile(p.path) && typeof p.content === 'string' &&
         p.content.length <= 128 &&
-        /^[ \\t]*v?\\d+\\.\\d+\\.\\d+[ \\t]*(?:\\r?\\n)?$/.test(p.content))
+        /^[ \t]*v?\d+\.\d+\.\d+[ \t]*(?:\r?\n)?$/.test(p.content))
     : [];
   const patchTargets = eligiblePins.map(p => ({ file: p.path,
     sha256: createHash('sha256').update(p.content).digest('hex'),
