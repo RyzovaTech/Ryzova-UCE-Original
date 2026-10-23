@@ -96,7 +96,7 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
     if (typeof pin.content !== 'string' || pin.content.length > 128) continue;
     const version = pin.content.trim().replace(/^v/, '');
     if (!semver.valid(version) || semver.prerelease(version) ||
-        semver.build(version).length) continue;
+        semver.parse(version).build.length) continue;
     const violating = constraints.filter(c => !semver.satisfies(version, c.range));
     if (!violating.length) continue;
     add({
