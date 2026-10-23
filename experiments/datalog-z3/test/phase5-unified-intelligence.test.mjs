@@ -60,7 +60,8 @@ test('disjoint source requirements are evidence-backed, never falsely formal-ver
 test('exact identity deduplicates a shared UCE/Trilogy finding with both origin labels', () => {
   const native = uce({ id: 'same', category: 'runtime',
     title: 'Declared Node runtime pin does not satisfy mandatory requirements',
-    severity: 'critical', affectedFile: '.nvmrc', recommendation: 'Review pin' });
+    severity: 'critical', affectedFile: '.nvmrc', recommendation: 'Review pin',
+    detected: '20.0.0', expected: '>=22' });
   const out = buildUnifiedIntelligence(native, fixture());
   const found = out.findings.filter(f => f.title === native.issues[0].title);
   assert.equal(found.length, 1);
@@ -69,6 +70,16 @@ test('exact identity deduplicates a shared UCE/Trilogy finding with both origin 
   assert.equal(found[0].severity, 'critical', 'never mutate UCE severity');
   assert.equal(found[0].verification, 'not-run');
   assert.ok(found[0].relatedTrilogyIds.length === 1);
+});
+
+test('same title and file without matching source claim is not falsely deduplicated', () => {
+  const report = uce({ id: 'wording-only', category: 'runtime',
+    title: 'Declared Node runtime pin does not satisfy mandatory requirements',
+    severity: 'warning', affectedFile: '.nvmrc', recommendation: 'Check claim' });
+  const out = buildUnifiedIntelligence(report, fixture());
+  const found = out.findings.filter(f => f.title === report.issues[0].title);
+  assert.equal(found.length, 2);
+  assert.ok(found.every(f => f.origin !== 'Both'));
 });
 
 test('same issue title but different file is not deduplicated; baseline issues remain present', () => {
