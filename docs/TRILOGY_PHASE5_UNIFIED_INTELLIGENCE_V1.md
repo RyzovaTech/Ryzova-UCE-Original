@@ -118,3 +118,14 @@ This is a **request-preparation** UX increment, not browser-native patch generat
 - Regression tests cover strict evidence sanitization, rejected stale embedded requests, risk metadata, SHA-256 identity, no generated diff, original-score parity and existing Phase 5 unsupported-case abstention. Exact-head CI and browser interaction QA are separate acceptance gates.
 
 This experimental Phase 5.3 increment leaves all original UCE scoring, issue records and solver behavior unchanged. Keep PR #86 Draft; no merge, deployment, or general patch category expansion is authorized.
+
+## Phase 5.4 first independent Node declaration discovery (experimental)
+
+- For an eligible, complete and bounded mandatory npm graph, the local Node scan additionally inspects **both** canonical root .nvmrc and .node-version literal Node versions. If they differ, emit one source-backed Trilogy runtime **review** finding with both source paths and declared versions.
+- This uses independently supplied local source bytes, not browser-derived UCE metadata. It does not prove which pin is active, application incompatibility, causal failure, install/build outcome or runtime behavior. Formal solver verification remains **not-run**.
+- Reject nonliteral aliases, prereleases, noncanonical pin syntax and unsupported/partial graph cases rather than inventing a conflict. Input order cannot change the finding identity.
+- Multiple pins continue to block V1 single-file patch proposals, even when the versions match. Scan never generates or applies a patch.
+- Local CLI finding fusion now requires one unambiguous UCE record and matching severity before labeling it Both. Differing severity and duplicate native candidates preserve distinct original records.
+- Added positive/negative Node pin evidence, Unknown abstention, original-score parity, nonmutation, deterministic identity and deduplication regression tests.
+
+Acceptance remains contingent on all three successful exact-current-HEAD CI workflows and independent review. Do not merge into production main; release blockers #77, #80 and #81 remain.
