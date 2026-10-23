@@ -1,5 +1,6 @@
 import test, { before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import semver from 'semver';
 import { createZ3Session, solveNodeConstraints, MAX_CONSTRAINTS } from '../solver.mjs';
 import { load } from '../../../scripts/trusted-module-loader.mjs';
 
@@ -102,6 +103,17 @@ test('workspace isolation rejects sibling paths before reaching the solver', asy
     constraints: [fact('sibling', '18', 'apps/web/.nvmrc:1')] });
   assert.equal(r.status, 'unknown');
   assert.match(r.reason, /outside/);
+});
+
+test('Phase 4 Smart solver verifies more than legacy 12 constraints with provenance and semver witness', async () => {
+  const facts = Array.from({ length: 23 }, (_, i) =>
+    fact('source' + i, i % 2 ? '>= 6' : '>= 4.0'));
+  const result = await run(...facts);
+  assert.equal(MAX_CONSTRAINTS, 32);
+  assert.equal(result.status, 'satisfiable', JSON.stringify(result));
+  assert.ok(facts.every(c => semver.satisfies(result.witness, c.range)));
+  const rejected = await run(...Array.from({length:33},(_,i)=>fact('fact' + i,'>=0')));
+  assert.equal(rejected.status,'unknown');
 });
 
 test('bounded inputs, duplicate names, and arbitrary metadata are rejected', async () => {

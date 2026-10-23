@@ -41,7 +41,7 @@ export function inspectSmartEvidence(files, workspace = '') {
     return { eligible: false, status: 'skipped', reason: 'no-supported-joint-question',
       rules: ['D10'], graph, digest };
   }
-  if (graph.constraints.length > 12) {
+  if (graph.constraints.length > 32) {
     return { eligible: false, status: 'unknown', reason: 'eligible-but-over-solver-budget',
       rules: ['D8'], graph: null, digest };
   }

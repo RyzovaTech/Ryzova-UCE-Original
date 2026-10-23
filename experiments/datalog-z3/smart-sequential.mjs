@@ -7,7 +7,7 @@ import { dependencyPath } from './datalog.mjs';
 import { inspectSmartEvidence } from './evidence-inspector.mjs';
 
 const WORKER = fileURLToPath(new URL('./smart-stage-worker.mjs', import.meta.url));
-const MAX_OUTPUT = 32 * 1024;
+const MAX_OUTPUT = 128 * 1024;
 const stageState = () => ({ souffle: 'not-run', z3: 'not-run', cvc5: 'not-run' });
 
 // Resolves ONLY after the specific stage worker has emitted 'close'.
@@ -83,7 +83,7 @@ function runStage(stage, input, timeoutMs = 4000, rssBudgetMiB = 512, z3HeapLimi
     });
     try {
       const bytes = JSON.stringify(input);
-      if (bytes.length > 700 * 1024) {
+      if (bytes.length > 2500 * 1024) {
         failure = 'stage-input-budget';
         child.kill('SIGKILL');
       } else {
@@ -115,9 +115,11 @@ export async function evaluateSmartSequential(files, options = {}) {
   // Benchmark-only opt-in: never applied to user verification by default.
   const z3HeapLimitMiB = options.z3HeapLimitMiB ?? null;
   const nativeZ3Binary = options.nativeZ3Binary ?? null;
-  if(nativeZ3Binary !== null && (typeof nativeZ3Binary !== 'string' ||
-      nativeZ3Binary.length < 1 || nativeZ3Binary.length > 256 ||
-      z3HeapLimitMiB !== null)) return unknown('invalid-native-z3-experiment-options');
+  // Do not expose an arbitrary executable path through the report adapter.
+  // The native CLI arm is benchmark-only; executable provenance is a release gate.
+  if(nativeZ3Binary !== null &&
+      (nativeZ3Binary !== 'z3' || z3HeapLimitMiB !== null))
+    return unknown('invalid-native-z3-experiment-options');
   if (z3HeapLimitMiB !== null && ![96, 128, 192, 256].includes(z3HeapLimitMiB))
     return unknown('unsupported-z3-heap-experiment');
   if (!Number.isInteger(deadlineMs) || deadlineMs < 1 || deadlineMs > 30000)

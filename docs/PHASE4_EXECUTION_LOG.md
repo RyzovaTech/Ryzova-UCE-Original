@@ -90,3 +90,15 @@ On the preceding PR #82 head, Full UCE CI failed on an HTTP 400 npm security-aud
 - [#81](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/81) — accepted hard process-tree memory and latency evidence, not just direct-child RSS
 
 **No production, main-branch, or browser merge has occurred.**
+
+## Phase 4 continuation — independent bounded semver oracle checks
+
+The Native Z3 and cvc5 agreement from PR #82 is valuable but insufficient on its own to detect a **shared SMT-LIB encoding error**, since both CLI engines consume equivalent generated constraints.
+
+Phase 4 evaluation PR #83 therefore adds **86 deterministic semantic fixtures**: 11 explicit semver boundary/disjunction examples and 75 seeded generator examples. Each input is checked using the independent `node-semver.satisfies` library over a bounded **6 major × 5 minor × 5 patch = 150 stable-version lattice**, and both solvers must independently return the corresponding SAT/UNSAT decision. The generator restricts all operands to major ≤3, minor ≤2, patch ≤2; this makes the finite lattice complete for the fixture syntax. Every SAT witness is rechecked with `semver.satisfies`; UNSAT is checked against the full source constraint set rather than mislabeled as a minimal core.
+
+**Resource invariant:** Z3 and cvc5 test invocations are strictly sequential. The optional smart verifier's experimental native command is now restricted to the fixed `z3` executable name; arbitrary binary paths are rejected before any stage starts. Default original UCE score, browser behavior, and solver path remain unchanged.
+
+**Evidence limitation:** 86 deterministic unit cases are not a representative real-repository study, do not establish independent human labels, and do not clear Issue #80. The optional native-Z3 backend remains experimental until tool provenance, hard process-tree resource bounds (#77), performance (#81) and maintainer sign-off are complete.
+
+**Validation:** final-head GitHub Actions must be inspected before marking this new suite green.

@@ -6,8 +6,8 @@ import { performance } from 'node:perf_hooks';
 
 // Independent SMT-LIB encoding for the *same semver requirements* sent to Z3.
 // This runs the real cvc5 native executable on an opt-in Node/CI path only.
-const MAX_FACTS = 12;
-const MAX_INPUT_CHARS = 16384;
+const MAX_FACTS = 32;
+const MAX_INPUT_CHARS = 32768;
 const MAX_OUTPUT_CHARS = 1024;
 const MAX_BOUND = 1000000;
 const COMPARISONS = new Set(['', '=', '>', '>=', '<', '<=']);
