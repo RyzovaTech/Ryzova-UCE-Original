@@ -41,6 +41,8 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
   const [showAllUngrouped, setShowAllUngrouped] = useState(false);
+  const [showOriginalIssues, setShowOriginalIssues] = useState(false);
+  const [showAllOriginalIssues, setShowAllOriginalIssues] = useState(false);
   const [bundle, setBundle] = useState<BrowserEvidenceBundle | null>(null);
   const [bundleName, setBundleName] = useState('');
   const [target, setTarget] = useState('');
@@ -122,6 +124,30 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
           .map(f => <FindingDetail key={f.id} item={f} onSelectSource={selectSource} />)}
         {model.ungroupedIds.length > 100 && <Button variant="outline" size="sm" onClick={() => setShowAllUngrouped(v => !v)}>{showAllUngrouped ? 'Show first 100 findings' : 'Show all ' + model.ungroupedIds.length + ' ungrouped findings'}</Button>}
         {!model.ungroupedIds.length && <p className="text-sm text-muted-foreground">All current findings appear within investigation clusters above.</p>}
+      </CardContent>
+    </Card>
+    <Card><CardHeader><div className="flex flex-wrap items-center justify-between gap-2">
+      <div><CardTitle className="text-base">Original UCE issues — unchanged records</CardTitle>
+        <CardDescription>Every raw original UCE issue stays accessible, even where workspace display deduplication applies. These are not rescored by Trilogy.</CardDescription></div>
+      <Button variant="outline" size="sm" aria-expanded={showOriginalIssues} onClick={() => setShowOriginalIssues(v => !v)}>
+        {showOriginalIssues ? 'Hide original issues' : 'Inspect original issues'}
+      </Button>
+    </div></CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-xs text-muted-foreground">Original issues: {model.originalIssues.length} · Unified workspace findings omitted by 1000-item display cap: {model.omittedWorkspaceFindings}</p>
+        {showOriginalIssues && <>
+          {(showAllOriginalIssues ? model.originalIssues : model.originalIssues.slice(0, 100)).map((issue, index) =>
+            <div key={issue.id + ':' + index} className="space-y-1 rounded border p-2 text-xs">
+              <div className="flex flex-wrap items-center gap-2"><Badge variant="outline">{issue.severity}</Badge>
+                <span className="font-semibold">{issue.title}</span></div>
+              <p className="break-all text-muted-foreground">UCE record: {issue.id} · File: {issue.affectedFile || 'Not provided'}</p>
+              <p className="text-muted-foreground">{issue.reason || 'No reason retained.'}</p>
+            </div>)}
+          {model.originalIssues.length > 100 && <Button variant="outline" size="sm"
+            onClick={() => setShowAllOriginalIssues(v => !v)}>
+            {showAllOriginalIssues ? 'Show first 100 original issues' : 'Show all ' + model.originalIssues.length + ' original issues'}
+          </Button>}
+        </>}
       </CardContent>
     </Card>
     <Card><CardHeader><CardTitle id="trilogy-source-evidence" className="text-base">Source evidence navigation</CardTitle>
