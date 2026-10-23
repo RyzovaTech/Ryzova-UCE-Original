@@ -105,3 +105,16 @@ Regression commands:
 - Existing explicit developer-request-only proposal preparation, user-selected exact Node target, SHA-256 guard, read-only local CLI and prohibition on auto-apply remain unchanged.
 
 Additional regression tests cover severity-conflict abstention, ambiguous native matching, source-line provenance, raw issue preservation and disclosed UI finding caps. **These changes are committed to experimental PR #86 but require successful exact-HEAD CI; do not treat a prior green milestone as proof for this head.** Production release is still NO-GO pending #77, #80, #81 and owner authorization.
+
+## Phase 5.3 developer-reviewed browser request preparation (experimental)
+
+This is a **request-preparation** UX increment, not browser-native patch generation.
+
+- A local evidence JSON can contain root `package.json`, `package-lock.json`, exactly one literal `.nvmrc` or `.node-version`, and the bounded set of relevant evidence files. Unexpected top-level fields, including any pre-existing embedded `request`, are rejected. File contents remain untrusted data; per-file metadata is dropped from the newly exported request.
+- Source reads and SHA-256 request construction use separate revision guards. Loading a different file, clearing evidence, or changing the developer-selected target invalidates unfinished or previously prepared requests. Generated input is never silently reused after source/target changes.
+- Generate is enabled only for loaded local evidence and a nonempty developer-selected target. It prepares a source-hashed CLI *request* only on explicit click. It does not execute the project, install dependencies, contact a service, run a solver, create a diff, or apply any changes.
+- The review panel displays the exact pin path, current version, target version and SHA-256, with visible risk factors and a manual verification checklist. To download the source-containing CLI input the developer must additionally acknowledge the evidence confidentiality and incomplete-verification risks.
+- **No browser "fix verified" status:** the browser has not evaluated all graph semantics. The separate Node `propose` command can return `blocked`, `stale` or a read-only `proposed` diff; even `proposed` is not build/install/runtime proof. The actual checked-out project file must still be inspected before any manual change.
+- Regression tests cover strict evidence sanitization, rejected stale embedded requests, risk metadata, SHA-256 identity, no generated diff, original-score parity and existing Phase 5 unsupported-case abstention. Exact-head CI and browser interaction QA are separate acceptance gates.
+
+This experimental Phase 5.3 increment leaves all original UCE scoring, issue records and solver behavior unchanged. Keep PR #86 Draft; no merge, deployment, or general patch category expansion is authorized.
