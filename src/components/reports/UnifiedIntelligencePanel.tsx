@@ -17,10 +17,13 @@ function FindingDetail({ item, onSelectSource }: {
       <Badge variant={item.severity === 'critical' ? 'destructive' : 'outline'}>{item.severity}</Badge>
       <Badge variant="outline">Origin: {item.origin}</Badge>
       <Badge variant="outline">{item.contextOnly ? 'Context only' : 'Review finding'}</Badge>
-      <Badge variant="outline">Not formally verified</Badge>
+      <Badge variant="outline">Evidence: {item.evidenceStatus.replaceAll('-', ' ')}</Badge>
+      <Badge variant="outline">Formal verification: not run</Badge>
     </div>
     <h4 className="text-sm font-semibold">{item.title}</h4>
-    <p className="text-xs text-muted-foreground">{item.evidenceLevel.replaceAll('-', ' ')}. {item.evidence || 'No detailed source evidence retained.'}</p>
+    <p className="text-xs text-muted-foreground">Evidence origin: {item.evidenceLevel.replaceAll('-', ' ')}. {item.evidence || 'No detailed source evidence retained.'}</p>
+    <p className="text-xs text-muted-foreground"><span className="font-medium">Potential impact (unverified): </span>{item.potentialImpact}</p>
+    {item.sourceIssueIds.length > 0 && <p className="break-all text-xs text-muted-foreground">Record provenance: {item.sourceIssueIds.map(id => (id.startsWith('trilogy:') ? 'Trilogy ' : 'UCE ') + id).join(' · ')}</p>}
     {item.recommendation && <p className="text-sm"><span className="font-medium">Next action: </span>{item.recommendation}</p>}
     <div className="flex flex-wrap gap-2">
       {item.sourceRefs.length ? item.sourceRefs.map(ref => <button key={ref} type="button"
@@ -37,6 +40,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   const byId = useMemo(() => new Map(model.findings.map(f => [f.id, f])), [model]);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
+  const [showAllUngrouped, setShowAllUngrouped] = useState(false);
   const [bundle, setBundle] = useState<BrowserEvidenceBundle | null>(null);
   const [bundleName, setBundleName] = useState('');
   const [target, setTarget] = useState('');
@@ -114,9 +118,9 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
     <Card><CardHeader><CardTitle className="text-base">Other findings and framework context</CardTitle>
       <CardDescription>Ungrouped findings are never hidden. Framework detection is informational context, not a proven incompatibility.</CardDescription></CardHeader>
       <CardContent className="space-y-2">
-        {model.ungroupedIds.slice(0, 100).map(id => byId.get(id)).filter((f): f is UnifiedBrowserFinding => !!f)
+        {(showAllUngrouped ? model.ungroupedIds : model.ungroupedIds.slice(0, 100)).map(id => byId.get(id)).filter((f): f is UnifiedBrowserFinding => !!f)
           .map(f => <FindingDetail key={f.id} item={f} onSelectSource={selectSource} />)}
-        {model.ungroupedIds.length > 100 && <p className="text-xs text-muted-foreground">Display limited to 100 ungrouped items. Original UCE Issues view retains its own filters and exports.</p>}
+        {model.ungroupedIds.length > 100 && <Button variant="outline" size="sm" onClick={() => setShowAllUngrouped(v => !v)}>{showAllUngrouped ? 'Show first 100 findings' : 'Show all ' + model.ungroupedIds.length + ' ungrouped findings'}</Button>}
         {!model.ungroupedIds.length && <p className="text-sm text-muted-foreground">All current findings appear within investigation clusters above.</p>}
       </CardContent>
     </Card>
@@ -126,7 +130,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
         {selectedSource ? <><div className="flex flex-wrap items-center gap-2">
           <code className="break-all text-xs">{selectedSource}</code>
           <Button variant="ghost" size="sm" onClick={() => setSelectedSource(null)}>Clear</Button></div>
-          <p className="text-sm">{matched.length} report finding(s) refer to this source. Open the corresponding local project file to verify exact contents; no source bytes are reconstructed.</p>
+          <p className="text-sm">{matched.length} report finding(s) refer to this source. Line fragments (#L...) locate saved report references only. Open the corresponding local project file to verify exact contents; no source bytes are reconstructed.</p>
           {matched.map(f => <p key={f.id} className="text-xs text-muted-foreground">{f.origin} · {f.title}: {f.evidence}</p>)}
         </> : <p className="text-sm text-muted-foreground">Select a file reference from the findings above.</p>}
       </CardContent>
