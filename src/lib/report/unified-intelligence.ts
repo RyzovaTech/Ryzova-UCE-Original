@@ -42,6 +42,9 @@ const sourcePath = (value: unknown): value is string => clean(value) &&
   /^[a-zA-Z0-9_.@/-]+(?:#[-a-zA-Z0-9_.]+)?$/.test(value) &&
   value.split('#')[0].split('/').every(part => part !== '.' && part !== '..' && part.length > 0);
 const evidencePath = (value: string) => value.split('#')[0];
+const AUXILIARY_SCOPE = /(^|\\/)(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(\\/|$)/i;
+const projectEvidencePath = (value: unknown): value is string =>
+  sourcePath(value) && !AUXILIARY_SCOPE.test(evidencePath(value));
 const keyOf = (f: UnifiedBrowserFinding) => [norm(f.domain), norm(f.title), norm(f.file), norm(f.evidence)].join('|');
 const DOMAIN_TITLES: Record<string, string> = {
   runtime: 'Runtime & environment relationships',
@@ -80,7 +83,7 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
   const additions: UnifiedBrowserFinding[] = [];
   const risks = report.stack.dependencyIntelligence?.risks ?? [];
   for (const [i, risk] of risks.slice(0, 64).entries()) {
-    if (!sourcePath(risk.source) || !clean(risk.name) ||
+    if (!projectEvidencePath(risk.source) || !clean(risk.name) ||
         !['wildcard', 'remote-source', 'version-conflict'].includes(risk.kind)) continue;
     additions.push({
       id: 'trilogy:dependency:' + i + ':' + risk.kind,
@@ -95,7 +98,7 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
   }
   const detections = report.stack.technologyDetections ?? [];
   for (const [i, detection] of detections.filter(d => d.kind === 'framework').slice(0, 24).entries()) {
-    const ref = detection.evidence.find(e => sourcePath(e.source));
+    const ref = detection.evidence.find(e => projectEvidencePath(e.source));
     if (!ref || !clean(detection.name)) continue;
     additions.push({
       id: 'trilogy:framework:' + i + ':' + detection.id,
@@ -105,7 +108,7 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       evidence: ref.description.slice(0, 400),
       recommendation: 'Inspect framework configuration and integration requirements before assuming compatibility.',
       verification: 'not-run', evidenceLevel: 'uce-extracted-framework',
-      sourceRefs: detection.evidence.filter(e => sourcePath(e.source)).slice(0, 6).map(e => e.source),
+      sourceRefs: detection.evidence.filter(e => projectEvidencePath(e.source)).slice(0, 6).map(e => e.source),
       sourceIssueIds: [], contextOnly: true,
     });
   }
