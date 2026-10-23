@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
 import { buildUnifiedIntelligence } from '../phase5-intelligence.mjs';
 import { generateReviewableFixProposal } from '../phase5-patch.mjs';
 
@@ -200,4 +201,28 @@ test('no scanner/request can create a patch for an incomplete or over-budget mod
   const tooLarge = [...files, ...Array.from({ length: 63 }, (_, i) => file('x' + i, ''))];
   assert.equal(buildUnifiedIntelligence(uce(), tooLarge).status, 'partial');
   assert.equal(generateReviewableFixProposal(tooLarge, request(files)).proposal, null);
+});
+
+test('local scan CLI invokes native UCE analysis but does not generate a patch or execute solvers', () => {
+  const cli = new URL('../phase5-cli.mjs', import.meta.url);
+  const input = new URL('../fixtures/optional-project.json', import.meta.url);
+  const run = spawnSync(process.execPath, [cli.pathname, 'scan', input.pathname],
+    { encoding: 'utf8', timeout: 20000, maxBuffer: 512 * 1024 });
+  assert.equal(run.status, 0, run.stderr);
+  const result = JSON.parse(run.stdout);
+  assert.equal(result.version, 1);
+  assert.equal(result.graphStatus, 'ok');
+  assert.ok(typeof result.originalScore === 'number');
+  assert.ok(result.findings.some(f => f.origin === 'Trilogy'));
+  assert.ok(!run.stdout.includes('"proposal":'));
+  assert.ok(!run.stdout.includes('"diff":'));
+});
+
+test('local propose CLI without explicit request returns not-requested', () => {
+  const cli = new URL('../phase5-cli.mjs', import.meta.url);
+  const input = new URL('../fixtures/optional-project.json', import.meta.url);
+  const run = spawnSync(process.execPath, [cli.pathname, 'propose', input.pathname],
+    { encoding: 'utf8', timeout: 15000 });
+  assert.equal(run.status, 0, run.stderr);
+  assert.equal(JSON.parse(run.stdout).status, 'not-requested');
 });
