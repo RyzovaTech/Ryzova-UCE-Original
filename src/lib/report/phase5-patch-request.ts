@@ -24,6 +24,11 @@ const stable = (v: string) => /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/
 export function validateBrowserEvidenceBundle(data: unknown): BrowserEvidenceBundle {
   if (!data || typeof data !== 'object') throw Error('Invalid local evidence JSON.');
   const item = data as Partial<BrowserEvidenceBundle>;
+  if (Object.keys(item).some(key => !['fileName', 'workspace', 'files'].includes(key)) ||
+      (item.fileName !== undefined && (typeof item.fileName !== 'string' ||
+        item.fileName.length < 1 || item.fileName.length > 100))) {
+    throw Error('Evidence JSON must contain only a bounded name, workspace and files; remove saved requests or extra fields.');
+  }
   if ((item.workspace ?? '') !== '' || !Array.isArray(item.files) ||
       item.files.length < 3 || item.files.length > 64) {
     throw Error('V1 supports root npm evidence with 3–64 files and no workspace override.');
@@ -44,7 +49,13 @@ export function validateBrowserEvidenceBundle(data: unknown): BrowserEvidenceBun
   if (pins.length !== 1 || pins[0].content.length > 128 ||
       !/^[ \t]*v?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)[ \t]*(?:\r?\n)?$/.test(pins[0].content))
     throw Error('Supply exactly one literal .nvmrc or .node-version source pin.');
-  return item as BrowserEvidenceBundle;
+  // Never copy unreviewed top-level fields or per-file metadata into the
+  // exported CLI input. In particular, reject previously embedded requests.
+  return {
+    ...(item.fileName ? { fileName: item.fileName } : {}),
+    workspace: '',
+    files: item.files.map(f => ({ path: f.path, content: f.content })),
+  };
 }
 export async function makeDeveloperPatchRequest(data: BrowserEvidenceBundle, targetVersion: string) {
   const checked = validateBrowserEvidenceBundle(data);
@@ -63,6 +74,24 @@ export async function makeDeveloperPatchRequest(data: BrowserEvidenceBundle, tar
   };
   return {
     request,
+    review: {
+      targetFile: file.path,
+      originalVersion: original,
+      targetVersion,
+      sourceSha256: expectedSha256,
+      riskLevel: 'requires-manual-review' as const,
+      riskFactors: [
+        'The browser has not established that the target satisfies the full dependency graph.',
+        'CI, deployment, framework support, installation, build and runtime behavior are not tested.',
+        'The downloaded evidence JSON contains source contents and may be confidential.',
+      ],
+      verificationChecklist: [
+        'Verify the intended source file, target version and SHA-256.',
+        'Run the separate guarded Node CLI locally; inspect its blocked/proposed status and diff.',
+        'Review runtime and CI/deployment compatibility before any manually approved change.',
+        'After manual application, run builds/tests and compare UCE scans.',
+      ],
+    },
     // Exact original bytes and request are provided to the local CLI only if
     // the developer explicitly downloads this bundle, never auto-submitted.
     cliInput: { ...checked, request },
