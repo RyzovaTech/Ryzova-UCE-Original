@@ -61,14 +61,14 @@ test('disjoint source requirements are evidence-backed, never falsely formal-ver
 test('exact identity deduplicates a shared UCE/Trilogy finding with both origin labels', () => {
   const native = uce({ id: 'same', category: 'runtime',
     title: 'Declared Node runtime pin does not satisfy mandatory requirements',
-    severity: 'critical', affectedFile: '.nvmrc', recommendation: 'Review pin',
+    severity: 'warning', affectedFile: '.nvmrc', recommendation: 'Review pin',
     detected: '20.0.0', expected: '>=22' });
   const out = buildUnifiedIntelligence(native, fixture());
   const found = out.findings.filter(f => f.title === native.issues[0].title);
   assert.equal(found.length, 1);
   assert.equal(found[0].origin, 'Both');
   assert.deepEqual(found[0].origins, ['UCE', 'Trilogy']);
-  assert.equal(found[0].severity, 'critical', 'never mutate UCE severity');
+  assert.equal(found[0].severity, 'warning', 'never mutate UCE severity');
   assert.equal(found[0].verification, 'not-run');
   assert.ok(found[0].relatedTrilogyIds.length === 1);
 });
@@ -307,4 +307,40 @@ test('unsupported source graphs never claim independent pin relationship proof',
   assert.equal(out.graphStatus, 'unknown');
   assert.equal(out.findings.length, 0);
   assert.deepEqual(out.patchTargets, []);
+});
+
+
+test('CLI fusion refuses a native critical versus Trilogy warning severity disagreement', () => {
+  const native = uce({ id: 'critical', category: 'runtime',
+    title: 'Declared Node runtime pin does not satisfy mandatory requirements',
+    severity: 'critical', affectedFile: '.nvmrc', recommendation: 'Review pin',
+    detected: '20.0.0', expected: '>=22' });
+  const reportBefore = JSON.stringify(native);
+  const out = buildUnifiedIntelligence(native, fixture());
+  const matches = out.findings.filter(f => f.title === native.issues[0].title);
+  assert.equal(matches.length, 2);
+  assert.deepEqual(new Set(matches.map(f => f.severity)), new Set(['critical', 'warning']));
+  assert.deepEqual(new Set(matches.map(f => f.origin)), new Set(['UCE', 'Trilogy']));
+  assert.ok(matches.every(f => f.verification === 'not-run'));
+  assert.equal(out.originalScore, 87);
+  assert.equal(JSON.stringify(native), reportBefore);
+});
+
+test('CLI fusion leaves all identical native records independent when matching is ambiguous', () => {
+  const data = { category: 'runtime',
+    title: 'Declared Node runtime pin does not satisfy mandatory requirements',
+    severity: 'warning', affectedFile: '.nvmrc', recommendation: 'Review pin',
+    detected: '20.0.0', expected: '>=22' };
+  const native = uce({ ...data, id: 'first' }, { ...data, id: 'second' });
+  const before = JSON.stringify(native);
+  const out = buildUnifiedIntelligence(native, fixture());
+  const matches = out.findings.filter(f => f.title === data.title);
+  assert.equal(matches.length, 3);
+  assert.equal(matches.filter(f => f.origin === 'UCE').length, 2);
+  assert.equal(matches.filter(f => f.origin === 'Trilogy').length, 1);
+  assert.equal(out.originalIssueCount, 2);
+  assert.equal(out.originalScore, 87);
+  assert.deepEqual(matches.filter(f => f.origin === 'UCE').map(f => f.sourceIssueIds[0]),
+    ['first', 'second']);
+  assert.equal(JSON.stringify(native), before);
 });
