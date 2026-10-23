@@ -121,3 +121,50 @@ test('browser proposal preparation rejects unsafe, duplicate, stale-like and dyn
     await assert.rejects(() => makeDeveloperPatchRequest(bundle(), target), undefined, target);
   }
 });
+
+test('browser fusion never hides a severity conflict despite exact same source and evidence', () => {
+  const r = sample();
+  r.issues.push({ id: 'uce-risk', title: 'Dependency declaration review: alpha',
+    category: 'dependencies', severity: 'critical', affectedFile: 'package.json',
+    reason: 'wildcard declaration for alpha (*)', recommendation: 'Review' });
+  const before = JSON.stringify(r);
+  const out = buildUnifiedBrowserReport(r);
+  const matches = out.findings.filter(f => f.title === 'Dependency declaration review: alpha');
+  assert.equal(matches.length, 2);
+  assert.deepEqual(new Set(matches.map(f => f.severity)), new Set(['critical', 'warning']));
+  assert.ok(matches.some(f => f.origin === 'UCE'));
+  assert.ok(matches.some(f => f.origin === 'Trilogy'));
+  assert.equal(JSON.stringify(r), before);
+});
+
+test('ambiguous UCE records with same evidence remain independent rather than arbitrarily merging', () => {
+  const r = sample();
+  const base = { title: 'Dependency declaration review: alpha',
+    severity: 'warning', affectedFile: 'package.json',
+    reason: 'wildcard declaration for alpha (*)', recommendation: 'Review' };
+  r.issues.push({ ...base, id: 'uce-risk-a', category: 'dependency-a' });
+  r.issues.push({ ...base, id: 'uce-risk-b', category: 'dependency-b' });
+  const out = buildUnifiedBrowserReport(r);
+  const matches = out.findings.filter(f => f.title === base.title);
+  assert.equal(matches.length, 3);
+  assert.equal(matches.filter(f => f.origin === 'UCE').length, 2);
+  assert.equal(matches.filter(f => f.origin === 'Trilogy').length, 1);
+  assert.ok(matches.every(f => f.verification === 'not-run'));
+});
+
+test('provenance exposes saved source line without claiming source text or solver proof', () => {
+  const r = sample();
+  r.issues[0].affectedFile = 'package.json:17';
+  const out = buildUnifiedBrowserReport(r);
+  const native = out.findings.find(f => f.id === 'uce:compatibility:uce-a');
+  assert.ok(native);
+  assert.deepEqual(native.sourceRefs, ['package.json#L17']);
+  assert.deepEqual(native.sourceIssueIds, ['compatibility:uce-a']);
+  assert.equal(native.evidenceStatus, 'report-reference');
+  assert.equal(native.verification, 'not-run');
+  const risk = out.findings.find(f => f.origin === 'Trilogy' && f.domain === 'dependencies');
+  assert.equal(risk.evidenceStatus, 'extracted-metadata');
+  assert.match(risk.potentialImpact, /unknown/);
+  assert.equal(out.originalScore, 84);
+  assert.equal(r.issues[0].affectedFile, 'package.json:17');
+});
