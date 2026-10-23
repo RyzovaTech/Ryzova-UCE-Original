@@ -94,6 +94,40 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
   const names = [(scope ? scope + '/' : '') + '.nvmrc',
     (scope ? scope + '/' : '') + '.node-version'];
   const pins = Array.isArray(files) ? files.filter(f => names.includes(f?.path)) : [];
+  // Independent declaration evidence: distinct canonical local pin files may
+  // select different runtimes in different tools. This is a review signal,
+  // not a proof that either version is incompatible with the project.
+  // Incomplete/dynamic/ambiguous versions abstain rather than guessing.
+  const literalPin = pin => {
+    if (!pin || typeof pin.content !== 'string' ||
+        Buffer.byteLength(pin.content) > 128 ||
+        !/^[ \\t]*v?(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)[ \\t]*(?:\\r?\\n)?$/.test(pin.content)) return null;
+    const value = pin.content.trim().replace(/^v/, '');
+    return semver.valid(value, { loose: false }) === value &&
+      semver.prerelease(value) === null &&
+      semver.parse(value).build.length === 0 &&
+      value.split('.').every(n => Number.isSafeInteger(Number(n)) && Number(n) <= 1000000)
+      ? value : null;
+  };
+  if (pins.length === 2 && pins[0].path !== pins[1].path) {
+    const a = literalPin(pins[0]);
+    const b = literalPin(pins[1]);
+    if (a && b && a !== b) {
+      add({
+        id: 'trilogy:conflicting-node-pins:' + idHash([scope,
+          pins[0].path, a, pins[1].path, b].join('|')),
+        title: 'Conflicting declared Node version pins',
+        file: pins[0].path,
+        evidenceRefs: [pins[0].path, pins[1].path],
+        sourceIssueIds: [],
+        declaredPins: [
+          { source: pins[0].path, version: a },
+          { source: pins[1].path, version: b },
+        ],
+        recommendation: 'Review which tools, CI jobs and deployment environments consume each pin. Do not assume either pin is the active runtime; separate source files are not automatically changed.',
+      });
+    }
+  }
   for (const pin of pins) {
     if (typeof pin.content !== 'string' || pin.content.length > 128) continue;
     const version = pin.content.trim().replace(/^v/, '');
