@@ -168,3 +168,30 @@ test('provenance exposes saved source line without claiming source text or solve
   assert.equal(out.originalScore, 84);
   assert.equal(r.issues[0].affectedFile, 'package.json:17');
 });
+
+test('original UCE raw issue records remain accessible even when workspace deduplication hides a mirror', () => {
+  const r = sample();
+  r.issues.push({ ...r.issues[0], id: 'distinct-issue', reason: 'Different original evidence' });
+  const before = JSON.stringify(r);
+  const out = buildUnifiedBrowserReport(r);
+  assert.equal(out.originalIssueCount, 3);
+  assert.equal(out.originalIssues.length, 3);
+  assert.equal(out.originalIssues[2].id, 'distinct-issue');
+  assert.equal(out.originalIssues[2].reason, 'Different original evidence');
+  assert.equal(out.originalScore, 84);
+  assert.equal(JSON.stringify(r), before);
+});
+
+test('workspace display cap is disclosed without dropping original UCE record access', () => {
+  const r = sample();
+  for (let i = 0; i < 1004; i++) {
+    r.issues.push({ id: 'bulk-' + i, title: 'Distinct issue ' + i, category: 'runtime',
+      severity: 'info', affectedFile: 'src/item-' + i + '.js',
+      reason: 'Source ' + i, recommendation: 'Manual review' });
+  }
+  const out = buildUnifiedBrowserReport(r);
+  assert.equal(out.originalIssueCount, 1006);
+  assert.equal(out.originalIssues.length, 1006);
+  assert.equal(out.omittedWorkspaceFindings, 6);
+  assert.equal(out.findings.filter(f => f.origin === 'UCE').length, 1000);
+});
