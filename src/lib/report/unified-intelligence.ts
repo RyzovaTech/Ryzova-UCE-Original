@@ -73,7 +73,7 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
     origin: 'UCE',
     severity: f.severity,
     domain: f.module.includes('security') ? 'security'
-      : f.module.includes('dependency') ? 'dependencies'
+      : f.module.includes('dependenc') ? 'dependencies'
       : f.module.includes('runtime') ? 'runtime'
       : f.module.includes('configuration') ? 'configuration' : 'other',
     file: f.file,
