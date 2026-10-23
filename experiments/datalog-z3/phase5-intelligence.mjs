@@ -114,6 +114,37 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
     });
   }
 
+  // Extend independent *context* discovery to locked mandatory framework
+  // declarations. This is NOT a framework compatibility error and does not
+  // import project source code, infer peer activation or invent a formal proof.
+  const manifestPath = (scope ? scope + '/' : '') + 'package.json';
+  const manifestSource = Array.isArray(files) ? files.find(f => f?.path === manifestPath) : null;
+  const FRAMEWORKS = new Set(['react', 'vue', 'next', 'nuxt', 'astro',
+    '@angular/core', '@sveltejs/kit', 'svelte', 'express', 'fastify']);
+  let manifest = null;
+  try { if (typeof manifestSource?.content === 'string')
+    manifest = JSON.parse(manifestSource.content); } catch { /* evidence stays unavailable */ }
+  if (manifest && typeof manifest.dependencies === 'object' && manifest.dependencies &&
+      !Array.isArray(manifest.dependencies)) {
+    for (const [name, declared] of Object.entries(manifest.dependencies)) {
+      if (found.length >= MAX_TRILOGY_FINDINGS) break;
+      if (!FRAMEWORKS.has(name) || typeof declared !== 'string' ||
+          declared.length > 160 || !graph.packages.includes('node_modules/' + name))
+        continue;
+      found.push({
+        id: 'trilogy:framework-declaration:' + idHash([scope, name, declared].join('|')),
+        title: 'Framework dependency context: ' + name,
+        file: manifestPath, module: 'framework',
+        origin: 'Trilogy', origins: ['Trilogy'], severity: 'info',
+        verification: 'not-run', evidenceLevel: 'source-backed-manifest-and-lock',
+        evidenceRefs: [manifestPath + '#dependencies', (scope ? scope + '/' : '') +
+          'package-lock.json#packages'],
+        sourceIssueIds: [], contextOnly: true, rootCauseId: null,
+        recommendation: 'Inspect this locked framework and its plugin/peer requirements. Compatibility and runtime behavior are not proven.',
+      });
+    }
+  }
+
   // Preserve every source issue; only merge identical normalized claims
   // with identical affected file and category. No title-only fuzzy merges.
   const fused = [];
