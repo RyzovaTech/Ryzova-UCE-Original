@@ -31,6 +31,8 @@ export interface UnifiedBrowserReport {
   version: 1;
   originalScore: number;
   originalIssueCount: number;
+  originalIssues: Array<{ id: string; title: string; severity: Severity; affectedFile: string; reason: string }>;
+  omittedWorkspaceFindings: number;
   findings: UnifiedBrowserFinding[];
   rootGroups: UnifiedRootGroup[];
   ungroupedIds: string[];
@@ -64,7 +66,8 @@ const DOMAIN_TITLES: Record<string, string> = {
  * of existing UCE-extracted metadata, NOT independent raw-source extraction.
  */
 export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowserReport {
-  const native = collectWorkspaceFindings(report).slice(0, 1000).map((f): UnifiedBrowserFinding => ({
+  const workspaceFindings = collectWorkspaceFindings(report);
+  const native = workspaceFindings.slice(0, 1000).map((f): UnifiedBrowserFinding => ({
     id: 'uce:' + f.id,
     title: f.title,
     origin: 'UCE',
@@ -164,6 +167,9 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
   return {
     version: 1, originalScore: report.score.overall,
     originalIssueCount: report.issues.length,
+    originalIssues: report.issues.map(issue => ({ id: issue.id, title: issue.title,
+      severity: issue.severity, affectedFile: issue.affectedFile, reason: issue.reason })),
+    omittedWorkspaceFindings: Math.max(0, workspaceFindings.length - native.length),
     findings: findings.sort((a, b) => rank(a.severity) - rank(b.severity) || a.id.localeCompare(b.id)),
     rootGroups, ungroupedIds: findings.filter(f => !grouped.has(f.id)).map(f => f.id),
     limitations: [
@@ -173,6 +179,8 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       'No Souffle, Z3 or cvc5 proof was run; all verification is not-run.',
       'Evidence status describes report provenance, not independently checked source bytes or calibrated confidence.',
       'Potential impact is an investigation hypothesis, not an observed build, installation or runtime result.',
+      'A separate original-issue record view preserves every raw UCE issue, including records deduplicated by the existing workspace helper.',
+      'The browser limits workspace enrichments to 1000; omitted counts are disclosed and all original issue records remain accessible.',
       'The original UCE issue records and score are unchanged.',
     ],
   };
