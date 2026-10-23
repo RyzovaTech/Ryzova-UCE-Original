@@ -93,7 +93,8 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
   // separate independent discovery (and a candidate for on-demand review).
   const names = [(scope ? scope + '/' : '') + '.nvmrc',
     (scope ? scope + '/' : '') + '.node-version'];
-  const pins = Array.isArray(files) ? files.filter(f => names.includes(f?.path)) : [];
+  const pins = Array.isArray(files) ? files.filter(f => names.includes(f?.path))
+    .sort((a, b) => a.path.localeCompare(b.path)) : [];
   // Independent declaration evidence: distinct canonical local pin files may
   // select different runtimes in different tools. This is a review signal,
   // not a proof that either version is incompatible with the project.
