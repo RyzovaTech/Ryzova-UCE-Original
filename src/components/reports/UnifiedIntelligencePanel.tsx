@@ -39,7 +39,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   const [opened, setOpened] = useState<string | null>(null);
   const [bundle, setBundle] = useState<BrowserEvidenceBundle | null>(null);
   const [bundleName, setBundleName] = useState('');
-  const [target, setTarget] = useState('22.0.0');
+  const [target, setTarget] = useState('');
   const [requestInput, setRequestInput] = useState<Awaited<ReturnType<typeof makeDeveloperPatchRequest>> | null>(null);
   const [message, setMessage] = useState('');
   const selectSource = (path: string) => {
@@ -143,7 +143,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
         <label className="block space-y-1 text-xs font-medium">Developer-selected stable Node target (x.y.z)
           <Input value={target} onChange={event => { setTarget(event.target.value); setRequestInput(null); }} placeholder="22.0.0" />
         </label>
-        <Button type="button" disabled={!bundle} onClick={() => { void generate(); }}>
+        <Button type="button" disabled={!bundle || !target.trim()} onClick={() => { void generate(); }}>
           Generate Fix Proposal
         </Button>
         <p className="text-sm" role="status">{message || 'No patch request generated.'}</p>
