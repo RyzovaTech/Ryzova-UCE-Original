@@ -81,6 +81,15 @@ test('invalid source paths and missing provenance never create supported extra f
   assert.equal(out.findings.filter(f => f.origin === 'UCE').length, 2);
 });
 
+test('framework or dependency references only in docs/tests cannot be promoted to project findings', () => {
+  const r = sample();
+  r.stack.dependencyIntelligence.risks[0].source = 'examples/package.json';
+  r.stack.technologyDetections[0].evidence[0].source = 'docs/example/package.json';
+  const out = buildUnifiedBrowserReport(r);
+  assert.ok(!out.findings.some(f => f.origin === 'Trilogy'));
+  assert.equal(out.originalIssueCount, 2);
+});
+
 test('browser request SHA is deterministic, user-selected and contains no generated diff', async () => {
   if (!globalThis.crypto?.subtle) globalThis.crypto = webcrypto;
   const files = bundle();
