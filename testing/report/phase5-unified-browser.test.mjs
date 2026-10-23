@@ -195,3 +195,42 @@ test('workspace display cap is disclosed without dropping original UCE record ac
   assert.equal(out.omittedWorkspaceFindings, 6);
   assert.equal(out.findings.filter(f => f.origin === 'UCE').length, 1000);
 });
+
+test('browser export strips untrusted per-file metadata and rejects embedded or unknown requests', () => {
+  const data = bundle();
+  data.files[0].size = 99999;
+  data.files[0].isDirectory = false;
+  const before = JSON.stringify(data);
+  const checked = validateBrowserEvidenceBundle(data);
+  assert.deepEqual(checked.files[0], { path: 'package.json',
+    content: '{"dependencies":{"alpha":"^1.0.0"}}' });
+  assert.equal(checked.workspace, '');
+  assert.equal(JSON.stringify(data), before, 'original developer evidence must not be mutated');
+  const stale = bundle();
+  stale.request = { action: 'generate-fix-proposal', targetVersion: '99.0.0' };
+  assert.throws(() => validateBrowserEvidenceBundle(stale), /remove saved requests/i);
+  const extra = bundle();
+  extra.token = 'secret-do-not-export';
+  assert.throws(() => validateBrowserEvidenceBundle(extra), /extra fields/i);
+  const invalidName = bundle();
+  invalidName.fileName = 'X'.repeat(101);
+  assert.throws(() => validateBrowserEvidenceBundle(invalidName));
+});
+
+test('browser request review displays true original version, exact hash and non-verified risks', async () => {
+  if (!globalThis.crypto?.subtle) globalThis.crypto = webcrypto;
+  const data = bundle();
+  data.files[2].content = 'v20.0.0\r\n';
+  const out = await makeDeveloperPatchRequest(data, '22.0.0');
+  assert.equal(out.review.targetFile, '.nvmrc');
+  assert.equal(out.review.originalVersion, '20.0.0');
+  assert.equal(out.review.targetVersion, '22.0.0');
+  assert.equal(out.review.sourceSha256, createHash('sha256').update('v20.0.0\r\n').digest('hex'));
+  assert.equal(out.review.sourceSha256, out.request.expectedSha256);
+  assert.equal(out.review.riskLevel, 'requires-manual-review');
+  assert.ok(out.review.riskFactors.some(x => x.includes('browser has not established')));
+  assert.ok(out.review.verificationChecklist.some(x => x.includes('separate guarded Node CLI')));
+  assert.equal(Object.hasOwn(out.cliInput, 'review'), false);
+  assert.equal(Object.hasOwn(out.cliInput, 'diff'), false);
+  assert.equal(JSON.stringify(data).includes('riskFactors'), false);
+});
