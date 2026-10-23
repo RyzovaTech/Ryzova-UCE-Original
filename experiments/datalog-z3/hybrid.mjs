@@ -13,7 +13,7 @@ const unknown = (reason, extras = {}) => ({
  * pass original, same-workspace documented Node requirements to real Z3.
  */
 export async function evaluateDatalogZ3(files, options = {}) {
-  const graph = extractLockedDependencyGraph(files, options.workspace ?? '');
+  const graph = extractLockedDependencyGraph(files, options.workspace ?? '', { hoistedOnly: options.hoistedOnly === true });
   if (graph.status !== 'ok') return unknown(graph.reason, { stage: 'graph' });
   const derived = await deriveReachability(graph, options);
   if (derived.status !== 'ok') return unknown(derived.reason, { stage: 'datalog' });

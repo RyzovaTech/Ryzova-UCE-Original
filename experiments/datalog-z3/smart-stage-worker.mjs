@@ -5,7 +5,7 @@ let source = '';
 try {
   for await (const chunk of process.stdin) {
     source += chunk;
-    if (source.length > 700 * 1024) throw Error('input-budget');
+    if (source.length > 2500 * 1024) throw Error('input-budget');
   }
   const payload = JSON.parse(source);
   if (!payload || !['souffle', 'z3', 'cvc5'].includes(stage)) throw Error('invalid-stage');

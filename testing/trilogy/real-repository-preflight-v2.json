@@ -1,0 +1,68 @@
+{
+  "schema": "uce-real-repo-nested-model-preflight-v2",
+  "date": "2026-10-22",
+  "model": "bounded mandatory npm lock v2/v3 with nearest-ancestor nested resolution",
+  "source": "exact commit-pinned public manifest + lock blobs; no installation or source execution",
+  "populationRepresentativeness": false,
+  "independentHumanLabels": 0,
+  "candidates": 7,
+  "realCaseObservations": [
+    {
+      "id": "RR01",
+      "repository": "RyzovaTech/Ryzova-UCE-Original",
+      "state": "unknown",
+      "reason": "reachable actual peers require resolution proof, plus model constraint budget; no global compatibility verdict"
+    },
+    {
+      "id": "RR02",
+      "repository": "expressjs/express",
+      "state": "unknown",
+      "reason": "no root package-lock at pinned commit"
+    },
+    {
+      "id": "RR03",
+      "repository": "fastify/fastify",
+      "state": "unknown",
+      "reason": "no root package-lock at pinned commit"
+    },
+    {
+      "id": "RR04",
+      "repository": "sindresorhus/slugify",
+      "state": "unknown",
+      "reason": "no root package-lock at pinned commit"
+    },
+    {
+      "id": "RR05",
+      "repository": "axios/axios",
+      "state": "supported-mandatory-node-scope",
+      "commit": "e6b79d9cef796ca3a903bb83e51d4752b019fd67",
+      "manifestBlobSha": "b4e3d1e48866809f4098494516806afdf1a8bcb5",
+      "lockfileBlobSha": "0fc1d3dcf01f09e50bf34a538e16de1743151516",
+      "lockedInstallEntries": 687,
+      "reachableMandatoryInstalls": 26,
+      "modeledEngineRanges": 23,
+      "scope": "joint engines.node requirements of source-backed mandatory production paths",
+      "verification": "synthetic-label-free, exact public-source solver regression; CI must be green",
+      "runtimeOrInstallProven": false,
+      "humanAdjudicated": false
+    },
+    {
+      "id": "RR06",
+      "repository": "npm/cli",
+      "state": "unknown",
+      "reason": "root npm workspaces require independent workspace proof; no inference from root lock alone"
+    },
+    {
+      "id": "RR07",
+      "repository": "uuidjs/uuid",
+      "state": "skipped",
+      "reason": "no root mandatory production dependency edges at pinned commit; no meaningful joint requirement"
+    }
+  ],
+  "claims": {
+    "realWorldAccuracy": false,
+    "globalCoverageRate": false,
+    "hardProcessTreeMemory": false,
+    "productionReady": false
+  }
+}

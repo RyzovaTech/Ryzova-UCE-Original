@@ -9,7 +9,9 @@ import { init, killThreads } from 'z3-solver';
  * infer that an installed runtime obeys a declaration merely because a
  * mathematically satisfying version exists.
  */
-export const MAX_CONSTRAINTS = 12;
+// Phase 4 Smart Verification permits up to 32 scoped source constraints.
+// Legacy held-out Trilogy continues to enforce its original 12-fact bound.
+export const MAX_CONSTRAINTS = 32;
 export const DEFAULT_TIMEOUT_MS = 2000;
 
 export async function createZ3Session() {

@@ -12,7 +12,7 @@ import { solveWithCvc5 } from './cvc5.mjs';
  * never treat a single solver's conflict as independently verified.
  */
 export async function evaluateDatalogZ3Cvc5(files, options = {}) {
-  const primary = await evaluateDatalogZ3(files, options);
+  const primary = await evaluateDatalogZ3(files, { ...options, hoistedOnly: true });
   const unknown = (reason, cvc5Status = 'not-run', cvc5ElapsedMs = null) => ({
     engine: 'Souffle+Z3+cvc5', status: 'unknown', reason,
     z3Status: primary.status, cvc5Status,
@@ -20,7 +20,7 @@ export async function evaluateDatalogZ3Cvc5(files, options = {}) {
     verification: 'incomplete',
   });
   if (primary.status === 'unknown') return unknown('Datalog/Z3 did not establish complete supported evidence: ' + primary.reason);
-  const graph = extractLockedDependencyGraph(files, options.workspace ?? '');
+  const graph = extractLockedDependencyGraph(files, options.workspace ?? '', { hoistedOnly: true });
   if (graph.status !== 'ok' || graph.constraints.length < 2 || graph.constraints.length > 12) {
     return unknown('Original dependency evidence is missing or over budget.');
   }

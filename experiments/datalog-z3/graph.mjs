@@ -1,10 +1,13 @@
 import semver from 'semver';
 
-const MAX_FILES = 32;
-const MAX_PACKAGES = 96;
-const MAX_EDGES = 192;
-const MAX_DEPTH = 16;
-const MAX_CHARS = 256 * 1024;
+const MAX_FILES = 64;
+// Finite input/graph traversal budgets, not an arbitrary project-size
+// eligibility heuristic: all mandatory reachable dependencies must fit.
+const MAX_PACKAGES = 2048;
+const MAX_REACHABLE_PACKAGES = 512;
+const MAX_EDGES = 2048;
+const MAX_DEPTH = 32;
+const MAX_CHARS = 1024 * 1024;
 const PACKAGE_NAME = /^(?:@[a-z0-9_.-]+\/)?[a-z0-9_.-]+$/i;
 const VALID_PATH = /^[A-Za-z0-9_.@/-]+$/;
 
@@ -33,11 +36,12 @@ function lockVersionAndDeps(data) {
 }
 
 /**
- * Only package-lock v2/v3 hoisted, exact (not aliased/workspace/nested) npm
- * dependency edges are supported. A missing edge or ambiguous resolution is
- * UNKNOWN, never a partial, supposedly complete dependency graph.
+ * npm package-lock v2/v3 mandatory production edges, including exact
+ * nearest-ancestor nested and scoped installations. Aliases/workspaces,
+ * peers, optional activation and conditional platform edges fail closed.
+ * A missing edge or ambiguous resolution is UNKNOWN, never partial SAT.
  */
-export function extractLockedDependencyGraph(files, workspace = '') {
+export function extractLockedDependencyGraph(files, workspace = '', options = {}) {
   if (!Array.isArray(files) || files.length > MAX_FILES ||
       typeof workspace !== 'string' || workspace.length > 120 ||
       (workspace !== '' && (!VALID_PATH.test(workspace) || workspace.split('/').some(x => !x || x === '.' || x === '..')))) {
@@ -63,6 +67,12 @@ export function extractLockedDependencyGraph(files, workspace = '') {
       !record(lock.packages) || !record(lock.packages[''])) {
     return unknown('Unsupported lockfile version or missing root lock metadata.');
   }
+  // npm workspaces, root peer activation and conditional platforms need
+  // independent scope proofs. Never claim the entire project in their presence.
+  if (pkg.workspaces !== undefined ||
+      (record(pkg.peerDependencies) && Object.keys(pkg.peerDependencies).length) ||
+      (record(pkg.optionalDependencies) && Object.keys(pkg.optionalDependencies).length))
+    return unknown('Unsupported root workspace/peer/optional activation semantics.');
   const direct = pkg.dependencies === undefined ? [] : depsOf(pkg.dependencies);
   const lockDirect = lock.packages[''].dependencies === undefined ? [] : depsOf(lock.packages[''].dependencies);
   if (!direct || !lockDirect || direct.length !== lockDirect.length ||
@@ -71,42 +81,84 @@ export function extractLockedDependencyGraph(files, workspace = '') {
   }
   if (!direct.length) return unknown('No direct production dependency edges in this workspace.');
 
-  // Hoisted-only: nested package copies make bare-name dependency resolution
-  // ambiguous; decline rather than guessing an installed dependency target.
+  // The historical v1 benchmark explicitly opts into its original
+  // hoisted-only model; expanded nested resolution remains available to
+  // the new Smart Verification path without changing frozen v1 labels.
+  if (options.hoistedOnly === true && Object.keys(lock.packages).some(key =>
+      key.startsWith('node_modules/') &&
+      key.slice('node_modules/'.length).includes('/node_modules/')))
+    return unknown('Historical hoisted-only graph does not model nested installations.');
+  // npm resolves each required package from its requiring package's own
+  // node_modules, then climbs to the nearest ancestor node_modules. A nested
+  // copy can shadow a hoisted package, so bare-name lookup is unsound.
   const entries = Object.entries(lock.packages);
-  if (entries.length > MAX_PACKAGES + 1 ||
-      entries.some(([key]) => key.startsWith('node_modules/') &&
-        key.slice('node_modules/'.length).includes('/node_modules/'))) {
-    return unknown('Package graph exceeds budget or contains nested installations.');
-  }
+  if (entries.length > MAX_PACKAGES + 1)
+    return unknown('Package lock entry budget exceeded.');
   const declared = new Map();
   for (const [key, val] of entries) {
     if (key === '') continue;
-    if (!key.startsWith('node_modules/')) return unknown('Unsupported lockfile package root/layout.');
-    const name = key.slice('node_modules/'.length);
-    if (!PACKAGE_NAME.test(name)) return unknown('Unsupported installed package reference.');
-    const metadata = lockVersionAndDeps(val);
-    if (!metadata) return unknown('Invalid installed package metadata: ' + key);
-    declared.set(name, metadata);
+    if (!key.startsWith('node_modules/') || !record(val))
+      return unknown('Unsupported lockfile package root/layout.');
+    const nodes = key.split('/node_modules/');
+    const names = [nodes[0].slice('node_modules/'.length), ...nodes.slice(1)];
+    if (names.some(name => !PACKAGE_NAME.test(name)))
+      return unknown('Invalid nested or scoped installed package reference.');
+    declared.set(key, val);
   }
+  const resolveInstalled = (issuer, name) => {
+    let ancestor = issuer === '__uce_root__' ? '' : issuer;
+    while (true) {
+      const candidate = (ancestor ? ancestor + '/' : '') + 'node_modules/' + name;
+      if (declared.has(candidate)) return candidate;
+      if (!ancestor) return null;
+      const index = ancestor.lastIndexOf('/node_modules/');
+      ancestor = index < 0 ? '' : ancestor.slice(0, index);
+    }
+  };
   const edges = [];
   const queue = [{ node: '__uce_root__', dependencies: direct, depth: 0 }];
   const visited = new Set();
   const included = new Set();
-  while (queue.length) {
-    const item = queue.shift();
+  const metadata = new Map();
+  let head = 0;
+  while (head < queue.length) {
+    const item = queue[head++];
     if (item.depth >= MAX_DEPTH) return unknown('Dependency depth budget exceeded.');
     for (const [name, range] of item.dependencies) {
-      const resolved = declared.get(name);
-      if (!resolved || !semver.satisfies(resolved.version, range, { includePrerelease: false })) {
-        return unknown('Missing or mismatched lock resolution for ' + name + '.');
+      const next = resolveInstalled(item.node, name);
+      if (!next) return unknown('Missing locked dependency resolution for ' + name + '.');
+      let resolved = metadata.get(next);
+      if (!resolved) {
+        const source = declared.get(next);
+        // A peerDependenciesMeta optional hint without any declared peer
+        // requirement does not create an installation obligation. Actual
+        // peerDependencies (even optional ones) still require npm resolution
+        // semantics outside this bounded mandatory-production proof.
+        const peers = source.peerDependencies;
+        const meta = source.peerDependenciesMeta;
+        const declaredPeers = peers !== undefined &&
+          (!record(peers) || Object.keys(peers).length > 0);
+        const badHints = meta !== undefined &&
+          (!record(meta) || Object.values(meta).some(hint =>
+            !record(hint) || hint.optional !== true));
+        if (source.link === true || source.optional === true ||
+            source.os !== undefined || source.cpu !== undefined ||
+            source.libc !== undefined || declaredPeers || badHints) {
+          return unknown('Reachable link/optional/platform/peer semantics require additional proof.');
+        }
+        resolved = lockVersionAndDeps(source);
+        if (!resolved) return unknown('Invalid reachable package metadata: ' + next);
+        metadata.set(next, resolved);
       }
-      const next = 'node_modules/' + name;
+      if (!semver.satisfies(resolved.version, range, { includePrerelease: false }))
+        return unknown('Locked dependency version does not satisfy source range: ' + name + '.');
       edges.push([item.node, next]);
-      if (edges.length > MAX_EDGES) return unknown('Dependency edge budget exceeded.');
-      included.add(name);
-      if (!visited.has(name)) {
-        visited.add(name);
+      if (edges.length > MAX_EDGES) return unknown('Mandatory dependency edge budget exceeded.');
+      included.add(next);
+      if (included.size > MAX_REACHABLE_PACKAGES)
+        return unknown('Mandatory reachable package budget exceeded.');
+      if (!visited.has(next)) {
+        visited.add(next);
         queue.push({ node: next, dependencies: resolved.dependencies, depth: item.depth + 1 });
       }
     }
@@ -119,20 +171,20 @@ export function extractLockedDependencyGraph(files, workspace = '') {
     package: '__uce_root__',
   });
   for (const name of [...included].sort()) {
-    const entry = declared.get(name);
+    const entry = metadata.get(name);
     if (entry.engine !== undefined && entry.engine !== null) {
       constraints.push({
         id: 'package_' + constraints.length,
         source: expected('package-lock.json') + '#packages',
-        key: 'packages["node_modules/' + name + '"].engines.node',
-        package: 'node_modules/' + name,
+        key: 'packages["' + name + '"].engines.node',
+        package: name,
         range: entry.engine,
       });
     }
   }
   return {
     status: 'ok', reason: '', workspace,
-    packages: ['__uce_root__', ...[...included].sort().map(x => 'node_modules/' + x)],
+    packages: ['__uce_root__', ...[...included].sort()],
     edges, constraints,
     evidence: [expected('package.json'), expected('package-lock.json')],
   };

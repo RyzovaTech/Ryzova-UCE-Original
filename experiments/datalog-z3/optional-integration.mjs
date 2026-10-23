@@ -16,8 +16,8 @@ import { createStrictSolverCgroup } from '../solver-linux-cgroup.mjs';
 const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
 const WORKER = fileURLToPath(new URL('./optional-worker.mjs', import.meta.url));
 const ENGINE = 'Souffle+Z3+cvc5';
-const MAX_PAYLOAD = 700 * 1024;
-const MAX_OUTPUT = 32 * 1024;
+const MAX_PAYLOAD = 2500 * 1024;
+const MAX_OUTPUT = 128 * 1024;
 
 const defaultDiagnostic = (enabled, workspace) => ({
   version: 1, engine: ENGINE, enabled, attempted: false,
@@ -214,7 +214,7 @@ function verifyResult(raw, graph) {
       witness: raw.witness, unsatCore: [], evidence: [] };
   }
   if (!Array.isArray(raw.unsatCore) || raw.unsatCore.length < 1 ||
-      raw.unsatCore.length > 12 || !Array.isArray(raw.paths) ||
+      raw.unsatCore.length > 32 || !Array.isArray(raw.paths) ||
       raw.paths.length !== raw.unsatCore.length) return null;
   const seen = new Set();
   const evidence = [];
