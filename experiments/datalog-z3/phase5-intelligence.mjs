@@ -101,7 +101,7 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
   const literalPin = pin => {
     if (!pin || typeof pin.content !== 'string' ||
         Buffer.byteLength(pin.content) > 128 ||
-        !/^[ \\t]*v?(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)[ \\t]*(?:\\r?\\n)?$/.test(pin.content)) return null;
+        !/^[ \t]*v?(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)[ \t]*(?:\r?\n)?$/.test(pin.content)) return null;
     const value = pin.content.trim().replace(/^v/, '');
     return semver.valid(value, { loose: false }) === value &&
       semver.prerelease(value) === null &&
