@@ -77,7 +77,7 @@ Tests:
 A new "Root Causes" report section is the first view for software scans on the experimental branch. The existing Overview and Issues sections, original score and report exports remain available and unchanged.
 
 - Read-only browser enrichment of original UCE findings and source-linked, UCE-extracted dependency risks and framework metadata. No source-code execution, new native solver invocation or project mutation.
-- UCE / Trilogy / Both origin labels. Both requires exact domain/title/file/evidence equality; no title-only fuzzy deduplication. The original UCE issue records are preserved.
+- UCE / Trilogy / Both origin labels. Both requires exact domain/title/file/evidence/**severity** equality with a single unambiguous UCE candidate. Conflicting-severity, multiple-candidate or merely similar findings stay separate. The original UCE issue records and their original severity are preserved.
 - Root Cause First groups are **investigation clusters**, based on shared module/domain evidence, NOT established causal roots. Ungrouped findings remain available.
 - Dependency enrichment covers source-referenced wildcard, remote-source and version-conflict declaration risks. Framework enrichment is informational source context, **not** a confirmed incompatibility.
 - Source reference clicks navigate to an Evidence Inspector showing linked report evidence and exact paths. Saved reports do NOT contain arbitrary original source bytes; the UI does not synthesize a source preview.
@@ -93,3 +93,15 @@ Regression commands:
     npm --prefix experiments/datalog-z3 test
 
 **No main merge, default production enablement or permission to auto-apply a proposed change.**
+
+## Phase 5.2 browser provenance and preservation refinement (2026-10-23)
+
+- The UCE report remains the canonical source of scores and original issues. Root Causes now exposes a separately reviewable list of **all raw original UCE issue records** (ID, title, severity, file, reason) without changing scoring or the existing Issues tab.
+- The derived workspace finding view is bounded to 1000 native entries. Its omitted count is explicit rather than silently implying full coverage; the raw original issue list remains accessible.
+- Every finding displays **severity**, **origin** (UCE, Trilogy or Both), **evidence status** (report reference, extracted metadata, report-only), **formal verification** (not run), **potential impact hypothesis** and any original record references as independent dimensions. No calibrated confidence, observed runtime result or formal proof is implied.
+- UCE findings with a valid saved source path and line use a navigable `path#Lline` report reference, not reconstructed or fetched file contents.
+- Ungrouped findings can be expanded beyond the initial first 100; no ungrouped findings are omitted without an explicit display choice.
+- Browser fusion now fails closed on ambiguous same-evidence UCE candidates and severity disagreement. Both `dependency` and `dependencies` module labels map to the dependency domain.
+- Existing explicit developer-request-only proposal preparation, user-selected exact Node target, SHA-256 guard, read-only local CLI and prohibition on auto-apply remain unchanged.
+
+Additional regression tests cover severity-conflict abstention, ambiguous native matching, source-line provenance, raw issue preservation and disclosed UI finding caps. **These changes are committed to experimental PR #86 but require successful exact-HEAD CI; do not treat a prior green milestone as proof for this head.** Production release is still NO-GO pending #77, #80, #81 and owner authorization.
