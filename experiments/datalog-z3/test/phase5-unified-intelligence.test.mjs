@@ -226,3 +226,30 @@ test('local propose CLI without explicit request returns not-requested', () => {
   assert.equal(run.status, 0, run.stderr);
   assert.equal(JSON.parse(run.stdout).status, 'not-requested');
 });
+
+test('framework coverage emits source-backed context, not an invented compatibility warning', () => {
+  const files = fixture({ modify: (pkg, lock) => {
+    pkg.dependencies.react = '^18.0.0';
+    lock.packages[''].dependencies.react = '^18.0.0';
+    lock.packages['node_modules/react'] = { version: '18.3.1' };
+  } });
+  const out = buildUnifiedIntelligence(uce(), files);
+  const framework = out.findings.find(f => f.id.startsWith('trilogy:framework-declaration:'));
+  assert.equal(out.status, 'ok', out.reason);
+  assert.ok(framework);
+  assert.equal(framework.module, 'framework');
+  assert.equal(framework.contextOnly, true);
+  assert.equal(framework.severity, 'info');
+  assert.equal(framework.verification, 'not-run');
+  assert.ok(framework.evidenceRefs.includes('package.json#dependencies'));
+  assert.equal(out.rootCauses.some(g => g.findingIds.includes(framework.id)), false);
+});
+
+test('unreachable/dev-only framework metadata does not create framework claims', () => {
+  const files = fixture({ modify: (pkg, lock) => {
+    pkg.devDependencies = { react: '^18.0.0' };
+    lock.packages['node_modules/react'] = { version: '18.3.1', dev: true };
+  } });
+  assert.equal(buildUnifiedIntelligence(uce(), files).findings.some(f =>
+    f.id.startsWith('trilogy:framework-declaration:')), false);
+});
