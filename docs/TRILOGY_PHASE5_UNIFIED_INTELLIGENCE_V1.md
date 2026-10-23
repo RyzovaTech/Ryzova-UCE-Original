@@ -1,6 +1,6 @@
 # Phase 5 — Unified Intelligence V1 experimental vertical slice
 
-**Status:** Node-only experimental engineering. Not production, not browser, no score changes.
+**Status:** Experimental Node CLI plus read-only browser report integration. Not production, not default-main, no score changes.
 **Design:** Full Project Intelligence foundation, gradual capability rollout; Root Cause First UX, explicit UCE/Trilogy/Both origins and honest evidence boundaries.
 
 ## Current implemented slice (not the entire Phase 5 roadmap)
@@ -51,7 +51,7 @@ Only source-backed complete graph semantics, a single supported pin file, matchi
 
 - No CI YAML / GitHub Actions, package.json, package-lock.json, source code, framework, dependency upgrade or security-sensitive patching in V1.
 - Scan and propose use bounded input and path checks. Any nonliteral runtime pin, path traversal, multiple pin files, conflicting target or unsupported lock semantics abstains.
-- The original UCE scoring, issues, native analyzer and browser user interface remain unchanged. Stored browser reports may not retain source bytes, so they cannot safely generate a source-hash-checked patch yet.
+- The original UCE scoring, issue records and native analyzer remain unchanged. The browser report now includes an experimental Root Causes section, but it does **not** retain source bytes or create an actual patch. A user must explicitly provide a local source evidence JSON and request a CLI input; only the Node-only propose command can validate the modeled graph and produce a guarded diff.
 - The original input files are unchanged; output provides an advisory diff only. There is no Apply button.
 - Existing standalone formal verification (native Souffle, Z3, cvc5) is separate and opt-in, and is not represented as having run during static discovery.
 - Independent human accuracy validation stays owner-deferred until after product work. Production release requires external hard-cgroup and performance gates.
