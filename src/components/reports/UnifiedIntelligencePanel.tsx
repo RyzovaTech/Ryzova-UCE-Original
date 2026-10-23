@@ -42,7 +42,10 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   const [target, setTarget] = useState('22.0.0');
   const [requestInput, setRequestInput] = useState<Awaited<ReturnType<typeof makeDeveloperPatchRequest>> | null>(null);
   const [message, setMessage] = useState('');
-  const selectSource = (path: string) => setSelectedSource(path);
+  const selectSource = (path: string) => {
+    setSelectedSource(path);
+    document.getElementById('trilogy-source-evidence')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   const loadBundle = async (selected?: File) => {
     setRequestInput(null);
     setBundle(null);
@@ -117,7 +120,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
         {!model.ungroupedIds.length && <p className="text-sm text-muted-foreground">All current findings appear within investigation clusters above.</p>}
       </CardContent>
     </Card>
-    <Card><CardHeader><CardTitle className="text-base">Source evidence navigation</CardTitle>
+    <Card><CardHeader><CardTitle id="trilogy-source-evidence" className="text-base">Source evidence navigation</CardTitle>
       <CardDescription>Select a source reference from a finding to inspect linked report evidence; saved reports do not contain original source text.</CardDescription></CardHeader>
       <CardContent className="space-y-2">
         {selectedSource ? <><div className="flex flex-wrap items-center gap-2">
