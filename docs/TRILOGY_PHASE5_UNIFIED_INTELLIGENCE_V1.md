@@ -7,14 +7,14 @@
 
 - Read-only UCE findings adapter preserving native UCE score and issues.
 - Independent, source-backed static discovery of Node requirements and runtime pin mismatches from complete npm v2/v3 mandatory dependency graphs. Unsupported workspaces/peer/optional/platform semantics return Unknown, preserving UCE issues.
-- Exact equivalence by normalized issue module, title and affected file. Unrelated issues are never grouped merely by a similar title. A Node runtime association group is not a proven causal explanation.
+- Cross-engine equivalence additionally requires the identical source-linked Node pin and matching violated requirement value (not merely matching titles and files). Unproven equivalence preserves both findings separately. A Node runtime association group is not a proven causal explanation.
 - Scan returns a source hash and on-demand proposal eligibility hints but **never generates a diff**.
 - Explicit developer-requested read-only proposals for **one** literal .nvmrc OR .node-version pin. The developer supplies a stable Node x.y.z target version. Proposals are never auto-generated or applied.
 - No native solver execution in this V1 static intelligence/patch code. All discovered facts remain NOT formally verified. Existing Souffle-Z3-cvc5 opt-in pipeline is unchanged.
 
 ## Local workflow
 
-Prepare a local JSON input with fileName, optional workspace, and files as an array of records containing project-relative path and UTF-8 content. Example:
+Prepare a local JSON input with fileName, optional workspace, and files as an array of records containing project-relative path and UTF-8 content. Schematic only (replace the omitted manifest/lockfile entries with valid JSON):
 
     {
       "fileName": "my-project",
