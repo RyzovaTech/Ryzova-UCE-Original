@@ -42,6 +42,8 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
     severity: severity(issue?.severity),
     verification: 'not-run', evidenceLevel: 'original-uce-analysis',
     evidenceRefs: [], sourceIssueIds: [String(issue?.id ?? index).slice(0, 100)],
+    detectedValue: typeof issue?.detected === 'string' ? issue.detected.slice(0, 160) : null,
+    expectedValue: typeof issue?.expected === 'string' ? issue.expected.slice(0, 160) : null,
     recommendation: typeof issue?.recommendation === 'string'
       ? issue.recommendation.slice(0, 600) : '',
     rootCauseId: null,
@@ -108,6 +110,7 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
       sourceIssueIds: [],
       recommendation: 'Review the pinned runtime and modeled Node requirements. Request a read-only fix proposal after selecting a supported target version.',
       pinnedVersion: version,
+      violatingRanges: violating.map(c => c.range),
     });
   }
 
@@ -118,7 +121,14 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
   for (const item of [...originals, ...found]) {
     const key = findingIdentity(item);
     const other = byKey.get(key);
-    if (other && other.origin !== item.origin && other.origin !== 'Both') {
+    // Cross-engine wording/paths alone do not prove identical source claims.
+    // In V1 only a matching literal pin and exact violated source range can
+    // establish equivalence; otherwise retain both distinct findings.
+    const exactPinClaim = other && other.origin === 'UCE' &&
+      item.origin === 'Trilogy' && Array.isArray(item.violatingRanges) &&
+      other.detectedValue === item.pinnedVersion &&
+      item.violatingRanges.includes(other.expectedValue);
+    if (exactPinClaim) {
       other.origin = 'Both';
       other.origins = ['UCE', 'Trilogy'];
       other.evidenceRefs = [...new Set([...other.evidenceRefs, ...item.evidenceRefs])];
