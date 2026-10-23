@@ -1,0 +1,8 @@
+<!doctype html><html lang="en">
+<head><meta charset="utf-8"><title>UCE Trilogy Browser Worker Diagnostics</title></head>
+<body><h1>Experimental Worker Performance Harness, NOT a Trilogy Solver</h1>
+<p>Local-only probe. Souffle and cvc5 do not run in this browser.</p>
+<script type="module">
+import {trilogyBrowserReleaseGate} from './controller.mjs';
+document.documentElement.dataset.trilogyGate = trilogyBrowserReleaseGate().status;
+</script></body></html>
