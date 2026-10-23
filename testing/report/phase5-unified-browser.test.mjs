@@ -58,6 +58,20 @@ test('browser grouping never suppresses distinct same-title claims or ungrouped 
   assert.ok(out.findings.every(f => f.verification === 'not-run'));
 });
 
+test('Both origin requires exact issue type, source, title and evidence, never promotes verification', () => {
+  const r = sample();
+  r.issues.push({ id: 'uce-risk', title: 'Dependency declaration review: alpha',
+    category: 'dependencies', severity: 'warning', affectedFile: 'package.json',
+    reason: 'wildcard declaration for alpha (*)', recommendation: 'Review' });
+  const out = buildUnifiedBrowserReport(r);
+  const result = out.findings.filter(f => f.title === 'Dependency declaration review: alpha');
+  assert.equal(result.length, 1);
+  assert.equal(result[0].origin, 'Both');
+  assert.equal(result[0].verification, 'not-run');
+  assert.ok(result[0].sourceIssueIds.includes('trilogy:dependency:0:wildcard'));
+  assert.equal(r.issues.length, 3, 'original UCE issue array was not changed');
+});
+
 test('invalid source paths and missing provenance never create supported extra findings', () => {
   const r = sample();
   r.stack.dependencyIntelligence.risks[0].source = '../private';
