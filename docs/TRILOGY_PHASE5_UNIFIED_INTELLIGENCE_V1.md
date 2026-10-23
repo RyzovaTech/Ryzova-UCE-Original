@@ -70,3 +70,26 @@ Tests:
     npm --prefix experiments/datalog-z3 test
 
 **No main merge, default enabling, automatic file modifications or production release.**
+
+
+## Browser Root Cause First experimental UI (Phase 5 next slice)
+
+A new "Root Causes" report section is the first view for software scans on the experimental branch. The existing Overview and Issues sections, original score and report exports remain available and unchanged.
+
+- Read-only browser enrichment of original UCE findings and source-linked, UCE-extracted dependency risks and framework metadata. No source-code execution, new native solver invocation or project mutation.
+- UCE / Trilogy / Both origin labels. Both requires exact domain/title/file/evidence equality; no title-only fuzzy deduplication. The original UCE issue records are preserved.
+- Root Cause First groups are **investigation clusters**, based on shared module/domain evidence, NOT established causal roots. Ungrouped findings remain available.
+- Dependency enrichment covers source-referenced wildcard, remote-source and version-conflict declaration risks. Framework enrichment is informational source context, **not** a confirmed incompatibility.
+- Source reference clicks navigate to an Evidence Inspector showing linked report evidence and exact paths. Saved reports do NOT contain arbitrary original source bytes; the UI does not synthesize a source preview.
+- **Generate Fix Proposal** is an explicitly clicked browser control requiring a developer-provided local JSON evidence bundle and an exact stable Node target. It prepares a SHA-256 guarded input for the existing Node-only CLI; it does NOT create a diff in the browser and does not modify files or call a native solver.
+- The developer must explicitly download the reviewed input (contains source contents and must be kept private), then run the Node-only phase5-cli.mjs propose command locally to receive an actual bounded read-only diff preview.
+- V1 patch preview supports one .nvmrc OR .node-version pin only. No GitHub Actions/YAML, package.json, package-lock.json, framework or application-source patches.
+- Rejected/unknown graph semantics stay blocked; Phase 4 hard resource and owner post-product accuracy/release gates are still open.
+
+Regression commands:
+
+    npm run test:report-regressions
+    npm run build
+    npm --prefix experiments/datalog-z3 test
+
+**No main merge, default production enablement or permission to auto-apply a proposed change.**
