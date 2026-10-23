@@ -154,10 +154,19 @@ export function buildUnifiedIntelligence(report, files, options = {}) {
     recommendation: 'Investigate Node requirements, runtime pins and affected build/deployment targets before choosing a fix.',
   }] : [];
 
-  const patchTargets = pins.filter(p => simpleFile(p.path) &&
-      typeof p.content === 'string' && p.content.length <= 128)
-    .map(p => ({ file: p.path, sha256: createHash('sha256')
-      .update(p.content).digest('hex'), action: 'request-generate-fix-proposal' }));
+  // Hints are offered only for one canonical, actually mismatching pin.
+  // Even then the developer must choose a target; the proposal gate will
+  // separately check the full modeled constraint set and stale source hash.
+  const hasPinMismatch = found.some(f => f.id.startsWith('trilogy:pinned-runtime:'));
+  const hasDisjointDeclarations = found.some(f => f.id.startsWith('trilogy:node-ranges:'));
+  const eligiblePins = pins.length === 1 && hasPinMismatch && !hasDisjointDeclarations
+    ? pins.filter(p => simpleFile(p.path) && typeof p.content === 'string' &&
+        p.content.length <= 128 &&
+        /^[ \\t]*v?\\d+\\.\\d+\\.\\d+[ \\t]*(?:\\r?\\n)?$/.test(p.content))
+    : [];
+  const patchTargets = eligiblePins.map(p => ({ file: p.path,
+    sha256: createHash('sha256').update(p.content).digest('hex'),
+    action: 'request-generate-fix-proposal' }));
 
   fused.sort((a, b) => rank(a.severity) - rank(b.severity) ||
     a.id.localeCompare(b.id));
