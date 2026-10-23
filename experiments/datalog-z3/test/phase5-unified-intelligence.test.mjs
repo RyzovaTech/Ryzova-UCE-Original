@@ -253,3 +253,58 @@ test('unreachable/dev-only framework metadata does not create framework claims',
   assert.equal(buildUnifiedIntelligence(uce(), files).findings.some(f =>
     f.id.startsWith('trilogy:framework-declaration:')), false);
 });
+
+
+test('different canonical Node pin declarations are independently source-backed, not a verified runtime failure', () => {
+  const files = [...fixture(), file('.node-version', '22.0.0\n')];
+  const native = uce({ id: 'native-pin', category: 'runtime',
+    title: 'Other runtime evidence', severity: 'info',
+    affectedFile: '.nvmrc', recommendation: 'Review' });
+  const before = JSON.stringify(files);
+  const reportBefore = JSON.stringify(native);
+  const out = buildUnifiedIntelligence(native, files);
+  assert.equal(out.status, 'ok', out.reason);
+  const finding = out.findings.find(f => f.id.startsWith('trilogy:conflicting-node-pins:'));
+  assert.ok(finding, JSON.stringify(out.findings));
+  assert.equal(finding.origin, 'Trilogy');
+  assert.equal(finding.severity, 'warning');
+  assert.equal(finding.verification, 'not-run');
+  assert.equal(finding.evidenceLevel, 'source-backed-static-model');
+  assert.deepEqual(new Set(finding.evidenceRefs), new Set(['.nvmrc', '.node-version']));
+  assert.deepEqual(new Set(finding.declaredPins.map(p => p.version)), new Set(['20.0.0', '22.0.0']));
+  assert.equal(out.originalScore, 87);
+  assert.equal(out.originalIssueCount, 1);
+  assert.deepEqual(out.patchTargets, [], 'ambiguous pin targets must never be offered for patching');
+  assert.ok(!JSON.stringify(out).includes('"diff"'));
+  assert.equal(JSON.stringify(files), before);
+  assert.equal(JSON.stringify(native), reportBefore);
+  const reversed = buildUnifiedIntelligence(native, [...files].reverse());
+  assert.equal(reversed.findings.find(f => f.id.startsWith('trilogy:conflicting-node-pins:')).id,
+    finding.id, 'source order must not affect finding identity');
+});
+
+test('same or nonliteral Node pins do not invent a contradictory declaration finding', () => {
+  const same = [...fixture(), file('.node-version', 'v20.0.0\r\n')];
+  const identical = buildUnifiedIntelligence(uce(), same);
+  assert.equal(identical.status, 'ok');
+  assert.ok(!identical.findings.some(f => f.id.startsWith('trilogy:conflicting-node-pins:')));
+  assert.deepEqual(identical.patchTargets, [], 'two equal pins still block a single-file proposal');
+  for (const value of ['lts/*\n', '^22.0.0\n', '22.0.0-rc.1\n', '22.0.0+metadata\n',
+    '099.0.0\n', '22.0.0\ntrailing\n']) {
+    const out = buildUnifiedIntelligence(uce(),
+      [...fixture(), file('.node-version', value)]);
+    assert.ok(!out.findings.some(f => f.id.startsWith('trilogy:conflicting-node-pins:')), value);
+    assert.deepEqual(out.patchTargets, []);
+  }
+});
+
+test('unsupported source graphs never claim independent pin relationship proof', () => {
+  const files = [...fixture({
+    modify: pkg => { pkg.workspaces = ['packages/*']; },
+  }), file('.node-version', '22.0.0\n')];
+  const out = buildUnifiedIntelligence(uce(), files);
+  assert.equal(out.status, 'partial');
+  assert.equal(out.graphStatus, 'unknown');
+  assert.equal(out.findings.length, 0);
+  assert.deepEqual(out.patchTargets, []);
+});
