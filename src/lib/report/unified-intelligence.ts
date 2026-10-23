@@ -13,6 +13,8 @@ export interface UnifiedBrowserFinding {
   recommendation: string;
   verification: 'not-run';
   evidenceLevel: 'uce-rule' | 'uce-extracted-dependency' | 'uce-extracted-framework';
+  evidenceStatus: 'report-reference' | 'extracted-metadata' | 'report-only';
+  potentialImpact: string;
   sourceRefs: string[];
   sourceIssueIds: string[];
   contextOnly: boolean;
@@ -45,7 +47,7 @@ const evidencePath = (value: string) => value.split('#')[0];
 const AUXILIARY_SCOPE = /(^|\/)(?:tools?|docs?|documentation|tests?|testing|fixtures?|examples?|samples?|benchmarks?|vendor|third_party|node_modules)(\/|$)/i;
 const projectEvidencePath = (value: unknown): value is string =>
   sourcePath(value) && !AUXILIARY_SCOPE.test(evidencePath(value));
-const keyOf = (f: UnifiedBrowserFinding) => [norm(f.domain), norm(f.title), norm(f.file), norm(f.evidence)].join('|');
+const keyOf = (f: UnifiedBrowserFinding) => [norm(f.domain), norm(f.title), norm(f.file), norm(f.evidence), f.severity].join('|');
 const DOMAIN_TITLES: Record<string, string> = {
   runtime: 'Runtime & environment relationships',
   dependencies: 'Dependency declaration relationships',
@@ -73,10 +75,12 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       : f.module.includes('configuration') ? 'configuration' : 'other',
     file: f.file,
     evidence: f.evidence,
+    potentialImpact: f.description || 'Potential effect has not been established by execution.',
+    evidenceStatus: sourcePath(f.file) ? 'report-reference' : 'report-only',
     recommendation: f.recommendation,
     verification: 'not-run',
     evidenceLevel: 'uce-rule',
-    sourceRefs: sourcePath(f.file) ? [f.file] : [],
+    sourceRefs: sourcePath(f.file) ? [f.line && Number.isSafeInteger(f.line) && f.line > 0 && !f.file.includes('#') ? `${f.file}#L${f.line}` : f.file] : [],
     sourceIssueIds: [f.id],
     contextOnly: false,
   }));
@@ -91,6 +95,8 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       origin: 'Trilogy', severity: risk.severity, domain: 'dependencies',
       file: evidencePath(risk.source),
       evidence: risk.kind + ' declaration for ' + risk.name + ' (' + risk.version.slice(0, 100) + ')',
+      evidenceStatus: 'extracted-metadata',
+      potentialImpact: 'This declaration warrants dependency-resolution review; installation or runtime impact is unknown.',
       recommendation: risk.recommendation.slice(0, 500),
       verification: 'not-run', evidenceLevel: 'uce-extracted-dependency',
       sourceRefs: [risk.source], sourceIssueIds: [], contextOnly: false,
@@ -106,25 +112,34 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       origin: 'Trilogy', severity: 'info', domain: 'framework',
       file: evidencePath(ref.source),
       evidence: ref.description.slice(0, 400),
+      evidenceStatus: 'extracted-metadata',
+      potentialImpact: 'Framework presence is context only; compatibility impact is unknown.',
       recommendation: 'Inspect framework configuration and integration requirements before assuming compatibility.',
       verification: 'not-run', evidenceLevel: 'uce-extracted-framework',
       sourceRefs: detection.evidence.filter(e => projectEvidencePath(e.source)).slice(0, 6).map(e => e.source),
       sourceIssueIds: [], contextOnly: true,
     });
   }
-  // Exact-equivalence only: same category, title, location AND evidence.
-  // Never collapse merely related problems or label a common source 'Both'.
+  // Match category, title, file, evidence AND severity. A collision among UCE
+  // records is ambiguous: never choose an arbitrary record to label Both.
   const findings = [...native];
-  const seen = new Map(native.map(f => [keyOf(f), f]));
+  const seen = new Map<string, UnifiedBrowserFinding[]>();
+  for (const item of native) {
+    const key = keyOf(item);
+    seen.set(key, [...(seen.get(key) ?? []), item]);
+  }
   for (const item of additions) {
-    const prior = seen.get(keyOf(item));
-    if (prior && prior.origin === 'UCE') {
+    const key = keyOf(item);
+    const matches = seen.get(key) ?? [];
+    const prior = matches.length === 1 && matches[0].origin === 'UCE' ? matches[0] : undefined;
+    if (prior) {
       prior.origin = 'Both';
       prior.sourceIssueIds.push(item.id);
       prior.sourceRefs = [...new Set([...prior.sourceRefs, ...item.sourceRefs])];
-    } else if (!prior) {
+    } else {
+      // Distinct/ambiguous source records remain visible, never silently dropped.
       findings.push(item);
-      seen.set(keyOf(item), item);
+      seen.set(key, [...matches, item]);
     }
   }
   const groups = new Map<string, UnifiedBrowserFinding[]>();
@@ -156,6 +171,8 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       'Browser Trilogy context is derived from UCE-extracted metadata; it does not independently parse raw files.',
       'Framework evidence is informational context, not a compatibility warning.',
       'No Souffle, Z3 or cvc5 proof was run; all verification is not-run.',
+      'Evidence status describes report provenance, not independently checked source bytes or calibrated confidence.',
+      'Potential impact is an investigation hypothesis, not an observed build, installation or runtime result.',
       'The original UCE issue records and score are unchanged.',
     ],
   };
