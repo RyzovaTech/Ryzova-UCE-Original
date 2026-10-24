@@ -2,13 +2,15 @@
 import { readFile } from 'node:fs/promises';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 import { buildUnifiedIntelligence } from './phase5-intelligence.mjs';
+import { evaluatePhase5Intelligence } from './phase5-evaluation.mjs';
 import { generateReviewableFixProposal } from './phase5-patch.mjs';
 
-// Two explicit modes. Scan never generates a patch. Propose never mutates a
-// file or runs a user project command. No native solver is started in V1.
+// Three explicit modes: scan, evaluate, and developer-requested propose.
+// Evaluate audits a fresh read-only scan without generating patches. No mode
+// mutates project bytes, executes project code, or starts a native solver.
 const [mode, inputPath, ...rest] = process.argv.slice(2);
-if (!['scan', 'propose'].includes(mode) || !inputPath || rest.length) {
-  process.stderr.write('Usage: node phase5-cli.mjs scan|propose <local-project-json>\n');
+if (!['scan', 'evaluate', 'propose'].includes(mode) || !inputPath || rest.length) {
+  process.stderr.write('Usage: node phase5-cli.mjs scan|evaluate|propose <local-project-json>\n');
   process.exitCode = 2;
 } else {
   try {
@@ -26,7 +28,7 @@ if (!['scan', 'propose'].includes(mode) || !inputPath || rest.length) {
       isDirectory: false,
     }));
     let result;
-    if (mode === 'scan') {
+    if (mode === 'scan' || mode === 'evaluate') {
       const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
       const report = analyzeProject({
         fileName: typeof data.fileName === 'string' ? data.fileName.slice(0, 100) : 'phase5-project',
@@ -37,7 +39,8 @@ if (!['scan', 'propose'].includes(mode) || !inputPath || rest.length) {
           filesIgnored: 0, ignoredCategories: [],
         },
       });
-      result = buildUnifiedIntelligence(report, files, { workspace: data.workspace ?? '' });
+      const unified = buildUnifiedIntelligence(report, files, { workspace: data.workspace ?? '' });
+      result = mode === 'evaluate' ? evaluatePhase5Intelligence(report, unified) : unified;
     } else {
       result = generateReviewableFixProposal(files, data.request, {
         workspace: data.workspace ?? '',
