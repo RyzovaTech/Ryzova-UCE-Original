@@ -25,6 +25,7 @@ export interface BrowserQualityAudit {
   version: 1;
   scope: 'browser-derived-report-only';
   status: 'passed-structural-checks' | 'review-required' | 'unknown';
+  graphCoverage: 'bounded-report' | 'unknown';
   scoreParity: 'preserved' | 'mismatch' | 'unknown';
   originalIssueParity: 'preserved' | 'mismatch' | 'unknown';
   counts: {
@@ -107,6 +108,18 @@ export function evaluateBrowserQuality(
       item.reason === raw[i]?.reason) ? 'preserved' : 'mismatch';
   if (scoreParity === 'mismatch') flag('original-score-mismatch');
   if (originalIssueParity === 'mismatch') flag('original-issue-record-drift');
+  const rawIds = new Set<string>();
+  for (const original of raw ?? []) {
+    if (typeof original.id !== 'string' || !original.id || rawIds.has(original.id))
+      flag('ambiguous-original-issue-id');
+    else rawIds.add(original.id);
+  }
+  const incomplete = report.summary?.analysisCoverage?.status === 'partial' ||
+    report.summary?.scanStats?.truncated === true ||
+    report.summary?.scanStats?.sampled === true ||
+    report.summary?.scanStats?.findingsLimited === true;
+  const graphCoverage = incomplete || !report.summary?.analysisCoverage
+    ? 'unknown' : 'bounded-report';
   const seen = new Set<string>();
   const candidates: BrowserQualityReviewCandidate[] = [];
   const counts = {
@@ -135,10 +148,19 @@ export function evaluateBrowserQuality(
       counts.missingTrilogySources++;
       flag('trilogy-evidence-reference-missing', finding.id);
     }
-    if (finding.origin === 'Both' &&
-        (!finding.sourceIssueIds.some(id => id.startsWith('trilogy:')) ||
-         !finding.sourceIssueIds.some(id => !id.startsWith('trilogy:')))) {
-      flag('ambiguous-both-record-provenance', finding.id);
+    const sourceIds = Array.isArray(finding.sourceIssueIds) ?
+      finding.sourceIssueIds.filter((id): id is string => typeof id === 'string') : [];
+    if (finding.origin === 'Both') {
+      const independent = sourceIds.filter(id => id.startsWith('trilogy:'));
+      const native = sourceIds.filter(id => !id.startsWith('trilogy:'));
+      if (independent.length !== 1 || native.length !== 1 ||
+          sourceIds.length !== 2 || !validSources)
+        flag('ambiguous-both-record-provenance', finding.id);
+    } else if (finding.origin === 'UCE' &&
+      (sourceIds.length !== 1 || finding.id !== 'uce:' + sourceIds[0])) {
+      flag('ambiguous-uce-derived-record-link', finding.id);
+    } else if (finding.origin === 'Trilogy' && sourceIds.length !== 0) {
+      flag('trilogy-record-claims-native-link', finding.id);
     }
     if (finding.origin !== 'UCE') {
       counts.candidatesTotal++;
@@ -163,7 +185,7 @@ export function evaluateBrowserQuality(
     ? 'unknown' : flags.length || additionalFlagsOmitted
       ? 'review-required' : 'passed-structural-checks';
   return {
-    version: 1, scope: 'browser-derived-report-only', status,
+    version: 1, scope: 'browser-derived-report-only', status, graphCoverage,
     scoreParity, originalIssueParity, counts, flags, additionalFlagsOmitted,
     reviewQueue,
     accuracy: {
@@ -175,6 +197,7 @@ export function evaluateBrowserQuality(
     limitations: [
       'Browser audit checks saved report structure, not the independent CLI evaluation or raw source bytes.',
       'Source references have not been re-opened, hashed or human-adjudicated.',
+      'Partial or unavailable coverage cannot be treated as proof of an issue-free project.',
       'Trilogy browser additions use existing UCE-extracted metadata, not independent raw-file discovery.',
       'Source-backed relationships and root-cause clusters are not causal or application proofs.',
       'A recorded symbolic satisfiable decision is not a successful build or runtime test.',
