@@ -46,8 +46,9 @@ export interface BrowserQualityAudit {
   limitations: string[];
 }
 
+const SOURCE_REFERENCE = new RegExp('^[A-Za-z0-9_.@/-]+(?:#[A-Za-z0-9_.-]+)?$');
 const sourceRef = (ref: string) => ref.length > 0 && ref.length <= 240 &&
-  new RegExp('^[A-Za-z0-9_.@/-]+(?:#[A-Za-z0-9_.-]+)?
+  SOURCE_REFERENCE.test(ref) &&
   ref.split('#')[0].split('/').every(part => !!part && part !== '.' && part !== '..');
 const rank = (level: string) => level === 'critical' ? 0 : level === 'warning' ? 1 : 2;
 const MAX_FLAGS = 64;
