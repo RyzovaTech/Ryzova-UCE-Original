@@ -143,3 +143,48 @@ test('review queue remains capped and contextual findings are not silently dropp
   assert.ok(out.reviewQueue.every(candidate => candidate.origin === 'Trilogy'));
   assert.equal(out.accuracy.usefulFindingRate, null);
 });
+
+
+test('duplicate canonical issue IDs are review-required despite preserved score and raw list', () => {
+  const report = sample();
+  report.issues.push({ ...report.issues[0], title: 'Different title but same native ID' });
+  const audit = evaluateBrowserQuality(report, buildUnifiedBrowserReport(report));
+  assert.equal(audit.originalIssueParity, 'preserved');
+  assert.equal(audit.status, 'review-required');
+  assert.ok(audit.flags.some(f => f.code === 'ambiguous-original-issue-id'));
+});
+
+test('UCE derived ID drift, fake Trilogy source link, and over-merged Both are rejected', () => {
+  const report = sample(), model = buildUnifiedBrowserReport(report);
+  const uce = model.findings.find(f => f.origin === 'UCE');
+  const trilogy = model.findings.find(f => f.origin === 'Trilogy');
+  assert.ok(uce && trilogy);
+  uce.sourceIssueIds = ['different-id'];
+  trilogy.sourceIssueIds = ['compatibility:native-a'];
+  const audit = evaluateBrowserQuality(report, model);
+  assert.ok(audit.flags.some(f => f.code === 'ambiguous-uce-derived-record-link'));
+  assert.ok(audit.flags.some(f => f.code === 'trilogy-record-claims-native-link'));
+  trilogy.origin = 'Both';
+  trilogy.sourceIssueIds = ['compatibility:native-a', 'trilogy:one', 'trilogy:two'];
+  const merged = evaluateBrowserQuality(report, model);
+  assert.ok(merged.flags.some(f => f.code === 'ambiguous-both-record-provenance'));
+  assert.equal(merged.accuracy.falseMergeRate, null);
+});
+
+test('partial and absent report source coverage stays Unknown despite clean structural parity', () => {
+  const report = sample();
+  let audit = evaluateBrowserQuality(report, buildUnifiedBrowserReport(report));
+  assert.equal(audit.graphCoverage, 'unknown');
+  assert.equal(audit.status, 'passed-structural-checks');
+  report.summary = { name: 'project', analysisCoverage: { status: 'partial' },
+    scanStats: { sampled: true, truncated: true } };
+  audit = evaluateBrowserQuality(report, buildUnifiedBrowserReport(report));
+  assert.equal(audit.graphCoverage, 'unknown');
+  assert.equal(audit.scoreParity, 'preserved');
+  assert.equal(audit.accuracy.falsePositiveRate, null);
+  report.summary.analysisCoverage.status = 'full';
+  report.summary.scanStats.sampled = false;
+  report.summary.scanStats.truncated = false;
+  assert.equal(evaluateBrowserQuality(report, buildUnifiedBrowserReport(report))
+    .graphCoverage, 'bounded-report');
+});
