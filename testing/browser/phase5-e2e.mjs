@@ -2,7 +2,10 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
-import { chromium } from 'playwright';
+import { pathToFileURL } from 'node:url';
+// Optional isolated install path supplied by CI, avoiding changes to the app lockfile.
+const { chromium } = await import(process.env.UCE_PLAYWRIGHT_ENTRY
+  ? pathToFileURL(process.env.UCE_PLAYWRIGHT_ENTRY).href : 'playwright');
 
 const HOST = 'http://127.0.0.1:4179';
 const fixture = {
