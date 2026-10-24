@@ -97,7 +97,10 @@ export function evaluatePhase5Intelligence(original, unified) {
         flag('invalid-source-provenance', finding.id);
       }
     } else if (refs.length === 0) {
-      if (!native) missingSource++;
+      if (!native) {
+        missingSource++;
+        flag('trilogy-finding-lacks-source-reference', finding.id);
+      }
     } else {
       sourceLinked++;
     }
@@ -150,7 +153,7 @@ export function evaluatePhase5Intelligence(original, unified) {
     }
   }
   if (unified.status === 'partial' && (trilogyOnly > 0 || both > 0 ||
-      unified.patchTargets.length > 0)) {
+      unified.patchTargets.length > 0 || unified.rootCauses.length > 0)) {
     flag('partial-graph-claims-extra-intelligence-or-patch');
   }
   const structuralStatus = flags.length || truncatedFlags ? 'review-required' : 'passed';
