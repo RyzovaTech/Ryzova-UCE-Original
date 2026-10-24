@@ -17,11 +17,11 @@ function FindingDetail({ item, onSelectSource }: {
       <Badge variant={item.severity === 'critical' ? 'destructive' : 'outline'}>{item.severity}</Badge>
       <Badge variant="outline">Origin: {item.origin}</Badge>
       <Badge variant="outline">{item.contextOnly ? 'Context only' : 'Review finding'}</Badge>
-      <Badge variant="outline">Evidence: {item.evidenceStatus.replaceAll('-', ' ')}</Badge>
+      <Badge variant="outline">Evidence: {item.evidenceStatus.replace(/-/g, ' ')}</Badge>
       <Badge variant="outline">Formal verification: not run</Badge>
     </div>
     <h4 className="text-sm font-semibold">{item.title}</h4>
-    <p className="text-xs text-muted-foreground">Evidence origin: {item.evidenceLevel.replaceAll('-', ' ')}. {item.evidence || 'No detailed source evidence retained.'}</p>
+    <p className="text-xs text-muted-foreground">Evidence origin: {item.evidenceLevel.replace(/-/g, ' ')}. {item.evidence || 'No detailed source evidence retained.'}</p>
     <p className="text-xs text-muted-foreground"><span className="font-medium">Potential impact (unverified): </span>{item.potentialImpact}</p>
     {item.sourceIssueIds.length > 0 && <p className="break-all text-xs text-muted-foreground">Record provenance: {item.sourceIssueIds.map(id => (id.startsWith('trilogy:') ? 'Trilogy ' : 'UCE ') + id).join(' · ')}</p>}
     {item.recommendation && <p className="text-sm"><span className="font-medium">Next action: </span>{item.recommendation}</p>}
