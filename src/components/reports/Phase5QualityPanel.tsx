@@ -18,7 +18,7 @@ export function Phase5QualityPanel({ audit, findings, onSelectSource }: {
   const [showFlags, setShowFlags] = useState(false);
   const byId = new Map(findings.map(f => [f.id, f]));
   const s = audit.symbolic;
-  return <Card aria-label="Phase 5.5 intelligence quality evaluation">
+  return <Card role="region" aria-label="Phase 5.5 intelligence quality evaluation">
     <CardHeader>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
@@ -73,7 +73,7 @@ export function Phase5QualityPanel({ audit, findings, onSelectSource }: {
           {showFlags ? 'Hide structural flags' : 'Inspect structural flags (' + (audit.flags.length + audit.additionalFlagsOmitted) + ')'}
         </Button>
       </div>
-      {showReview && <div className="space-y-2" aria-label="Review candidates">
+      {showReview && <div role="region" className="space-y-2" aria-label="Review candidates">
         {audit.reviewQueue.length === 0 && <p className="text-xs text-muted-foreground">No additional browser-derived review candidates in this saved report. This is not a clean-project certification.</p>}
         {audit.reviewQueue.map(item => {
           const finding = byId.get(item.id);
@@ -91,7 +91,7 @@ export function Phase5QualityPanel({ audit, findings, onSelectSource }: {
         {audit.counts.candidatesTotal > audit.counts.candidatesShown &&
           <p className="text-xs text-muted-foreground">Review queue displays the first {audit.counts.candidatesShown} prioritized candidates. {audit.counts.candidatesTotal - audit.counts.candidatesShown} more are not shown here; they remain available in the report findings.</p>}
       </div>}
-      {showFlags && <div className="space-y-1" aria-label="Structural flags">
+      {showFlags && <div role="region" className="space-y-1" aria-label="Structural flags">
         {audit.flags.length === 0 && <p className="text-xs text-muted-foreground">No structural flags detected. Source truth and runtime behavior remain unverified.</p>}
         {audit.flags.map((flag, i) => <p key={i} className="break-all text-xs text-muted-foreground">
           {flag.code}{flag.findingId ? ' · ' + flag.findingId : ''}
