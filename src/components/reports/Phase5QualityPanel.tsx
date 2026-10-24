@@ -47,6 +47,7 @@ export function Phase5QualityPanel({ audit, findings, onSelectSource }: {
         </div>
       </div>
       <p className="text-xs text-muted-foreground">UCE: {audit.counts.uce} · Trilogy: {audit.counts.trilogy} · Both: {audit.counts.both} · Context only: {audit.counts.contextOnly} · Trilogy references missing: {audit.counts.missingTrilogySources} · Workspace findings omitted: {audit.counts.omittedWorkspaceFindings}</p>
+      <p className="text-xs text-muted-foreground">Saved report coverage: {audit.graphCoverage === 'unknown' ? 'Unknown / incomplete evidence; no clean-project claim' : 'bounded report scope only (not full compatibility proof)'}</p>
       <p className="text-xs font-medium">Human-evaluated false-positive, false-merge, useful-finding and recommendation-correctness rates: Not measured.</p>
       <div className="rounded-lg border p-3 space-y-2">
         <h4 className="text-sm font-semibold">Symbolic AI status — saved report evidence only</h4>
