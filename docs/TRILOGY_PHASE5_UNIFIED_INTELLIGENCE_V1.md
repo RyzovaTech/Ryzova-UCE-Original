@@ -151,3 +151,18 @@ The audit output reports independent dimensions:
 Implementation: `experiments/datalog-z3/phase5-evaluation.mjs` and `test/phase5-evaluation.test.mjs`. The native experimental package test command uses the `test/*.test.mjs` glob, so this suite is automatically included. No browser presentation, default UCE scoring, original issue records, symbolic semantics, automatic fix creation, patch application or production flag has changed.
 
 Acceptance of this new Phase 5.5 increment requires new exact-HEAD CI passes, output contract inspection, and any appropriate independent review. PR #86 stays Draft, experimental, unmerged and production NO-GO; #77, #80 and #81 remain open.
+
+## Phase 5.5 Browser Evaluation Integration — experimental
+
+The Root Cause First browser workspace now includes a separately labeled **Intelligence quality & symbolic reasoning** panel after investigation clusters.
+
+- New pure browser helper: `src/lib/report/phase5-quality.ts`; UI: `src/components/reports/Phase5QualityPanel.tsx`. They evaluate only saved UCE report records and browser-derived Unified findings. They do **not** run the independent native CLI evaluator, reload original project source, recompute original UCE scores or invoke native solvers.
+- Structural review shows exact original-score and raw-issue record parity (ID, title, severity, file and reason), UCE / Trilogy / Both / context counts, missing or unsafe source references, duplicate/unresolved group IDs, origin ambiguity and unsupported browser-proof claims. A zero-flag check is labeled **structurally consistent**, not accuracy-verified.
+- Up to 40 review candidates are prioritized by severity and deterministic ID; overflow is disclosed. Source navigation opens existing report-evidence references, **not** reconstructed source bytes. The original UCE Issues tab, score display and fix-request UI remain untouched.
+- A symbolic status panel separately displays original UCE local bounded symbolic constraint counts (conflict/satisfiable/unknown/limited), if present in the saved report. These are modeled local constraint decisions, not application behavior proofs.
+- Optional native Soufflé/Z3/cvc5 diagnostics appear **only if already present in a saved report**, explicitly labeled saved metadata and not re-run/authenticated. Missing diagnostics are **not-run**; no new `formally-verified` finding labels are produced. Even reported solver agreement concerns modeled constraints, never end-to-end application runtime.
+- Browser additions continue to be UCE-metadata-derived context; independent raw-source graph discoveries remain in the *separate local experimental CLI*.
+- No real-project false positive / false merge / recommendation correctness percentages are calculated. They remain **not measured** until independent human adjudication (#80).
+- Eight new report-regression cases cover parity, drift, missing provenance, ambiguous Both, invalid links, original UCE symbolic counts, saved native diagnostics, deterministic bounded human review. Existing `npm run test:report-regressions` includes this test file.
+
+The existing CI-validated Phase 5.5 CLI structural evaluator is independent from this browser helper: their scopes and input evidence differ and must not be represented as the same evaluation. Exact new-head Full UCE CI, native experimental CI and strict cross-platform CI validation remain required. PR #86 stays Draft, unmerged and production NO-GO pending #77/#80/#81 and release authorization.
