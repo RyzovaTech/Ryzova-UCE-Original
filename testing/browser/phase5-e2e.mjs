@@ -65,7 +65,7 @@ async function main() {
   }
   const reviewToggle = quality.getByRole('button', { name: /Inspect review candidates/ });
   await reviewToggle.click();
-  assert.equal(await reviewToggle.getAttribute('aria-expanded'), 'true');
+  assert.equal(await quality.getByRole('button', { name: 'Hide review queue' }).getAttribute('aria-expanded'), 'true');
   await quality.getByRole('button', { name: /Inspect structural flags/ }).click();
 
   const source = panel.locator('[title^="Inspect source references at "]').first();
@@ -116,7 +116,7 @@ async function main() {
   // Responsive layout and keyboard-accessible quality controls remain mounted.
   await page.setViewportSize({ width: 390, height: 844 });
   await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
-  assert.equal(await reviewToggle.getAttribute('aria-expanded'), 'true');
+  assert.equal(await quality.getByRole('button', { name: 'Hide review queue' }).getAttribute('aria-expanded'), 'true');
   console.log(JSON.stringify({ suite: 'phase5.5-browser-e2e', browser: 'chromium',
     routes: 'demo-report', assertions: 'navigation, Root Cause First, quality, review, evidence, proposal, stale-state, privacy, responsive' }));
 }
