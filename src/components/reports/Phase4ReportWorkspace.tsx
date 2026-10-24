@@ -31,6 +31,7 @@ import { BrowserCompatibilityPanel } from '@/components/reports/BrowserCompatibi
 import { CodeIntelligencePanel } from '@/components/reports/CodeIntelligence';
 import { ExtendedIntelligencePanel } from '@/components/reports/ExtendedIntelligencePanel';
 import { IntelligenceInsightsPanel } from '@/components/reports/IntelligenceInsightsPanel';
+import { UnifiedIntelligencePanel } from '@/components/reports/UnifiedIntelligencePanel';
 import { exportJson, exportSarif, downloadFile } from '@/lib/report/export';
 import { loadProjectBaseline, loadReportReviewState, saveProjectBaseline, saveReportReviewState } from '@/lib/storage';
 import { collectWorkspaceFindings, compareReports, compatibleProjectReports, groupWorkspaceFindings } from '@/lib/report/workspace';
@@ -39,12 +40,13 @@ import { attentionCategories, describeReportReadiness, reportCoverageRows } from
 import type { ReportReviewState, WorkspaceFinding } from '@/lib/report/workspace';
 import type { AnalysisResult, SecurityFinding, Severity } from '@/lib/analyzer/types';
 
-type ReportSection = 'overview' | 'technology' | 'code' | 'security' | 'compatibility' | 'quality' | 'issues' | 'map';
+type ReportSection = 'overview' | 'intelligence' | 'technology' | 'code' | 'security' | 'compatibility' | 'quality' | 'issues' | 'map';
 type UserMode = 'simple' | 'developer' | 'expert';
 type SoftStatus = 'Confirmed' | 'Likely' | 'Possible' | 'Review required' | 'Not enough evidence' | 'Not applicable';
 
 const NAV_ITEMS: Array<{ id: ReportSection; label: string; icon: typeof CircleGauge }> = [
   { id: 'overview', label: 'Overview', icon: CircleGauge },
+  { id: 'intelligence', label: 'Root Causes', icon: Network },
   { id: 'technology', label: 'Technology', icon: Boxes },
   { id: 'code', label: 'Code & Architecture', icon: Code2 },
   { id: 'security', label: 'Security', icon: LockKeyhole },
@@ -57,7 +59,7 @@ const NAV_ITEMS: Array<{ id: ReportSection; label: string; icon: typeof CircleGa
 const SEVERITIES: Array<'all' | Severity> = ['all', 'critical', 'warning', 'info'];
 
 export function Phase4ReportWorkspace({ report, history }: { report: AnalysisResult; history: AnalysisResult[] }) {
-  const [section, setSection] = useState<ReportSection>('overview');
+  const [section, setSection] = useState<ReportSection>(report.classification.isSoftware ? 'intelligence' : 'overview');
   const [mode, setMode] = useState<UserMode>(() => readMode());
 
   const changeMode = (next: UserMode) => {
@@ -90,6 +92,7 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
 
       <main>
         {section === 'overview' && <OverviewView report={report} history={history} mode={mode} onNavigate={setSection} />}
+        {section === 'intelligence' && <UnifiedIntelligencePanel key={report.id} report={report} />}
         {section === 'technology' && <TechnologyView report={report} mode={mode} />}
         {section === 'code' && <CodeView report={report} mode={mode} />}
         {section === 'security' && <SecurityView report={report} mode={mode} />}
