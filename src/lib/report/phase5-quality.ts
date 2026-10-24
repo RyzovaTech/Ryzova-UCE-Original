@@ -47,7 +47,7 @@ export interface BrowserQualityAudit {
 }
 
 const sourceRef = (ref: string) => ref.length > 0 && ref.length <= 240 &&
-  /^[A-Za-z0-9_.@/-]+(?:#[A-Za-z0-9_.-]+)?$/.test(ref) &&
+  /^[A-Za-z0-9_.@\/-]+(?:#[A-Za-z0-9_.-]+)?$/.test(ref) &&
   ref.split('#')[0].split('/').every(part => !!part && part !== '.' && part !== '..');
 const rank = (level: string) => level === 'critical' ? 0 : level === 'warning' ? 1 : 2;
 const MAX_FLAGS = 64;
@@ -65,9 +65,9 @@ function symbolicSnapshot(report: AnalysisResult): BrowserSymbolicSnapshot {
   // browser report NEVER executes a solver or upgrades static findings.
   return {
     localStatus: valid ? 'recorded' : 'not-available',
-    conflict: valid ? counts.conflict : null,
-    satisfiable: valid ? counts.satisfiable : null,
-    unknown: valid ? counts.unknown : null,
+    conflict: valid && counts ? counts.conflict : null,
+    satisfiable: valid && counts ? counts.satisfiable : null,
+    unknown: valid && counts ? counts.unknown : null,
     limited: typeof local?.limited === 'boolean' ? local.limited : null,
     solverStatus: saved?.status ?? 'not-run',
     solverVerification: saved?.enabled && saved?.attempted &&
