@@ -3,6 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Phase5QualityPanel } from '@/components/reports/Phase5QualityPanel';
+import { evaluateBrowserQuality } from '@/lib/report/phase5-quality';
 import { downloadFile } from '@/lib/report/export';
 import { buildUnifiedBrowserReport, type UnifiedBrowserFinding } from '@/lib/report/unified-intelligence';
 import { makeDeveloperPatchRequest, validateBrowserEvidenceBundle,
@@ -37,6 +39,7 @@ function FindingDetail({ item, onSelectSource }: {
 /** In-browser, read-only Phase 5 experiment. No hidden source uploads or native solver calls. */
 export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult }) {
   const model = useMemo(() => buildUnifiedBrowserReport(report), [report]);
+  const quality = useMemo(() => evaluateBrowserQuality(report, model), [report, model]);
   const byId = useMemo(() => new Map(model.findings.map(f => [f.id, f])), [model]);
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [opened, setOpened] = useState<string | null>(null);
@@ -175,6 +178,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
         </div>)}
       </CardContent>
     </Card>
+    <Phase5QualityPanel audit={quality} findings={model.findings} onSelectSource={selectSource} />
     <Card><CardHeader><CardTitle className="text-base">Other findings and framework context</CardTitle>
       <CardDescription>Ungrouped findings are never hidden. Framework detection is informational context, not a proven incompatibility.</CardDescription></CardHeader>
       <CardContent className="space-y-2">
