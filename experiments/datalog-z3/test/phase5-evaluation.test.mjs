@@ -111,6 +111,8 @@ test('invalid or absent Trilogy source references never count as verified eviden
   s.findings[1].evidenceRefs = [];
   a = evaluatePhase5Intelligence(report(), s);
   assert.equal(a.counts.trilogyWithoutSource, 1);
+  assert.equal(a.structuralStatus, 'review-required');
+  assert.ok(a.flags.some(x => x.code === 'trilogy-finding-lacks-source-reference'));
   assert.equal(a.reviewQueue[0].evidenceStatus, 'review-provenance');
   assert.equal(a.accuracy.falsePositiveRate, null);
 });
@@ -126,6 +128,10 @@ test('partial graph stays Unknown and cannot advertise new findings or patches',
   assert.equal(a.counts.trilogyOnly, 0);
   assert.equal(a.accuracy.usefulNewFindingRate, null);
   s.patchTargets = [{ file: '.nvmrc' }];
+  assert.ok(evaluatePhase5Intelligence(report(), s).flags.some(x =>
+    x.code === 'partial-graph-claims-extra-intelligence-or-patch'));
+  s.patchTargets = [];
+  s.rootCauses = [{ id: 'fake', proofStatus: 'not-run', findingIds: ['uce:a'] }];
   assert.ok(evaluatePhase5Intelligence(report(), s).flags.some(x =>
     x.code === 'partial-graph-claims-extra-intelligence-or-patch'));
 });
