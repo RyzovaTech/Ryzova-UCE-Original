@@ -4,8 +4,12 @@ import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 // Optional isolated install path supplied by CI, avoiding changes to the app lockfile.
-const { chromium } = await import(process.env.UCE_PLAYWRIGHT_ENTRY
+const engines = await import(process.env.UCE_PLAYWRIGHT_ENTRY
   ? pathToFileURL(process.env.UCE_PLAYWRIGHT_ENTRY).href : 'playwright');
+const browserName = process.env.UCE_BROWSER ?? 'chromium';
+if (!['chromium', 'firefox', 'webkit'].includes(browserName))
+  throw new Error('Unsupported E2E browser');
+const engine = engines[browserName];
 
 const HOST = 'http://127.0.0.1:4179';
 const fixture = {
@@ -39,7 +43,8 @@ async function shown(locator, timeout = 30000) {
 }
 async function main() {
   await ready();
-  browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
+  browser = await engine.launch({ headless: true,
+    ...(browserName === 'chromium' ? { args: ['--no-sandbox'] } : {}) });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 },
     acceptDownloads: false });
   const pageErrors = [];
@@ -64,9 +69,40 @@ async function main() {
     assert.equal(await panel.getByRole('button', { name: 'Collapse evidence' }).count() > 0, true);
   }
   const reviewToggle = quality.getByRole('button', { name: /Inspect review candidates/ });
-  await reviewToggle.click();
-  assert.equal(await quality.getByRole('button', { name: 'Hide review queue' }).getAttribute('aria-expanded'), 'true');
-  await quality.getByRole('button', { name: /Inspect structural flags/ }).click();
+  // Keyboard-only activation and focus persistence, not pointer-only testing.
+  await reviewToggle.focus();
+  assert.equal(await reviewToggle.evaluate(node => node === document.activeElement), true);
+  await page.keyboard.press('Enter');
+  const hideReview = quality.getByRole('button', { name: 'Hide review queue' });
+  assert.equal(await hideReview.getAttribute('aria-expanded'), 'true');
+  assert.equal(await hideReview.evaluate(node => node === document.activeElement), true);
+  const flagToggle = quality.getByRole('button', { name: /Inspect structural flags/ });
+  await flagToggle.focus();
+  await page.keyboard.press('Space');
+  assert.equal(await quality.getByRole('button', { name: 'Hide structural flags' })
+    .getAttribute('aria-expanded'), 'true');
+  const limitations = quality.locator('details summary');
+  await limitations.focus();
+  await page.keyboard.press('Enter');
+  assert.equal(await quality.locator('details').getAttribute('open'), '');
+  // Scanned Phase 5.5 panel: WCAG A/AA rules, without treating automation
+  // as a substitute for real assistive technology/screen-reader acceptance.
+  const axePath = process.env.UCE_AXE_CORE_PATH;
+  if (!axePath) throw new Error('Axe accessibility runner path is required.');
+  await page.addScriptTag({ path: axePath });
+  const violations = await page.evaluate(async () => {
+    const el = document.querySelector('[aria-label="Phase 5.5 intelligence quality evaluation"]');
+    if (!el || !window.axe) throw new Error('Accessibility audit target unavailable.');
+    const result = await window.axe.run(el, {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+      rules: { 'region': { enabled: false } },
+    });
+    return result.violations.map(item => ({
+      id: item.id, impact: item.impact,
+      nodes: item.nodes.map(node => node.target).slice(0, 5),
+    }));
+  });
+  assert.deepEqual(violations, [], 'Phase 5.5 panel WCAG A/AA automated audit');
 
   const source = panel.locator('[title^="Inspect source references at "]').first();
   if (await source.count()) {
@@ -117,8 +153,8 @@ async function main() {
   await page.setViewportSize({ width: 390, height: 844 });
   await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
   assert.equal(await quality.getByRole('button', { name: 'Hide review queue' }).getAttribute('aria-expanded'), 'true');
-  console.log(JSON.stringify({ suite: 'phase5.5-browser-e2e', browser: 'chromium',
-    routes: 'demo-report', assertions: 'navigation, Root Cause First, quality, review, evidence, proposal, stale-state, privacy, responsive' }));
+  console.log(JSON.stringify({ suite: 'phase5.5-browser-e2e', browser: browserName,
+    routes: 'demo-report', assertions: 'navigation, Root Cause First, keyboard/focus, axe WCAG A/AA, quality, review, evidence, proposal, stale-state, privacy, responsive' }));
 }
 try { await main(); }
 finally {
