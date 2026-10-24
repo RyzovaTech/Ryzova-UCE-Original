@@ -11,10 +11,9 @@ const MAX_FINDINGS = 1024;
 const MAX_FLAGS = 64;
 const MAX_REVIEW = 64;
 const severity = new Set(['critical', 'warning', 'info']);
-const own = (x, k) => Object.prototype.hasOwnProperty.call(x, k);
 const record = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 const sourceRef = value => typeof value === 'string' && value.length > 0 &&
-  value.length <= 240 && /^[A-Za-z0-9_.@/-]+(?:#[^\s#]{1,120})?$/.test(value) &&
+  value.length <= 240 && /^[A-Za-z0-9_.@\/-]+(?:#[^\s#]{1,120})?$/.test(value) &&
   value.split('#')[0].split('/').every(p => p && p !== '.' && p !== '..');
 
 function empty(reason) {
