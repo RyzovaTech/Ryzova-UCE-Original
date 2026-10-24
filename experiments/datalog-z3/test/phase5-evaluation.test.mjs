@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { evaluatePhase5Intelligence } from '../phase5-evaluation.mjs';
 
 const issue = (id, severity = 'warning') => ({
@@ -151,4 +152,24 @@ test('malformed or over-budget scans abstain instead of asserting parity', () =>
     issues: Array.from({ length: 513 }, (_, i) => issue(String(i))) }, scan());
   assert.equal(a.structuralStatus, 'unknown');
   assert.equal(a.accuracy.recommendationCorrectnessRate, null);
+});
+
+
+test('explicit evaluate CLI executes original UCE in read-only mode and reports unknown accuracy', () => {
+  const cli = new URL('../phase5-cli.mjs', import.meta.url);
+  const input = new URL('../fixtures/optional-project.json', import.meta.url);
+  const process = spawnSync(globalThis.process.execPath,
+    [cli.pathname, 'evaluate', input.pathname],
+    { encoding: 'utf8', timeout: 20000, maxBuffer: 512 * 1024 });
+  assert.equal(process.status, 0, process.stderr);
+  const out = JSON.parse(process.stdout);
+  assert.equal(out.version, 1);
+  assert.equal(out.originalScoreParity, 'preserved');
+  assert.equal(out.originalIssueParity, 'preserved');
+  assert.equal(out.accuracy.falsePositiveRate, null);
+  assert.equal(out.accuracy.falseMergeRate, null);
+  assert.ok(['passed', 'review-required'].includes(out.structuralStatus),
+    JSON.stringify(out.flags));
+  assert.ok(!process.stdout.includes('"diff"'));
+  assert.ok(!process.stdout.includes('"proposal"'));
 });
