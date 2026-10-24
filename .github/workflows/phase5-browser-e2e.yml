@@ -1,0 +1,44 @@
+name: Phase 5.5 Cross-Browser and Accessibility E2E
+
+on:
+  pull_request:
+    paths:
+      - 'src/components/reports/**'
+      - 'src/lib/report/**'
+      - 'testing/browser/**'
+      - '.github/workflows/phase5-browser-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-phase55:
+    name: Phase 5.5 ${{ matrix.browser }} E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 28
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    env:
+      VITE_UCE_UNIFIED_INTELLIGENCE_UI: 'true'
+      UCE_BROWSER: ${{ matrix.browser }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install locked application dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Install pinned test-only Playwright and axe-core in isolated temporary project
+        run: |
+          mkdir -p "$RUNNER_TEMP/uce-phase55-browser"
+          npm install --prefix "$RUNNER_TEMP/uce-phase55-browser" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1 axe-core@4.10.3
+          echo "UCE_PLAYWRIGHT_ENTRY=$RUNNER_TEMP/uce-phase55-browser/node_modules/playwright/index.mjs" >> "$GITHUB_ENV"
+          echo "UCE_AXE_CORE_PATH=$RUNNER_TEMP/uce-phase55-browser/node_modules/axe-core/axe.min.js" >> "$GITHUB_ENV"
+      - name: Install selected browser and Linux libraries
+        run: node "$RUNNER_TEMP/uce-phase55-browser/node_modules/playwright/cli.js" install --with-deps "${{ matrix.browser }}"
+      - name: Run Phase 5.5 real browser and WCAG checks
+        run: node testing/browser/phase5-e2e.mjs
