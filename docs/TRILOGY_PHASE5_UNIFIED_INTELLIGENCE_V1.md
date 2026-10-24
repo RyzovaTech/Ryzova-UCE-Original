@@ -129,3 +129,25 @@ This experimental Phase 5.3 increment leaves all original UCE scoring, issue rec
 - Added positive/negative Node pin evidence, Unknown abstention, original-score parity, nonmutation, deterministic identity and deduplication regression tests.
 
 Acceptance remains contingent on all three successful exact-current-HEAD CI workflows and independent review. Do not merge into production main; release blockers #77, #80 and #81 remain.
+
+## Phase 5.5 read-only Intelligence Quality & Safety evaluation foundation
+
+An explicit third local experimental CLI action is available:
+
+    node experiments/datalog-z3/phase5-cli.mjs evaluate /path/to/input.json
+
+This executes the existing original UCE analyzer and Phase 5 read-only intelligence scan in memory, then runs a **structural audit** against both outputs. It is distinct from `propose`: no patch request or diff is emitted, and no project source files are modified or executed. No native Soufflé/Z3/cvc5 solver is invoked.
+
+The audit output reports independent dimensions:
+
+- Original UCE score and issue-count parity, plus per-issue ID, title, affected file and severity preservation checks.
+- UCE-only, Trilogy-only, Both and context-only finding counts, and bounded provenance/reference diagnostics.
+- Duplicate/ambiguous UCE IDs, missing original record links, severity drift, duplicate finding IDs, invalid source references and unsupported solver/proof status claims.
+- Source-backed review candidates for later independent human adjudication, with bounded lists and explicit truncation counts.
+- Distinct structural audit status and graph coverage status (`bounded-modeled-graph` versus `unknown`). A partial/unsupported graph is **not** treated as a clean compatibility result.
+
+**Important quality boundary:** false-positive rate, false-merge rate, useful-new-finding rate, recommendation correctness and representative project accuracy remain `null` / `not-measured-needs-independent-labels`. Engineering structural parity and syntactic source references do not prove any of these quantities; original source bytes are not independently re-opened or rehashed by this evaluation. The owner has deferred independently blinded real-project accuracy adjudication to after product development (#80).
+
+Implementation: `experiments/datalog-z3/phase5-evaluation.mjs` and `test/phase5-evaluation.test.mjs`. The native experimental package test command uses the `test/*.test.mjs` glob, so this suite is automatically included. No browser presentation, default UCE scoring, original issue records, symbolic semantics, automatic fix creation, patch application or production flag has changed.
+
+Acceptance of this new Phase 5.5 increment requires new exact-HEAD CI passes, output contract inspection, and any appropriate independent review. PR #86 stays Draft, experimental, unmerged and production NO-GO; #77, #80 and #81 remain open.
