@@ -26,9 +26,12 @@ jobs:
           cache: npm
       - name: Install locked application dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install pinned isolated browser test runner without lockfile edits
-        run: npm install --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+      - name: Install pinned Playwright in a separate temporary project
+        run: |
+          mkdir -p "$RUNNER_TEMP/uce-phase55-browser"
+          npm install --prefix "$RUNNER_TEMP/uce-phase55-browser" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          echo "UCE_PLAYWRIGHT_ENTRY=$RUNNER_TEMP/uce-phase55-browser/node_modules/playwright/index.mjs" >> "$GITHUB_ENV"
       - name: Install Chromium and Linux runtime libraries
-        run: npx playwright install --with-deps chromium
+        run: node "$RUNNER_TEMP/uce-phase55-browser/node_modules/playwright/cli.js" install --with-deps chromium
       - name: Run real Phase 5.5 browser UI, privacy and stale-request assertions
         run: node testing/browser/phase5-e2e.mjs
