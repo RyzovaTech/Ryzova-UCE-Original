@@ -5,6 +5,8 @@ on:
       - 'tools/mcp/**'
       - 'testing/mcp/**'
       - 'docs/UCE_MCP_LOCAL_V1.md'
+      - 'docs/UCE_MCP_AGENT_FIRST.md'
+      - 'docs/UCE_MCP_V2_UPLOADS.md'
       - '.github/workflows/uce-mcp.yml'
   workflow_dispatch:
 permissions:
