@@ -124,6 +124,57 @@ OAuth PKCE/CIMD/DCR support, revocation and long-running jobs are future
 release requirements. Generic static access tokens alone are not a
 production-ready replacement for per-user OAuth.
 
+## Optional OAuth 2.1 resource-server verification (identity provider required)
+
+UCE's private HTTP gateway can validate **signed RS256/ES256 OAuth access JWTs**
+using an operator-configured HTTPS JWKS URI, issuer, exact MCP resource
+audience, the \`uce.analyze\` scope and a pre-authorized subject-to-root
+binding. This is OAuth **resource server** functionality, not an embedded
+OAuth login / authorization server. Configure an independent, reviewed
+identity provider implementing OAuth 2.1 authorization-code PKCE,
+RFC 8414 metadata, refresh-token controls and CIMD or DCR as appropriate.
+ChatGPT/Claude registration and consent must be completed in that provider.
+
+\`\`\`bash
+export UCE_MCP_OAUTH_CONFIG='{
+  "issuer":"https://YOUR-AUTH-PROVIDER",
+  "jwksUri":"https://YOUR-AUTH-PROVIDER/.well-known/jwks.json",
+  "audience":"https://YOUR-PRIVATE-HOST/mcp",
+  "scope":"uce.analyze"
+}'
+export UCE_MCP_ACCOUNTS_JSON='[
+  {
+    "id":"alice",
+    "oauthSubject":"YOUR-IDP-USER-SUBJECT",
+    "root":"/ABSOLUTE/EMPTY/ALICE-DEDICATED-ROOT",
+    "tokenSha256":"OPTIONAL-EXACT-64-HEX-SHA256-FOR-BROWSER-UPLOAD-ONLY"
+  }
+]'
+\`\`\`
+
+For OAuth-only authentication, omit \`tokenSha256\`; browser upload via the
+built-in password-based upload form would not be usable until a login-aware
+upload portal is integrated with the same identity provider. If using the
+private form, configure a **separate random bearer secret for the same
+subject account**; never place that secret in the prompt, source repo or
+browser persistent storage. Static bearer authentication is supported only
+for trusted operator-controlled test environments.
+
+The gateway advertises
+\`GET /.well-known/oauth-protected-resource\` and sends an OAuth
+\`WWW-Authenticate\` resource metadata challenge on 401. That metadata
+points to the **external authorization server**; UCE does not implement
+\`/authorize\` or \`/token\`. Tokens are rejected unless the exact issuer,
+resource audience, expiration, signature, scope and allowlisted user
+subject pass verification. Cross-user uploaded handles remain isolated in
+distinct worker processes and temp roots.
+
+**Do not turn this into public service by copying example variables.**
+Validate real user registration, IdP JWKS rotation, account revocation,
+network access, SOC privacy controls, ZIP fuzzing, exhaustion and incident
+logging before publishing. JWT signature verification alone does not make
+a finished public multi-user product.
+
 ## ChatGPT and Claude integration boundaries
 
 - **ChatGPT web:** custom plugins connect to remote MCP endpoints or a
