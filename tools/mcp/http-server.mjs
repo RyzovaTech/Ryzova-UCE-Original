@@ -13,40 +13,57 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { createHash, timingSafeEqual, randomBytes } from 'node:crypto';
 import { uploadHtml } from './upload-ui.mjs';
+import { oauthConfig, resourceMetadata, verifyTokenJwt, getJwks } from './oauth-verify.mjs';
 import { fileURLToPath } from 'node:url';
 
 const stdio=fileURLToPath(new URL('./server.mjs',import.meta.url));
 const port=Number(process.env.UCE_MCP_PORT??'8715');
 if(!Number.isInteger(port)||port<1024||port>65535)throw Error('Invalid UCE_MCP_PORT');
+const oauth=oauthConfig();
 const raw=process.env.UCE_MCP_ACCOUNTS_JSON;
 if(!raw)throw Error('UCE_MCP_ACCOUNTS_JSON is required: id, tokenSha256 and dedicated root for each principal.');
 const accounts=JSON.parse(raw);
 if(!Array.isArray(accounts)||!accounts.length||accounts.length>4)
   throw Error('Only 1–4 explicitly configured principals are permitted.');
-const ids=new Set(),hashes=new Set(),roots=new Set();
+const ids=new Set(),hashes=new Set(),roots=new Set(),subjects=new Set();
 for(const a of accounts){
   if(!a||typeof a.id!=='string'||!/^[A-Za-z0-9_-]{1,50}$/.test(a.id)||
-     typeof a.tokenSha256!=='string'||!/^[a-f0-9]{64}$/.test(a.tokenSha256)||
+     (a.tokenSha256!==undefined &&
+       (typeof a.tokenSha256!=='string'||!/^[a-f0-9]{64}$/.test(a.tokenSha256)))||
+     (a.oauthSubject!==undefined &&
+       (typeof a.oauthSubject!=='string'||a.oauthSubject.length<1||a.oauthSubject.length>256))||
+     (!a.tokenSha256&&!a.oauthSubject)||
+     (!!a.oauthSubject&&!oauth)||
      typeof a.root!=='string'||!path.isAbsolute(a.root)||
      fs.lstatSync(a.root).isSymbolicLink()||!fs.statSync(a.root).isDirectory())
     throw Error('Invalid principal; each needs id, SHA-256 and existing non-symlink root.');
   const rp=fs.realpathSync(a.root);
-  if(ids.has(a.id)||hashes.has(a.tokenSha256)||roots.has(rp))
-    throw Error('Shared principal names, tokens and roots are forbidden.');
-  ids.add(a.id);hashes.add(a.tokenSha256);roots.add(rp);a.root=rp;
+  if(ids.has(a.id)||roots.has(rp)||
+     (a.tokenSha256&&hashes.has(a.tokenSha256))||
+     (a.oauthSubject&&subjects.has(a.oauthSubject)))
+    throw Error('Shared principal identifiers, tokens and roots are forbidden.');
+  ids.add(a.id);if(a.tokenSha256)hashes.add(a.tokenSha256);
+  if(a.oauthSubject)subjects.add(a.oauthSubject);
+  roots.add(rp);a.root=rp;
 }
 const allowedOrigins=new Set((process.env.UCE_MCP_ALLOWED_ORIGINS??'')
   .split(',').map(s=>s.trim()).filter(Boolean));
 const clients=new Map();
-function authenticate(req){
+async function authenticate(req){
   const header=req.headers.authorization;
-  if(typeof header!=='string'||!/^Bearer [A-Za-z0-9._~+/-]{20,512}=?=?$/.test(header))
+  if(typeof header!=='string'||!/^Bearer [A-Za-z0-9._~+/-]{20,8192}=?=?$/.test(header))
     return null;
-  const input=Buffer.from(createHash('sha256').update(header.slice(7)).digest('hex'),'hex');
+  const token=header.slice(7);
+  const input=Buffer.from(createHash('sha256').update(token).digest('hex'),'hex');
   for(const a of accounts){
-    if(timingSafeEqual(input,Buffer.from(a.tokenSha256,'hex')))return a;
+    if(a.tokenSha256&&timingSafeEqual(input,Buffer.from(a.tokenSha256,'hex')))return a;
   }
-  return null;
+  if(!oauth)return null;
+  try {
+    const jwks=await getJwks(oauth);
+    const subject=verifyTokenJwt(token,oauth,jwks);
+    return accounts.find(a=>a.oauthSubject===subject)??null;
+  }catch{return null;}
 }
 function send(res,status,data,headers={}){
   if(res.writableEnded)return;
@@ -133,6 +150,11 @@ const server=http.createServer(async(req,res)=>{
   if(req.headers.origin && !allowedOrigins.has(req.headers.origin)){
     send(res,403,{error:'Origin not permitted'});return;
   }
+  if(oauth&&req.method==='GET'&&
+    (req.url==='/.well-known/oauth-protected-resource'||
+     req.url==='/.well-known/oauth-protected-resource/mcp')){
+    send(res,200,resourceMetadata(oauth));return;
+  }
   if(req.method==='GET'&&req.url==='/health'){
     send(res,200,{status:'ok',mode:'private-upload-mcp-gateway'});return;
   }
@@ -146,9 +168,15 @@ const server=http.createServer(async(req,res)=>{
         "'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'"});
     res.end(uploadHtml(nonce));return;
   }
-  const account=authenticate(req);
-  if(!account){send(res,401,{error:'Bearer authentication required'},
-    {'www-authenticate':'Bearer realm="uce-mcp"'});return;}
+  const account=await authenticate(req);
+  if(!account){
+    const challenge=oauth?
+      'Bearer realm="uce-mcp", resource_metadata="'+
+        new URL('/.well-known/oauth-protected-resource',oauth.audience).href+'"':
+      'Bearer realm="uce-mcp"';
+    send(res,401,{error:'Valid bearer authentication required'},
+      {'www-authenticate':challenge});return;
+  }
   if(req.method==='POST'&&req.url==='/mcp'){
     try{
       const bytes=await readLimited(req,64*1024);
