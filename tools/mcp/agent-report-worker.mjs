@@ -4,6 +4,7 @@
  * Project code is never loaded; only UCE trusted source modules are loaded.
  */
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import { load } from '../../scripts/trusted-module-loader.mjs';
 const [filename,mode,offsetArg,limitArg]=process.argv.slice(2);
 const offset=Number(offsetArg??0),limit=Number(limitArg??25);
@@ -63,8 +64,18 @@ for(const item of findings){const key=item.module;
  if(item.severity==='critical')value.critical++;
  if(item.severity==='warning')value.warning++;
  groups.set(key,value);}
+const normalizedFindings=findings.map(f=>JSON.stringify({
+  module:f.module,ruleId:f.ruleId,severity:f.severity,title:f.title,
+  category:f.category??null,file:f.file??null,line:f.line??null,
+  evidence:f.evidence??null,recommendation:f.recommendation??null,
+})).sort();
+const fingerprintSha256=createHash('sha256')
+  .update(JSON.stringify({engine:report.analysisVersion,score:report.score.overall,
+    findings:normalizedFindings})).digest('hex');
 const overall={
   resultType:'UCE-canonical-rule-evaluation',version:report.analysisVersion,
+  repeatableFingerprintSha256:fingerprintSha256,
+  fingerprintScope:'canonical UCE score + normalized rule findings; excludes report IDs and timestamps',
   score:report.score.overall,originalIssueCount:report.issues.length,
   evaluatedFindings:findings.length,ruleModules:[...groups.values()],
   coverage:quality.graphCoverage,structuralQuality:quality.status,
