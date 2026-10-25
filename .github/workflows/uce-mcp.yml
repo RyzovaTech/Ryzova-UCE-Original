@@ -1,0 +1,23 @@
+name: UCE MCP Local Protocol and Safety
+on:
+  pull_request:
+    paths:
+      - 'tools/mcp/**'
+      - 'testing/mcp/**'
+      - '.github/workflows/uce-mcp.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stdio-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: JSON-RPC MCP protocol, real bounded UCE scan, fail-closed path tests
+        run: node --test testing/mcp/stdio.test.mjs
