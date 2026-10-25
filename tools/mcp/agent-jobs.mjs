@@ -27,7 +27,13 @@ export class AgentJobs {
     parseRepositoryUrl(args?.repository,hosts);
     validatedBudget(args?.maxFiles,'maxFiles');
     validatedBudget(args?.maxBytes,'maxBytes');
-    if(this.#jobs.size>=6||[...this.#jobs.values()].filter(j=>j.status==='running').length>=2)
+    const maxJobs=Number(process.env.UCE_MCP_MAX_JOBS??100);
+    const maxConcurrent=Number(process.env.UCE_MCP_MAX_CONCURRENT_SCANS??2);
+    if(!Number.isSafeInteger(maxJobs)||maxJobs<1||
+      !Number.isSafeInteger(maxConcurrent)||maxConcurrent<1)
+      throw Error('Invalid operator job safety policy');
+    if(this.#jobs.size>=maxJobs||
+       [...this.#jobs.values()].filter(j=>j.status==='running').length>=maxConcurrent)
       throw Error('Machine is busy; check or release existing scans before starting another.');
     const session=this.store.begin();
     const jobId=randomBytes(24).toString('hex');
