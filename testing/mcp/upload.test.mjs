@@ -169,8 +169,9 @@ test('HTTP remote bridge enforces authentication and tenant upload isolation',as
   const up=await request('/upload',tokenA,{method:'POST',headers:{
     'content-type':'application/zip','x-uce-upload-consent':'true',
     'x-uce-filename':'my-project.zip'},body:bytes});
-  assert.equal(up.status,201,await up.text().catch(()=>'')); // body consumed only if status fails
-  const uploaded=await up.json();
+  const responseText=await up.text();
+  assert.equal(up.status,201,responseText);
+  const uploaded=JSON.parse(responseText);
   await mcp(tokenB,1,'initialize',{protocolVersion:'2025-06-18'});
   const stolen=await mcp(tokenB,2,'tools/call',{
     name:'uce_analyze_upload',arguments:{uploadId:uploaded.uploadId}});
