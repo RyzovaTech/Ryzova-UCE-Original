@@ -3,7 +3,7 @@
     "ryzova-uce": {
       "command": "node",
       "args": [
-        "./plugins/uce/bin/launch.mjs"
+        "./bin/launch.mjs"
       ]
     }
   }
