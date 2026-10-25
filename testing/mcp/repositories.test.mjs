@@ -90,6 +90,17 @@ test('Gitless full local workspace scan uses all UCE rules and paginates real ev
   }
   assert.equal(count,value.summary.evaluatedFindings,
    'paginated findings must cover full original UCE rule output');
+  const repeated=await c.tool('uce_scan_workspace',{projectPath:'.'});
+  assert.equal(repeated.result.isError,false,JSON.stringify(repeated));
+  const repeatedId=repeated.result.structuredContent.reportId;
+  const compared=await c.tool('uce_compare_reports',{
+    beforeReportId:reportId,afterReportId:repeatedId});
+  assert.equal(compared.result.isError,false,JSON.stringify(compared));
+  assert.equal(compared.result.structuredContent.sameEngineVersion,true);
+  assert.equal(compared.result.structuredContent.sameNormalizedFindings,true,
+    'Identical local source + engine should produce a repeatable rule fingerprint');
+  assert.equal(compared.result.structuredContent.scoreDelta,0);
+  await c.tool('uce_release_report',{reportId:repeatedId});
   const released=await c.tool('uce_release_report',{reportId});
   assert.equal(released.result.structuredContent.released,true);
   const gone=await c.tool('uce_get_findings',{reportId});
