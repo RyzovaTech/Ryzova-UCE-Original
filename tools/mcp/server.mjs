@@ -92,6 +92,12 @@ const tools = [
     annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
     inputSchema:{type:'object',additionalProperties:false,
       properties:{reportId:{type:'string'}},required:['reportId']}},
+  { name:'uce_compare_reports',title:'Repeatable compatibility regression comparison',
+    description:'Compare two UCE report handles (e.g., two Git commits or pre/post local scans). Return canonical rule fingerprint, score delta and module finding deltas. Comparing reports does not prove that rule findings are objectively correct.',
+    annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{beforeReportId:{type:'string'},afterReportId:{type:'string'}},
+      required:['beforeReportId','afterReportId']}},
   { name:'uce_release_report',title:'Delete temporary UCE report',
     description:'Erase temporary report results after the agent finishes analysis. Public checkout source was already deleted.',
     annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false},
@@ -229,6 +235,28 @@ function inlineFiles(args) {
   if(data.length>42*1024)throw Error('Inline files exceed 42 KiB. Use ZIP staging.');
   return uploadedReport('files',data,args.maxIssues);
 }
+function compareAgentReports(args) {
+  const before=agentReports.page({reportId:args.beforeReportId,view:'summary'});
+  const after=agentReports.page({reportId:args.afterReportId,view:'summary'});
+  const b=new Map(before.ruleModules.map(x=>[x.module,x]));
+  const a=new Map(after.ruleModules.map(x=>[x.module,x]));
+  const modules=[...new Set([...b.keys(),...a.keys()])].sort().map(module=>{
+    const start=b.get(module)?.findings??0,end=a.get(module)?.findings??0;
+    return {module,before:start,after:end,delta:end-start};
+  });
+  return {type:'uce-rule-regression-comparison',
+    sameEngineVersion:before.version===after.version,
+    before:{reportId:args.beforeReportId,source:before.source,
+      score:before.score,fingerprint:before.repeatableFingerprintSha256,
+      coverage:before.coverage,totalFindings:before.evaluatedFindings},
+    after:{reportId:args.afterReportId,source:after.source,
+      score:after.score,fingerprint:after.repeatableFingerprintSha256,
+      coverage:after.coverage,totalFindings:after.evaluatedFindings},
+    sameNormalizedFindings:before.repeatableFingerprintSha256===
+      after.repeatableFingerprintSha256,
+    scoreDelta:after.score-before.score,modules,
+    interpretation:'Changed rule output is a measured regression signal, not independent source truth. Review new or removed findings through uce_get_findings. Limited/Unknown coverage invalidates whole-repository clean claims.'};
+}
 function scanAgentRepository(args) {
   const session=agentReports.begin();
   try {
@@ -248,7 +276,7 @@ function capabilities() {
   return {server:'ryzova-uce-mcp',version:'0.2.0',
     mode:remoteOnly?'authenticated-http-worker':'local-stdio',
     license:'MPL-2.0',paywall:false,
-    preferredAgentWorkflow:'uce_scan_repository → uce_rule_summary → uce_get_findings (page until hasMore=false)',
+    preferredAgentWorkflow:'uce_scan_repository → uce_rule_summary → uce_get_findings (page until hasMore=false) → optionally uce_compare_reports across two scans',
     repositorySources:['github.com','gitlab.com','codeberg.org'],
     chatUploadRequired:false,
     workspace:remoteOnly?'upload-only-user-isolated':'explicit-root-only',
@@ -307,6 +335,7 @@ function handle(req) {
       uce_scan_workspace:['projectPath','maxFiles','maxBytes'],
       uce_get_findings:['reportId','offset','limit'],
       uce_rule_summary:['reportId'],
+      uce_compare_reports:['beforeReportId','afterReportId'],
       uce_release_report:['reportId'],
       uce_scan_project:['projectPath','maxIssues'],
       uce_inspect_report:['reportPath','maxIssues'],
@@ -328,6 +357,7 @@ function handle(req) {
         name==='uce_scan_workspace'?scanAgentWorkspace(args):
         name==='uce_get_findings'?agentReports.page({...args,view:'findings'}):
         name==='uce_rule_summary'?agentReports.page({...args,view:'summary'}):
+        name==='uce_compare_reports'?compareAgentReports(args):
         name==='uce_release_report'?agentReports.release(args.reportId):
         name==='uce_scan_project'?scan(args):
         name==='uce_inspect_report'?
