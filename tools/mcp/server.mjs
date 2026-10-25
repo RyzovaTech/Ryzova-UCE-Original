@@ -63,6 +63,13 @@ function resolveAuthorized(relative, kind) {
   return full;
 }
 const tools = [
+  { name:'uce_rule_catalog',title:'Discover registered UCE compatibility rules',
+    description:'List actual built-in UCE V3 rule packs or paginate registered detector metadata, optionally by module. This is the real rule registry, not model-generated rule guesses.',
+    annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{mode:{type:'string',enum:['packs','rules']},
+        module:{type:'string',description:'Optional V3 rule module filter'},
+        offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:100}}}},
   { name:'uce_scan_repository', title:'Run full UCE rules on a Git repository',
     description:'PREFERRED: Analyze a public GitHub/GitLab/Codeberg repository directly by URL or owner/repo. No file upload/ZIP or chat attachment. Uses the canonical UCE compatibility, rules, security, symbolic and technology analyzers; returns exact checked-out Git commit, scan coverage and temporary reportId for paginated evidence.',
     annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:true},
@@ -331,6 +338,7 @@ function handle(req) {
       error(id,-32602,'Tool arguments must be an object.');return;
     }
     const allowed = ({
+      uce_rule_catalog:['mode','module','offset','limit'],
       uce_scan_repository:['repository','ref','maxFiles','maxBytes'],
       uce_scan_workspace:['projectPath','maxFiles','maxBytes'],
       uce_get_findings:['reportId','offset','limit'],
@@ -353,6 +361,8 @@ function handle(req) {
     }
     try {
       const result=name==='uce_capabilities'?capabilities():
+        name==='uce_rule_catalog'?JSON.parse(runTrusted('tools/mcp/rule-catalog-worker.mjs',
+          [args.mode??'packs',String(args.offset??0),String(args.limit??50),args.module??''],30000)):
         name==='uce_scan_repository'?scanAgentRepository(args):
         name==='uce_scan_workspace'?scanAgentWorkspace(args):
         name==='uce_get_findings'?agentReports.page({...args,view:'findings'}):
