@@ -17,7 +17,9 @@ test('plugin manifest describes MPL-2.0 open-source UCE and valid local componen
   assert.equal(manifest.skills, './skills/');
   assert.equal(manifest.apps, undefined, 'never invent an unregistered ChatGPT app ID');
   const servers = JSON.parse(fs.readFileSync(path.join(folder, '.mcp.json'), 'utf8'));
-  assert.deepEqual(servers.mcp_servers['ryzova-uce'].args, ['./plugins/uce/bin/launch.mjs']);
+  assert.deepEqual(servers.mcp_servers['ryzova-uce'].args, ['./bin/launch.mjs']);
+  assert.ok(fs.existsSync(path.join(folder,servers.mcp_servers['ryzova-uce'].args[0])),
+    'launcher must resolve from standalone plugin folder, not repository root');
   assert.ok(fs.existsSync(path.join(folder, 'skills/analyze-repository/SKILL.md')));
 });
 test('local plugin denies implicit roots and symlink roots', () => {
@@ -36,6 +38,14 @@ test('local plugin denies implicit roots and symlink roots', () => {
     });
     assert.equal(denied.status, 2);
     assert.equal(denied.stdout, '');
+    const badEngine=spawnSync(process.execPath,[script],{cwd:folder,encoding:'utf8',
+      env:{...process.env,UCE_MCP_AUTHORIZED_ROOT:dir,UCE_ENGINE_ROOT:'../bad-engine'},timeout:5000});
+    assert.equal(badEngine.status,2,'relative engine location must be denied');
+    assert.equal(badEngine.stdout,'');
+    const missingEngine=spawnSync(process.execPath,[script],{cwd:folder,encoding:'utf8',
+      env:{...process.env,UCE_MCP_AUTHORIZED_ROOT:dir,UCE_ENGINE_ROOT:path.join(dir,'missing')},timeout:5000});
+    assert.equal(missingEngine.status,2,'standalone plugin must require canonical engine checkout');
+    assert.equal(missingEngine.stdout,'');
   } finally {fs.rmSync(dir,{recursive:true,force:true});}
 });
 
@@ -56,8 +66,8 @@ test('actual bundled plugin launches canonical UCE MCP, scans without executing 
   assert.equal(cli.status,0,cli.stderr.slice(-1300));
   const originalReport=JSON.parse(fs.readFileSync(cliPath,'utf8'));
   const pluginScript=path.join(folder,'bin/launch.mjs');
-  const child=spawn(process.execPath,[pluginScript],{cwd:root,stdio:['pipe','pipe','pipe'],
-    env:{...process.env,UCE_MCP_AUTHORIZED_ROOT:project}});
+  const child=spawn(process.execPath,['./bin/launch.mjs'],{cwd:folder,stdio:['pipe','pipe','pipe'],
+    env:{...process.env,UCE_MCP_AUTHORIZED_ROOT:project,UCE_ENGINE_ROOT:root}});
   const lines=createInterface({input:child.stdout});
   const pending=new Map();
   let nextId=0,stderr='',unmatched=[];
