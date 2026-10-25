@@ -14,9 +14,25 @@ export UCE_MCP_AUTHORIZED_ROOT="/absolute/path/to/allowed/projects"
 node plugins/uce/bin/launch.mjs
 ```
 
-`plugins/uce/.mcp.json` provides a bundled MCP server command for
-developer tooling that resolves commands from the UCE repository root.
-Do not authorize your home directory or sensitive folders.
+`plugins/uce/.mcp.json` launches `./bin/launch.mjs` **relative to the
+plugin folder**, so it works with a plugin-root working directory.
+When the plugin is installed outside the original repository, the
+original engine is intentionally **not copied or reimplemented**.
+Install/pin a full UCE checkout separately (with `npm ci`) and set:
+
+```sh
+export UCE_ENGINE_ROOT="/absolute/path/to/complete-uce-checkout"
+export UCE_MCP_AUTHORIZED_ROOT="/absolute/path/to/approved-projects"
+cd /path/to/installed/uce-plugin
+node ./bin/launch.mjs
+```
+
+The real launcher performs explicit absolute-path checks; it fails
+closed when `UCE_ENGINE_ROOT` does not contain the UCE engine.
+MCP tools execute the canonical UCE CLI with the dependencies installed
+in that checkout. See the repository-root `.env.example` for a
+redacted list of operator environment settings. Never authorize your
+home directory or sensitive folders.
 
 ## ChatGPT / Claude remote testing
 
