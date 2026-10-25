@@ -27,11 +27,17 @@ Model calls:
    `uce_rule_catalog({mode:"rules",module:"dependency",limit:100})` to
    discover the **actual registered UCE rule packs and detectors**.
    Catalog presence alone is not proof that a rule ran or matched.
-1. `uce_scan_repository({repository:"pallets/click",ref:"<commit-sha>"})`
-   or any public HTTPS GitHub, GitLab or Codeberg URL allowed by the server
-   operator. `ref` is optional; specifying an exact **40-character commit**
-   gives a reproducible source snapshot.
-2. Response includes source repository, **resolved commit SHA**, UCE scanner
+1. **Preferred for large projects:** `uce_start_repository_scan({
+   repository:"pallets/click",ref:"<commit-sha>"})`; this returns a job handle
+   immediately rather than keeping a cloud AI tool call open. The agent
+   calls `uce_repository_scan_status({jobId})` until complete and receives
+   the result's `reportId`. The user can cancel explicitly with
+   `uce_cancel_repository_scan({jobId})`. For small projects, direct
+   `uce_scan_repository` is available.
+   Any public HTTPS GitHub, GitLab or Codeberg repository URL on the
+   operator's allowlist is supported. Pin the full 40-character Git SHA
+   for reproducibility.
+2. Result includes source repository, **resolved commit SHA**, UCE scanner
    version, original score, rule findings by module, source coverage,
    normalized SHA-256 rules fingerprint, and temporary `reportId`.
 3. `uce_rule_summary({reportId})` for module-by-module compatibility
@@ -141,7 +147,7 @@ npm run test:report-regressions
 npm run check
 ```
 
-The MCP CI includes parsing malicious Git URLs, locally scanning an
+The MCP CI includes asynchronous status/cancel handling, parsing malicious Git URLs, locally scanning an
 actual fixture, paginating **all** real rule findings, repeat scan
 fingerprint invariance and fetching an exact pinned public Git commit.
 It also tests existing upload security, authentication, OAuth JWTs and
