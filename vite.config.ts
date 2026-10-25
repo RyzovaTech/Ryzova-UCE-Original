@@ -49,7 +49,7 @@ export default defineConfig({
           const pieces = repoPath?.split("/") ?? [];
           const ok = (provider === "gitlab" || provider === "codeberg") &&
             pieces.length >= 2 && pieces.length <= (provider === "gitlab" ? 8 : 2) &&
-            pieces.every(x => /^[a-zA-Z0-9_.-]+$/.test(x) && x !== "." && x !== "..");
+            pieces.every(x => /^[a-zA-Z0-9_.-]+$/.test(x) && x !== "." && x !== ".." && x !== "-");
           res.setHeader("Cache-Control", "private, no-store");
           res.setHeader("Content-Type", "application/json");
           if (req.method !== "GET" || !ok) {
