@@ -39,7 +39,7 @@ export class AgentJobs {
       const child=spawn(process.execPath,[worker,JSON.stringify(args),session.file],{
         cwd:fileURLToPath(new URL('../../',import.meta.url)),stdio:['ignore','pipe','ignore'],
         detached:process.platform!=='win32',
-        env:{...process.env},shell:false});
+        env:{...process.env,UCE_MCP_WORK_ROOT:session.directory},shell:false});
       job.proc=child;
       const timer=setTimeout(()=>{job.error='Machine time limit reached';killTree(child);},
         9*60_000);
@@ -54,6 +54,7 @@ export class AgentJobs {
         clearTimeout(timer);
         job.proc=null;
         job.completedAt=new Date().toISOString();
+        if(job.status==='cancelled'){this.store.abort(session);return;}
         if(code!==0||job.error){
           job.status='failed';job.error=job.error??'Public Git repository scan failed';
           this.store.abort(session);return;
@@ -92,7 +93,9 @@ export class AgentJobs {
     const j=this.#get(id);
     if(j.status==='running'){
       j.status='cancelled';j.error='Cancelled by requester';
-      killTree(j.proc);this.store.abort(j.session);
+      killTree(j.proc);
+      // The checkout lives under session.directory; close handler erases it
+      // after the process group has terminated, not while Git may still write.
       return {jobId:id,status:'cancelled',sourceContentRetained:false};
     }
     return {jobId:id,status:j.status,alreadyFinished:true};
@@ -102,7 +105,8 @@ export class AgentJobs {
     for(const [id,j] of this.#jobs){
       if(now-j.created>JOB_TTL_MS){
         if(j.status==='running')killTree(j.proc);
-        if(j.status==='running')this.store.abort(j.session);
+        if(j.status==='running')j.status='cancelled';
+        // Process close handler removes its entire temporary directory.
         this.#jobs.delete(id);
       }
     }
