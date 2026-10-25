@@ -60,7 +60,7 @@ function worker(account){
     stdio:['pipe','pipe','ignore'],shell:false,cwd:path.dirname(stdio),
     env:{...process.env,UCE_MCP_REMOTE_UPLOAD_ONLY:'1'}
   });
-  const context={proc,dead:false,seq:0,pending:new Map(),buf:'',tokens:0,refill:Date.now()};
+  const context={proc,dead:false,initialized:false,seq:0,pending:new Map(),buf:'',tokens:0,refill:Date.now()};
   const rejectAll=()=>{
     context.dead=true;for(const item of context.pending.values()){
       clearTimeout(item.timer);item.reject(Error('UCE MCP worker ended.'));
@@ -87,7 +87,7 @@ function call(account,request,timeout=80000){
   const c=worker(account);
   const now=Date.now();
   if(now-c.refill>60000){c.tokens=0;c.refill=now;}
-  if(++c.tokens>150)return Promise.reject(Error('Per-user request quota exceeded.'));
+  if(++c.tokens>300)return Promise.reject(Error('Per-user request quota exceeded.'));
   if(c.pending.size>2)return Promise.reject(Error('Too many concurrent MCP requests.'));
   const id=++c.seq;
   return new Promise((resolve,reject)=>{
@@ -102,6 +102,14 @@ function call(account,request,timeout=80000){
   });
 }
 async function tool(account,name,args,timeout=80000){
+  const c=worker(account);
+  if(!c.initialized){
+    const hello=await call(account,{jsonrpc:'2.0',method:'initialize',
+      params:{protocolVersion:'2025-06-18',capabilities:{},
+        clientInfo:{name:'uce-private-upload-gateway',version:'0.1'}}});
+    if(hello.error)throw Error('MCP worker did not initialize.');
+    c.initialized=true;
+  }
   const message=await call(account,{jsonrpc:'2.0',method:'tools/call',
     params:{name,arguments:args}},timeout);
   if(message.error||message.result?.isError)
