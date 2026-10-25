@@ -73,7 +73,7 @@ export function getRepositoryArchiveUrl(repository: PublicRepository, defaultBra
   const ref = encodePath(defaultBranch);
   if (repository.provider === 'github') {
     return '/api/github/archive/' + encodeURIComponent(repository.owner) + '/' +
-      encodeURIComponent(repository.repository) + '/' + ref;
+      encodeURIComponent(repository.repository) + '/' + ref + '.zip';
   }
   if (repository.provider === 'gitlab') {
     if (!Number.isSafeInteger(gitlabProjectId) || gitlabProjectId! < 1) {
