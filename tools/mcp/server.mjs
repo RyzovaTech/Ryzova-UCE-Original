@@ -31,6 +31,7 @@ try {
 
 const protocol = '2025-06-18';
 const uploadStore = new UploadStore();
+setInterval(() => uploadStore.sweep(), 60_000).unref();
 const remoteOnly = process.env.UCE_MCP_REMOTE_UPLOAD_ONLY === '1';
 const MAX_LINE = 64 * 1024;
 let initialized = false;
@@ -174,6 +175,11 @@ function uploadedReport(mode,raw,maxIssues) {
       ...meta,temporaryBytesErased:true,provenance:'user-supplied-source-not-trusted'}};
   }finally {fs.rmSync(tmp,{recursive:true,force:true});}
 }
+function analyzeUploaded(args) {
+  const uploaded=uploadStore.take(args);
+  try{return uploadedReport('zip',uploaded.content,args.maxIssues);}
+  finally{uploaded.content.fill(0);}
+}
 function inlineFiles(args) {
   if(!Array.isArray(args.files)||!args.files.length||args.files.length>16)
     throw Error('Inline file list must have 1–16 entries.');
@@ -255,8 +261,7 @@ function handle(req) {
         name==='uce_begin_upload'?uploadStore.begin(args):
         name==='uce_upload_chunk'?uploadStore.chunk(args):
         name==='uce_finish_upload'?uploadStore.finish(args):
-        name==='uce_analyze_upload'?
-          uploadedReport('zip',uploadStore.take(args).content,args.maxIssues):
+        name==='uce_analyze_upload'?analyzeUploaded(args):
         name==='uce_delete_upload'?uploadStore.delete(args.uploadId):
         uploadStore.status(args.uploadId);
       respond({jsonrpc:'2.0',id,result:{
