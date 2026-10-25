@@ -71,9 +71,9 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
   };
 
   return (
-    <div className="space-y-5 animate-slide-up">
+    <div className="min-w-0 w-full max-w-full space-y-5 animate-slide-up">
       <ReportHeader report={report} mode={mode} onModeChange={changeMode} />
-      <nav aria-label="Report sections" className="no-print overflow-x-auto rounded-xl border bg-card p-1.5">
+      <nav aria-label="Report sections" className="no-print min-w-0 w-full max-w-full overflow-x-auto rounded-xl border bg-card p-1.5">
         <div className="flex min-w-max gap-1">
           {NAV_ITEMS.filter(item => UNIFIED_INTELLIGENCE_UI_ENABLED || item.id !== 'intelligence').map((item) => {
             const Icon = item.icon;
@@ -93,7 +93,7 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
         </div>
       </nav>
 
-      <main>
+      <main className="min-w-0 max-w-full">
         {section === 'overview' && <OverviewView report={report} history={history} mode={mode} onNavigate={setSection} />}
         {UNIFIED_INTELLIGENCE_UI_ENABLED && section === 'intelligence' && <UnifiedIntelligencePanel key={report.id} report={report} />}
         {section === 'technology' && <TechnologyView report={report} mode={mode} />}
