@@ -13,6 +13,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { UploadStore } from './upload-store.mjs';
 import { AgentReportStore } from './report-store.mjs';
+import { AgentJobs } from './agent-jobs.mjs';
 import { scanRemoteRepository, scanLocalProject } from './repository-scan.mjs';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -34,8 +35,9 @@ try {
 const protocol = '2025-06-18';
 const uploadStore = new UploadStore();
 const agentReports = new AgentReportStore();
-setInterval(() => {uploadStore.sweep();agentReports.sweep();}, 60_000).unref();
-process.on('exit',()=>agentReports.close());
+const agentJobs = new AgentJobs(agentReports);
+setInterval(() => {uploadStore.sweep();agentReports.sweep();agentJobs.sweep();}, 60_000).unref();
+process.on('exit',()=>{agentJobs.close();agentReports.close();});
 const remoteOnly = process.env.UCE_MCP_REMOTE_UPLOAD_ONLY === '1';
 const MAX_LINE = 64 * 1024;
 let initialized = false;
@@ -70,6 +72,23 @@ const tools = [
       properties:{mode:{type:'string',enum:['packs','rules']},
         module:{type:'string',description:'Optional V3 rule module filter'},
         offset:{type:'integer',minimum:0},limit:{type:'integer',minimum:1,maximum:100}}}},
+  { name:'uce_start_repository_scan',title:'Start large Git repository UCE scan',
+    description:'RECOMMENDED for large repositories and cloud ChatGPT/Claude: launch real canonical UCE Git analysis without blocking an AI tool call. No ZIP/chat upload needed. Returns jobId; poll uce_repository_scan_status until completed and then use returned reportId.',
+    annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:true},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{repository:{type:'string'},ref:{type:'string'},
+        maxFiles:{type:'integer',minimum:1},maxBytes:{type:'integer',minimum:1}},
+      required:['repository']}},
+  { name:'uce_repository_scan_status',title:'Get UCE repository scan progress/result',
+    description:'Poll an asynchronous Git scan. When completed returns canonical rule summary and temporary reportId; use uce_get_findings to inspect every page.',
+    annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{jobId:{type:'string'}},required:['jobId']}},
+  { name:'uce_cancel_repository_scan',title:'Cancel running UCE repository scan',
+    description:'Explicitly cancel an ongoing cloned-repo analysis and erase pending workspace where possible.',
+    annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{jobId:{type:'string'}},required:['jobId']}},
   { name:'uce_scan_repository', title:'Run full UCE rules on a Git repository',
     description:'PREFERRED: Analyze a public GitHub/GitLab/Codeberg repository directly by URL or owner/repo. No file upload/ZIP or chat attachment. Uses the canonical UCE compatibility, rules, security, symbolic and technology analyzers; returns exact checked-out Git commit, scan coverage and temporary reportId for paginated evidence.',
     annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:true},
@@ -283,7 +302,7 @@ function capabilities() {
   return {server:'ryzova-uce-mcp',version:'0.2.0',
     mode:remoteOnly?'authenticated-http-worker':'local-stdio',
     license:'MPL-2.0',paywall:false,
-    preferredAgentWorkflow:'uce_scan_repository → uce_rule_summary → uce_get_findings (page until hasMore=false) → optionally uce_compare_reports across two scans',
+    preferredAgentWorkflow:'uce_start_repository_scan → uce_repository_scan_status (poll until completed) → uce_rule_summary → uce_get_findings (page until hasMore=false) → optionally uce_compare_reports',
     repositorySources:['github.com','gitlab.com','codeberg.org'],
     chatUploadRequired:false,
     workspace:remoteOnly?'upload-only-user-isolated':'explicit-root-only',
@@ -339,6 +358,9 @@ function handle(req) {
     }
     const allowed = ({
       uce_rule_catalog:['mode','module','offset','limit'],
+      uce_start_repository_scan:['repository','ref','maxFiles','maxBytes'],
+      uce_repository_scan_status:['jobId'],
+      uce_cancel_repository_scan:['jobId'],
       uce_scan_repository:['repository','ref','maxFiles','maxBytes'],
       uce_scan_workspace:['projectPath','maxFiles','maxBytes'],
       uce_get_findings:['reportId','offset','limit'],
@@ -363,6 +385,9 @@ function handle(req) {
       const result=name==='uce_capabilities'?capabilities():
         name==='uce_rule_catalog'?JSON.parse(runTrusted('tools/mcp/rule-catalog-worker.mjs',
           [args.mode??'packs',String(args.offset??0),String(args.limit??50),args.module??''],30000)):
+        name==='uce_start_repository_scan'?agentJobs.start(args):
+        name==='uce_repository_scan_status'?agentJobs.status(args.jobId):
+        name==='uce_cancel_repository_scan'?agentJobs.cancel(args.jobId):
         name==='uce_scan_repository'?scanAgentRepository(args):
         name==='uce_scan_workspace'?scanAgentWorkspace(args):
         name==='uce_get_findings'?agentReports.page({...args,view:'findings'}):
@@ -385,7 +410,7 @@ function handle(req) {
       // Avoid disclosing absolute paths, private source, environment variables,
       // command output and stack traces to an untrusted MCP client.
       const safe = typeof e?.message==='string' &&
-        /^(Invalid relative|Path traversal|Symlinks|Requested path escapes|Expected |Report must|Scanner report exceeds|maxIssues must|Trusted UCE|UCE analysis output|Upload |ZIP |A safe |Expected ZIP|Total in-memory|Explicit upload|Invalid upload|Upload quota|Upload already|Upload handle|Inline |Public Git|Git repository|Git branch|Git commit|maxFiles| maxBytes|Invalid report|Report unavailable|Analysis cache|Invalid pagination|UCE report)/.test(e.message)
+        /^(Invalid relative|Path traversal|Symlinks|Requested path escapes|Expected |Report must|Scanner report exceeds|maxIssues must|Trusted UCE|UCE analysis output|Upload |ZIP |A safe |Expected ZIP|Total in-memory|Explicit upload|Invalid upload|Upload quota|Upload already|Upload handle|Inline |Public Git|Git repository|Git branch|Git commit|maxFiles| maxBytes|Invalid report|Report unavailable|Analysis cache|Invalid pagination|UCE report|Machine is busy|Repository scan job|Invalid job|Could not start)/.test(e.message)
         ? e.message : 'UCE read-only inspection failed; check the authorized root and source limits.';
       respond({jsonrpc:'2.0',id,result:{content:[{type:'text',text:safe}],isError:true}});
     }return;
