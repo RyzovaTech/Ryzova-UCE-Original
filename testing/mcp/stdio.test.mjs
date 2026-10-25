@@ -35,8 +35,10 @@ test('MCP initialization, capabilities, local scan and read-only parity',()=>{
     ]);
     assert.equal(items.length,8);
     assert.equal(items[0].result.protocolVersion,'2025-06-18');
-    assert.deepEqual(items[1].result.tools.map(t=>t.name),
-      ['uce_scan_project','uce_inspect_report','uce_capabilities']);
+    assert.ok(['uce_scan_project','uce_inspect_report','uce_capabilities',
+      'uce_analyze_text_files','uce_begin_upload','uce_upload_chunk',
+      'uce_finish_upload','uce_analyze_upload','uce_delete_upload','uce_upload_status']
+      .every(name => items[1].result.tools.some(tool => tool.name === name)));
     assert.equal(items[2].result.structuredContent.permissions.sourceUpload,false);
     const result=items[3].result.structuredContent;
     assert.equal(result.engine,'UCE');
