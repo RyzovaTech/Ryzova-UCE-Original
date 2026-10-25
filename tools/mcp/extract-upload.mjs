@@ -19,7 +19,7 @@ const ignoreDir=/(^|\/)(?:node_modules|vendor|dist|build|coverage|\.next|\.nuxt|
 const seen=new Set();let total=0,examined=0,skipped=0,written=0;
 function safeName(name){
  if(typeof name!=='string'||name.length>240||name.length===0||
-   name.includes('\\')||name.includes('\0')||name.startsWith('/')||
+   name.includes('\\')||/[\x00-\x1f\x7f]/.test(name)||name.startsWith('/')||
    /^[A-Za-z]:/.test(name)||name.split('/').some(x=>!x||x==='.'||x==='..'))
    throw Error('unsafe archive source path');
  return name;
@@ -53,7 +53,8 @@ if(mode==='zip'){
    const original=entry.unsafeOriginalName??name;
    if(original!==name)throw Error('archive path normalization rejected');
    if(entry.dir){safeName(name.replace(/\/$/,''));continue;}
-   const perms=typeof entry.unixPermissions==='number'?entry.unixPermissions:0;
+   const perms=typeof entry.unixPermissions==='number'?entry.unixPermissions:
+     typeof entry.unixPermissions==='string'?Number.parseInt(entry.unixPermissions,8):0;
    if((perms&0xf000)===0xa000)throw Error('archive symlinks are refused');
    const estimated=entry._data?.uncompressedSize;
    const compressed=entry._data?.compressedSize;
