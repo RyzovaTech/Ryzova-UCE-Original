@@ -130,7 +130,9 @@ test('HTTP remote bridge enforces authentication and tenant upload isolation',as
  const port=await freePort();
  const processChild=spawn(process.execPath,[gateway],{
    cwd:root,stdio:['ignore','ignore','pipe'],
-   env:{...process.env,UCE_MCP_PORT:String(port),UCE_MCP_ACCOUNTS_JSON:JSON.stringify([
+   env:{...process.env,UCE_MCP_PORT:String(port),UCE_MCP_ENABLE_UPLOAD_UI:'1',
+     UCE_MCP_ALLOWED_ORIGINS:'https://uce.example.test',
+     UCE_MCP_ACCOUNTS_JSON:JSON.stringify([
      {id:'alice',tokenSha256:hash(tokenA),root:dirs[0]},
      {id:'bob',tokenSha256:hash(tokenB),root:dirs[1]},
    ])}
@@ -153,6 +155,16 @@ test('HTTP remote bridge enforces authentication and tenant upload isolation',as
     await new Promise(resolve=>setTimeout(resolve,100));
   }
   assert.equal(healthy,true);
+  const browserForm=await fetch(endpoint+'/upload-ui');
+  assert.equal(browserForm.status,200);
+  assert.match(browserForm.headers.get('content-security-policy')??'',
+    /script-src 'nonce-/);
+  assert.match(await browserForm.text(),/Private project ZIP upload/);
+  const disallowedOrigin=await request('/upload',tokenA,{method:'POST',
+    headers:{Origin:'https://evil.example','content-type':'application/zip',
+      'x-uce-upload-consent':'true'},
+    body:await archive()});
+  assert.equal(disallowedOrigin.status,403);
   const unauthorized=await request('/mcp',null,{method:'POST',headers:{
     'Content-Type':'application/json'},body:JSON.stringify(method(1,'initialize',{}))});
   assert.equal(unauthorized.status,401);
