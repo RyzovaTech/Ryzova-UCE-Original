@@ -29,7 +29,7 @@ function harness(workspace){
          pending.set(next,resolve);
          proc.stdin.write(JSON.stringify({jsonrpc:'2.0',id:next,method,params})+'\n',e=>e&&reject(e));
        }),
-       new Promise((_,reject)=>setTimeout(()=>reject(Error('MCP repository tool timeout')),150000))
+       new Promise((_,reject)=>setTimeout(()=>reject(Error('MCP repository tool timeout')),150000).unref())
      ]);
    },
    async tool(name,args){return this.send('tools/call',{name,arguments:args});},
