@@ -1,0 +1,20 @@
+name: UCE ChatGPT Plugin Packaging
+on:
+  pull_request:
+    paths:
+      - 'plugins/uce/**'
+      - 'testing/mcp/plugin-package.test.mjs'
+      - '.github/workflows/uce-plugin-package.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plugin-manifest-and-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --test testing/mcp/plugin-package.test.mjs

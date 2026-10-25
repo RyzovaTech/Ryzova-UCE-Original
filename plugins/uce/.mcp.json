@@ -1,0 +1,10 @@
+{
+  "mcp_servers": {
+    "ryzova-uce": {
+      "command": "node",
+      "args": [
+        "./plugins/uce/bin/launch.mjs"
+      ]
+    }
+  }
+}
