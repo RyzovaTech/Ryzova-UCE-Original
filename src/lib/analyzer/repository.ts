@@ -21,7 +21,8 @@ const SEGMENT = /^[A-Za-z0-9_.-]+$/;
 /** Explicit host allowlist, no arbitrary remote URL/credential access. */
 export function parseRepositoryUrl(value: string): PublicRepository {
   const input = value.trim();
-  if (input.length > 350 || /[\u0000-\u001f\u007f%\\]/.test(input)) {
+  if (input.length > 350 || /[\u0000-\u001f\u007f%\\]/.test(input) ||
+      /(?:^|\/)\.{1,2}(?:\/|$)/.test(input)) {
     throw new Error('Use a normal public GitHub, GitLab, or Codeberg repository URL.');
   }
   const ssh = input.match(/^git@(github\.com|gitlab\.com|codeberg\.org):([A-Za-z0-9_.\/-]+?)(?:\.git)?\/?$/i);
