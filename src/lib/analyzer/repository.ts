@@ -73,7 +73,7 @@ export function getRepositoryArchiveUrl(repository: PublicRepository, defaultBra
   const ref = encodePath(defaultBranch);
   if (repository.provider === 'github') {
     return '/api/github/archive/' + encodeURIComponent(repository.owner) + '/' +
-      encodeURIComponent(repository.repository) + '/' + ref + '.zip';
+      encodeURIComponent(repository.repository) + '/' + ref;
   }
   if (repository.provider === 'gitlab') {
     if (!Number.isSafeInteger(gitlabProjectId) || gitlabProjectId! < 1) {
@@ -82,7 +82,7 @@ export function getRepositoryArchiveUrl(repository: PublicRepository, defaultBra
     return '/api/gitlab/archive/' + gitlabProjectId + '?sha=' + encodeURIComponent(defaultBranch);
   }
   return '/api/codeberg/archive/' + encodeURIComponent(repository.owner) + '/' +
-    encodeURIComponent(repository.repository) + '/' + ref;
+    encodeURIComponent(repository.repository) + '/' + ref + '.zip';
 }
 
 export function getGitHubArchiveUrl(repository: GitHubRepository, branch: string): string {
