@@ -69,6 +69,7 @@ export function AnalyzePage() {
   }, [repositoryUrl]);
   const activeProvider = repositoryValidation.repository?.provider ?? preferredProvider;
   const activeProviderInfo = REPOSITORY_PROVIDERS.find(provider => provider.id === activeProvider)!;
+  const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigatedRef = useRef(false);
@@ -135,7 +136,7 @@ export function AnalyzePage() {
     await analyzeRepository(repositoryUrl, destination);
   };
 
-  const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
+
 
   return (
     <div className="space-y-6 animate-slide-up">
