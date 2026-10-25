@@ -1,0 +1,91 @@
+name: Phase 5.6 Production Stabilization QA
+
+on:
+  pull_request:
+    paths:
+      - 'testing/phase56/**'
+      - 'testing/browser/**'
+      - 'src/lib/report/**'
+      - '.github/workflows/phase56-production-stabilization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-public-excerpts:
+    name: SHA-pinned real repository excerpts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Scan eight repository-provenanced manifest excerpts
+        run: node testing/phase56/pinned-excerpts.mjs
+        env:
+          UCE_PHASE56_OUTPUT: phase56-evidence/pinned-excerpts.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase56-public-excerpt-metadata
+          path: phase56-evidence/pinned-excerpts.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  pinned-public-worktrees:
+    name: Bounded full-worktree real repo audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Fetch immutable public source and scan without running it
+        run: node testing/phase56/pinned-worktrees.mjs
+        env:
+          UCE_PHASE56_FULL_OUTPUT: phase56-evidence/pinned-worktrees.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase56-public-worktree-metadata
+          path: phase56-evidence/pinned-worktrees.json
+          if-no-files-found: warn
+          retention-days: 30
+
+  production-demo:
+    name: Live public production demo smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Isolate pinned browser test dependency (never modify UCE lockfile)
+        run: |
+          mkdir -p "$RUNNER_TEMP/uce-phase56-browser"
+          npm install --prefix "$RUNNER_TEMP/uce-phase56-browser" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.56.1
+          echo "UCE_PLAYWRIGHT_ENTRY=$RUNNER_TEMP/uce-phase56-browser/node_modules/playwright/index.mjs" >> "$GITHUB_ENV"
+      - name: Install Chromium and Linux libraries
+        run: node "$RUNNER_TEMP/uce-phase56-browser/node_modules/playwright/cli.js" install --with-deps chromium
+      - name: Validate live HTTPS demo and Root Causes functionality
+        run: node testing/phase56/live-production-smoke.mjs
+        env:
+          UCE_LIVE_URL: https://uce.ryzova.com/
+          UCE_PHASE56_LIVE_OUTPUT: phase56-evidence/production-smoke.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: phase56-public-production-smoke
+          path: phase56-evidence/production-smoke.json
+          if-no-files-found: warn
+          retention-days: 14

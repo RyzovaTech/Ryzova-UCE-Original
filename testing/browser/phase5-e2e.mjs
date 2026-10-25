@@ -149,12 +149,42 @@ async function main() {
   assert.deepEqual(outbounds, [], 'Proposal preparation must perform no remote requests.');
   assert.deepEqual(pageErrors, [], 'No uncaught browser exceptions are acceptable.');
 
-  // Responsive layout and keyboard-accessible quality controls remain mounted.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
+  // Phase 5.6C: full Unified Intelligence region WCAG A/AA, not just the
+  // nested Quality panel. Axe is an automated proxy, NOT assistive technology.
+  const panelViolations = await page.evaluate(async () => {
+    const section = document.querySelector('[aria-label="Experimental Unified Intelligence"]');
+    if (!section || !window.axe) throw new Error('Unified region or axe unavailable.');
+    const audit = await window.axe.run(section, {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+      rules: { region: { enabled: false } },
+    });
+    return audit.violations.map(v => ({
+      id: v.id, impact: v.impact, nodes: v.nodes.slice(0, 4).map(n => n.target),
+    }));
+  });
+  assert.deepEqual(panelViolations, [], 'Phase 5.6C full Unified Intelligence WCAG A/AA audit');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
+    const geometry = await page.evaluate(() => ({
+      width: window.innerWidth, scroll: document.documentElement.scrollWidth,
+      overflowSources: [...document.querySelectorAll('body *')]
+        .map(el => ({el,rect:el.getBoundingClientRect()}))
+        .filter(x => x.rect.right > window.innerWidth + 3 &&
+          x.rect.width >= 30 &&
+          getComputedStyle(x.el).overflowX !== 'auto')
+        .sort((a,b) => b.rect.right - a.rect.right)
+        .slice(0,8).map(x=>({tag:x.el.tagName,
+          className:typeof x.el.className === 'string' ? x.el.className.slice(0,130) : '',
+          left:Math.round(x.rect.left),right:Math.round(x.rect.right)})),
+    }));
+    assert.ok(geometry.scroll <= geometry.width + 2,
+      'Phase 5.6C unexpected document-wide horizontal overflow: ' + JSON.stringify(geometry));
+  }
   assert.equal(await quality.getByRole('button', { name: 'Hide review queue' }).getAttribute('aria-expanded'), 'true');
-  console.log(JSON.stringify({ suite: 'phase5.5-browser-e2e', browser: browserName,
-    routes: 'demo-report', assertions: 'navigation, Root Cause First, keyboard/focus, axe WCAG A/AA, quality, review, evidence, proposal, stale-state, privacy, responsive' }));
+  console.log(JSON.stringify({ suite: 'phase5.6-browser-e2e', browser: browserName,
+    routes: 'demo-report', assertions: 'navigation, Root Cause First, keyboard/focus, scoped and full panel axe WCAG A/AA, 320px and 390px reflow, reduced-motion, quality, review, evidence, proposal, stale-state, privacy' }));
 }
 try { await main(); }
 finally {
