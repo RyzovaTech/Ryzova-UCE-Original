@@ -241,7 +241,7 @@ export function AnalyzePage() {
                 />
                 <Button
                   disabled={busy || !repositoryUrl.trim()}
-                  onClick={() => analyzeRepository(githubUrl).catch(() => undefined)}
+                  onClick={() => analyzeRepository(repositoryUrl).catch(() => undefined)}
                   className="gap-2"
                 >
                   <Github className="h-4 w-4" />
