@@ -11,6 +11,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { UploadStore } from './upload-store.mjs';
 
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const rootArg = process.argv.find(a => a.startsWith('--root='))?.slice(7);
@@ -29,6 +30,8 @@ try {
 }
 
 const protocol = '2025-06-18';
+const uploadStore = new UploadStore();
+const remoteOnly = process.env.UCE_MCP_REMOTE_UPLOAD_ONLY === '1';
 const MAX_LINE = 64 * 1024;
 let initialized = false;
 function resolveAuthorized(relative, kind) {
@@ -68,6 +71,50 @@ const tools = [
     inputSchema:{type:'object',additionalProperties:false,
       properties:{reportPath:{type:'string',minLength:1,maxLength:256,description:'Relative path to a saved UCE JSON report'},
         maxIssues:{type:'integer',minimum:1,maximum:30}},required:['reportPath']}},
+  { name:'uce_analyze_text_files',title:'Analyze supplied source texts',
+    description:'USER-UPLOADED DATA INPUT: pass a small collection of source-text files with relative paths. Inspect UCE findings without running project code. Source is staged temporarily then erased.',
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{files:{type:'array',minItems:1,maxItems:16,items:{type:'object',
+        additionalProperties:false,properties:{path:{type:'string',maxLength:240},
+          content:{type:'string',maxLength:30000}},required:['path','content']}},
+        maxIssues:{type:'integer',minimum:1,maximum:30}},required:['files']}},
+  { name:'uce_begin_upload',title:'Begin user-consented ZIP upload',
+    description:'Create a short-lived staging handle for a user-supplied project ZIP. Requires explicit transfer consent, original byte count and SHA-256. No project code executes.',
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{filename:{type:'string',maxLength:100},
+        totalBytes:{type:'integer',minimum:4,maximum:4194304},
+        sha256:{type:'string',minLength:64,maxLength:64},
+        confirmDataTransfer:{type:'boolean'}},
+      required:['filename','totalBytes','sha256','confirmDataTransfer']}},
+  { name:'uce_upload_chunk',title:'Upload a ZIP chunk',
+    description:'Append one base64 encoded raw ZIP chunk of at most 24 KiB to the caller-owned ephemeral upload.',
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{uploadId:{type:'string'},base64Chunk:{type:'string',maxLength:32800}},
+      required:['uploadId','base64Chunk']}},
+  { name:'uce_finish_upload',title:'Verify uploaded ZIP checksum',
+    description:'Finalize ZIP staging only after all bytes and SHA-256 match the consented upload.',
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{uploadId:{type:'string'}},required:['uploadId']}},
+  { name:'uce_analyze_upload',title:'Analyze user-staged ZIP',
+    description:'Analyze a previously uploaded ZIP under strict archive guards, no dependencies or user code executed. Staged bytes deleted after analysis or failure.',
+    annotations:{readOnlyHint:false,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{uploadId:{type:'string'},maxIssues:{type:'integer',minimum:1,maximum:30}},
+      required:['uploadId']}},
+  { name:'uce_delete_upload',title:'Delete staged ZIP',
+    description:'Erase user-uploaded ZIP staging without analysis.',
+    annotations:{readOnlyHint:false,destructiveHint:true,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{uploadId:{type:'string'}},required:['uploadId']}},
+  { name:'uce_upload_status',title:'Check staged ZIP progress',
+    description:'Get staged byte counts and expiry without reading project contents.',
+    annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
+    inputSchema:{type:'object',additionalProperties:false,
+      properties:{uploadId:{type:'string'}},required:['uploadId']}},
   { name:'uce_capabilities',title:'UCE MCP capabilities',
     description:'Inspect local tool limits, consent and safety boundary; performs no file scan.',
     annotations:{readOnlyHint:true,destructiveHint:false,openWorldHint:false},
@@ -110,14 +157,45 @@ function scan(args) {
     return inspect(reportPath,boundedCount(args.maxIssues));
   } finally { fs.rmSync(tmp,{recursive:true,force:true}); }
 }
+function uploadedReport(mode,raw,maxIssues) {
+  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-upload-'));
+  try {
+    const input=path.join(tmp,mode==='zip'?'source.zip':'source-files.json');
+    const source=path.join(tmp,'extracted');
+    fs.mkdirSync(source,{mode:0o700});
+    fs.writeFileSync(input,raw,{mode:0o600});
+    const extracted=runTrusted('tools/mcp/extract-upload.mjs',[mode,input,source],18000);
+    const meta=JSON.parse(extracted);
+    const report=path.join(tmp,'scan.json');
+    runTrusted('scripts/uce-scan.mjs',[source,'--output='+report,
+      '--max-files=1000','--max-bytes=16777216'],60000);
+    if(fs.statSync(report).size>8*1024*1024)throw Error('Scanner report exceeds the MCP 8 MiB limit.');
+    return {...inspect(report,boundedCount(maxIssues)),upload:{
+      ...meta,temporaryBytesErased:true,provenance:'user-supplied-source-not-trusted'}};
+  }finally {fs.rmSync(tmp,{recursive:true,force:true});}
+}
+function inlineFiles(args) {
+  if(!Array.isArray(args.files)||!args.files.length||args.files.length>16)
+    throw Error('Inline file list must have 1–16 entries.');
+  if(args.files.some(f=>!f||typeof f!=='object'||Array.isArray(f)||
+      Object.keys(f).some(k=>!['path','content'].includes(k))||
+      typeof f.path!=='string'||typeof f.content!=='string'))
+    throw Error('Inline source structure invalid.');
+  const data=Buffer.from(JSON.stringify(args.files),'utf8');
+  if(data.length>42*1024)throw Error('Inline files exceed 42 KiB. Use ZIP staging.');
+  return uploadedReport('files',data,args.maxIssues);
+}
 function capabilities() {
   return {server:'ryzova-uce-mcp',version:'0.1.0',mode:'local-stdio-only',
     workspace:'explicit-root-only',tools:['uce_scan_project','uce_inspect_report','uce_capabilities'],
     limits:{files:4000,contentBytes:16777216,reportBytes:8*1024*1024,
-      maxIssues:30,scanTimeoutMs:60000},
-    permissions:{networkListener:false,sourceUpload:false,projectCodeExecution:false,
+      maxIssues:30,scanTimeoutMs:60000,uploadedZipBytes:4194304,
+      uploadExpirySeconds:900,inlineFilesBytes:43008},
+    permissions:{networkListener:false,sourceUpload:true,temporaryStaging:true,
+      projectCodeExecution:false,
       nativeTrilogy:false,patchApply:false,scoringChanges:false},
-    caveats:['No OS-enforced memory cap; process timeout and input budgets are software limits.',
+    caveats:['Source uploads are accepted only through explicit tool calls or authenticated upload endpoint; chat attachments are not forwarded automatically.',
+      'No OS-enforced memory cap; process timeout and input budgets are software limits.',
       'Structural findings are not independently human adjudicated or runtime-proven.',
       'Run only for trusted local projects under a consciously chosen authorized root.']};
 }
@@ -142,30 +220,52 @@ function handle(req) {
   if (!initialized) {error(id,-32000,'Initialize MCP before calling tools.');return;}
   if(req.method==='tools/list'){
     if(req.params?.cursor) {error(id,-32602,'Unexpected tools pagination cursor.');return;}
-    respond({jsonrpc:'2.0',id,result:{tools}});return;
+    respond({jsonrpc:'2.0',id,result:{tools:remoteOnly?
+      tools.filter(t=>!['uce_scan_project','uce_inspect_report'].includes(t.name)):tools}});return;
   }
   if(req.method==='tools/call'){
     const name=req.params?.name, args=req.params?.arguments??{};
-    if(!tools.some(t=>t.name===name)){error(id,-32602,'Unknown UCE tool.');return;}
+    if(!tools.some(t=>t.name===name)||
+        (remoteOnly&&['uce_scan_project','uce_inspect_report'].includes(name))){
+      error(id,-32602,'Unknown or unavailable UCE tool.');return;}
     if(!args || typeof args!=='object'||Array.isArray(args)){
       error(id,-32602,'Tool arguments must be an object.');return;
     }
-    const allowed = name==='uce_scan_project'?['projectPath','maxIssues']:
-      name==='uce_inspect_report'?['reportPath','maxIssues']:[];
+    const allowed = ({
+      uce_scan_project:['projectPath','maxIssues'],
+      uce_inspect_report:['reportPath','maxIssues'],
+      uce_analyze_text_files:['files','maxIssues'],
+      uce_begin_upload:['filename','totalBytes','sha256','confirmDataTransfer'],
+      uce_upload_chunk:['uploadId','base64Chunk'],
+      uce_finish_upload:['uploadId'],
+      uce_analyze_upload:['uploadId','maxIssues'],
+      uce_delete_upload:['uploadId'],
+      uce_upload_status:['uploadId'],
+      uce_capabilities:[]
+    })[name];
     if(Object.keys(args).some(key=>!allowed.includes(key))){
       error(id,-32602,'Unexpected tool argument.');return;
     }
     try {
       const result=name==='uce_capabilities'?capabilities():
         name==='uce_scan_project'?scan(args):
-        inspect(resolveAuthorized(args.reportPath,'file'),boundedCount(args.maxIssues));
+        name==='uce_inspect_report'?
+          inspect(resolveAuthorized(args.reportPath,'file'),boundedCount(args.maxIssues)):
+        name==='uce_analyze_text_files'?inlineFiles(args):
+        name==='uce_begin_upload'?uploadStore.begin(args):
+        name==='uce_upload_chunk'?uploadStore.chunk(args):
+        name==='uce_finish_upload'?uploadStore.finish(args):
+        name==='uce_analyze_upload'?
+          uploadedReport('zip',uploadStore.take(args).content,args.maxIssues):
+        name==='uce_delete_upload'?uploadStore.delete(args.uploadId):
+        uploadStore.status(args.uploadId);
       respond({jsonrpc:'2.0',id,result:{
         content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result,isError:false}});
     }catch(e){
       // Avoid disclosing absolute paths, private source, environment variables,
       // command output and stack traces to an untrusted MCP client.
       const safe = typeof e?.message==='string' &&
-        /^(Invalid relative|Path traversal|Symlinks|Requested path escapes|Expected |Report must|Scanner report exceeds|maxIssues must|Trusted UCE|UCE analysis output)/.test(e.message)
+        /^(Invalid relative|Path traversal|Symlinks|Requested path escapes|Expected |Report must|Scanner report exceeds|maxIssues must|Trusted UCE|UCE analysis output|Upload |ZIP |A safe |Expected ZIP|Total in-memory|Explicit upload|Invalid upload|Upload quota|Upload already|Upload handle|Inline )/.test(e.message)
         ? e.message : 'UCE read-only inspection failed; check the authorized root and source limits.';
       respond({jsonrpc:'2.0',id,result:{content:[{type:'text',text:safe}],isError:true}});
     }return;
