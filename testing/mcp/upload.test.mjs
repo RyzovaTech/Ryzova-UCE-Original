@@ -196,3 +196,42 @@ test('HTTP remote bridge enforces authentication and tenant upload isolation',as
   assert.deepEqual(fs.readdirSync(dirs[1]),[]);
  }finally{processChild.kill('SIGTERM');fs.rmSync(base,{recursive:true,force:true});}
 });
+
+test('wrong upload checksum invalidates handle and oversized claims are refused',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-checksum-'));const c=start(dir);
+ try{
+  await c.send('initialize',{protocolVersion:'2025-06-18'});
+  const bytes=await archive();
+  const big=await c.tool('uce_begin_upload',{filename:'large.zip',totalBytes:4194305,
+    sha256:hash(bytes),confirmDataTransfer:true});
+  assert.equal(big.result.isError,true);
+  const begin=await c.tool('uce_begin_upload',{filename:'incorrect.zip',
+    totalBytes:bytes.length,sha256:'0'.repeat(64),confirmDataTransfer:true});
+  const handle=begin.result.structuredContent.uploadId;
+  const chunk=await c.tool('uce_upload_chunk',{uploadId:handle,
+    base64Chunk:bytes.toString('base64')});
+  assert.equal(chunk.result.isError,false);
+  const finish=await c.tool('uce_finish_upload',{uploadId:handle});
+  assert.equal(finish.result.isError,true);
+  const replay=await c.tool('uce_upload_status',{uploadId:handle});
+  assert.equal(replay.result.isError,true,'checksum failure must discard staged ZIP');
+ }finally{c.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('ZIP POSIX symlink records cannot escape extraction or be analyzed',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-symlink-'));const c=start(dir);
+ try{
+  await c.send('initialize',{protocolVersion:'2025-06-18'});
+  const z=new JSZip();
+  z.file('package.json','{"name":"sample","version":"1.0.0"}');
+  z.file('linked.js','../outside.js',{unixPermissions:0o120777});
+  const bytes=await z.generateAsync({type:'nodebuffer',compression:'DEFLATE',platform:'UNIX'});
+  const begin=await c.tool('uce_begin_upload',{filename:'symlink.zip',
+    totalBytes:bytes.length,sha256:hash(bytes),confirmDataTransfer:true});
+  const id=begin.result.structuredContent.uploadId;
+  await c.tool('uce_upload_chunk',{uploadId:id,base64Chunk:bytes.toString('base64')});
+  await c.tool('uce_finish_upload',{uploadId:id});
+  const x=await c.tool('uce_analyze_upload',{uploadId:id});
+  assert.equal(x.result.isError,true);
+  assert.equal(fs.existsSync(path.join(dir,'outside.js')),false);
+ }finally{c.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
