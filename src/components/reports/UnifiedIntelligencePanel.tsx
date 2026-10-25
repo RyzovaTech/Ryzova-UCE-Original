@@ -144,12 +144,12 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   const matched = selectedSource ? model.findings.filter(f =>
     f.sourceRefs.includes(selectedSource) || f.file === selectedSource.split('#')[0]) : [];
 
-  return <section className="space-y-4" aria-label="Experimental Unified Intelligence">
+  return <section className="min-w-0 w-full max-w-full space-y-4" aria-label="Experimental Unified Intelligence">
     <div>
       <h2 className="text-xl font-semibold">Unified Project Intelligence</h2>
       <p className="mt-1 text-sm text-foreground">Phase 5 experimental browser view · Root Cause First · Native UCE score and original issues unchanged</p>
     </div>
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-3">
       <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Original UCE issues</p>
         <p className="text-2xl font-semibold tabular-nums">{model.originalIssueCount}</p></CardContent></Card>
       <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Investigation clusters</p>
