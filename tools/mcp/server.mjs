@@ -192,8 +192,11 @@ function inlineFiles(args) {
   return uploadedReport('files',data,args.maxIssues);
 }
 function capabilities() {
-  return {server:'ryzova-uce-mcp',version:'0.1.0',mode:'local-stdio-only',
-    workspace:'explicit-root-only',tools:['uce_scan_project','uce_inspect_report','uce_capabilities'],
+  return {server:'ryzova-uce-mcp',version:'0.2.0',
+    mode:remoteOnly?'authenticated-http-worker':'local-stdio',
+    workspace:remoteOnly?'upload-only-user-isolated':'explicit-root-only',
+    tools:tools.filter(t=>!remoteOnly||
+      !['uce_scan_project','uce_inspect_report'].includes(t.name)).map(t=>t.name),
     limits:{files:4000,contentBytes:16777216,reportBytes:8*1024*1024,
       maxIssues:30,scanTimeoutMs:60000,uploadedZipBytes:4194304,
       uploadExpirySeconds:900,inlineFilesBytes:43008},
@@ -220,7 +223,7 @@ function handle(req) {
       ? req.params.protocolVersion : protocol;
     respond({jsonrpc:'2.0',id,result:{protocolVersion:version,
       capabilities:{tools:{listChanged:false}},
-      serverInfo:{name:'ryzova-uce-mcp',version:'0.1.0'}}});return;
+      serverInfo:{name:'ryzova-uce-mcp',version:'0.2.0'}}});return;
   }
   if (req.method==='ping') {respond({jsonrpc:'2.0',id,result:{}});return;}
   if (!initialized) {error(id,-32000,'Initialize MCP before calling tools.');return;}
