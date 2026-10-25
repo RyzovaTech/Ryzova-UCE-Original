@@ -34,7 +34,7 @@ test('GitLab nested group repository and Codeberg remotes use allowlisted relays
   assert.equal(codeberg.metadataUrl,
     '/api/repository/metadata?provider=codeberg&path=example%2Fexample');
   assert.equal(getRepositoryArchiveUrl(codeberg,'dev/next'),
-    '/api/codeberg/archive/example/example/dev/next');
+    '/api/codeberg/archive/example/example/dev/next.zip');
   assert.throws(()=>parseGitHubRepositoryUrl('https://codeberg.org/example/example'));
 });
 
@@ -134,7 +134,7 @@ test('Vercel archive relays are explicit fixed upstreams',()=>{
   assert.equal(get('/api/gitlab/archive/:id(\\d+)'),
     'https://gitlab.com/api/v4/projects/:id/repository/archive.zip');
   assert.equal(get('/api/codeberg/archive/:owner/:repository/:branch*'),
-    'https://codeberg.org/:owner/:repository/archive/:branch*.zip');
+    'https://codeberg.org/:owner/:repository/archive/:branch*');
   assert.equal(get('/api/github/archive/:owner/:repository/:branch*'),
     'https://codeload.github.com/:owner/:repository/zip/refs/heads/:branch*');
 });
