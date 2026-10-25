@@ -18,9 +18,22 @@ try {
   process.stderr.write('UCE MCP authorized root must be a non-symlink directory.\n');
   process.exit(2);
 }
-const script = fileURLToPath(new URL('../../../tools/mcp/server.mjs', import.meta.url));
+// The plugin is a thin MCP wrapper, not a fork of the canonical UCE engine.
+// A repo checkout works directly; independently installed plugins must point
+// at a complete, user-installed UCE checkout using an absolute UCE_ENGINE_ROOT.
+const suppliedEngineRoot = process.env.UCE_ENGINE_ROOT;
+if (suppliedEngineRoot && !path.isAbsolute(suppliedEngineRoot)) {
+  process.stderr.write('UCE_ENGINE_ROOT must be an absolute path to a full UCE checkout.\n');
+  process.exit(2);
+}
+const engineRoot = suppliedEngineRoot || fileURLToPath(new URL('../../..', import.meta.url));
+const script = path.join(engineRoot, 'tools/mcp/server.mjs');
+if (!fs.existsSync(script) || !fs.existsSync(path.join(engineRoot, 'package.json'))) {
+  process.stderr.write('No canonical UCE engine found. Install UCE and set UCE_ENGINE_ROOT.\n');
+  process.exit(2);
+}
 const child = spawn(process.execPath, [script, '--root=' + workspace], {
-  shell: false, stdio: 'inherit', env: process.env,
+  shell: false, stdio: 'inherit', env: process.env, cwd: engineRoot,
 });
 child.on('error', () => process.exitCode = 1);
 child.on('exit', (code, signal) => {
