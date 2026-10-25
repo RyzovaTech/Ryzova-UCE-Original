@@ -13,6 +13,11 @@ export class UploadStore {
     const now=Date.now();
     for(const [id,u] of this.#uploads)if(u.expires<=now)this.delete(id);
   }
+  sweep(){
+    const before=this.#uploads.size;
+    this.#cleanup();
+    return {expired:before-this.#uploads.size};
+  }
   begin(args){
     this.#cleanup();
     if(this.#uploads.size>=3)throw Error('Upload quota reached (maximum 3 concurrent uploads).');
@@ -78,7 +83,12 @@ export class UploadStore {
   }
   delete(uploadId){
     const u=this.#uploads.get(uploadId);
-    if(u){this.#total-=u.bytes;this.#uploads.delete(uploadId);return {deleted:true};}
+    if(u){
+      for(const part of u.fragments)part.fill(0);
+      u.fragments.length=0;
+      this.#total-=u.bytes;this.#uploads.delete(uploadId);
+      return {deleted:true};
+    }
     return {deleted:false};
   }
   status(uploadId){
