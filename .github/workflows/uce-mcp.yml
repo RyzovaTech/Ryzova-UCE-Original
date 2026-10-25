@@ -20,5 +20,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: MCP protocol, source/ZIP staging and authenticated upload security tests
+      - name: MCP protocol, full UCE rules, real pinned Git checkout, uploads and security tests
         run: npm run test:mcp
+        env:
+          UCE_MCP_GIT_SMOKE: '1'
