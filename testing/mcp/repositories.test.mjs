@@ -137,3 +137,45 @@ test('Pinned real GitHub repository can be analyzed without ZIP or chat attachme
   assert.deepEqual(fs.readdirSync(dir),[],'Public checkout must not be retained inside root');
  }finally{c.close();fs.rmSync(dir,{recursive:true,force:true});}
 });
+
+test('Public Git scan jobs reject hostile URL before creating a worker',async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-job-reject-'));const c=harness(dir);
+ try{
+  await c.send('initialize',{protocolVersion:'2025-06-18'});
+  const invalid=await c.tool('uce_start_repository_scan',{
+    repository:'http://127.0.0.1/secret/repo'});
+  assert.equal(invalid.result.isError,true);
+  const noJob=await c.tool('uce_repository_scan_status',{jobId:'a'.repeat(48)});
+  assert.equal(noJob.result.isError,true);
+ }finally{c.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
+test('Nonblocking real Git repository scan returns eventual paginated result',{
+ skip:process.env.UCE_MCP_GIT_SMOKE!=='1',timeout:240000},async()=>{
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-async-repo-'));
+ const c=harness(dir);
+ try{
+  await c.send('initialize',{protocolVersion:'2025-06-18'});
+  const fullSha='2247b35ea1c47c727d7a06e51fa280e12a863ff6';
+  const launch=await c.tool('uce_start_repository_scan',{repository:'pallets/click',ref:fullSha});
+  assert.equal(launch.result.isError,false,JSON.stringify(launch));
+  const jobId=launch.result.structuredContent.jobId;
+  assert.match(jobId,/^[a-f0-9]{48}$/);
+  let completed;
+  for(let i=0;i<140;i++){
+    const r=await c.tool('uce_repository_scan_status',{jobId});
+    assert.equal(r.result.isError,false,JSON.stringify(r));
+    const state=r.result.structuredContent;
+    if(state.status==='completed'){completed=state;break;}
+    if(state.status==='failed')throw Error(state.error);
+    await new Promise(done=>setTimeout(done,600));
+  }
+  assert.ok(completed,'asynchronous Git scan should complete');
+  assert.equal(completed.result.source.source.commit,fullSha);
+  const reportId=completed.result.reportId;
+  const details=await c.tool('uce_rule_summary',{reportId});
+  assert.equal(details.result.isError,false);
+  assert.equal(details.result.structuredContent.structuralParity.issues,'preserved');
+  await c.tool('uce_release_report',{reportId});
+  assert.deepEqual(fs.readdirSync(dir),[]);
+ }finally{c.close();fs.rmSync(dir,{recursive:true,force:true});}
+});
