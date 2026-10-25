@@ -41,7 +41,7 @@ button.disabled=true;status.textContent='Uploading securely to your UCE gatewayâ
 try{
 const response=await fetch('/upload',{method:'POST',cache:'no-store',headers:{
 Authorization:'Bearer '+token,'Content-Type':'application/zip',
-'X-UCE-Upload-Consent':'true','X-UCE-Filename':file.name},body:file});
+'X-UCE-Upload-Consent':'true','X-UCE-Filename':'project.zip'},body:file});
 const value=await response.json();
 status.textContent=response.ok?'Upload staged! MCP uploadId: '+value.uploadId+
 '\\nExpires in '+value.expiresInSeconds+' seconds.':'Upload rejected ('+
