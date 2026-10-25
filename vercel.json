@@ -10,7 +10,7 @@
     },
     {
       "source": "/api/codeberg/archive/:owner/:repository/:branch*",
-      "destination": "https://codeberg.org/:owner/:repository/archive/:branch*.zip"
+      "destination": "https://codeberg.org/:owner/:repository/archive/:branch*"
     }
   ],
   "headers": [
