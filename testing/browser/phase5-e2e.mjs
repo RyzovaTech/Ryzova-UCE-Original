@@ -169,6 +169,15 @@ async function main() {
     await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
     const geometry = await page.evaluate(() => ({
       width: window.innerWidth, scroll: document.documentElement.scrollWidth,
+      overflowSources: [...document.querySelectorAll('body *')]
+        .map(el => ({el,rect:el.getBoundingClientRect()}))
+        .filter(x => x.rect.right > window.innerWidth + 3 &&
+          x.rect.width >= 30 &&
+          getComputedStyle(x.el).overflowX !== 'auto')
+        .sort((a,b) => b.rect.right - a.rect.right)
+        .slice(0,8).map(x=>({tag:x.el.tagName,
+          className:typeof x.el.className === 'string' ? x.el.className.slice(0,130) : '',
+          left:Math.round(x.rect.left),right:Math.round(x.rect.right)})),
     }));
     assert.ok(geometry.scroll <= geometry.width + 2,
       'Phase 5.6C unexpected document-wide horizontal overflow: ' + JSON.stringify(geometry));
