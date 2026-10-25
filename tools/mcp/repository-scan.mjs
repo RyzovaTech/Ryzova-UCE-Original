@@ -83,7 +83,12 @@ export function scanRemoteRepository(args,reportPath) {
     throw Error('Invalid Git branch/tag/commit');
   const files=validatedBudget(args.maxFiles,'maxFiles');
   const bytes=validatedBudget(args.maxBytes,'maxBytes');
-  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-git-'));
+  // Background jobs stage Git trees INSIDE their tracked temporary report
+  // directory so cancelling the job can erase the entire subtree.
+  const tmpRoot=process.env.UCE_MCP_WORK_ROOT||os.tmpdir();
+  if(!path.isAbsolute(tmpRoot)||!fs.statSync(tmpRoot).isDirectory())
+    throw Error('Invalid Git temporary workspace policy');
+  const tmp=fs.mkdtempSync(path.join(tmpRoot,'uce-mcp-git-'));
   try {
     const dir=path.join(tmp,'project');
     fs.mkdirSync(dir,{mode:0o700});
