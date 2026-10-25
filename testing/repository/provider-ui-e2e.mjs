@@ -40,11 +40,13 @@ async function runCase(provider,url,expectArchive,meta){
   page.on('pageerror',error=>errors.push(error.message));
   await page.route(/\/api\/repository\/metadata\?/,async route=>{
     metadata.push(route.request().url());
-    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(meta)});
+    await route.fulfill({status:200,contentType:'application/json',
+      headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(meta)});
   });
   await page.route('https://api.github.com/repos/**',async route=>{
     metadata.push(route.request().url());
-    await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(meta)});
+    await route.fulfill({status:200,contentType:'application/json',
+      headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(meta)});
   });
   await page.route(/\/api\/(github|gitlab|codeberg)\/archive\//,async route=>{
     archives.push(route.request().url());
