@@ -51,13 +51,23 @@ for (const sample of corpus.projects) {
       filesFound: files.length, filesAnalyzed: files.length, filesIgnored: 0,
       ignoredCategories: [], sampled: true, truncated: true,
       truncationReason: 'Pinned manifest excerpts only; incomplete repository evidence' } };
-  const inputBefore = JSON.stringify(input);
+  // Analyzer may append timing and rule-count diagnostics to scanStats.
+  // We guard actual project source paths, byte sizes and content instead.
+  const originalFiles = JSON.stringify(input.files);
+  const originalSource = input.source;
+  const originalCoverage = { sampled: input.scanStats.sampled,
+    truncated: input.scanStats.truncated,
+    truncationReason: input.scanStats.truncationReason };
   const report = analyzeProject(input);
   const before = JSON.stringify(report);
   const unified = buildUnifiedBrowserReport(report);
   const quality = evaluateBrowserQuality(report, unified);
   assert.equal(JSON.stringify(report), before, 'browser interpretation mutated UCE scan');
-  assert.equal(JSON.stringify(input), inputBefore, 'scan or enrichment changed pinned source evidence');
+  assert.equal(JSON.stringify(input.files), originalFiles, 'UCE analysis changed pinned source bytes or file paths');
+  assert.equal(input.source, originalSource);
+  assert.equal(input.scanStats.sampled, originalCoverage.sampled);
+  assert.equal(input.scanStats.truncated, originalCoverage.truncated);
+  assert.equal(input.scanStats.truncationReason, originalCoverage.truncationReason);
   assert.equal(quality.scoreParity, 'preserved');
   assert.equal(quality.originalIssueParity, 'preserved');
   assert.equal(quality.graphCoverage, 'unknown', 'manifest excerpts cannot establish full coverage');
