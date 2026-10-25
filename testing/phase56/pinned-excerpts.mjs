@@ -26,8 +26,20 @@ for (const sample of corpus.projects) {
   seen.add(sample.repository.toLowerCase());
   const sourceFile = sample.files.find(file => file.path === sample.sourcePath);
   assert.ok(sourceFile);
-  assert.equal(crypto.createHash('sha256').update(sourceFile.content).digest('hex'),
-    sample.sourceSha256, 'pinned source excerpt hash drift');
+
+  // The corpus sourceSha256 attests the FULL upstream source file. For
+  // leading-sections and selected-manifest-fields we only retain excerpts;
+  // their hashes must never be compared to the original full-file digest.
+  assert.match(sample.sourceSha256, /^[a-f0-9]{64}$/, 'malformed upstream source digest');
+  assert.ok(['full-file', 'leading-sections', 'selected-manifest-fields'].includes(sample.excerptKind),
+    'unsupported excerpt boundary');
+  const excerptSha256 = crypto.createHash('sha256').update(sourceFile.content).digest('hex');
+  const upstreamDigestVerification = sample.excerptKind === 'full-file'
+    ? 'matched-retained-full-file' : 'not-verified-from-excerpt';
+  if (sample.excerptKind === 'full-file') {
+    assert.equal(excerptSha256, sample.sourceSha256,
+      'declared full-file excerpt must match its upstream SHA-256');
+  }
   assert.equal(sample.sourceUrl,
     'https://github.com/' + sample.repository + '/blob/' + sample.commit + '/' + sample.sourcePath);
   const files = sample.files.map(file => ({
@@ -59,6 +71,7 @@ for (const sample of corpus.projects) {
   rows.push({
     repository: sample.repository, sourceCommit: sample.commit,
     sourcePath: sample.sourcePath, sourceSha256: sample.sourceSha256,
+    excerptSha256, excerptKind: sample.excerptKind, upstreamDigestVerification,
     sourceScope: 'pinned-manifest-excerpt', ecosystem: sample.ecosystem,
     originalScore: report.score.overall,
     nativeIssues: report.issues.length, derivedFindings: unified.findings.length,
@@ -79,6 +92,7 @@ const result = {
   structuralIssueParity: rows.every(r => r.nativeIssueParity === 'preserved'),
   limitations: [
     'Excerpt-only coverage; no full dependency graph or runtime compatibility proof',
+    'For leading-sections/selected-manifest-fields, upstream full-file SHA-256 is declared but cannot be verified against a retained excerpt',
     'Human reviewer labels, blind accuracy metrics, and root-cause correctness not measured',
     'Trilogy labels use UCE-extracted context; native solver never invoked',
     'Repository selection is curated and not representative of arbitrary user projects',
