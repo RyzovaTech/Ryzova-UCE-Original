@@ -21,11 +21,12 @@ const SEGMENT = /^[A-Za-z0-9_.-]+$/;
 /** Explicit host allowlist, no arbitrary remote URL/credential access. */
 export function parseRepositoryUrl(value: string): PublicRepository {
   const input = value.trim();
-  if (input.length > 350 || /[\u0000-\u001f\u007f%\\]/.test(input) ||
+  if (input.length > 350 || [...input].some(c => c.charCodeAt(0) < 32 ||
+      c.charCodeAt(0) === 127 || c === '%' || c === '\\') ||
       /(?:^|\/)\.{1,2}(?:\/|$)/.test(input)) {
     throw new Error('Use a normal public GitHub, GitLab, or Codeberg repository URL.');
   }
-  const ssh = input.match(/^git@(github\.com|gitlab\.com|codeberg\.org):([A-Za-z0-9_.\/-]+?)(?:\.git)?\/?$/i);
+  const ssh = input.match(/^git@(github\.com|gitlab\.com|codeberg\.org):([^\s?#:]+?)(?:\.git)?\/?$/i);
   const normalized = ssh ? 'https://' + ssh[1] + '/' + ssh[2] : input;
   let url: URL;
   try { url = new URL(normalized); }
@@ -61,7 +62,8 @@ export function parseGitHubRepositoryUrl(value: string): GitHubRepository {
 }
 
 function encodePath(branch: string): string {
-  if (!branch || branch.length > 255 || /[\u0000-\u0020\u007f%\\?#]/.test(branch) ||
+  if (!branch || branch.length > 255 || [...branch].some(c => c.charCodeAt(0) <= 32 ||
+      c.charCodeAt(0) === 127 || '%\\?#'.includes(c)) ||
       branch.startsWith('/') || branch.endsWith('/') || branch.includes('//') ||
       branch.split('/').some(part => !SEGMENT.test(part) || part === '.' || part === '..')) {
     throw new Error('The remote repository returned an invalid default branch.');
