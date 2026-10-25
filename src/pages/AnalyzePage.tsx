@@ -42,9 +42,9 @@ const SUPPORTED_FORMATS = ['.zip'];
 export function AnalyzePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, resume, isRunning } = useAnalyzer();
+  const { state, analyzeFile, analyzeDemo, analyzeRepository, reset, cancel, resume, isRunning } = useAnalyzer();
   const [dragOver, setDragOver] = useState(false);
-  const [githubUrl, setGithubUrl] = useState('');
+  const [repositoryUrl, setRepositoryUrl] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigatedRef = useRef(false);
@@ -93,7 +93,7 @@ export function AnalyzePage() {
     if (!picker) return;
     // Picker must run directly from this click while user activation is present.
     const destination = await picker({ suggestedName: 'uce-repository.zip', types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }] });
-    await analyzeGithub(githubUrl, destination);
+    await analyzeRepository(repositoryUrl, destination);
   };
 
   const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
@@ -103,7 +103,7 @@ export function AnalyzePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analyze Project</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Analyze a ZIP archive or a public GitHub repository with deterministic, browser-based checks.
+          Analyze a ZIP archive or a public GitHub, GitLab, or Codeberg repository using deterministic browser-based checks.
         </p>
       </div>
 
@@ -227,33 +227,33 @@ export function AnalyzePage() {
                 </span>
               </CardTitle>
               <CardDescription>
-                Paste a public GitHub URL or Git remote. UCE downloads its default branch, then analyzes the repository structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
+                Paste a public GitHub, GitLab, or Codeberg repository root URL (or supported Git remote). UCE downloads its default branch and analyzes structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
-                  placeholder="https://github.com/owner/repository or git@github.com:owner/repository.git"
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="https://github.com/owner/repo · gitlab.com/group/repo · codeberg.org/owner/repo"
+                  value={repositoryUrl}
+                  onChange={(e) => setRepositoryUrl(e.target.value)}
                   disabled={busy}
                   className="font-mono text-sm"
                 />
                 <Button
-                  disabled={busy || !githubUrl.trim()}
-                  onClick={() => analyzeGithub(githubUrl).catch(() => undefined)}
+                  disabled={busy || !repositoryUrl.trim()}
+                  onClick={() => analyzeRepository(githubUrl).catch(() => undefined)}
                   className="gap-2"
                 >
                   <Github className="h-4 w-4" />
                   Analyze
                 </Button>
               </div>
-              {'showSaveFilePicker' in window ? <Button variant="outline" disabled={busy || !githubUrl.trim()} onClick={() => scanToDevice().catch((error) => { if (error instanceof DOMException && error.name === 'AbortError') return; toast.error(error instanceof Error ? error.message : 'Could not save the archive.'); })}>Choose download location and analyze</Button> : null}
+              {'showSaveFilePicker' in window ? <Button variant="outline" disabled={busy || !repositoryUrl.trim()} onClick={() => scanToDevice().catch((error) => { if (error instanceof DOMException && error.name === 'AbortError') return; toast.error(error instanceof Error ? error.message : 'Could not save the archive.'); })}>Choose download location and analyze</Button> : null}
               <p className="text-xs text-muted-foreground">
                 Large archives can be saved directly to a location you choose when supported. ZIP indexing and extraction read 32 KB slices; the analysis still applies its published file and text budgets.
               </p>
               <p className="text-xs text-muted-foreground">
-                Public GitHub archives are retrieved through UCE&apos;s same-origin relay, then extracted and analyzed locally in your browser. ZIP uploads never leave your browser.
+                Public GitHub, GitLab and Codeberg archives use UCE&apos;s same-origin relay and are analyzed locally in your browser. ZIP uploads never leave your browser.
               </p>
             </CardContent>
           </Card>
