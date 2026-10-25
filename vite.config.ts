@@ -20,7 +20,7 @@ export default defineConfig({
         changeOrigin: true,
         rewrite(url) {
           return url.replace(/^\/api\/codeberg\/archive\/([^/]+)\/([^/]+)\/(.+)$/,
-            "/$1/$2/archive/$3.zip");
+            "/$1/$2/archive/$3");
         },
       },
       "/api/github/archive": {
