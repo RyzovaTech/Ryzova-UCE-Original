@@ -17,4 +17,46 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node --test testing/mcp/plugin-package.test.mjs
+      - name: Install actual UCE runtime dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Test bundled launcher, MCP protocol and canonical CLI parity
+        run: node --test testing/mcp/plugin-package.test.mjs
+      - name: Diagnose self-scan warning deltas against main without relaxing the gate
+        run: |
+          node scripts/uce-scan.mjs . --output="$RUNNER_TEMP/uce-plugin-scan.json"
+          git fetch --no-tags --depth=1 origin main
+          git worktree add --detach "$RUNNER_TEMP/uce-baseline" FETCH_HEAD
+          node scripts/uce-scan.mjs "$RUNNER_TEMP/uce-baseline" --output="$RUNNER_TEMP/uce-main-scan.json"
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const temp=process.env.RUNNER_TEMP;
+          const load=(name)=>JSON.parse(fs.readFileSync(path.join(temp,name),'utf8'));
+          const collect=(r)=>{
+            const out=[];
+            const add=(x,mod)=>out.push({
+              severity:x.severity, title:x.title??'',file:x.affectedFile??x.file??'',
+              module:mod, ruleId:x.ruleId??x.id??'',evidence:x.evidence??''
+            });
+            for(const i of r.issues??[])add(i,'compatibility');
+            for(const i of r.stack?.securityIntelligence?.findings??[])add(i,'security');
+            for(const [name,mod] of Object.entries(r.stack?.extendedIntelligence?.modules??{}))
+              for(const i of mod.findings??[])add(i,name);
+            for(const i of r.stack?.v3RulePlatform?.findings??[])add(i,'V3');
+            return out.filter(i=>i.severity==='warning');
+          };
+          const main=collect(load('uce-main-scan.json')),head=collect(load('uce-plugin-scan.json'));
+          const key=i=>[i.module,i.file,i.title,i.ruleId].join('|');
+          const frequencies=new Map();
+          for(const i of main){const keyName=key(i);frequencies.set(keyName,(frequencies.get(keyName)??0)+1);}
+          const added=[];
+          for(const i of head){const k=key(i),n=frequencies.get(k)??0;if(n>0)frequencies.set(k,n-1);else added.push(i);}
+          const counts=(rows)=>Object.fromEntries([...new Set(rows.map(x=>x.module))].sort().map(k=>[k,rows.filter(x=>x.module===k).length]));
+          console.log('UCE_PREPLUGIN_SELFCHECK='+JSON.stringify({
+            baselineMainWarnings:main.length,pluginBranchWarnings:head.length,
+            delta:head.length-main.length,baselineModules:counts(main),
+            branchModules:counts(head),newWarnings:added.slice(0,100).map(x=>({
+              module:x.module,file:x.file,title:x.title,ruleId:x.ruleId
+            }))
+          }));
+          JS
