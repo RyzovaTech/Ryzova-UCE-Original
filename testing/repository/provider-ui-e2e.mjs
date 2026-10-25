@@ -74,7 +74,19 @@ async function runCase(provider,url,expectArchive,meta){
     assert.match(await page.locator('#repository-url-validation').innerText(),
       /Valid public .* repository URL/);
     await input.press('Enter');
-    await page.waitForURL(/\/report\/[^/?]+/,{timeout:90000});
+    try {
+      await page.waitForURL(/\/report\/[^/?]+/,{timeout:35000,waitUntil:'domcontentloaded'});
+    } catch (error) {
+      const diagnostics={
+        provider,currentUrl:page.url(),metadata,archives,pageErrors:errors,
+        failedVisible:await page.getByText(/Analysis failed|could not be read|unsupported|failed to fetch|timed out/i)
+          .allInnerTexts().catch(()=>[]),
+        statusText:(await page.locator('main').allInnerTexts().catch(()=>[]))
+          .join('\n').slice(-1800),
+      };
+      throw Error('Provider import did not produce report: '+JSON.stringify(diagnostics)+
+        '; original error: '+String(error));
+    }
     assert.equal(metadata.length,1,'Metadata lookup must hit the intended fixed public provider');
     assert.equal(archives.length,1,'Only one archive request should run');
     assert.equal(archives[0].includes(expectArchive),true,
