@@ -65,6 +65,13 @@ test('Gitless full local workspace scan uses all UCE rules and paginates real ev
  try{
   const initialized=await c.send('initialize',{protocolVersion:'2025-06-18'});
   assert.equal(initialized.result.serverInfo.name,'ryzova-uce-mcp');
+  const registry=await c.tool('uce_rule_catalog',{mode:'packs',limit:5});
+  assert.equal(registry.result.isError,false,JSON.stringify(registry));
+  assert.ok(registry.result.structuredContent.total>0);
+  const rules=await c.tool('uce_rule_catalog',{mode:'rules',limit:3});
+  assert.equal(rules.result.isError,false,JSON.stringify(rules));
+  assert.ok(rules.result.structuredContent.total>=3);
+  assert.equal(rules.result.structuredContent.items.length,3);
   const result=await c.tool('uce_scan_workspace',{projectPath:'.'});
   assert.equal(result.result.isError,false,JSON.stringify(result));
   const value=result.result.structuredContent;
