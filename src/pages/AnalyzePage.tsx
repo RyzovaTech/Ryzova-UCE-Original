@@ -233,7 +233,7 @@ export function AnalyzePage() {
             <CardContent className="space-y-3">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
-                  placeholder="https://github.com/owner/repo · gitlab.com/group/repo · codeberg.org/owner/repo"
+                  placeholder="https://github.com/owner/repo (GitLab / Codeberg URLs supported)"
                   value={repositoryUrl}
                   onChange={(e) => setRepositoryUrl(e.target.value)}
                   disabled={busy}
