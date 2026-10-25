@@ -43,7 +43,7 @@ function start(dir,remoteOnly=false){
         pending.set(id,resolve);
         p.stdin.write(JSON.stringify(method(id,name,params))+'\n',e=>{if(e)reject(e);});
       }),
-      new Promise((_,reject)=>setTimeout(()=>reject(Error('stdio MCP timeout')),30000)),
+      new Promise((_,reject)=>setTimeout(()=>reject(Error('stdio MCP timeout')),30000).unref()),
     ]);
   },async tool(name,args){return this.send('tools/call',{name,arguments:args});},
   close(){p.kill('SIGTERM');lines.close();}};
