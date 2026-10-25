@@ -10,7 +10,7 @@ import { analyzeArchiveBatches } from './archive-batch-runner';
 import type { AnalysisInput, AnalysisStage } from './types';
 
 type Request = { type: 'analyze'; requestId: number; input: AnalysisInput }
-  | { type: 'analyze-archive'; requestId: number; file: File; source: 'upload' | 'github'; displayName?: string }
+  | { type: 'analyze-archive'; requestId: number; file: File; source: 'upload' | 'github' | 'gitlab' | 'codeberg'; displayName?: string }
   | { type: 'continue-archive'; requestId: number };
 const workerScope = self as DedicatedWorkerGlobalScope;
 const progress = (requestId: number, stage: AnalysisStage, value: number, message: string) => workerScope.postMessage({ type: 'progress', requestId, stage, progress: value, message });
