@@ -1,0 +1,35 @@
+name: Original UCE Public Repository Providers
+on:
+  pull_request:
+    paths:
+      - 'src/lib/analyzer/repository.ts'
+      - 'src/hooks/useAnalyzer.ts'
+      - 'src/pages/AnalyzePage.tsx'
+      - 'src/lib/analyzer/types.ts'
+      - 'src/lib/analyzer/trust.ts'
+      - 'src/lib/analyzer/download.ts'
+      - 'src/lib/analyzer/analysis.worker.ts'
+      - 'api/repository/metadata.js'
+      - 'vercel.json'
+      - 'vite.config.ts'
+      - 'testing/repository/**'
+      - '.github/workflows/uce-repository-providers.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  provider-imports:
+    name: GitHub GitLab Codeberg provider contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Validate safe providers, metadata relays and source trust
+        run: npm run test:repository-import
+      - name: Typecheck, lint and compile original UCE
+        run: npm run check && npm run build
