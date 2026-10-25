@@ -1,58 +1,91 @@
-export interface GitHubRepository {
+export type RepositoryProvider = 'github' | 'gitlab' | 'codeberg';
+
+export interface PublicRepository {
+  provider: RepositoryProvider;
+  /** Provider-specific namespace including GitLab subgroups. */
+  namespace: string[];
   owner: string;
   repository: string;
   metadataUrl: string;
+  displayUrl: string;
 }
+export type GitHubRepository = PublicRepository;
 
-/**
- * Parse the two GitHub remote forms that can be downloaded safely in-browser.
- * Keeping this allowlisted avoids turning the analyzer into an arbitrary URL
- * fetcher while providing a clear base for additional Git hosts later.
- */
-export function parseGitHubRepositoryUrl(value: string): GitHubRepository {
+const PROVIDERS: Record<string, RepositoryProvider> = {
+  'github.com': 'github',
+  'gitlab.com': 'gitlab',
+  'codeberg.org': 'codeberg',
+};
+const SEGMENT = /^[A-Za-z0-9_.-]+$/;
+
+/** Explicit host allowlist, no arbitrary remote URL/credential access. */
+export function parseRepositoryUrl(value: string): PublicRepository {
   const input = value.trim();
-  const sshMatch = input.match(/^git@github\.com:([^/\s]+)\/([^/\s]+?)(?:\.git)?\/?$/i);
-  const normalized = sshMatch ? `https://github.com/${sshMatch[1]}/${sshMatch[2]}` : input;
-
+  if (input.length > 350 || /[\u0000-\u001f\u007f%\\]/.test(input)) {
+    throw new Error('Use a normal public GitHub, GitLab, or Codeberg repository URL.');
+  }
+  const ssh = input.match(/^git@(github\.com|gitlab\.com|codeberg\.org):([A-Za-z0-9_.\/-]+?)(?:\.git)?\/?$/i);
+  const normalized = ssh ? 'https://' + ssh[1] + '/' + ssh[2] : input;
   let url: URL;
-  try {
-    url = new URL(normalized);
-  } catch {
-    throw new Error('Enter a GitHub repository URL or Git remote, for example https://github.com/owner/repository.');
+  try { url = new URL(normalized); }
+  catch { throw new Error('Enter a public GitHub, GitLab, or Codeberg repository URL.'); }
+  const provider = PROVIDERS[url.hostname.toLowerCase()];
+  if (!provider || url.protocol !== 'https:' || url.username || url.password ||
+      url.port || url.search || url.hash) {
+    throw new Error('Only public HTTPS GitHub, GitLab, or Codeberg repository roots are supported.');
   }
-
-  if (url.protocol !== 'https:' || url.hostname.toLowerCase() !== 'github.com') {
-    throw new Error('Remote analysis currently supports public GitHub repositories only. Upload a ZIP for other Git hosts.');
+  const rawSegments = url.pathname.replace(/\/$/, '').split('/').slice(1);
+  if (rawSegments.length < 2 || rawSegments.length > (provider === 'gitlab' ? 8 : 2) ||
+      rawSegments.some(part => !SEGMENT.test(part) || part === '.' || part === '..')) {
+    throw new Error('Enter a repository root URL, not a branch, file path, or unsafe URL.');
   }
-  if (url.search || url.hash) {
-    throw new Error('Enter the repository root URL without a branch, file path, query, or fragment.');
-  }
-
-  const segments = url.pathname.split('/').filter(Boolean);
-  if (segments.length !== 2 || !segments.every((segment) => /^[A-Za-z0-9_.-]+$/.test(segment))) {
-    throw new Error('Enter the repository root URL, for example https://github.com/owner/repository.');
-  }
-
-  const [owner, rawRepository] = segments;
-  const repository = rawRepository.replace(/\.git$/i, '');
-  if (!repository) throw new Error('Enter a repository name after the GitHub owner.');
-
-  return {
-    owner,
-    repository,
-    metadataUrl: `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repository)}`,
-  };
+  const namespace = [...rawSegments];
+  const repository = namespace.pop()!.replace(/\.git$/i, '');
+  if (!repository || repository === '.' || repository === '..' ||
+      !SEGMENT.test(repository)) throw new Error('Enter a valid repository name.');
+  namespace.push(repository);
+  const owner = namespace[0];
+  const providerPath = namespace.join('/');
+  const metadataUrl = provider === 'github'
+    ? 'https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repository)
+    : '/api/repository/metadata?provider=' + provider + '&path=' + encodeURIComponent(providerPath);
+  return { provider, namespace, owner, repository, metadataUrl,
+    displayUrl: 'https://' + url.hostname.toLowerCase() + '/' + providerPath };
 }
 
-function encodePath(value: string): string {
-  return value.split('/').map(encodeURIComponent).join('/');
+export function parseGitHubRepositoryUrl(value: string): GitHubRepository {
+  const repository = parseRepositoryUrl(value);
+  if (repository.provider !== 'github') throw new Error('This legacy helper accepts GitHub repositories only.');
+  return repository;
 }
 
-/**
- * Build the same-origin archive relay endpoint for a known branch.
- * GitHub's codeload host does not allow browser requests from arbitrary
- * origins, so Vercel/Vite relay the public archive without analyzing it.
- */
+function encodePath(branch: string): string {
+  if (!branch || branch.length > 255 || /[\u0000-\u0020\u007f%\\?#]/.test(branch) ||
+      branch.startsWith('/') || branch.endsWith('/') || branch.includes('//') ||
+      branch.split('/').some(part => !SEGMENT.test(part) || part === '.' || part === '..')) {
+    throw new Error('The remote repository returned an invalid default branch.');
+  }
+  return branch.split('/').map(encodeURIComponent).join('/');
+}
+
+export function getRepositoryArchiveUrl(repository: PublicRepository, defaultBranch: string,
+  gitlabProjectId?: number): string {
+  const ref = encodePath(defaultBranch);
+  if (repository.provider === 'github') {
+    return '/api/github/archive/' + encodeURIComponent(repository.owner) + '/' +
+      encodeURIComponent(repository.repository) + '/' + ref;
+  }
+  if (repository.provider === 'gitlab') {
+    if (!Number.isSafeInteger(gitlabProjectId) || gitlabProjectId! < 1) {
+      throw new Error('GitLab project metadata did not provide a valid project ID.');
+    }
+    return '/api/gitlab/archive/' + gitlabProjectId + '?sha=' + encodeURIComponent(defaultBranch);
+  }
+  return '/api/codeberg/archive/' + encodeURIComponent(repository.owner) + '/' +
+    encodeURIComponent(repository.repository) + '/' + ref;
+}
+
 export function getGitHubArchiveUrl(repository: GitHubRepository, branch: string): string {
-  return `/api/github/archive/${encodeURIComponent(repository.owner)}/${encodeURIComponent(repository.repository)}/${encodePath(branch)}`;
+  if (repository.provider !== 'github') throw new Error('Expected GitHub repository.');
+  return getRepositoryArchiveUrl(repository, branch);
 }
