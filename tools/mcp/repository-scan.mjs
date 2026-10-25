@@ -31,13 +31,17 @@ export function parseRepositoryUrl(value,hosts=DEFAULT_HOSTS) {
   return {url:url.origin+p+'.git',display:url.hostname+p};
 }
 export function validatedBudget(value,kind) {
-  const limits={maxFiles:[25_000,100_000],maxBytes:[96*1024*1024,512*1024*1024]};
-  const pair=limits[kind];
-  if(!pair)throw Error('Invalid resource budget');
-  if(value===undefined)return pair[0];
-  if(!Number.isSafeInteger(value)||value<1||value>pair[1])
-    throw Error(kind+' must be a positive integer at or under available machine policy');
-  return value;
+  const specs={maxFiles:{defaultValue:25_000,env:'UCE_MCP_MAX_SCAN_FILES',fallback:100_000},
+    maxBytes:{defaultValue:96*1024*1024,env:'UCE_MCP_MAX_SCAN_BYTES',fallback:512*1024*1024}};
+  const spec=specs[kind];
+  if(!spec)throw Error('Invalid resource budget');
+  const raw=process.env[spec.env];
+  const policy=raw===undefined?spec.fallback:Number(raw);
+  if(!Number.isSafeInteger(policy)||policy<1)throw Error('Invalid operator resource budget policy');
+  const selected=value===undefined?Math.min(spec.defaultValue,policy):value;
+  if(!Number.isSafeInteger(selected)||selected<1||selected>policy)
+    throw Error(kind+' exceeds operator-configured compute policy; no UCE feature/paywall cap applies');
+  return selected;
 }
 function gitCall(args,cwd,timeout=120_000) {
   const scratchHome=path.join(cwd,'git-home');
