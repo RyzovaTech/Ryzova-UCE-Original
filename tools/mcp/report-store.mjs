@@ -7,13 +7,16 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 const worker=fileURLToPath(new URL('./agent-report-worker.mjs',import.meta.url));
 const MAX_TTL_MS=2*3600_000;
-const MAX_REPORTS=10;
+const DEFAULT_MAX_REPORTS=25;
 const MAX_REPORT_BYTES=128*1024*1024;
 export class AgentReportStore {
   #entries=new Map();
   begin(){
     this.sweep();
-    if(this.#entries.size>=MAX_REPORTS)
+    const cachePolicy=Number(process.env.UCE_MCP_MAX_CACHED_REPORTS??DEFAULT_MAX_REPORTS);
+    if(!Number.isSafeInteger(cachePolicy)||cachePolicy<1)
+      throw Error('Invalid operator report cache policy');
+    if(this.#entries.size>=cachePolicy)
       throw Error('Analysis cache full; release previous report handles.');
     const directory=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-report-'));
     fs.chmodSync(directory,0o700);
