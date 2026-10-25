@@ -147,7 +147,7 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   return <section className="space-y-4" aria-label="Experimental Unified Intelligence">
     <div>
       <h2 className="text-xl font-semibold">Unified Project Intelligence</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Phase 5 experimental browser view · Root Cause First · Native UCE score and original issues unchanged</p>
+      <p className="mt-1 text-sm text-foreground">Phase 5 experimental browser view · Root Cause First · Native UCE score and original issues unchanged</p>
     </div>
     <div className="grid gap-3 sm:grid-cols-3">
       <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Original UCE issues</p>
