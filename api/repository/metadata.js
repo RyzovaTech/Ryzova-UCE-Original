@@ -12,7 +12,7 @@ export function getPublicMetadataTarget(provider, sourcePath) {
       sourcePath.includes('\\') || /[\x00-\x1f\x7f]/.test(sourcePath)) throw Error('Invalid repository path');
   const parts = sourcePath.split('/');
   if (parts.length < 2 || parts.length > (provider === 'gitlab' ? 8 : 2) ||
-      parts.some(p => !SEGMENT.test(p) || p === '.' || p === '..'))
+      parts.some(p => !SEGMENT.test(p) || p === '.' || p === '..' || p === '-'))
     throw Error('Invalid repository namespace');
   return provider === 'gitlab'
     ? 'https://gitlab.com/api/v4/projects/' + encodeURIComponent(sourcePath)
