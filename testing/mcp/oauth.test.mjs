@@ -36,7 +36,9 @@ test('OAuth JWT validates signature, scope, issuer, audience, subject and time',
    assert.throws(()=>verifyTokenJwt(token(overrides),cfg,jwks,now));
  }
  assert.throws(()=>verifyTokenJwt(token({}, {alg:'none'}),cfg,jwks,now));
- assert.throws(()=>verifyTokenJwt(token().replace(/.$/,'a'),cfg,jwks,now),
+ const valid=token(),parts=valid.split('.');
+ const tampered=parts[0]+'.'+parts[1]+'.'+(parts[2][0]==='A'?'B':'A')+parts[2].slice(1);
+ assert.throws(()=>verifyTokenJwt(tampered,cfg,jwks,now),
    /invalid|signing|signature|JWT/i);
  assert.throws(()=>verifyTokenJwt(token(),cfg,{keys:[]},now));
 });
