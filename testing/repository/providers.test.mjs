@@ -46,6 +46,7 @@ test('reject credentials, arbitrary hosts, paths and hidden protocol escapes',()
     'https://github.com:8443/owner/repo',
     'https://owner:secret@gitlab.com/g/repo',
     'https://gitlab.com/group/repo/-/tree/main',
+    'https://github.com/owner/repo/../other',
     'https://codeberg.org/owner/repo?archive=1',
     'https://codeberg.org/owner/repo#token',
     'https://github.com/owner/%2e%2e',
