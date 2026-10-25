@@ -11,7 +11,8 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
-import { createHash, timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual, randomBytes } from 'node:crypto';
+import { uploadHtml } from './upload-ui.mjs';
 import { fileURLToPath } from 'node:url';
 
 const stdio=fileURLToPath(new URL('./server.mjs',import.meta.url));
@@ -134,6 +135,16 @@ const server=http.createServer(async(req,res)=>{
   }
   if(req.method==='GET'&&req.url==='/health'){
     send(res,200,{status:'ok',mode:'private-upload-mcp-gateway'});return;
+  }
+  if(req.method==='GET' && req.url==='/upload-ui' &&
+     process.env.UCE_MCP_ENABLE_UPLOAD_UI==='1'){
+    const nonce=randomBytes(24).toString('base64');
+    res.writeHead(200,{'content-type':'text/html; charset=utf-8',
+      'cache-control':'no-store','x-content-type-options':'nosniff',
+      'x-frame-options':'DENY','referrer-policy':'no-referrer',
+      'content-security-policy':"default-src 'none'; script-src 'nonce-"+nonce+
+        "'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'none'; frame-ancestors 'none'"});
+    res.end(uploadHtml(nonce));return;
   }
   const account=authenticate(req);
   if(!account){send(res,401,{error:'Bearer authentication required'},
