@@ -1,9 +1,10 @@
-name: UCE MCP Local Protocol and Safety
+name: UCE MCP V2 Upload Protocol and Security
 on:
   pull_request:
     paths:
       - 'tools/mcp/**'
       - 'testing/mcp/**'
+      - 'docs/UCE_MCP_LOCAL_V1.md'
       - '.github/workflows/uce-mcp.yml'
   workflow_dispatch:
 permissions:
@@ -19,5 +20,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: JSON-RPC MCP protocol, real bounded UCE scan, fail-closed path tests
-        run: node --test testing/mcp/stdio.test.mjs
+      - name: MCP protocol, source/ZIP staging and authenticated upload security tests
+        run: npm run test:mcp
