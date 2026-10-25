@@ -71,7 +71,7 @@ export async function readArchiveDownload(response: Response, options: {
   };
   options.signal.addEventListener('abort', abort, { once: true });
   const stalled = () => {
-    abortError = new DOMException('Repository download stopped receiving data. Check your connection and retry, or download the ZIP directly from GitHub.', 'TimeoutError');
+    abortError = new DOMException('Repository download stopped receiving data. Check your connection and retry, or download the ZIP from its repository host.', 'TimeoutError');
     void reader.cancel().catch(() => undefined);
   };
   let timer = setTimeout(stalled, options.timeoutMs);

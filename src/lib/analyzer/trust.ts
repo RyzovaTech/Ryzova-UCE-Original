@@ -3,8 +3,8 @@ import { CORE_KNOWLEDGE_PACK } from '../knowledge/core-pack';
 import { V3_CORE_RULE_PACK } from '../knowledge/v3-core-pack';
 import { COMPATIBILITY_SCORE_WEIGHTS } from '../compatibility/scoring/index';
 
-export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' = 'upload'): AnalysisTrustMetadata {
-  const networkAccessUsed = source === 'github';
+export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' | 'gitlab' | 'codeberg' = 'upload'): AnalysisTrustMetadata {
+  const networkAccessUsed = source === 'github' || source === 'gitlab' || source === 'codeberg';
   return {
     localOnly: !networkAccessUsed,
     networkAccessUsed,
@@ -16,7 +16,7 @@ export function buildTrustMetadata(source: 'upload' | 'demo' | 'github' = 'uploa
       { id: V3_CORE_RULE_PACK.id, version: V3_CORE_RULE_PACK.version, schemaVersion: V3_CORE_RULE_PACK.schemaVersion, signed: Boolean(V3_CORE_RULE_PACK.signature) },
     ],
     limitations: [
-      ...(source === 'github' ? ['GitHub archives can omit tracked files through export-ignore rules. Missing-file findings describe the downloaded archive, not necessarily the complete repository.'] : []),
+      ...(networkAccessUsed ? ['Remote repository archives may omit files through export-ignore or hosting policies. Missing-file findings describe the downloaded archive, not necessarily the complete repository.'] : []),
       'Static findings are review signals, not proof of runtime behavior or exploitable vulnerabilities.',
       'Browser and platform checks do not execute the project on real devices.',
       'Accessibility checks do not replace keyboard, screen-reader, contrast, or user testing.',

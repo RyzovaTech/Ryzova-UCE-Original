@@ -4,7 +4,7 @@ import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
 import { markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
 import { persistLargeReport } from '@/lib/storage/large-reports';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
-import { getGitHubArchiveUrl, parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
+import { getRepositoryArchiveUrl, parseRepositoryUrl } from '@/lib/analyzer/repository';
 import {
   archiveProcessingTimeoutMs,
   GITHUB_ARCHIVE_TIMEOUT_MS,
@@ -90,7 +90,7 @@ export function useAnalyzer() {
   const temporaryArchiveCleanupRef = useRef<(() => Promise<void>) | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const workerRejectRef = useRef<((error: Error) => void) | null>(null);
-  const resumableRef = useRef<AnalysisInput | { file: File; source: 'upload' | 'github'; displayName?: string } | null>(null);
+  const resumableRef = useRef<AnalysisInput | { file: File; source: 'upload' | 'github' | 'gitlab' | 'codeberg'; displayName?: string } | null>(null);
 
   const safeSetState = useCallback((update: Partial<AnalyzerState> | ((prev: AnalyzerState) => AnalyzerState)) => {
     if (mountedRef.current) {
@@ -105,15 +105,21 @@ export function useAnalyzer() {
     }
   }, []);
 
-  useEffect(() => () => {
-    mountedRef.current = false;
-    remoteAbortRef.current?.abort();
-    workerRef.current?.terminate();
-    workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
-    workerRejectRef.current = null;
-    void temporaryArchiveCleanupRef.current?.();
-    temporaryArchiveCleanupRef.current = null;
-    clearAnalysisTimeout();
+  useEffect(() => {
+    // React StrictMode replays setup → cleanup → setup in development.
+    // Restore the mounted flag on each setup, otherwise all subsequent
+    // progress/report state updates silently disappear after the first replay.
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      remoteAbortRef.current?.abort();
+      workerRef.current?.terminate();
+      workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
+      workerRejectRef.current = null;
+      void temporaryArchiveCleanupRef.current?.();
+      temporaryArchiveCleanupRef.current = null;
+      clearAnalysisTimeout();
+    };
   }, [clearAnalysisTimeout]);
 
   const startRequest = useCallback((preserveResume = false) => {
@@ -150,7 +156,7 @@ export function useAnalyzer() {
   }, [safeSetState, clearAnalysisTimeout]);
 
   const runAnalysis = useCallback(
-    async (files: import('@/lib/analyzer/types').ProjectFile[], name: string, source: 'upload' | 'demo' | 'github', scanStats: import('@/lib/analyzer/types').ScanStats, requestId: number): Promise<AnalysisResult> => {
+    async (files: import('@/lib/analyzer/types').ProjectFile[], name: string, source: 'upload' | 'demo' | 'github' | 'gitlab' | 'codeberg', scanStats: import('@/lib/analyzer/types').ScanStats, requestId: number): Promise<AnalysisResult> => {
       ensureCurrentRequest(requestId);
       try {
         safeSetState((s) => ({ ...s, stage: 'reading', progress: 39, error: null, cacheHit: false, canResume: false, message: 'Preparing a bounded, deterministic analysis input.' }));
@@ -185,7 +191,7 @@ export function useAnalyzer() {
   );
 
   const analyzeArchive = useCallback(
-    async (file: File, source: 'upload' | 'github', requestId = startRequest(), displayName?: string): Promise<AnalysisResult> => {
+    async (file: File, source: 'upload' | 'github' | 'gitlab' | 'codeberg', requestId = startRequest(), displayName?: string): Promise<AnalysisResult> => {
       if (requestId !== requestIdRef.current) throw new Error(CANCELLED_MESSAGE);
       resumableRef.current = { file, source, displayName };
       const refreshIdleTimeout = () => {
@@ -254,39 +260,40 @@ export function useAnalyzer() {
       let remoteStep: 'metadata' | 'archive' | 'download' = 'metadata';
       try {
         requestId = startRequest();
-        const repository = parseGitHubRepositoryUrl(url);
+        const repository = parseRepositoryUrl(url);
+        const providerName = repository.provider === 'gitlab' ? 'GitLab' : repository.provider === 'codeberg' ? 'Codeberg' : 'GitHub';
         safeSetState((s) => ({ ...s, stage: 'uploading', progress: STAGE_PROGRESS.uploading, error: null }));
         remoteAbortRef.current = new AbortController();
         const metadata = await fetchWithTimeout(repository.metadataUrl, GITHUB_METADATA_TIMEOUT_MS, {
-          headers: { Accept: 'application/vnd.github+json' },
+          headers: { Accept: repository.provider === 'github' ? 'application/vnd.github+json' : 'application/json' },
           signal: remoteAbortRef.current.signal,
         });
         ensureCurrentRequest(requestId);
-        if (!metadata.ok) throw new Error(`GitHub returned ${metadata.status}. The repository may be private, unavailable, or does not exist.`);
+        if (!metadata.ok) throw new Error(providerName + ' returned ' + metadata.status + '. Only available public repositories can be analyzed.');
         const details: unknown = await metadata.json();
         const defaultBranch = typeof (details as { default_branch?: unknown }).default_branch === 'string'
           ? (details as { default_branch: string }).default_branch
           : null;
-        if (!defaultBranch) throw new Error('GitHub did not provide a default branch for this repository.');
+        if (!defaultBranch) throw new Error(providerName + ' did not provide a default branch for this repository.');
 
         remoteStep = 'archive';
         safeSetState((s) => ({ ...s, message: 'Connecting to repository archive…', download: { receivedBytes: 0, totalBytes: null, bytesPerSecond: 0, elapsedSeconds: 0, complete: false } }));
         remoteAbortRef.current = new AbortController();
-        const res = await fetchWithTimeout(getGitHubArchiveUrl(repository, defaultBranch), GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
+        const res = await fetchWithTimeout(getRepositoryArchiveUrl(repository, defaultBranch, (details as { id?: number }).id), GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
         ensureCurrentRequest(requestId);
         if (!res.ok) {
           const message = res.status === 404
-            ? 'GitHub could not provide the default-branch archive. The repository may be empty, unavailable, or recently renamed.'
+            ? providerName + ' could not provide the default-branch archive. It may be empty, unavailable, or recently renamed.'
             : res.status === 413
-              ? 'The repository archive exceeds the relay download limit. Download the ZIP from GitHub and use ZIP Upload instead.'
+              ? 'The repository archive exceeds the relay download limit. Download a ZIP from the repository host and use ZIP Upload instead.'
               : res.status === 429
-                ? 'GitHub archive retrieval is temporarily rate limited. Wait a moment or use ZIP Upload.'
-                : `The GitHub archive relay returned ${res.status}. Try again or use ZIP Upload.`;
+                ? providerName + ' archive retrieval is temporarily rate limited. Retry later or use ZIP Upload.'
+                : providerName + ' archive relay returned ' + res.status + '. Try again or use ZIP Upload.';
           throw new Error(message);
         }
         const contentType = res.headers.get('content-type') ?? '';
         if (contentType && !/application\/(zip|octet-stream)|application\/x-zip-compressed/i.test(contentType)) {
-          throw new Error('GitHub returned an unexpected response instead of a ZIP archive.');
+          throw new Error(providerName + ' returned an unexpected response instead of a ZIP archive.');
         }
         const contentLength = Number(res.headers.get('content-length') ?? 0);
         if (contentLength > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
@@ -306,7 +313,7 @@ export function useAnalyzer() {
         safeSetState((s) => ({ ...s, download: null }));
         if (blob.size > MAX_COMPRESSED_ARCHIVE_BYTES) throw new Error('The repository archive exceeds UCE\'s 2GB browser-safety ceiling. Use the UCE CLI for a project of this size.');
         const file = blob instanceof File ? blob : new File([blob], `${repository.repository}.zip`, { type: 'application/zip' });
-        try { return await analyzeArchive(file, 'github', requestId, `${repository.repository}.zip`); }
+        try { return await analyzeArchive(file, repository.provider, requestId, repository.repository + '.zip'); }
         finally {
           const cleanup = temporaryArchiveCleanupRef.current;
           temporaryArchiveCleanupRef.current = null;
@@ -322,15 +329,15 @@ export function useAnalyzer() {
         if (requestId === requestIdRef.current) runningRef.current = false;
         const message = e instanceof DOMException && e.name === 'AbortError'
           ? remoteStep === 'metadata'
-            ? 'GitHub metadata did not respond within 30 seconds. Check your connection and try again.'
+            ? 'Repository metadata did not respond within 30 seconds. Check your connection and try again.'
             : remoteStep === 'archive'
-              ? 'The GitHub archive relay did not start responding within 10 minutes. Retry or download the ZIP directly from GitHub.'
+              ? 'The repository archive relay did not respond in time. Retry or download the ZIP from its host.'
               : 'Repository download was cancelled.'
           : e instanceof TypeError && /failed to fetch/i.test(e.message)
             ? remoteStep === 'metadata'
-              ? 'Could not contact the GitHub metadata API. Check your connection and try again.'
-              : 'Could not reach the UCE GitHub archive relay. Try again or download the repository ZIP from GitHub.'
-            : e instanceof Error ? e.message : 'Failed to fetch GitHub repository.';
+              ? 'Could not contact the repository metadata service. Check your connection and try again.'
+              : 'Could not reach the UCE repository archive relay. Try again or download a ZIP from the repository host.'
+            : e instanceof Error ? e.message : 'Failed to fetch public repository.';
         if (requestId === requestIdRef.current) safeSetState({ ...INITIAL_STATE, stage: 'error', error: message, canResume: Boolean(resumableRef.current) });
         throw e;
       }
@@ -361,7 +368,7 @@ export function useAnalyzer() {
     return runAnalysis(input.files, input.fileName, input.source, input.scanStats, requestId);
   }, [runAnalysis, analyzeArchive, startRequest]);
 
-  return { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, resume, isRunning: runningRef.current };
+  return { state, analyzeFile, analyzeDemo, analyzeRepository: analyzeGithub, analyzeGithub, reset, cancel, resume, isRunning: runningRef.current };
 }
 
 async function executeInWorker(
@@ -395,7 +402,7 @@ async function executeInWorker(
 /** Keep the compressed archive and extracted source in one worker; only the report crosses threads. */
 async function executeArchiveInWorker(
   file: File,
-  source: 'upload' | 'github',
+  source: 'upload' | 'github' | 'gitlab' | 'codeberg',
   requestId: number,
   workerRef: React.MutableRefObject<Worker | null>,
   workerRejectRef: React.MutableRefObject<((error: Error) => void) | null>,

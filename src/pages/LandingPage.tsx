@@ -46,7 +46,7 @@ const features = [
   {
     icon: GitBranch,
     title: "Git Repository Analysis",
-    desc: "Analyze a public GitHub repository or ZIP archive without changing your workflow.",
+    desc: "Analyze a public GitHub, GitLab, or Codeberg repository — or a ZIP archive — without changing your workflow.",
   },
   {
     icon: ShieldCheck,
@@ -79,7 +79,7 @@ const steps = [
   {
     step: 1,
     title: "Choose a Project",
-    desc: "Upload a ZIP archive or paste a public GitHub repository URL.",
+    desc: "Upload a ZIP archive or paste a public GitHub, GitLab, or Codeberg repository URL.",
   },
   {
     step: 2,

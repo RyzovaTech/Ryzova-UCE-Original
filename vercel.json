@@ -3,6 +3,14 @@
     {
       "source": "/api/github/archive/:owner/:repository/:branch*",
       "destination": "https://codeload.github.com/:owner/:repository/zip/refs/heads/:branch*"
+    },
+    {
+      "source": "/api/gitlab/archive/:id(\\d+)",
+      "destination": "https://gitlab.com/api/v4/projects/:id/repository/archive.zip"
+    },
+    {
+      "source": "/api/codeberg/archive/:owner/:repository/:branch*",
+      "destination": "https://codeberg.org/:owner/:repository/archive/:branch*"
     }
   ],
   "headers": [
@@ -43,6 +51,32 @@
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow, noarchive"
+        }
+      ]
+    },
+    {
+      "source": "/api/gitlab/archive/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/codeberg/archive/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
         }
       ]
     }

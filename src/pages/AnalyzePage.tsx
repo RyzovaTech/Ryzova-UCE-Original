@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle } from 'lucide-react';
+import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, GitBranch, Gitlab, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAnalyzer } from '@/hooks/useAnalyzer';
 import { cn, formatFileSize } from '@/lib/utils';
 import type { AnalysisStage } from '@/lib/analyzer/types';
+import { parseRepositoryUrl, type RepositoryProvider } from '@/lib/analyzer/repository';
 
 const STAGE_LABELS: Record<AnalysisStage, string> = {
   idle: 'Waiting for a project',
@@ -39,12 +40,36 @@ function stageIndex(stage: AnalysisStage): number {
 
 const SUPPORTED_FORMATS = ['.zip'];
 
+const REPOSITORY_PROVIDERS: {
+  id: RepositoryProvider; label: string; placeholder: string; hint: string;
+}[] = [
+  { id: 'github', label: 'GitHub',
+    placeholder: 'https://github.com/owner/repository',
+    hint: 'Public GitHub repository · owner/repository' },
+  { id: 'gitlab', label: 'GitLab',
+    placeholder: 'https://gitlab.com/group/subgroup/repository',
+    hint: 'Public GitLab repository · nested groups supported' },
+  { id: 'codeberg', label: 'Codeberg',
+    placeholder: 'https://codeberg.org/owner/repository',
+    hint: 'Public Codeberg repository · owner/repository' },
+];
+
 export function AnalyzePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { state, analyzeFile, analyzeDemo, analyzeGithub, reset, cancel, resume, isRunning } = useAnalyzer();
+  const { state, analyzeFile, analyzeDemo, analyzeRepository, reset, cancel, resume, isRunning } = useAnalyzer();
   const [dragOver, setDragOver] = useState(false);
-  const [githubUrl, setGithubUrl] = useState('');
+  const [repositoryUrl, setRepositoryUrl] = useState('');
+  const [preferredProvider, setPreferredProvider] = useState<RepositoryProvider>('github');
+  const repositoryValidation = useMemo(() => {
+    if (!repositoryUrl.trim()) return { repository: null, error: null };
+    try { return { repository: parseRepositoryUrl(repositoryUrl), error: null }; }
+    catch (e) { return { repository: null,
+      error: e instanceof Error ? e.message : 'Enter a supported public repository URL.' }; }
+  }, [repositoryUrl]);
+  const activeProvider = repositoryValidation.repository?.provider ?? preferredProvider;
+  const activeProviderInfo = REPOSITORY_PROVIDERS.find(provider => provider.id === activeProvider)!;
+  const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const navigatedRef = useRef(false);
@@ -88,22 +113,37 @@ export function AnalyzePage() {
     if (file) handleFile(file);
   };
 
+  const selectProvider = (provider: RepositoryProvider) => {
+    if (busy) return;
+    setPreferredProvider(provider);
+    if (repositoryUrl.trim() && repositoryValidation.repository?.provider !== provider) {
+      setRepositoryUrl('');
+    }
+  };
+
+  const submitRepository = () => {
+    if (busy || !repositoryValidation.repository) return;
+    navigatedRef.current = false;
+    void analyzeRepository(repositoryUrl.trim()).catch(() => undefined);
+  };
+
   const scanToDevice = async () => {
+    if (!repositoryValidation.repository || busy) return;
     const picker = (window as Window & { showSaveFilePicker?: (options: { suggestedName: string; types: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle> }).showSaveFilePicker;
     if (!picker) return;
     // Picker must run directly from this click while user activation is present.
     const destination = await picker({ suggestedName: 'uce-repository.zip', types: [{ description: 'ZIP archive', accept: { 'application/zip': ['.zip'] } }] });
-    await analyzeGithub(githubUrl, destination);
+    await analyzeRepository(repositoryUrl, destination);
   };
 
-  const busy = state.stage !== 'idle' && state.stage !== 'error' && state.stage !== 'completed';
+
 
   return (
     <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analyze Project</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Analyze a ZIP archive or a public GitHub repository with deterministic, browser-based checks.
+          Analyze a ZIP archive or a public GitHub, GitLab, or Codeberg repository using deterministic browser-based checks.
         </p>
       </div>
 
@@ -227,34 +267,66 @@ export function AnalyzePage() {
                 </span>
               </CardTitle>
               <CardDescription>
-                Paste a public GitHub URL or Git remote. UCE downloads its default branch, then analyzes the repository structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
+                Paste a public GitHub, GitLab, or Codeberg repository root URL (or supported Git remote). UCE downloads its default branch and analyzes structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Input
-                  placeholder="https://github.com/owner/repository or git@github.com:owner/repository.git"
-                  value={githubUrl}
-                  onChange={(e) => setGithubUrl(e.target.value)}
-                  disabled={busy}
-                  className="font-mono text-sm"
-                />
-                <Button
-                  disabled={busy || !githubUrl.trim()}
-                  onClick={() => analyzeGithub(githubUrl).catch(() => undefined)}
-                  className="gap-2"
-                >
-                  <Github className="h-4 w-4" />
-                  Analyze
-                </Button>
+            <CardContent className="space-y-4">
+              <div role="group" aria-label="Repository provider" className="space-y-2">
+                <p className="text-sm font-medium">Choose a Git provider</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {REPOSITORY_PROVIDERS.map(({ id, label }) => (
+                    <Button key={id} type="button" size="sm"
+                      variant={activeProvider === id ? 'default' : 'outline'}
+                      aria-pressed={activeProvider === id} disabled={busy}
+                      onClick={() => selectProvider(id)}
+                      className="min-w-0 gap-2 px-2 sm:px-3">
+                      {id === 'github' ? <Github aria-hidden="true" className="h-4 w-4 shrink-0" /> :
+                        id === 'gitlab' ? <Gitlab aria-hidden="true" className="h-4 w-4 shrink-0" /> :
+                          <GitBranch aria-hidden="true" className="h-4 w-4 shrink-0" />}
+                      {label}
+                    </Button>
+                  ))}
+                </div>
               </div>
-              {'showSaveFilePicker' in window ? <Button variant="outline" disabled={busy || !githubUrl.trim()} onClick={() => scanToDevice().catch((error) => { if (error instanceof DOMException && error.name === 'AbortError') return; toast.error(error instanceof Error ? error.message : 'Could not save the archive.'); })}>Choose download location and analyze</Button> : null}
-              <p className="text-xs text-muted-foreground">
-                Large archives can be saved directly to a location you choose when supported. ZIP indexing and extraction read 32 KB slices; the analysis still applies its published file and text budgets.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Public GitHub archives are retrieved through UCE&apos;s same-origin relay, then extracted and analyzed locally in your browser. ZIP uploads never leave your browser.
-              </p>
+              <form onSubmit={(event) => { event.preventDefault(); submitRepository(); }} className="space-y-2">
+                <label htmlFor="uce-repository-url" className="block text-sm font-medium">Public repository URL</label>
+                <div className="flex min-w-0 flex-col gap-2 sm:flex-row">
+                  <Input id="uce-repository-url" name="repository-url"
+                    placeholder={activeProviderInfo.placeholder} value={repositoryUrl}
+                    onChange={(event) => setRepositoryUrl(event.target.value)}
+                    autoComplete="url" inputMode="url" spellCheck={false}
+                    aria-invalid={Boolean(repositoryValidation.error)}
+                    aria-describedby="repository-provider-help repository-url-validation"
+                    disabled={busy} className="min-w-0 flex-1 font-mono text-sm" />
+                  <Button type="submit" disabled={busy || !repositoryValidation.repository}
+                    className="gap-2 sm:shrink-0">
+                    {busy ? <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" /> :
+                      <GitBranch aria-hidden="true" className="h-4 w-4" />}
+                    Analyze repository
+                  </Button>
+                </div>
+                <p id="repository-url-validation" aria-live="polite" className={cn(
+                  'text-xs', repositoryValidation.error ? 'text-destructive' : 'text-muted-foreground'
+                )}>
+                  {repositoryValidation.error ?? (repositoryValidation.repository
+                    ? '✓ Valid public ' + activeProviderInfo.label + ' repository URL — ready to analyze.'
+                    : activeProviderInfo.hint)}
+                </p>
+              </form>
+              {'showSaveFilePicker' in window ?
+                <Button type="button" variant="outline"
+                  disabled={busy || !repositoryValidation.repository}
+                  onClick={() => scanToDevice().catch((error) => {
+                    if (error instanceof DOMException && error.name === 'AbortError') return;
+                    toast.error(error instanceof Error ? error.message : 'Could not save the archive.');
+                  })}>
+                  Choose download location and analyze
+                </Button> : null}
+              <div id="repository-provider-help" className="space-y-1 text-xs text-muted-foreground">
+                <p><strong>Public repositories only.</strong> Paste a repository root URL, not a branch, issue, or file link. The default branch is analyzed.</p>
+                <p>UCE downloads public archives through a fixed-provider relay. Compatibility rules run locally in your browser; source code is not retained by the relay.</p>
+                <p>Large archives can use device storage where supported. ZIP indexing uses 32 KB slices; existing browser safety and sampling budgets still apply.</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
