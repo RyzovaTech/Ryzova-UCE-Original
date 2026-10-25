@@ -90,7 +90,7 @@ export function useAnalyzer() {
   const temporaryArchiveCleanupRef = useRef<(() => Promise<void>) | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const workerRejectRef = useRef<((error: Error) => void) | null>(null);
-  const resumableRef = useRef<AnalysisInput | { file: File; source: 'upload' | 'github'; displayName?: string } | null>(null);
+  const resumableRef = useRef<AnalysisInput | { file: File; source: 'upload' | 'github' | 'gitlab' | 'codeberg'; displayName?: string } | null>(null);
 
   const safeSetState = useCallback((update: Partial<AnalyzerState> | ((prev: AnalyzerState) => AnalyzerState)) => {
     if (mountedRef.current) {
@@ -150,7 +150,7 @@ export function useAnalyzer() {
   }, [safeSetState, clearAnalysisTimeout]);
 
   const runAnalysis = useCallback(
-    async (files: import('@/lib/analyzer/types').ProjectFile[], name: string, source: 'upload' | 'demo' | 'github', scanStats: import('@/lib/analyzer/types').ScanStats, requestId: number): Promise<AnalysisResult> => {
+    async (files: import('@/lib/analyzer/types').ProjectFile[], name: string, source: 'upload' | 'demo' | 'github' | 'gitlab' | 'codeberg', scanStats: import('@/lib/analyzer/types').ScanStats, requestId: number): Promise<AnalysisResult> => {
       ensureCurrentRequest(requestId);
       try {
         safeSetState((s) => ({ ...s, stage: 'reading', progress: 39, error: null, cacheHit: false, canResume: false, message: 'Preparing a bounded, deterministic analysis input.' }));
@@ -185,7 +185,7 @@ export function useAnalyzer() {
   );
 
   const analyzeArchive = useCallback(
-    async (file: File, source: 'upload' | 'github', requestId = startRequest(), displayName?: string): Promise<AnalysisResult> => {
+    async (file: File, source: 'upload' | 'github' | 'gitlab' | 'codeberg', requestId = startRequest(), displayName?: string): Promise<AnalysisResult> => {
       if (requestId !== requestIdRef.current) throw new Error(CANCELLED_MESSAGE);
       resumableRef.current = { file, source, displayName };
       const refreshIdleTimeout = () => {
@@ -396,7 +396,7 @@ async function executeInWorker(
 /** Keep the compressed archive and extracted source in one worker; only the report crosses threads. */
 async function executeArchiveInWorker(
   file: File,
-  source: 'upload' | 'github',
+  source: 'upload' | 'github' | 'gitlab' | 'codeberg',
   requestId: number,
   workerRef: React.MutableRefObject<Worker | null>,
   workerRejectRef: React.MutableRefObject<((error: Error) => void) | null>,
