@@ -36,7 +36,7 @@ export function parseRepositoryUrl(value: string): PublicRepository {
   }
   const rawSegments = url.pathname.replace(/\/$/, '').split('/').slice(1);
   if (rawSegments.length < 2 || rawSegments.length > (provider === 'gitlab' ? 8 : 2) ||
-      rawSegments.some(part => !SEGMENT.test(part) || part === '.' || part === '..')) {
+      rawSegments.some(part => !SEGMENT.test(part) || part === '.' || part === '..' || part === '-')) {
     throw new Error('Enter a repository root URL, not a branch, file path, or unsafe URL.');
   }
   const namespace = [...rawSegments];
