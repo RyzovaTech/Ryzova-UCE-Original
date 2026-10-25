@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 const root=fileURLToPath(new URL('../../',import.meta.url));
 const server=path.join(root,'tools/mcp/server.mjs');
 function talk(workspace,requests){
@@ -66,4 +67,27 @@ test('MCP refuses symlinks, unknown args and malformed input without leakage',()
    assert.notEqual(missing.status,0);
    assert.equal(missing.stdout,'');
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
+});
+
+test('MCP inspect saved report with real UCE CLI and reject symlink JSON',()=> {
+  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'uce-mcp-saved-'));
+  try {
+    fs.writeFileSync(path.join(dir,'package.json'),JSON.stringify({name:'sample',version:'1.0.0'}));
+    const out=path.join(dir,'saved.json');
+    const cli=spawnSync(process.execPath,[path.join(root,'scripts/uce-scan.mjs'),dir,'--output='+out,
+      '--max-files=100','--max-bytes=1048576'],{cwd:root,encoding:'utf8',timeout:30000,
+      maxBuffer:1024*1024});
+    assert.equal(cli.status,0,cli.stderr.slice(-1000));
+    const snapshot=createHash('sha256').update(fs.readFileSync(out)).digest('hex');
+    const link=path.join(dir,'linked.json');fs.symlinkSync(out,link);
+    const msg=talk(dir,[req(1,'initialize',{protocolVersion:'2025-06-18'}),
+      req(2,'tools/call',{name:'uce_inspect_report',arguments:{reportPath:'saved.json',maxIssues:2}}),
+      req(3,'tools/call',{name:'uce_inspect_report',arguments:{reportPath:'linked.json'}})]);
+    assert.equal(msg[1].result.isError,false);
+    assert.equal(msg[1].result.structuredContent.quality.issueParity,'preserved');
+    assert.equal(msg[1].result.structuredContent.quality.humanAccuracy,'not-measured');
+    assert.equal(msg[2].result.isError,true);
+    assert.equal(createHash('sha256').update(fs.readFileSync(out)).digest('hex'),snapshot,
+      'inspect must not mutate saved original UCE report');
+  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
