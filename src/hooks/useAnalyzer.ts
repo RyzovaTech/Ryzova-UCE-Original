@@ -105,15 +105,21 @@ export function useAnalyzer() {
     }
   }, []);
 
-  useEffect(() => () => {
-    mountedRef.current = false;
-    remoteAbortRef.current?.abort();
-    workerRef.current?.terminate();
-    workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
-    workerRejectRef.current = null;
-    void temporaryArchiveCleanupRef.current?.();
-    temporaryArchiveCleanupRef.current = null;
-    clearAnalysisTimeout();
+  useEffect(() => {
+    // React StrictMode replays setup → cleanup → setup in development.
+    // Restore the mounted flag on each setup, otherwise all subsequent
+    // progress/report state updates silently disappear after the first replay.
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      remoteAbortRef.current?.abort();
+      workerRef.current?.terminate();
+      workerRejectRef.current?.(new Error(CANCELLED_MESSAGE));
+      workerRejectRef.current = null;
+      void temporaryArchiveCleanupRef.current?.();
+      temporaryArchiveCleanupRef.current = null;
+      clearAnalysisTimeout();
+    };
   }, [clearAnalysisTimeout]);
 
   const startRequest = useCallback((preserveResume = false) => {
