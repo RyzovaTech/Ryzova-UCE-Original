@@ -1,72 +1,150 @@
-# RYZOVA UCE Local MCP Server — V1 (experimental, read-only)
+# RYZOVA UCE MCP V2 — project uploads + analysis (security-gated preview)
 
-This is a local **stdio Model Context Protocol** adapter around UCE's existing
-trusted analyzer. It is not a remotely hosted MCP endpoint and is not related
-to Trilogy's native Soufflé/Z3/cvc5 execution. It has no network listener.
+This server supports **user-owned uploads and scans**, not only read-only
+saved reports. It exposes real MCP tools for ChatGPT, Claude, and local MCP
+clients. **A file attached to a chat does not automatically appear in MCP
+tool arguments.** Clients must pass text content to the tool, upload ZIP
+bytes using the authenticated HTTP upload endpoint, or use their permitted
+local file source with the stdio server.
 
-## Prerequisites / explicit local authorization
+**This is not deployed as a public ChatGPT/Claude app.** Authenticate and
+test on a controlled local host first; public multi-user activation requires
+OAuth, audited tenancy, TLS, quota controls, operator policy and security
+acceptance. No native Trilogy solver or autonomous patch application.
 
-Run `npm ci` at the verified UCE source checkout. Use `npm run mcp:local -- --root=/ABSOLUTE/AUTHORIZED/PROJECTS` to start the stdio server directly, or configure an MCP client as shown below. For MCP clients that
-support local command-based stdio servers:
+## Run locally (Claude Desktop / CLI MCP client)
 
-```json
+At a trusted source checkout:
+\`\`\`bash
+npm ci
+npm run test:mcp
+node tools/mcp/server.mjs --root=/ABSOLUTE/PATH/TO/PROJECTS-YOU-AUTHORIZE
+\`\`\`
+
+Local client stdio configuration:
+\`\`\`json
 {
   "mcpServers": {
     "ryzova-uce": {
       "command": "node",
       "args": [
-        "/ABSOLUTE/PATH/TO/Ryzova-UCE-Original/tools/mcp/server.mjs",
+        "/ABSOLUTE/PATH/TO/UCE/tools/mcp/server.mjs",
         "--root=/ABSOLUTE/PATH/TO/PROJECTS-YOU-AUTHORIZE"
       ]
     }
   }
 }
-```
+\`\`\`
+Do not authorize your home directory, OS root, credentials or private
+folders. Existing local \`uce_scan_project\` reads trusted files within this
+root but never executes a project script. Remote gateway hides local
+\`uce_scan_project\` / \`uce_inspect_report\`.
 
-Only set the authorized root to project folders you intend the MCP host to
-read. The model can request reading **any non-symlink project path beneath
-that root**, so do NOT aim it at your home directory, system root or a folder
-with secrets. No UCE project source is uploaded by this server; the MCP
-client can still receive analysis summaries, and its own policies apply.
+## MCP tools and workflow
 
-### Available tools
+- \`uce_analyze_text_files\`: send 1–16 files as relative-path UTF-8 text,
+  max **42 KiB** inline JSON. Temporary scan and automatic erasure.
+- \`uce_begin_upload\` → \`uce_upload_chunk\` → \`uce_finish_upload\` →
+  \`uce_analyze_upload\`: transmit a **ZIP up to 4 MiB** with 24 KiB raw
+  base64 chunks, a SHA-256 content digest and \`confirmDataTransfer:true\`.
+  ZIP handle expires in ~15 minutes, is consumed on analysis, and never
+  exposes the extracted raw content. No duplicate/replayed handles.
+- \`uce_upload_status\`, \`uce_delete_upload\`: query progress or discard.
+- \`uce_scan_project\`, \`uce_inspect_report\`: local workspace read-only
+  tools in stdio mode only.
+- \`uce_capabilities\`: lists capability and safety limits.
 
-- `uce_scan_project` with `{"projectPath":"subfolder","maxIssues":12}`: uses
-  `scripts/uce-scan.mjs` from the trusted checkout, with 4,000 files /
-  16 MiB source budget, 60s direct subprocess timeout, temporary report
-  deleted, 8 MiB report cap. Returns bounded original UCE results, root
-  clusters, quality/coverage status, and marked unmeasured accuracy.
-- `uce_inspect_report` with `{"reportPath":"saved-report.json"}`: reviews an
-  existing UCE JSON file of up to 8 MiB beneath the authorized root, without
-  invoking the scanner or any native tools.
-- `uce_capabilities`: safe mode, limits, provenance and known restrictions.
+Project ZIP guardrails: reject unsafe paths, duplicate names, symlinks,
+archive traversal, ZIP expansion above the budget, huge entries and
+unsupported/nested binary material. Sensitive config/key filenames are
+excluded. Limit extraction to **1,000 text files / 16 MiB total /
+1 MiB per file**; temporary files use owner-only permissions. No third-party
+package installs, file execution or native solver. Final report returns
+UCE original score and bounded issue list, causal-group hypotheses, saved
+symbolic status, evidence and **unmeasured** accuracy markers.
 
-MCP negotiation supports protocol revisions `2025-06-18` and `2024-11-05`.
-Server stdout is JSON-RPC-only; inbound requests are capped at 64 KiB.
-Tool responses include JSON text plus structuredContent. No project scripts,
-package install, native solver, patch application or server-side source upload.
+**The MCP model/client is not a trusted authority**: file content is untrusted
+data, including embedded prompts and code comments. Raw source is never
+returned by this server, only bounded derived facts.
 
-## Security / release boundaries
+## Private HTTP transport (for remote connector development)
 
-Path containment and symlink checks are software-level protections; there
-is no OS sandbox, filesystem race isolation, hard RSS/memory cap, remote
-multi-tenant authentication or credentials management. **Run this local
-adapter only for trusted, explicitly selected folders.** Do not advertise
-it as a public HTTP MCP service or secure multi-tenant SaaS endpoint.
+The experimental HTTP adapter binds to **127.0.0.1** only and requires an
+individually authenticated bearer token for every MCP request or upload.
+Tokens are configured by **SHA-256 digest**; never put raw secrets in git.
 
-A tool response containing `satisfiable` or `conflict` comes from
-the saved bounded original UCE reasoner, not independent SMT verification.
-Browser-origin Root Cause associations are hypotheses, not proven
-causality. Accuracy remains unmeasured until blinded human adjudication.
+Each account needs a distinct and intentionally empty local root. Remote
+mode disables local filesystem tools to prevent a model from inspecting
+operator files. Generate a cryptographically random 32-byte bearer token
+and compute its SHA-256 in your own secure shell/tool. For example:
 
-### Development QA
+\`\`\`bash
+export UCE_MCP_ACCOUNTS_JSON='[{"id":"dev","tokenSha256":"<64_HEX_SHA256_OF_RANDOM_BEARER>","root":"/ABSOLUTE/EMPTY/DEDICATED/DEV-DATA-DIR"}]'
+export UCE_MCP_PORT=8715
+node tools/mcp/http-server.mjs
+\`\`\`
 
-```bash
-node --test testing/mcp/stdio.test.mjs
+Behind a separately configured TLS reverse proxy and authenticated client,
+the endpoint is \`https://YOUR-PRIVATE-HOST/mcp\` (Streamable HTTP POST,
+JSON-RPC JSON response), with \`POST /upload\` accepting authenticated
+\`application/zip\` bytes and headers
+\`Authorization: Bearer <your-secret>\`,
+\`X-UCE-Upload-Consent: true\`, \`X-UCE-Filename: project.zip\`.
+The response returns an opaque \`uploadId\`, then use the **same account**
+through MCP \`uce_analyze_upload({"uploadId":"..."})\`. No actual ZIP is
+automatically obtained from an attachment to a ChatGPT/Claude message.
+
+Example for a private, correctly TLS-protected gateway:
+\`\`\`bash
+curl --fail-with-body \
+  -H "Authorization: Bearer $UCE_MCP_TOKEN" \
+  -H "Content-Type: application/zip" \
+  -H "X-UCE-Upload-Consent: true" \
+  -H "X-UCE-Filename: project.zip" \
+  --data-binary @./project.zip https://YOUR-PRIVATE-HOST/upload
+\`\`\`
+
+Do NOT run the HTTP gateway with an internet-facing HTTP port. It is
+**not a full OAuth server, TLS terminator, virus scanner, secure
+multi-tenant SaaS or hard process sandbox**. This adapter is suitable only
+for tightly controlled operator-managed evaluation. Persistent uploads,
+file storage, public onboarding, tenant billing, rate-limit distribution,
+OAuth PKCE/CIMD/DCR support, revocation and long-running jobs are future
+release requirements. Generic static access tokens alone are not a
+production-ready replacement for per-user OAuth.
+
+## ChatGPT and Claude integration boundaries
+
+- **ChatGPT web:** custom plugins connect to remote MCP endpoints or a
+  supported Secure MCP Tunnel. Production-ready hosted authentication should
+  use a vetted OAuth authorization server and protected-resource metadata
+  that ChatGPT supports. Do not select "No authentication" to bypass the
+  protected UCE upload capability.
+- **Claude:** custom remote MCP connectors can use authenticated streaming
+  HTTP, including API-key/bearer headers where supported by the client, or
+  OAuth. Claude Desktop can also run the local stdio version separately.
+- Connection setup and selecting a client permission are explicit **user**
+  actions; creating source code does not connect either product.
+- External ChatGPT and Claude feature access depends on plan, workspace,
+  tool configuration, platform permissions and client ability to provide
+  uploaded file bytes to a particular MCP tool.
+- Never claim "direct file attachment upload works" until an actual
+  ChatGPT and Claude end-to-end user journey has been tested.
+
+## Quality gates
+
+\`\`\`bash
+npm ci
+npm run test:mcp
 npm run test:report-regressions
-```
+npm run check
+\`\`\`
 
-Do not enable an HTTP transport, remote agent credentials, arbitrary
-commands, write operations or native Trilogy in V1. If later required,
-design authentication, user consent, tenant isolation, process-tree resource
-budgets, rate limits and external security review first.
+CI covers real UCE analyzer invocation, saved report integrity,
+source-text uploads, ZIP hashing, traversal/symlink/secret rejection,
+temporary file removal, authenticated HTTP metadata and cross-account
+upload isolation. Cross-platform behavior and high-volume adversarial
+audits still need dedicated independent review.
+
+Browser Phase 5.6 PR #88 is a separate quality hardening gate and
+does not change UCE scoring or grant native Trilogy permissions.
