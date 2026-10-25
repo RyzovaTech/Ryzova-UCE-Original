@@ -84,6 +84,17 @@ export UCE_MCP_PORT=8715
 node tools/mcp/http-server.mjs
 \`\`\`
 
+For the optional, CSP-protected **browser upload form**, set
+`UCE_MCP_ENABLE_UPLOAD_UI=1` and set `UCE_MCP_ALLOWED_ORIGINS` to the exact
+HTTPS site origin where your gateway is published, for example
+`https://YOUR-PRIVATE-HOST`. Then open
+`https://YOUR-PRIVATE-HOST/upload-ui`. The form asks for your private
+bearer token in memory only, allows you to choose a ZIP from your device,
+and returns an upload handle to paste into the same-account ChatGPT/Claude
+MCP tool. This is an **operator-development interface**, not a public
+passwordless upload portal or OAuth login. Protect it at the TLS gateway and
+do not enable it for untrusted users without an audited identity layer.
+
 Behind a separately configured TLS reverse proxy and authenticated client,
 the endpoint is \`https://YOUR-PRIVATE-HOST/mcp\` (Streamable HTTP POST,
 JSON-RPC JSON response), with \`POST /upload\` accepting authenticated
