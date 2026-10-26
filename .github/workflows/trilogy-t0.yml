@@ -1,4 +1,4 @@
-name: Trilogy T0–T6 Accuracy & Safety
+name: Trilogy T0–T7 Accuracy & Safety
 
 on:
   pull_request:
@@ -10,6 +10,7 @@ on:
       - 'testing/trilogy-t4/**'
       - 'testing/trilogy-t5/**'
       - 'testing/trilogy-t6/**'
+      - 'testing/trilogy-t7/**'
       - 'experiments/datalog-z3/**'
       - 'experiments/solver-linux-cgroup.mjs'
       - 'experiments/solver-process-env.mjs'
@@ -21,6 +22,7 @@ on:
       - 'docs/TRILOGY_T4_ACCURACY_AWARE_FUSION.md'
       - 'docs/TRILOGY_T5_ROOT_CAUSE_INTELLIGENCE.md'
       - 'docs/TRILOGY_T6_SAFE_FIX_PROPOSALS.md'
+      - 'docs/TRILOGY_T7_INDEPENDENT_ACCURACY_PROTOCOL.md'
       - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
       - '.github/workflows/trilogy-t0.yml'
       - 'src/lib/analyzer/**'
@@ -74,6 +76,10 @@ jobs:
         run: node --test testing/trilogy-t6/*.test.mjs
       - name: T6 reproducible source-hashed patch preview artifact
         run: node testing/trilogy-t6/run.mjs --output=trilogy-t6-report.json
+      - name: T7 blind paired study and abstention contracts
+        run: node --test testing/trilogy-t7/*.test.mjs
+      - name: T7 accuracy study readiness audit - no fabricated independent labels
+        run: node testing/trilogy-t7/run.mjs --output=trilogy-t7-report.json
       - name: Independent label claim guard
         run: npm run audit:accuracy:baseline
       - name: Upload T0 evidence (no source contents)
@@ -89,4 +95,5 @@ jobs:
             trilogy-t4-report.json
             trilogy-t5-report.json
             trilogy-t6-report.json
+            trilogy-t7-report.json
           if-no-files-found: ignore
