@@ -1,4 +1,4 @@
-name: Trilogy T0 Accuracy & Safety Baseline
+name: Trilogy T0–T3 Evidence & Native Safety
 
 on:
   pull_request:
@@ -7,9 +7,14 @@ on:
       - 'testing/trilogy-t1/**'
       - 'testing/trilogy-t2/**'
       - 'testing/trilogy-t3/**'
+      - 'experiments/datalog-z3/**'
+      - 'experiments/solver-linux-cgroup.mjs'
+      - 'experiments/solver-process-env.mjs'
+      - 'experiments/solver-process-lifecycle.mjs'
       - 'docs/TRILOGY_T1_EVIDENCE_RELIABILITY.md'
       - 'docs/TRILOGY_T2_WHOLE_PROJECT_INTELLIGENCE.md'
       - 'docs/TRILOGY_T3_INDEPENDENT_VERIFICATION.md'
+      - 'docs/TRILOGY_T3B_NATIVE_ISOLATION.md'
       - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
       - '.github/workflows/trilogy-t0.yml'
       - 'src/lib/analyzer/**'
@@ -45,6 +50,8 @@ jobs:
         run: node testing/trilogy-t2/run.mjs --output=trilogy-t2-report.json
       - name: T3 independent model and native isolation gate contracts
         run: node --test testing/trilogy-t3/*.test.mjs
+      - name: T3-B native security and fail-closed tests
+        run: node --test testing/trilogy-t3/native.test.mjs
       - name: T3 reproducible verification artifact
         run: node testing/trilogy-t3/run.mjs --output=trilogy-t3-report.json
       - name: Independent label claim guard
