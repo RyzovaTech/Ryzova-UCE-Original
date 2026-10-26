@@ -23,3 +23,5 @@ Conditional native test expects a real, source-backed modeled Node-engine contra
 ## Remaining release blockers
 
 This kernel cgroup gate does **not** implement a filesystem quota, network namespace, read-only mount policy or Windows Job Objects. Independent signed-commit source provenance, native process tree security audit, representative perf budgets (#81), blinded real repository accuracy labels (#80), and accepted native hard isolation (#77) remain needed before deployment. Source/path hashes are not anonymous to a dictionary attack. Default UCE engine, score and report remain unchanged. Do not merge to main before explicit owner review.
+
+**Hardened native child boundary:** All Soufflé/Z3/cvc5 calls now use one `experiments/solver-safe-spawn.mjs` entrypoint that independently verifies the current kernel cgroup and restricts role-specific argument shapes, shell, process groups, and environment. No security warnings are ignored or suppressed.

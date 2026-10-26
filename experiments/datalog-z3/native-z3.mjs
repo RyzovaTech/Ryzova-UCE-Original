@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawnNativeSolver } from '../solver-safe-spawn.mjs';
 import { performance } from 'node:perf_hooks';
 import semver from 'semver';
 import { buildCvc5SmtLib } from './cvc5.mjs';
@@ -23,7 +23,7 @@ export async function solveWithNativeZ3(constraints, options={}) {
   return new Promise(resolve=>{
     let child;
     try {
-      child=spawn(binary,['-in','-smt2'],{
+      child=spawnNativeSolver('z3',binary,['-in','-smt2'],{
         shell:false,windowsHide:true,stdio:['pipe','pipe','pipe'],
         env:solverProcessEnv(),
         detached:process.platform!=='win32' && process.env.UCE_TRILOGY_EXPERIMENT!=='1',

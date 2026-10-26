@@ -5,29 +5,9 @@
  * Never imports or executes source project code. No network usage by this JS.
  */
 import {createHash} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
-import path from 'node:path';
+import {isKernelSolverCgroup} from '../../experiments/solver-safe-spawn.mjs';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const fail=reason=>({status:'unknown',reason,stages:{souffle:'unknown',z3:'not-run',cvc5:'not-run'}});
-async function independentlyCheckKernelCgroup(){
- if(process.platform!=='linux')return false;
- try{
-   const own=await readFile('/proc/self/cgroup','utf8');
-   const entry=own.split('\n').find(line=>line.startsWith('0::/'));
-   if(!entry)return false;
-   const relative=entry.slice(3).trim();
-   if(!/^\/(?:[a-zA-Z0-9_.-]+\/)*uce-solver-[a-zA-Z0-9]{6,}$/.test(relative))
-     return false;
-   const root=path.resolve('/sys/fs/cgroup','.'+relative);
-   if(!root.startsWith('/sys/fs/cgroup/'))return false;
-   const [memory,pids,cpu,swap,group]=await Promise.all(
-     ['memory.max','pids.max','cpu.max','memory.swap.max','memory.oom.group']
-       .map(f=>readFile(path.join(root,f),'utf8').then(v=>v.trim())));
-   const m=Number(memory);
-   return Number.isSafeInteger(m)&&m>=256*1048576&&m<=2048*1048576&&
-     pids==='64'&&cpu==='50000 100000'&&swap==='0'&&group==='1';
- }catch{return false}
-}
 async function main(){
  let bytes=0,buf='';
  for await (const chunk of process.stdin) {
@@ -35,7 +15,7 @@ async function main(){
    if(bytes>2300000) return fail('worker-input-budget-exceeded');
    buf+=chunk.toString('utf8');
  }
- if(!(await independentlyCheckKernelCgroup()))return fail('kernel-native-isolation-unattested');
+ if(!isKernelSolverCgroup())return fail('kernel-native-isolation-unattested');
  let v;
  try{v=JSON.parse(buf)}catch{return fail('malformed-worker-message')}
  if(!v||!Array.isArray(v.files)||v.files.length!==2||

@@ -4,6 +4,7 @@ import {spawnSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {verifyNativeTrilogy} from './native.mjs';
+import {isKernelSolverCgroup,spawnNativeSolver} from '../../experiments/solver-safe-spawn.mjs';
 import {buildWholeProjectGraph} from '../trilogy-t2/graph.mjs';
 import {load} from '../../scripts/trusted-module-loader.mjs';
 
@@ -147,4 +148,10 @@ test('real native Souffle/Z3/cvc5 conflict fixture under delegated strict cgroup
  assert.equal(result.sourceSnapshotAuthenticated,false);
  assert.equal(result.automaticFixAllowed,false);
  assert.equal(result.hardOomKills,0);
+});
+
+test('three native engines cannot bypass the single kernel-gated subprocess API',()=>{
+ assert.equal(isKernelSolverCgroup(),false);
+ assert.throws(()=>spawnNativeSolver('z3',process.execPath,['-in','-smt2']),/kernel-native-isolation-required/);
+ assert.throws(()=>spawnNativeSolver('sh',process.execPath,['-c','echo unsafe']),/kernel-native-isolation-required/);
 });

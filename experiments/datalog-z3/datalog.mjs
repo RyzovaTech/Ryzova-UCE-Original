@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawnNativeSolver } from '../solver-safe-spawn.mjs';
 import { solverProcessEnv } from '../solver-process-env.mjs';
 import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 import { mkdtemp, readFile, writeFile, rm } from 'node:fs/promises';
@@ -21,7 +21,7 @@ export async function deriveReachability(graph, options = {}) {
     await writeFile(join(dir, 'Root.facts'), '__uce_root__\n');
     const solved = await new Promise(resolve => {
       let child;
-      try { child = spawn(binary, ['-F', dir, '-D', dir, RULES], {
+      try { child = spawnNativeSolver('souffle',binary, ['-F', dir, '-D', dir, RULES], {
         stdio: ['ignore', 'ignore', 'pipe'], shell: false, // In the optional worker, inherit its isolated process group so the
         // outer deadline can kill all nested native descendants together.
         detached: process.platform !== 'win32' && process.env.UCE_TRILOGY_EXPERIMENT !== '1',

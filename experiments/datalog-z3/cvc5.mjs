@@ -1,5 +1,5 @@
 import semver from 'semver';
-import { spawn } from 'node:child_process';
+import { spawnNativeSolver } from '../solver-safe-spawn.mjs';
 import { solverProcessEnv } from '../solver-process-env.mjs';
 import { terminateSolverProcessTree } from '../solver-process-lifecycle.mjs';
 import { performance } from 'node:perf_hooks';
@@ -115,7 +115,7 @@ export async function solveWithCvc5(constraints, options = {}) {
   return new Promise(resolve => {
     let child;
     try {
-      child = spawn(executable, ['--lang=smt2', '--tlimit=' + solverMs, '-'], {
+      child = spawnNativeSolver('cvc5',executable, ['--lang=smt2', '--tlimit=' + solverMs, '-'], {
         stdio: ['pipe', 'pipe', 'pipe'], shell: false,
         env: solverProcessEnv(),
         // Standalone execution uses a new group; nested optional workers share
