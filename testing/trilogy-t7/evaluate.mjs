@@ -74,7 +74,11 @@ function readReviews(reviews,cases,studyId){
     throw Error('T7 dual review must declare distinct reviewers');
   dual++;
   let outcome='unknown';
-  if(r[0].decision===r[1].decision)outcome=r[0].decision;
+  if(r[0].decision===r[1].decision){
+   if(Object.hasOwn(row,'adjudicator'))
+    throw Error('T7 unsolicited adjudicator on agreeing reviews');
+   outcome=r[0].decision;
+  }
   else if(row.adjudicator!==undefined){
    const a=row.adjudicator;
    if(!plain(a)||!ID.test(a.reviewerAlias??'')||
