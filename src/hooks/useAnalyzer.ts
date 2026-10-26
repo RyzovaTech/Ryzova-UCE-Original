@@ -1,7 +1,7 @@
 import { readArchiveDownload, type DownloadProgress } from '@/lib/analyzer/download';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
-import { markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
+import { canCacheAnalysisInput, canCacheAnalysisResult, markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
 import { persistLargeReport } from '@/lib/storage/large-reports';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
 import { getGitHubArchiveUrl, parseGitHubRepositoryUrl } from '@/lib/analyzer/repository';
@@ -157,20 +157,21 @@ export function useAnalyzer() {
         await delay(0);
         const prepared = prepareAnalysisInput({ files, fileName: name, source, scanStats });
         resumableRef.current = prepared.input;
-        const cached = loadCachedAnalysis(prepared.cacheKey);
+        const candidate = canCacheAnalysisInput(prepared.input) ? loadCachedAnalysis(prepared.cacheKey) : null;
+        const cached = candidate && canCacheAnalysisResult(candidate) ? candidate : null;
         let result: AnalysisResult;
         if (cached) {
-          result = markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, createdAt: new Date().toISOString(), source }, true);
+          result = markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`, createdAt: new Date().toISOString(), source }, true, false);
           safeSetState((s) => ({ ...s, stage: 'reporting', progress: 95, cacheHit: true, message: 'Reused a matching local analysis cache entry.' }));
         } else {
           result = await executeInWorker(prepared.input, requestId, workerRef, workerRejectRef, (stage, progress, message) => safeSetState((s) => ({ ...s, stage, progress, message })), (preview) => safeSetState((s) => ({ ...s, preview })));
-          saveCachedAnalysis(prepared.cacheKey, result);
+          if (canCacheAnalysisInput(prepared.input) && canCacheAnalysisResult(result)) saveCachedAnalysis(prepared.cacheKey, result);
         }
         ensureCurrentRequest(requestId);
         await storeAnalysisReport(result);
         resumableRef.current = null;
         clearAnalysisTimeout();
-        safeSetState({ stage: 'completed', result, error: null, progress: 100, message: cached ? 'Analysis complete from local cache.' : 'Analysis complete in a background worker.', cacheHit: Boolean(cached), canResume: false });
+        safeSetState({ stage: 'completed', result, error: null, progress: 100, message: cached ? 'Analysis complete from local cache.' : result.trust?.execution?.worker ? 'Analysis complete in a background worker.' : 'Analysis complete using the local fallback.', cacheHit: Boolean(cached), canResume: false });
         if (requestId === requestIdRef.current) runningRef.current = false;
         return result;
       } catch (e) {
@@ -214,7 +215,7 @@ export function useAnalyzer() {
         const cleanup = temporaryArchiveCleanupRef.current;
         temporaryArchiveCleanupRef.current = null;
         await cleanup?.().catch(() => undefined);
-        safeSetState({ stage: 'completed', result, error: null, progress: 100, message: cached ? 'Analysis complete from local cache.' : 'Analysis complete in a background worker.', cacheHit: cached, canResume: false });
+        safeSetState({ stage: 'completed', result, error: null, progress: 100, message: cached ? 'Analysis complete from local cache.' : result.trust?.execution?.worker ? 'Analysis complete in a background worker.' : 'Analysis complete using the local fallback.', cacheHit: cached, canResume: false });
         runningRef.current = false;
         return result;
       } catch (e) {
@@ -374,7 +375,7 @@ async function executeInWorker(
 ): Promise<AnalysisResult> {
   if (typeof Worker === 'undefined') {
     const { analyzeProject } = await import('@/lib/analyzer/analyzer');
-    return markExecution(analyzeProject(input), false);
+    return markExecution(analyzeProject(input), false, false);
   }
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('../lib/analyzer/analysis.worker.ts', import.meta.url), { type: 'module' });
@@ -407,12 +408,13 @@ async function executeArchiveInWorker(
     const [{ readZip }, { analyzeProject }] = await Promise.all([import('@/lib/analyzer/zip'), import('@/lib/analyzer/analyzer')]);
     const { files, name, scanStats } = await readZip(file, (done, total) => onProgress('reading', 20 + Math.floor(19 * done / Math.max(total, 1)), `Reading selected files: ${done.toLocaleString()} / ${total.toLocaleString()}.`), displayName);
     const prepared = prepareAnalysisInput({ files, fileName: name, source, scanStats });
-    const cached = prepared.input.scanStats.sampled || prepared.input.scanStats.truncated ? null : loadCachedAnalysis(prepared.cacheKey);
-    const result = cached ? markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}`, createdAt: new Date().toISOString(), source }, true)
+    const candidate = canCacheAnalysisInput(prepared.input) ? loadCachedAnalysis(prepared.cacheKey) : null;
+    const cached = candidate && canCacheAnalysisResult(candidate) ? candidate : null;
+    const result = cached ? markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}`, createdAt: new Date().toISOString(), source }, true, false)
       : markExecution(prepared.input.scanStats.sampled || prepared.input.scanStats.truncated
         ? await (await import('@/lib/analyzer/archive-batch-runner')).analyzeArchiveBatches(file, prepared.input, (checked, eligible) => onProgress('analyzing', 55 + Math.floor(36 * checked / Math.max(eligible, 1)), `Checking source batches: ${checked.toLocaleString()} / ${eligible.toLocaleString()}.`))
-        : analyzeProject(prepared.input), false);
-    if (!cached && !prepared.input.scanStats.sampled && !prepared.input.scanStats.truncated) saveCachedAnalysis(prepared.cacheKey, result);
+        : analyzeProject(prepared.input), false, false);
+    if (!cached && canCacheAnalysisInput(prepared.input) && canCacheAnalysisResult(result)) saveCachedAnalysis(prepared.cacheKey, result);
     return { result, cached: Boolean(cached) };
   }
   return new Promise((resolve, reject) => {
@@ -427,7 +429,8 @@ async function executeArchiveInWorker(
       if (event.data.type === 'preview' && event.data.preview) onPreview(event.data.preview);
       if (event.data.type === 'prepared' && event.data.cacheKey) {
         cacheable = event.data.cacheable === true;
-        const cached = cacheable ? loadCachedAnalysis(event.data.cacheKey) : null;
+        const candidate = cacheable ? loadCachedAnalysis(event.data.cacheKey) : null;
+        const cached = candidate && canCacheAnalysisResult(candidate) ? candidate : null;
         if (cached) {
           finish();
           resolve({ result: markExecution({ ...cached, id: `rpt_${Date.now().toString(36)}`, createdAt: new Date().toISOString(), source }, true), cached: true });
@@ -435,7 +438,7 @@ async function executeArchiveInWorker(
       }
       if (event.data.type === 'complete' && event.data.result) {
         finish();
-        if (cacheable && event.data.cacheKey) saveCachedAnalysis(event.data.cacheKey, event.data.result);
+        if (cacheable && event.data.cacheKey && canCacheAnalysisResult(event.data.result)) saveCachedAnalysis(event.data.cacheKey, event.data.result);
         resolve({ result: event.data.result, cached: false });
       }
       if (event.data.type === 'error') { finish(); reject(new Error(event.data.message ?? 'Worker analysis failed.')); }
