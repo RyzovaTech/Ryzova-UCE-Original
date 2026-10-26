@@ -39,3 +39,5 @@ T2 contracts include positive examples and **negative controls**: comments/strin
 - T3 may consume these graph facts as **untrusted typed inputs** after separate evidence authentication, with strict process isolation and fail-closed Unknown on tool failures.
 
 **Release posture: review-only, accuracy unknown, developer-safe fixes disabled.**
+
+**Additional safety guard:** A parse failure, unreadable source, invalid manifest, nonliteral dynamic import or hard budget limit globally downgrades prior unresolved-import review suggestions to `unknown`. Source candidates without readable bytes cannot be marked `source-supported`. Exact version strings with minors/patches are excluded from major-only runtime reasoning.

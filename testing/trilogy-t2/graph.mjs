@@ -48,8 +48,9 @@ function parseSource(file, content) {
   const kind = ext==='.tsx'||ext==='.jsx' ? ts.ScriptKind.TSX :
     ext==='.ts'||ext==='.mts'||ext==='.cts' ? ts.ScriptKind.TS : ts.ScriptKind.JS;
   const ast=ts.createSourceFile(file,content,ts.ScriptTarget.Latest,true,kind);
-  if (ast.parseDiagnostics?.length) return {imports:[],failed:true};
+  if (ast.parseDiagnostics?.length) return {imports:[],failed:true,unmodeledDynamic:0};
   const imports=[];
+  let unmodeledDynamic=0;
   const capture=(spec,node,kind)=>{
     if (typeof spec !== 'string' || !spec || spec.length>LIMITS.specifierChars) return;
     const start=ast.getLineAndCharacterOfPosition(node.getStart(ast)).line+1;
@@ -62,18 +63,21 @@ function parseSource(file, content) {
     if (ts.isImportEqualsDeclaration(node)&&ts.isExternalModuleReference(node.moduleReference)&&
         node.moduleReference.expression && ts.isStringLiteral(node.moduleReference.expression))
       capture(node.moduleReference.expression.text,node,'import-equals');
-    if (ts.isCallExpression(node)&&node.arguments.length===1 &&
-        ts.isStringLiteral(node.arguments[0])) {
-      const call = node.expression;
-      if (call.kind===ts.SyntaxKind.ImportKeyword)
-        capture(node.arguments[0].text,node,'dynamic-import-literal');
-      else if (ts.isIdentifier(call)&&call.text==='require')
-        capture(node.arguments[0].text,node,'require-literal');
+    if (ts.isCallExpression(node)) {
+      const call=node.expression;
+      const isDynamic=call.kind===ts.SyntaxKind.ImportKeyword ||
+        (ts.isIdentifier(call)&&call.text==='require');
+      if(isDynamic) {
+        if(node.arguments.length===1 && ts.isStringLiteral(node.arguments[0])) {
+          capture(node.arguments[0].text,node,
+            call.kind===ts.SyntaxKind.ImportKeyword?'dynamic-import-literal':'require-literal');
+        } else unmodeledDynamic++;
+      }
     }
     ts.forEachChild(node,visit);
   };
   visit(ast);
-  return {imports,failed:false};
+  return {imports,failed:false,unmodeledDynamic};
 }
 function targetCandidates(origin,spec) {
   if (!/^\.{1,2}\//.test(spec) || /[?#\\\x00-\x1f\x7f]/.test(spec)) return null;
@@ -103,7 +107,7 @@ function restrictedNodeRange(value,pinMajor) {
   if (typeof value!=='string'||!Number.isSafeInteger(pinMajor)) return 'unknown';
   // Conservative subset only; unsupported range syntax is never assumed false.
   const compact=value.trim();
-  const exact=/^v?(\d{1,3})(?:\.\d+(?:\.\d+)?)?$/.exec(compact);
+  const exact=/^v?(\d{1,3})$/.exec(compact);
   if(exact) return Number(exact[1])===pinMajor?'modeled-overlap':'modeled-disjoint';
   const lower=/^>=\s*(\d{1,3})$/.exec(compact);
   if(lower) return pinMajor<Number(lower[1])?'modeled-disjoint':'modeled-overlap';
@@ -138,7 +142,7 @@ export function buildWholeProjectGraph(report,sourceFiles,options) {
     report.classification?.isSoftware===false;
   const missingReviewAllowed=opts.inventoryComplete && !partial && unavailable===0;
   const edges=[],decisions=[];
-  let skippedDynamic=0,parseFailures=0,limitReached=false,packageProblems=0;
+  let skippedDynamic=0,unmodeledDynamic=0,parseFailures=0,limitReached=false,packageProblems=0;
   let packages=0;
   const packagesByName=new Map();
   const push=(collection,value,max)=>{
@@ -179,6 +183,7 @@ export function buildWholeProjectGraph(report,sourceFiles,options) {
     if(content===null){parseFailures++;continue}
     const parsed=parseSource(file,content);
     if(parsed.failed){parseFailures++;continue}
+    unmodeledDynamic+=parsed.unmodeledDynamic;
     for(const item of parsed.imports) {
       if(edges.length>=LIMITS.edges){limitReached=true;break}
       const spec=item.specifier;
@@ -190,7 +195,7 @@ export function buildWholeProjectGraph(report,sourceFiles,options) {
         const target=existing.length===1?existing[0]:null;
         const status=!candidates?'unknown':
           existing.length>1?'unknown':
-          existing.length===1 ? 'source-supported':
+          existing.length===1 ? (found.get(target).content===null?'unknown':'source-supported'):
           missingReviewAllowed?'review-required':'unknown';
         edges.push(fact('relative-source-import',file,target,
           JSON.stringify([spec,candidates?.length??0,existing.length]),status,item.kind,item.line));
@@ -205,6 +210,12 @@ export function buildWholeProjectGraph(report,sourceFiles,options) {
     }
     if(limitReached)break;
   }
+  // File parser failures, incomplete manifests, dynamic imports and hard caps
+  // invalidate any apparent negative absence claims discovered earlier.
+  const incompleteGraph=limitReached||parseFailures>0||packageProblems>0||
+    unavailable>0||unmodeledDynamic>0;
+  if(incompleteGraph)for(const edge of edges)
+    if(edge.status==='review-required')edge.status='unknown';
   edges.sort((a,b)=>a.id.localeCompare(b.id));
   decisions.sort((a,b)=>a.id.localeCompare(b.id));
   const counts={relationships:edges.length,sourceSupported:edges.filter(x=>x.status==='source-supported').length,
@@ -212,7 +223,7 @@ export function buildWholeProjectGraph(report,sourceFiles,options) {
     unknown:edges.filter(x=>x.status==='unknown').length,
     runtimeDecisions:decisions.length,runtimeReviewRequired:decisions.filter(x=>x.status==='review-required').length,
     parseOrUnreadableFiles:parseFailures,manifestReadFailures:packageProblems,
-    unmodeledPackageImports:skippedDynamic};
+    unmodeledPackageImports:skippedDynamic,unmodeledDynamicImports:unmodeledDynamic};
   const result={
     schemaVersion:1,stage:'Trilogy-T2',mode:'read-only-independent-source-graph',
     canonicalEvidenceSha256:projection,
@@ -223,7 +234,7 @@ export function buildWholeProjectGraph(report,sourceFiles,options) {
     coverage:{
       filesListed:paths.length,filesReadable:paths.length-unavailable,readableBytes,
       truncatedByBudget:limitReached,parseFailures,
-      negativeAbsenceEligible:missingReviewAllowed&&!limitReached&&parseFailures===0&&packageProblems===0,
+      negativeAbsenceEligible:missingReviewAllowed&&!incompleteGraph,
     },
     counts,edges,decisions,
     originalCoreScore:report.score.overall,originalIssueCount:report.issues.length,

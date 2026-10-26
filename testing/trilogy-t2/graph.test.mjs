@@ -135,3 +135,35 @@ test('edge budget advertises incomplete traversal and prevents negative absence'
  assert.equal(o.coverage.truncatedByBudget,true);
  assert.equal(o.coverage.negativeAbsenceEligible,false);
 });
+
+test('parser failure elsewhere downgrades earlier unresolved import from review to Unknown',()=>{
+ const o=build(report(),[file('src/a.ts',"import './missing';"),
+  file('src/z.ts',"import { from './broken';")],{inventoryComplete:true});
+ assert.equal(o.coverage.parseFailures,1);
+ assert.equal(o.counts.reviewRequired,0);
+ assert.equal(o.counts.unknown,1);
+ assert.equal(o.coverage.negativeAbsenceEligible,false);
+});
+test('nonliteral imports make source completeness unknown and cannot confirm absence',()=>{
+ const o=build(report(),[file('src/a.ts',
+  "import './missing';\nconst part = './actual';\nimport(part);")],{inventoryComplete:true});
+ assert.equal(o.counts.unmodeledDynamicImports,1);
+ assert.equal(o.counts.reviewRequired,0);
+ assert.equal(o.counts.unknown,1);
+ assert.equal(o.coverage.negativeAbsenceEligible,false);
+});
+test('an unreadable imported target cannot count as source-supported',()=>{
+ const o=build(report(),[
+  file('src/a.ts',"import './target';"),
+  {path:'src/target.ts',content:undefined},
+ ],{inventoryComplete:true});
+ assert.equal(o.counts.sourceSupported,0);
+ assert.equal(o.counts.unknown,1);
+});
+test('unsupported minor-range exact pins remain Unknown rather than modeled overlap',()=>{
+ const o=build(report(),[
+  file('package.json','{"engines":{"node":"22.4.0"}}'),
+  file('.nvmrc','22'),
+ ]);
+ assert.equal(o.decisions[0].status,'unknown');
+});
