@@ -10,6 +10,7 @@ import { load } from '../../scripts/trusted-module-loader.mjs';
 const { ALL_RULES } = load('src/lib/compatibility/rules/index.ts');
 const { runAnalysisWithDiagnostics } = load('src/lib/compatibility/analysis/engine.ts');
 const { analyzeProject } = load('src/lib/analyzer/analyzer.ts');
+const { finishBatchCoverage } = load('src/lib/analyzer/batch-coverage.ts');
 const { describeReportReadiness } = load('src/lib/report/readiness.ts');
 const { exportMarkdown } = load('src/lib/report/export.ts');
 const file = (name, content) => ({ path: name, content, size: Buffer.byteLength(content), isDirectory: false });
@@ -75,7 +76,24 @@ test('canonical report is partial and hides readiness score after a compatibilit
   assert.ok(!JSON.stringify(report).includes('sensitive example source'));
 });
 
-test('UEC CI gate rejects a report with failed rules even if its numeric score is 100', () => {
+test('archive coverage finalization cannot turn execution failure into a full scan', () => {
+  ALL_RULES.push(badRule);
+  let report;
+  try { report = analyzeProject(input()); }
+  finally { ALL_RULES.pop(); }
+  finishBatchCoverage(report, {
+    eligibleFiles: 2, nextIndex: 2, textFilesEligible: 2,
+    filesWithContent: 0, unreadableTextFiles: 0, bytesRead: 0,
+  }, 2, report.summary.scanStats.projectSize, { security: 0, browser: 0 },
+  { sampled: false, truncated: false });
+  assert.equal(report.summary.analysisCoverage.status, 'partial');
+  assert.equal(report.summary.scanStats.truncated, true);
+  assert.equal(report.summary.scanStats.ruleFailures.length, 1);
+  assert.match(report.summary.analysisCoverage.reason, /compatibility rule/);
+  assert.equal(describeReportReadiness(report).displayScore, null);
+});
+
+test('UCE CI gate rejects a report with failed rules even if its numeric score is 100', () => {
   const report = analyzeProject(input());
   report.score.overall = 100;
   report.summary.scanStats.ruleFailures = [{ ruleId: badRule.id, category: 'structure', kind: 'exception' }];
