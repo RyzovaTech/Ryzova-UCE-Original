@@ -6,8 +6,10 @@ on:
       - 'testing/trilogy-t0/**'
       - 'testing/trilogy-t1/**'
       - 'testing/trilogy-t2/**'
+      - 'testing/trilogy-t3/**'
       - 'docs/TRILOGY_T1_EVIDENCE_RELIABILITY.md'
       - 'docs/TRILOGY_T2_WHOLE_PROJECT_INTELLIGENCE.md'
+      - 'docs/TRILOGY_T3_INDEPENDENT_VERIFICATION.md'
       - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
       - '.github/workflows/trilogy-t0.yml'
       - 'src/lib/analyzer/**'
@@ -41,6 +43,10 @@ jobs:
         run: node --test testing/trilogy-t2/*.test.mjs
       - name: T2 reproducible whole-project graph audit
         run: node testing/trilogy-t2/run.mjs --output=trilogy-t2-report.json
+      - name: T3 independent model and native isolation gate contracts
+        run: node --test testing/trilogy-t3/*.test.mjs
+      - name: T3 reproducible verification artifact
+        run: node testing/trilogy-t3/run.mjs --output=trilogy-t3-report.json
       - name: Independent label claim guard
         run: npm run audit:accuracy:baseline
       - name: Upload T0 evidence (no source contents)
@@ -52,4 +58,5 @@ jobs:
             trilogy-t0-report.json
             trilogy-t1-report.json
             trilogy-t2-report.json
+            trilogy-t3-report.json
           if-no-files-found: ignore
