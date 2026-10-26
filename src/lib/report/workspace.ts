@@ -1,4 +1,5 @@
 import type { AnalysisResult, Severity } from '../analyzer/types';
+import { describeReportReadiness } from './readiness';
 
 export interface WorkspaceFinding {
   id: string;
@@ -11,6 +12,8 @@ export interface WorkspaceFinding {
   evidence: string;
   recommendation: string;
   ruleId?: string;
+  /** The exact V3 pack that emitted this observation, never inferred from its title. */
+  packId?: string;
   confidence?: number | string;
   scope?: string;
   falsePositivePossible?: boolean;
@@ -27,11 +30,14 @@ export interface FindingGroup {
 export interface ScanComparison {
   currentId: string;
   baselineId: string;
-  scoreDelta: number;
+  /** Null when either scan has incomplete scope; a numeric delta would mislead. */
+  scoreDelta: number | null;
+  scoreComparable: boolean;
+  resolutionComparable: boolean;
   newFindings: WorkspaceFinding[];
   resolvedFindings: WorkspaceFinding[];
   persistingFindings: WorkspaceFinding[];
-  categoryDeltas: Array<{ id: string; label: string; current: number; baseline: number; delta: number }>;
+  categoryDeltas: Array<{ id: string; label: string; current: number | null; baseline: number | null; delta: number | null }>;
 }
 
 export interface ReportReviewState {
@@ -47,7 +53,11 @@ export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFindi
     ...(report.stack.securityIntelligence?.findings ?? []).map(item => `batch-security:${item.id}`),
     ...(report.stack.browserCompatibility?.findings ?? []).map(item => `batch-browser:${item.file}:${item.id}:${item.affectedBrowsers.join(',')}`),
   ]);
-  const findings: WorkspaceFinding[] = report.issues.filter((item) => !item.id.startsWith('security-intelligence-') && !mirrored.has(item.id)).map((item) => ({
+  // Only remove generated security mirrors if their canonical source exists.
+  // Legacy/orphaned security-intelligence-* issues remain reviewable.
+  const securityMirrors = new Set((report.stack.securityIntelligence?.findings ?? [])
+    .map(item => `security-intelligence-${item.ruleId ?? item.title}`));
+  const findings: WorkspaceFinding[] = report.issues.filter((item) => !securityMirrors.has(item.id) && !mirrored.has(item.id)).map((item) => ({
     id: `compatibility:${item.id}`,
     title: item.title,
     severity: item.severity,
@@ -109,15 +119,17 @@ export function collectWorkspaceFindings(report: AnalysisResult): WorkspaceFindi
     });
   }
 
-  for (const item of report.stack.v3RulePlatform?.findings ?? []) {
-    if (!item.packId.includes('.v3-phase4.') && !item.packId.includes('.v3-phase5.')) continue;
+  // Phase 2/3 and newer V3 packs have the same provenance and review rights
+  // as Phase 4/5. Never silently discard a pack based on its naming convention.
+  for (const [index, item] of (report.stack.v3RulePlatform?.findings ?? []).entries()) {
     findings.push({
-      id: 'v3:' + item.ruleId + ':' + item.file + ':' + (item.line ?? 0),
+      id: 'v3:' + item.packId + ':' + item.ruleId + ':' + item.file + ':' + (item.line ?? 0) + ':' + index,
       title: item.title, severity: item.severity, module: 'v3/' + item.module,
       file: item.file, line: item.line,
       description: 'Evidence-linked static review signal; runtime behavior and impact are not proven.',
       evidence: item.evidence.map(evidence => evidence.detail + (evidence.relatedFile ? ' (related: ' + evidence.relatedFile + (evidence.relatedLine ? ':' + evidence.relatedLine : '') + ')' : '')).join('; '),
-      recommendation: item.recommendation, ruleId: item.ruleId, confidence: item.confidence,
+      recommendation: item.recommendation, ruleId: item.ruleId, packId: item.packId,
+      confidence: item.confidence,
       falsePositivePossible: true,
     });
   }
@@ -147,24 +159,45 @@ export function compareReports(current: AnalysisResult, baseline: AnalysisResult
   const baselineFindings = collectWorkspaceFindings(baseline);
   const currentByKey = new Map(currentFindings.map((item) => [findingFingerprint(item), item]));
   const baselineByKey = new Map(baselineFindings.map((item) => [findingFingerprint(item), item]));
-  const baselineCategories = new Map(baseline.categories.map((item) => [item.id, item.score]));
+  const currentPartial = describeReportReadiness(current).partial;
+  const baselinePartial = describeReportReadiness(baseline).partial;
+  const comparable = !currentPartial && !baselinePartial &&
+    current.classification?.isSoftware !== false && baseline.classification?.isSoftware !== false;
+  const baselineCategories = new Map(baseline.categories.map(item => [item.id, item]));
 
   return {
     currentId: current.id,
     baselineId: baseline.id,
-    scoreDelta: current.score.overall - baseline.score.overall,
+    scoreDelta: comparable ? current.score.overall - baseline.score.overall : null,
+    scoreComparable: comparable,
+    resolutionComparable: comparable,
     newFindings: currentFindings.filter((item) => !baselineByKey.has(findingFingerprint(item))),
-    resolvedFindings: baselineFindings.filter((item) => !currentByKey.has(findingFingerprint(item))),
+    // A missing finding in a partial scan is not evidence of remediation.
+    resolvedFindings: comparable ? baselineFindings.filter((item) => !currentByKey.has(findingFingerprint(item))) : [],
     persistingFindings: currentFindings.filter((item) => baselineByKey.has(findingFingerprint(item))),
     categoryDeltas: current.categories.map((item) => {
-      const baselineScore = baselineCategories.get(item.id) ?? item.score;
-      return { id: item.id, label: item.label, current: item.score, baseline: baselineScore, delta: item.score - baselineScore };
+      const prior = baselineCategories.get(item.id);
+      const bothAssessed = comparable && item.status !== 'unknown' && prior?.status !== 'unknown' && !!prior &&
+        (current.score.applicableCategories?.includes(item.id) ?? true) &&
+        (baseline.score.applicableCategories?.includes(item.id) ?? true);
+      return { id: item.id, label: item.label,
+        current: bothAssessed ? item.score : null,
+        baseline: bothAssessed ? prior.score : null,
+        delta: bothAssessed ? item.score - prior.score : null };
     }),
   };
 }
 
 export function findingFingerprint(finding: WorkspaceFinding): string {
-  return [finding.module, finding.module.startsWith('v3/') ? finding.ruleId : normalize(finding.title), normalize(finding.file), finding.line ?? 0].join('|');
+  // Strong report identity: distinct rules, evidence, severity and locations
+  // remain independent even when title and file are identical.
+  // V3 array-index display IDs are intentionally excluded for cross-scan stability.
+  return JSON.stringify([
+    finding.module, finding.packId ?? '', finding.ruleId ?? finding.id,
+    normalize(finding.file), finding.line ?? 0, finding.severity,
+    normalize(finding.title), normalize(finding.evidence),
+    normalize(finding.description), normalize(finding.recommendation),
+  ]);
 }
 
 export function compatibleProjectReports(current: AnalysisResult, reports: AnalysisResult[]): AnalysisResult[] {
