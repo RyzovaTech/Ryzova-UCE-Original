@@ -120,3 +120,24 @@ test('repeated inputs keep result deterministic and never leak raw source fragme
  assert.ok(!JSON.stringify(result).includes('src/root.ts'));
  assert.equal(result.patchesGenerated,0);
 });
+
+test('caller-unverified inventory forces Unknown despite agreeing traversal algorithms',()=>{
+ const result=verifyTrilogyModel(report(),files(),{
+  enabled:true,roots:['src/root.ts'],inventoryComplete:false});
+ assert.equal(result.status,'unknown');
+ assert.equal(result.modelAgreement,false);
+});
+test('unresolved relative import and unmodeled external import force Unknown',()=>{
+ const a=verifyTrilogyModel(report(),[
+  file('src/root.ts',"import './missing';")],opts);
+ assert.equal(a.status,'unknown');
+ assert.equal(a.modelAgreement,false);
+ const b=verifyTrilogyModel(report(),[
+  file('src/root.ts',"import 'external-package';")],opts);
+ assert.equal(b.status,'unknown');
+ assert.equal(b.modelAgreement,false);
+});
+test('T3 explicitly rejects misleading nonboolean inventory-complete assertions',()=>{
+ assert.throws(()=>verifyTrilogyModel(report(),files(),
+  {enabled:true,inventoryComplete:'yes',roots:['src/root.ts']}));
+});

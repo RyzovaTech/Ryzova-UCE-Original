@@ -94,6 +94,7 @@ export function verifyTrilogyModel(report,sourceFiles,options={}) {
   if(!options || typeof options!=='object'||Array.isArray(options) ||
      typeof options.enabled!=='boolean' ||
      (options.nativeSolvers!==undefined && typeof options.nativeSolvers!=='boolean')||
+     (options.inventoryComplete!==undefined && typeof options.inventoryComplete!=='boolean')||
      !rootsValid(options.roots??[]))
     throw Error('T3 invalid verification authorization/options');
   const roots=options.roots??[];
@@ -137,8 +138,11 @@ export function verifyTrilogyModel(report,sourceFiles,options={}) {
   const incomplete=graph.coverage.truncatedByBudget||
     graph.coverage.parseFailures>0 ||
     graph.coverage.filesReadable!==graph.coverage.filesListed ||
-    graph.inputScope==='partial-UCE-report' ||
-    graph.counts.unmodeledDynamicImports>0||
+    graph.inputScope!=='caller-asserted-inventory' ||
+    graph.counts.unknown>0 ||
+    graph.counts.reviewRequired>0 ||
+    graph.counts.unmodeledPackageImports>0 ||
+    graph.counts.unmodeledDynamicImports>0 ||
     graph.counts.manifestReadFailures>0;
   const status=incomplete?'unknown':'model-consistent-review-only';
   const conclusion=result(status,incomplete?'incomplete-or-partial-source-model':

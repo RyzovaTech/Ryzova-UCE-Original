@@ -32,3 +32,5 @@ node testing/trilogy-t3/run.mjs --output=trilogy-t3-report.json
 Dedicated workflow verifies T0–T3 contracts, frozen corpus, deterministic source-provenance output. Full UCE CI and CodeQL must pass on the **same** commit. No merge, manual production deployment, MCP publication or automatic fix.
 
 **Accurate claim:** T3-A checks modeled graph consistency. Independent native Soufflé/Z3/cvc5 solver verification remains **not-run** and is an explicit release blocker, not a skipped success.
+
+**Final T3-A hardening:** Even if BFS and DFS agree, a missing caller inventory declaration, unresolved relative target, unmodeled external dependency import, parser failure or truncated scope yields **Unknown** instead of a positive model-consistency status. Source inventory booleans are type-checked; client-supplied attestations do not grant native process execution.
