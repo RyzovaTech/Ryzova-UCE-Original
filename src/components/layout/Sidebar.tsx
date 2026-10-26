@@ -14,7 +14,7 @@ const navItems = [
 
 export function Sidebar() {
   return (
-    <aside className="hidden w-60 flex-col border-r bg-card md:flex">
+    <aside className="hidden w-60 shrink-0 flex-col border-r bg-card md:flex">
       <Link to="/" className="flex h-16 items-center gap-2 border-b px-5">
         <UceLogo size="sm" />
       </Link>

@@ -71,9 +71,9 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
   };
 
   return (
-    <div className="space-y-5 animate-slide-up">
+    <div className="min-w-0 w-full max-w-full space-y-5 animate-slide-up">
       <ReportHeader report={report} mode={mode} onModeChange={changeMode} />
-      <nav aria-label="Report sections" className="no-print overflow-x-auto rounded-xl border bg-card p-1.5">
+      <nav aria-label="Report sections" className="no-print min-w-0 w-full max-w-full overflow-x-auto rounded-xl border bg-card p-1.5">
         <div className="flex min-w-max gap-1">
           {NAV_ITEMS.filter(item => UNIFIED_INTELLIGENCE_UI_ENABLED || item.id !== 'intelligence').map((item) => {
             const Icon = item.icon;
@@ -93,7 +93,7 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
         </div>
       </nav>
 
-      <main>
+      <main className="min-w-0 w-full max-w-full">
         {section === 'overview' && <OverviewView report={report} history={history} mode={mode} onNavigate={setSection} />}
         {UNIFIED_INTELLIGENCE_UI_ENABLED && section === 'intelligence' && <UnifiedIntelligencePanel key={report.id} report={report} />}
         {section === 'technology' && <TechnologyView report={report} mode={mode} />}
@@ -113,7 +113,7 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
   const exportSecurityReport = () => downloadFile(`${report.summary.name}-uce-results.sarif`, exportSarif(report), 'application/sarif+json');
   const exportShareableSummary = () => downloadFile(`${report.summary.name}-uce-shareable-summary.json`, JSON.stringify(createPortableReportSummary(report), null, 2), 'application/json');
   return (
-    <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+    <header className="flex min-w-0 w-full max-w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="truncate text-2xl font-semibold tracking-tight">{report.summary.name}</h1>
@@ -122,8 +122,8 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
         </div>
         <p className="mt-1 text-xs text-muted-foreground">UCE Engine {report.analysisVersion} · {new Date(report.createdAt).toLocaleString()}</p>
       </div>
-      <div className="no-print flex flex-wrap items-center gap-2">
-        <div className="flex rounded-lg border bg-muted/30 p-1" aria-label="Report detail mode">
+      <div className="no-print flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex max-w-full flex-wrap rounded-lg border bg-muted/30 p-1" aria-label="Report detail mode">
           {(['simple', 'developer', 'expert'] as UserMode[]).map((item) => (
             <button key={item} type="button" onClick={() => onModeChange(item)} aria-pressed={mode === item} className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === item ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{item}</button>
           ))}
