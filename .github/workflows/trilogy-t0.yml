@@ -1,4 +1,4 @@
-name: Trilogy T0–T3 Evidence & Native Safety
+name: Trilogy T0–T4 Accuracy & Safety
 
 on:
   pull_request:
@@ -7,6 +7,7 @@ on:
       - 'testing/trilogy-t1/**'
       - 'testing/trilogy-t2/**'
       - 'testing/trilogy-t3/**'
+      - 'testing/trilogy-t4/**'
       - 'experiments/datalog-z3/**'
       - 'experiments/solver-linux-cgroup.mjs'
       - 'experiments/solver-process-env.mjs'
@@ -15,6 +16,7 @@ on:
       - 'docs/TRILOGY_T2_WHOLE_PROJECT_INTELLIGENCE.md'
       - 'docs/TRILOGY_T3_INDEPENDENT_VERIFICATION.md'
       - 'docs/TRILOGY_T3B_NATIVE_ISOLATION.md'
+      - 'docs/TRILOGY_T4_ACCURACY_AWARE_FUSION.md'
       - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
       - '.github/workflows/trilogy-t0.yml'
       - 'src/lib/analyzer/**'
@@ -56,6 +58,10 @@ jobs:
         run: node --test testing/trilogy-t3/native.test.mjs
       - name: T3 reproducible verification artifact
         run: node testing/trilogy-t3/run.mjs --output=trilogy-t3-report.json
+      - name: T4 accuracy-aware fusion and false-merge regression contracts
+        run: node --test testing/trilogy-t4/*.test.mjs
+      - name: T4 reproducible source-evidence fusion artifact
+        run: node testing/trilogy-t4/run.mjs --output=trilogy-t4-report.json
       - name: Independent label claim guard
         run: npm run audit:accuracy:baseline
       - name: Upload T0 evidence (no source contents)
@@ -68,4 +74,5 @@ jobs:
             trilogy-t1-report.json
             trilogy-t2-report.json
             trilogy-t3-report.json
+            trilogy-t4-report.json
           if-no-files-found: ignore
