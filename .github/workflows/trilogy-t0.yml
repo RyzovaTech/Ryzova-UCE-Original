@@ -36,6 +36,8 @@ jobs:
           node-version: '20'
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Install pinned native graph-model parser dependency for safe offline contracts
+        run: npm ci --prefix experiments/datalog-z3 --no-audit --no-fund
       - name: T0 safety regression contracts
         run: node --test testing/trilogy-t0/*.test.mjs
       - name: T0 reproducible UCE report comparison
