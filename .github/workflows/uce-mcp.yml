@@ -1,0 +1,28 @@
+name: UCE MCP V2 Upload Protocol and Security
+on:
+  pull_request:
+    paths:
+      - 'tools/mcp/**'
+      - 'testing/mcp/**'
+      - 'docs/UCE_MCP_LOCAL_V1.md'
+      - 'docs/UCE_MCP_AGENT_FIRST.md'
+      - 'docs/UCE_MCP_V2_UPLOADS.md'
+      - '.github/workflows/uce-mcp.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stdio-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: MCP protocol, full UCE rules, real pinned Git checkout, uploads and security tests
+        run: npm run test:mcp
+        env:
+          UCE_MCP_GIT_SMOKE: '1'

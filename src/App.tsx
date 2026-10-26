@@ -53,7 +53,7 @@ function RouteSeo() {
       ? {
           title: "Ryzova UCE — Universal Compatibility Engine",
           description:
-            "Ryzova UCE analyzes ZIP projects and public GitHub repositories with 77 language labels and 524 unique technologies from 639 deterministic detection definitions.",
+            "Ryzova UCE analyzes ZIP projects and public GitHub, GitLab, and Codeberg repositories with 77 language labels and 524 unique technologies from 639 deterministic detection definitions.",
           canonicalPath: "/",
           indexable: true,
         }
@@ -61,7 +61,7 @@ function RouteSeo() {
         ? {
             title: "Software Compatibility Analyzer — Ryzova UCE",
             description:
-              "Analyze a ZIP archive or public GitHub repository with Ryzova UCE's deterministic, browser-based software compatibility checks.",
+              "Analyze a ZIP archive or public GitHub, GitLab, or Codeberg repository with Ryzova UCE's deterministic, browser-based software compatibility checks.",
             canonicalPath: "/analyze",
             indexable: true,
           }
@@ -130,7 +130,7 @@ function AnalyzeRoute() {
           How UCE analyzes your project
         </h2>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Ryzova UCE analyzes ZIP archives and public GitHub repositories in your browser. It
+          Ryzova UCE analyzes ZIP archives and public GitHub, GitLab, and Codeberg repositories in your browser. It
           detects project structure, languages, frameworks, runtimes, package managers,
           dependencies, lockfiles, configuration, and compatibility risks, then produces a scored
           engineering report.

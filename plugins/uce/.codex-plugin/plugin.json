@@ -1,0 +1,32 @@
+{
+  "name": "ryzova-uce",
+  "version": "0.1.0",
+  "description": "Open-source, repeatable UCE compatibility and rule-based repository analysis for ChatGPT and other MCP clients.",
+  "homepage": "https://uce.ryzova.com",
+  "repository": "https://github.com/RyzovaTech/Ryzova-UCE-Original",
+  "license": "MPL-2.0",
+  "keywords": [
+    "compatibility",
+    "repository",
+    "rule-testing",
+    "open-source",
+    "mcp"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Ryzova UCE",
+    "shortDescription": "Repeatable compatibility and rule-based repository analysis",
+    "longDescription": "Scan GitHub, GitLab, Codeberg or an approved local checkout with the canonical UCE analyzer. Review provenance, coverage, rules and repeatable scan comparisons. No UCE paywalls.",
+    "developerName": "Ryzova",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Read"
+    ],
+    "websiteURL": "https://uce.ryzova.com",
+    "defaultPrompt": [
+      "Analyze this public repository with UCE, cite source evidence and explain Unknown coverage.",
+      "Compare UCE results for two commits and list compatibility regressions."
+    ]
+  }
+}
