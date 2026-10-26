@@ -3,7 +3,7 @@ import type { AnalysisResult } from '../analyzer/types';
 /** A compatibility score describes observed evidence, not the unscanned project. */
 export function describeReportReadiness(report: AnalysisResult): { title: string; scope: string; coverage: string | null; partial: boolean; displayScore: number | null } {
   const coverage = report.summary.analysisCoverage;
-  const partial = coverage?.status === 'partial' || Boolean(report.summary.scanStats.truncated || report.summary.scanStats.sampled || report.stack.securityIntelligence?.truncated) || Boolean(report.stack.v3RulePlatform?.metrics.some(metric => metric.truncated));
+  const partial = coverage?.status === 'partial' || Boolean(report.summary.scanStats.truncated || report.summary.scanStats.sampled || report.summary.scanStats.ruleFailures?.length || report.stack.securityIntelligence?.truncated) || Boolean(report.stack.v3RulePlatform?.metrics.some(metric => metric.truncated));
   if (partial) {
     const selected = report.summary.scanStats.filesAnalyzed;
     const discovered = report.summary.scanStats.filesFound;
@@ -17,6 +17,7 @@ export function describeReportReadiness(report: AnalysisResult): { title: string
         report.summary.scanStats.securityFilesChecked !== undefined ? `Security module: ${report.summary.scanStats.securityFilesChecked.toLocaleString()} source files checked.` : '',
         report.summary.scanStats.browserFilesChecked !== undefined ? `Browser module: ${report.summary.scanStats.browserFilesChecked.toLocaleString()} source files checked.` : '',
         report.stack.v3RulePlatform?.metrics.some(metric => metric.truncated) ? 'Some rules reached their evaluation budgets.' : '',
+        report.summary.scanStats.ruleFailures?.length ? `${report.summary.scanStats.ruleFailures.length} compatibility rule execution failure(s); affected category scores are unknown and no overall readiness score is established.` : '',
         report.stack.v3RulePlatform?.archiveSweep ? `${report.stack.v3RulePlatform.archiveSweep.rulesChecked.toLocaleString()} standalone V3 source/dependency rules checked ${report.stack.v3RulePlatform.archiveSweep.filesChecked.toLocaleString()} readable files; multi-detector and cross-file rules remain core-limited.` : '',
         'Overall readiness is not established. Findings do not cover unchecked content.',
       ].filter(Boolean).join(' '),
