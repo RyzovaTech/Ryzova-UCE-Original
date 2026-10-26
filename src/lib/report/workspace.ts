@@ -205,7 +205,7 @@ export function compatibleProjectReports(current: AnalysisResult, reports: Analy
   return reports.filter((item) => item.id !== current.id && normalize(item.summary.name) === name).sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
-function normalize(value: string): string { return value.trim().toLowerCase().replace(/\\/g, '/').replace(/\s+/g, ' '); }
+function normalize(value: string | undefined | null): string { return typeof value === 'string' ? value.trim().toLowerCase().replace(/\\/g, '/').replace(/\s+/g, ' ') : ''; }
 function severityRank(value: Severity): number { return value === 'critical' ? 0 : value === 'warning' ? 1 : 2; }
 
 /** Legacy issues encode a line after the path; do not strip drive letters or numeric basenames. */
