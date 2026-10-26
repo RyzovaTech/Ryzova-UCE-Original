@@ -1,5 +1,5 @@
-import type { CategoryId, CategoryResult, CategoryStatus, Issue, Language, ProjectFile } from '../../analyzer/types';
-import type { RuleContext } from '../types';
+import type { CategoryId, CategoryResult, CategoryStatus, Issue, Language, ProjectFile, RuleExecutionFailure } from '../../analyzer/types';
+import type { CompatibilityRule, RuleContext } from '../types';
 import { hasEslintConfig } from '../rules/shared';
 import { ALL_RULES } from '../rules';
 import { CATEGORIES } from '../categories';
@@ -147,15 +147,25 @@ export function countApplicableRules(language: Language): number {
 }
 
 export function runAnalysis(ctx: RuleContext): CategoryResult[] {
+  return runAnalysisWithDiagnostics(ctx).categories;
+}
+
+/** Preserve successful evidence but never mark a failed rule/category as healthy. */
+export function runAnalysisWithDiagnostics(ctx: RuleContext, rules: readonly CompatibilityRule[] = ALL_RULES): { categories: CategoryResult[]; failures: RuleExecutionFailure[] } {
   const byCategory = new Map<CategoryId, Issue[]>();
-  for (const rule of ALL_RULES) {
+  const failures: RuleExecutionFailure[] = [];
+  const failedCategories = new Map<CategoryId, number>();
+  for (const rule of rules) {
     if (!isApplicable(rule.id, ctx.stack.language)) continue;
     if (!categoryApplicable(rule.category, ctx)) continue;
     let issues: Issue[] = [];
     try {
       issues = filterEvidenceAwareFalsePositives(rule.id, rule.run(ctx) ?? [], ctx);
     } catch {
-      issues = [];
+      // Rule crashes are not compatibility findings; record the incomplete evaluation.
+      failures.push({ ruleId: rule.id, category: rule.category, kind: 'exception' });
+      failedCategories.set(rule.category, (failedCategories.get(rule.category) ?? 0) + 1);
+      continue;
     }
     if (!issues.length) continue;
     const list = byCategory.get(rule.category) ?? [];
@@ -192,17 +202,20 @@ export function runAnalysis(ctx: RuleContext): CategoryResult[] {
     byCategory.set('security', list);
   }
 
-  return CATEGORIES.map((cat) => {
+  const categories = CATEGORIES.map((cat) => {
     if (!categoryApplicable(cat.id, ctx)) return { id: cat.id, label: cat.label, status: 'unknown' as const, score: 0, issues: [], summary: 'Not applicable or insufficient evidence for this project.' };
     const issues = deduplicateIssues(byCategory.get(cat.id) ?? []);
-    const status = statusFromIssues(issues);
+    const failed = failedCategories.get(cat.id) ?? 0;
+    const status = failed ? 'unknown' as const : statusFromIssues(issues);
     const compatibilityScore = scoreFromIssues(issues);
     const score = cat.id === 'security' && ctx.stack.securityIntelligence
       ? Math.min(compatibilityScore, ctx.stack.securityIntelligence.score)
       : compatibilityScore;
-    const summary = issues.length === 0
+    const observed = issues.length === 0
       ? `No compatibility issues detected in ${cat.label.toLowerCase()}.`
       : `${issues.length} issue${issues.length > 1 ? 's' : ''} detected (${issues.filter((i) => i.severity === 'critical').length} critical).`;
-    return { id: cat.id, label: cat.label, status, score, issues, summary };
+    const summary = failed ? `Incomplete: ${failed} compatibility rule${failed === 1 ? '' : 's'} failed during execution. ${issues.length} observed issue${issues.length === 1 ? '' : 's'} retained; absence of other issues is not established.` : observed;
+    return { id: cat.id, label: cat.label, status, score: failed ? 0 : score, issues, summary };
   });
+  return { categories, failures };
 }
