@@ -1,0 +1,40 @@
+name: Trilogy T0 Accuracy & Safety Baseline
+
+on:
+  pull_request:
+    paths:
+      - 'testing/trilogy-t0/**'
+      - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
+      - '.github/workflows/trilogy-t0.yml'
+      - 'src/lib/analyzer/**'
+      - 'src/lib/report/readiness.ts'
+      - 'testing/accuracy/corpus.json'
+      - 'testing/accuracy/baseline.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safety-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: T0 safety regression contracts
+        run: node --test testing/trilogy-t0/*.test.mjs
+      - name: T0 reproducible UCE report comparison
+        run: node testing/trilogy-t0/run.mjs --output=trilogy-t0-report.json
+      - name: Independent label claim guard
+        run: npm run audit:accuracy:baseline
+      - name: Upload T0 evidence (no source contents)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trilogy-t0-safety-baseline
+          path: trilogy-t0-report.json
+          if-no-files-found: ignore
