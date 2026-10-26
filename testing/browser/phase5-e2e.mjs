@@ -180,6 +180,7 @@ async function main() {
         sources: [...document.querySelectorAll('body *')]
           .map(el => ({ el, rect: el.getBoundingClientRect() }))
           .filter(x => x.rect.right > window.innerWidth + 3 && x.rect.width >= 30 &&
+            !x.el.closest('[aria-label="Report sections"]') &&
             getComputedStyle(x.el).overflowX !== 'auto')
           .sort((a, b) => b.rect.right - a.rect.right).slice(0, 8)
           .map(x => ({
