@@ -18,7 +18,7 @@ import { buildCorrelatedInsights } from './correlated-intelligence';
 import { detectExtendedIntelligence } from './extended-intelligence';
 import { buildTrustMetadata } from './trust';
 import { classifyProject, NON_SOFTWARE_MESSAGE } from './classifier';
-import { runAnalysis, countApplicableRules } from '../compatibility/analysis/engine';
+import { runAnalysisWithDiagnostics, countApplicableRules } from '../compatibility/analysis/engine';
 import { computeScore } from '../compatibility/scoring';
 import { buildRecommendations } from '../compatibility/recommendations';
 import { CATEGORIES } from '../compatibility/categories';
@@ -144,10 +144,23 @@ export function analyzeProject(input: AnalysisInput): AnalysisResult {
     summary.scanStats.truncationReason = summary.analysisCoverage.reason;
   }
   if (!classification.isSoftware) return { id: generateId(), createdAt: new Date().toISOString(), analysisVersion: ANALYSIS_VERSION, classification, summary, stack, detectedFiles, categories: buildNonSoftwareCategories(), issues: [], score: ZERO_SCORE, timeline: buildNonSoftwareTimeline(), notes: [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic classification rules — no AI or external calls.', NON_SOFTWARE_MESSAGE], source: input.source, trust: buildTrustMetadata(input.source) };
-  const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName }; const categories = runAnalysis(ctx); const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
+  const ctx = { files: input.files, detectedFiles, stack, projectName: input.fileName };
+  const { categories, failures } = runAnalysisWithDiagnostics(ctx);
+  if (failures.length) {
+    summary.scanStats.ruleFailures = failures;
+    const reason = `${failures.length} compatibility rule${failures.length === 1 ? '' : 's'} failed during execution; affected categories are unknown and overall readiness is not established.`;
+    summary.scanStats.truncated = true;
+    summary.scanStats.truncationReason = [summary.scanStats.truncationReason, reason].filter(Boolean).join(' ');
+    if (summary.analysisCoverage) {
+      summary.analysisCoverage.status = 'partial';
+      summary.analysisCoverage.reason = [summary.analysisCoverage.reason, reason].filter(Boolean).join(' ');
+    }
+  }
+  const score = computeScore(categories); const issues = categories.flatMap((c) => c.issues); const recommendations = buildRecommendations(categories);
   const endTime = typeof performance !== 'undefined' ? performance.now() : Date.now(); const scanTimeMs = Math.round(endTime - startTime); const memoryUsedMB = typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory ? Math.round((performance as unknown as { memory: { usedJSHeapSize: number } }).memory.usedJSHeapSize / 1024 / 1024 * 10) / 10 : undefined; const rulesExecuted = countApplicableRules(stack.language);
   if (summary.scanStats) { summary.scanStats.scanTimeMs = scanTimeMs; if (memoryUsedMB !== undefined) summary.scanStats.memoryUsedMB = memoryUsedMB; summary.scanStats.rulesExecuted = rulesExecuted + (stack.securityIntelligence?.rulesExecuted ?? 0) + (stack.v3RulePlatform?.rulesExecuted ?? 0); }
   const notes: string[] = [`Analysis completed by UCE Engine v${UCE_VERSION}.`, 'Results are generated using deterministic compatibility rules — no AI or external calls.', recommendations[0]];
+  if (failures.length) notes.push(`Analysis incomplete: ${failures.length} compatibility rule execution failure${failures.length === 1 ? '' : 's'}. Rule IDs and categories are preserved in scanStats.ruleFailures; no rule crash is interpreted as a compatibility defect.`);
   if (stack.mixedLanguage && stack.secondaryLanguages?.length) notes.push(`Mixed-language project detected: primary ${stack.primaryLanguage ?? stack.language}; secondary ${stack.secondaryLanguages.map((p) => `${p.language} ${p.percentage}%`).join(', ')}.`);
   if (stack.frameworks && stack.frameworks.length > 1) notes.push(`Multiple frameworks detected: ${stack.frameworks.join(', ')}.`);
   if (stack.runtimes && stack.runtimes.length > 1) notes.push(`Multiple runtimes detected: ${stack.runtimes.join(', ')}.`);
