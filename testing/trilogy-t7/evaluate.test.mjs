@@ -63,6 +63,11 @@ test('a distinct third review resolves disagreement, never claims external ident
  assert.equal(v.declaredResolvedBinaryCases,24);
  assert.equal(v.reviewerIdentityAndBlindingExternallyVerified,false);
 });
+test('agreeing reviewers reject an unsolicited third-party adjudication record',()=>{
+ const x=run();x.r.cases[0].adjudicator={reviewerAlias:'reviewer-c',blindToPredictions:true,
+  decision:'negative',evidenceSha256:hex,rationaleSha256:other};
+ assert.throws(()=>evaluate(x),/unsolicited adjudicator/);
+});
 test('a third reviewer cannot impersonate either initial reviewer',()=>{
  const x=run();x.r.cases[0].reviewers[1].decision='negative';
  x.r.cases[0].adjudicator={reviewerAlias:'reviewer-a',blindToPredictions:true,
