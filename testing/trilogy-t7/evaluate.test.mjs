@@ -37,6 +37,9 @@ test('same paired case universe computes independent diagnostic confusion, not v
   {tp:6,fp:6,fn:6,tn:6,abstainPositive:0,abstainNegative:0});
  assert.deepEqual(v.pairedDiagnostic.augmented.confusion,
   {tp:12,fp:0,fn:0,tn:12,abstainPositive:0,abstainNegative:0});
+ assert.equal(v.pairedDiagnostic.baseline.falseNegativeRateDecided,50);
+ assert.equal(v.pairedDiagnostic.baseline.missedPositiveIncidenceAllLabeledPositives,50);
+ assert.equal(v.pairedDiagnostic.augmented.falseNegativeRateDecided,0);
  assert.equal(v.pairedDiagnostic.paired.newTrueDetections,6);
  assert.equal(v.pairedDiagnostic.paired.avoidedFalseAlerts,6);
  assert.equal(v.demonstratedTrilogyImprovement,false);
@@ -106,6 +109,8 @@ test('unknown predictions never become true negatives or rewarded as accuracy',(
  assert.equal(v.strictRecallIncludingUnknown,0);
  assert.equal(v.alertPrecision,null);
  assert.equal(v.falsePositiveRateDecided,null);
+ assert.equal(v.falseNegativeRateDecided,null);
+ assert.equal(v.missedPositiveIncidenceAllLabeledPositives,0);
  assert.equal(v.decisionCoverage,0);
 });
 test('partial scans are abstentions even if they emit positive findings',()=>{

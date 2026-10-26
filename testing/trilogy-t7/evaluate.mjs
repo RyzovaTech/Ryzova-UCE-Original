@@ -113,6 +113,8 @@ function stats(cases,predictions,labels){
   strictRecallIncludingUnknown:percent(tp,positives),recallWilson95:wilson(tp,positives),
   falsePositiveRateDecided:percent(fp,fp+tn),
   falseAlertIncidenceAllLabeledNegatives:percent(fp,negatives),
+  falseNegativeRateDecided:percent(fn,tp+fn),
+  missedPositiveIncidenceAllLabeledPositives:percent(fn,positives),
   negativeDecisionCoverage:percent(fp+tn,negatives),
   abstentionRate:percent(abstainPositive+abstainNegative,positives+negatives),
  };
