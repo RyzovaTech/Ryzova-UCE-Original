@@ -25,6 +25,7 @@ import { ScoreRing, reportStatus, CategoryBar } from '@/components/reports/Score
 import { SeverityBadge } from '@/components/reports/SeverityBadge';
 import { BrowserCompatibilityPanel } from '@/components/reports/BrowserCompatibilityPanel';
 import { exportJson, exportMarkdown, downloadFile } from '@/lib/report/export';
+import { describeReportReadiness } from '@/lib/report/readiness';
 import { sortIssues } from '@/lib/compatibility/recommendations';
 import type { AnalysisResult, Issue, Severity } from '@/lib/analyzer/types';
 import { readLargeReport } from '@/lib/storage/large-reports';
@@ -129,7 +130,8 @@ export function ReportPage() {
     );
   }
 
-  const status = reportStatus(report.score.overall, report.issues.filter((issue) => issue.severity === 'critical').length, report.issues.filter((issue) => issue.severity === 'warning').length);
+  const readiness = describeReportReadiness(report);
+  const status = reportStatus(report.score.overall, report.issues.filter((issue) => issue.severity === 'critical').length, report.issues.filter((issue) => issue.severity === 'warning').length, readiness.partial);
   const isSoftware = report.classification?.isSoftware ?? true;
   const projectType = report.classification?.type ?? 'Software Project';
 
@@ -172,6 +174,16 @@ export function ReportPage() {
         </div>
       </div>
 
+      {isSoftware && readiness.partial && (
+        <div role="status" className="rounded-lg border border-warning/40 p-4 text-sm">
+          <p className="font-semibold">Partial scan — overall compatibility readiness not established</p>
+          <p className="mt-1 text-muted-foreground">{readiness.coverage}</p>
+          {!!report.summary.scanStats.ruleFailures?.length && (
+            <p className="mt-2 text-muted-foreground">Failed rules: {report.summary.scanStats.ruleFailures.map(f => `${f.category}/${f.ruleId}`).join(', ')}. These are execution errors, not compatibility findings.</p>
+          )}
+        </div>
+      )}
+
       {/* Score + Overview */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-1">
@@ -183,7 +195,12 @@ export function ReportPage() {
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-5">
             {isSoftware ? (
-              <ScoreRing score={report.score.overall} status={status} />
+              readiness.partial ? (
+                <div className="flex h-32 flex-col items-center justify-center rounded-full border-4 border-dashed border-warning/40 px-3 text-center" aria-label="Incomplete scan; score not established">
+                  <span className="text-2xl font-bold text-warning">N/A</span>
+                  <span className="text-xs text-muted-foreground">Partial analysis</span>
+                </div>
+              ) : <ScoreRing score={report.score.overall} status={status} />
             ) : (
               <div className="flex flex-col items-center gap-3 py-8 text-center">
                 <div className="flex h-32 w-32 items-center justify-center rounded-full border-4 border-dashed border-muted-foreground/20">
@@ -198,7 +215,9 @@ export function ReportPage() {
             {isSoftware && (
               <div className="w-full space-y-2.5">
                 {report.categories.map((c) => (
-                  <CategoryBar key={c.id} score={c.score} label={c.label} />
+                  c.status === 'unknown' ? (
+                    <div key={c.id} className="flex items-center justify-between gap-2 text-xs"><span className="text-muted-foreground">{c.label}</span><span>Not assessed</span></div>
+                  ) : <CategoryBar key={c.id} score={c.score} label={c.label} />
                 ))}
               </div>
             )}
@@ -549,7 +568,8 @@ export function ReportPage() {
           <CardContent>
             <ul className="divide-y">
               {history.map((h) => {
-                const s = reportStatus(h.result.score.overall, h.result.issues.filter((issue) => issue.severity === 'critical').length, h.result.issues.filter((issue) => issue.severity === 'warning').length, h.result.summary.analysisCoverage?.status === 'partial' || Boolean(h.result.summary.scanStats.truncated));
+                const incomplete = describeReportReadiness(h.result).partial;
+                const s = reportStatus(h.result.score.overall, h.result.issues.filter((issue) => issue.severity === 'critical').length, h.result.issues.filter((issue) => issue.severity === 'warning').length, incomplete);
                 return (
                   <li key={h.id}>
                     <button
@@ -562,7 +582,7 @@ export function ReportPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className={s.text}>{s.label}</Badge>
-                        <span className="text-sm font-semibold tabular-nums">{h.result.score.overall}</span>
+                        <span className="text-sm font-semibold tabular-nums">{incomplete ? '—' : h.result.score.overall}</span>
                       </div>
                     </button>
                   </li>
