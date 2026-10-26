@@ -236,6 +236,6 @@ test('cache key changes when only the middle of a large file changes', () => {
     source: 'upload',
     scanStats: { projectSize: 5000, filesFound: 1, filesAnalyzed: 1, filesIgnored: 0, ignoredCategories: [] },
   });
-  assert.equal(ANALYSIS_CACHE_VERSION, 23);
+  assert.equal(ANALYSIS_CACHE_VERSION, 24);
   assert.notEqual(fingerprintAnalysisInput(makeInput('alpha')), fingerprintAnalysisInput(makeInput('bravo')));
 });
