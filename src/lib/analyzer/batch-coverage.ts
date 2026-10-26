@@ -76,13 +76,14 @@ export function finishBatchCoverage(result: AnalysisResult, progress: {
   stats.findingsLimited = limits.security > 0 || limits.browser > 0 || Boolean(sweep?.findingsOmitted);
   const completeInventory = progress.nextIndex === progress.eligibleFiles;
   const limitedRules = Boolean(result.stack.v3RulePlatform?.metrics.some(metric => metric.truncated));
-  const partial = core.truncated || core.sampled || !completeInventory || progress.unreadableTextFiles > 0 ||
+  const partial = core.truncated || core.sampled || Boolean(stats.ruleFailures?.length) || !completeInventory || progress.unreadableTextFiles > 0 ||
     stats.filesWithContent < progress.textFilesEligible || Boolean(stats.findingsLimited || result.stack.securityIntelligence?.truncated || limitedRules);
   const extras = [
     `Core cross-file and multi-file V3 rules evaluated ${stats.coreFilesAnalyzed.toLocaleString()} selected files; per-rule budgets may restrict these further.`,
     sweep ? `${sweep.rulesChecked.toLocaleString()} standalone V3 source/dependency rules checked ${sweep.filesChecked.toLocaleString()} readable files (${sweep.dependencyFilesChecked.toLocaleString()} dependency manifests) in ${sweep.ruleFileVisits.toLocaleString()} rule-file visits${sweep.complete ? '' : ' so far'}; multi-detector and cross-file rules still use the core input.` : '',
     `${stats.filesWithContent.toLocaleString()} source-text files read in bounded batches; ${progress.unreadableTextFiles.toLocaleString()} oversized text files were not read.`,
     'Additional per-file security and browser findings appear in the Issue Center but do not change the core compatibility score.',
+    stats.ruleFailures?.length ? `${stats.ruleFailures.length} compatibility rule(s) failed; affected category status is unknown and overall readiness is not established.` : '',
     limits.security || limits.browser || sweep?.findingsOmitted ? `Finding display caps reached (security: ${limits.security}, browser: ${limits.browser}, V3 source: ${sweep?.findingsOmitted ?? 0}); further findings are not included.` : '',
     completeInventory ? '' : `Archive inventory paused at ${progress.nextIndex.toLocaleString()} / ${progress.eligibleFiles.toLocaleString()} eligible files.`,
   ].filter(Boolean).join(' ');
