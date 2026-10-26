@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'testing/trilogy-t0/**'
+      - 'testing/trilogy-t1/**'
+      - 'docs/TRILOGY_T1_EVIDENCE_RELIABILITY.md'
       - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
       - '.github/workflows/trilogy-t0.yml'
       - 'src/lib/analyzer/**'
@@ -29,6 +31,10 @@ jobs:
         run: node --test testing/trilogy-t0/*.test.mjs
       - name: T0 reproducible UCE report comparison
         run: node testing/trilogy-t0/run.mjs --output=trilogy-t0-report.json
+      - name: T1 source evidence reliability contracts
+        run: node --test testing/trilogy-t1/*.test.mjs
+      - name: T1 reproducible source evidence audit
+        run: node testing/trilogy-t1/run.mjs --output=trilogy-t1-report.json
       - name: Independent label claim guard
         run: npm run audit:accuracy:baseline
       - name: Upload T0 evidence (no source contents)
@@ -36,5 +42,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: trilogy-t0-safety-baseline
-          path: trilogy-t0-report.json
+          path: |
+            trilogy-t0-report.json
+            trilogy-t1-report.json
           if-no-files-found: ignore
