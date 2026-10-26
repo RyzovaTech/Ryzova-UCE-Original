@@ -1,0 +1,17 @@
+{
+  "workspace": "",
+  "files": [
+    {
+      "path": "package.json",
+      "content": "{\"name\":\"hybrid-test\",\"engines\":{\"node\":\">=18\"}}"
+    },
+    {
+      "path": ".nvmrc",
+      "content": "20"
+    },
+    {
+      "path": ".node-version",
+      "content": "22"
+    }
+  ]
+}
