@@ -122,7 +122,12 @@ export function evaluateBrowserQuality(
   const incomplete = report.summary?.analysisCoverage?.status === 'partial' ||
     report.summary?.scanStats?.truncated === true ||
     report.summary?.scanStats?.sampled === true ||
-    report.summary?.scanStats?.findingsLimited === true;
+    report.summary?.scanStats?.findingsLimited === true ||
+    Boolean(report.summary?.scanStats?.ruleFailures?.length) ||
+    Boolean(report.stack?.securityIntelligence?.truncated) ||
+    Boolean(report.stack?.v3RulePlatform?.metrics?.some(m => m.truncated)) ||
+    Boolean(report.stack?.v3RulePlatform?.archiveSweep?.findingsOmitted) ||
+    report.stack?.v3RulePlatform?.archiveSweep?.complete === false;
   const graphCoverage = incomplete || !report.summary?.analysisCoverage
     ? 'unknown' : 'bounded-report';
   const seen = new Set<string>();

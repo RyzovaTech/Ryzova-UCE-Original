@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useReportEngine } from '@/hooks/useReportEngine';
 import { reportStatus } from '@/components/reports/ScoreRing';
+import { describeReportReadiness } from '@/lib/report/readiness';
 
 export function ReportsPage() {
   const navigate = useNavigate();
@@ -31,10 +32,11 @@ export function ReportsPage() {
           ) : (
             <ul className="divide-y">
               {history.map(({ id, createdAt, result }) => {
-                const status = reportStatus(result.score.overall, result.issues.filter((issue) => issue.severity === 'critical').length, result.issues.filter((issue) => issue.severity === 'warning').length, result.summary.analysisCoverage?.status === 'partial' || Boolean(result.summary.scanStats.truncated));
+                const incomplete = describeReportReadiness(result).partial;
+                 const status = reportStatus(result.score.overall, result.issues.filter((issue) => issue.severity === 'critical').length, result.issues.filter((issue) => issue.severity === 'warning').length, incomplete);
                 return <li key={id} className="flex items-center gap-3 py-3">
                   <button onClick={() => navigate(`/report/${id}`)} className="flex min-w-0 flex-1 items-center gap-3 rounded-md p-1 text-left hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold ${status.text}`}>{result.score.overall}</span>
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-bold ${status.text}`}>{incomplete ? '—' : result.score.overall}</span>
                     <span className="min-w-0"><span className="block truncate text-sm font-medium">{result.summary.name}</span><span className="block text-xs text-muted-foreground">{new Date(createdAt).toLocaleString()} · {result.issues.length} issue{result.issues.length === 1 ? '' : 's'}</span></span>
                     <Badge variant="outline" className={`ml-auto shrink-0 ${status.text}`}>{status.label}</Badge>
                     <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />

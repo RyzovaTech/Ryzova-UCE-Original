@@ -67,7 +67,10 @@ const DOMAIN_TITLES: Record<string, string> = {
  */
 export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowserReport {
   const workspaceFindings = collectWorkspaceFindings(report);
-  const native = workspaceFindings.slice(0, 1000).map((f): UnifiedBrowserFinding => ({
+  // Prioritize urgent observations within the disclosed browser display cap;
+  // the complete canonical report and original issues are untouched.
+  const native = [...workspaceFindings].sort((a, b) => rank(a.severity) - rank(b.severity))
+    .slice(0, 1000).map((f): UnifiedBrowserFinding => ({ 
     id: 'uce:' + f.id,
     title: f.title,
     origin: 'UCE',
@@ -180,7 +183,8 @@ export function buildUnifiedBrowserReport(report: AnalysisResult): UnifiedBrowse
       'Evidence status describes report provenance, not independently checked source bytes or calibrated confidence.',
       'Potential impact is an investigation hypothesis, not an observed build, installation or runtime result.',
       'A separate original-issue record view preserves every raw UCE issue, including records deduplicated by the existing workspace helper.',
-      'The browser limits workspace enrichments to 1000; omitted counts are disclosed and all original issue records remain accessible.',
+      'All named V3 pack phases are eligible for reporting. V3 static observations are review-only and are NOT included in the original weighted core compatibility score.',
+      'The browser limits workspace enrichments to 1000, prioritized by severity; omitted counts are disclosed and all original issue records remain accessible.',
       'The original UCE issue records and score are unchanged.',
     ],
   };

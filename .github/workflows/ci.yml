@@ -23,7 +23,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Typecheck and lint
         run: npm run check
@@ -84,6 +84,11 @@ jobs:
 
       - name: V3 sampled-project memory benchmark
         run: npm run benchmark:v3-memory
+
+      - name: Large ZIP batch resource benchmark
+        env:
+          UCE_BENCH_ZIP_FILES: '25001'
+        run: npm run benchmark:zip-batches
 
       - name: Dependency security audit
         run: npm audit --omit=dev

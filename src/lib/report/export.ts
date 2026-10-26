@@ -87,6 +87,7 @@ export function exportMarkdown(result: AnalysisResult): string {
   lines.push('');
   lines.push(readiness.partial ? '**Not established — partial scan**' : `**${result.score.overall} / 100 (static checks)**`);
   if (readiness.coverage) lines.push('', readiness.coverage);
+  lines.push('', '_The weighted numeric score covers applicable core compatibility categories only. V3 and supplementary intelligence findings are separate static observations, not included in that score; neither is runtime compatibility proof._');
   lines.push('');
   lines.push('| Category | Score |');
   lines.push('| --- | --- |');
@@ -124,7 +125,7 @@ export function exportMarkdown(result: AnalysisResult): string {
   lines.push('## Issues');
   lines.push('');
   if (result.issues.length === 0) {
-    lines.push('_No issues detected._');
+    lines.push('_No core compatibility issues detected in the checked scope; supplementary or V3 observations may still require review._');
   } else {
     for (const issue of result.issues) {
       lines.push(`### [${issue.severity.toUpperCase()}] ${issue.title}`);

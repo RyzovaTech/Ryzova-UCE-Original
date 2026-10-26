@@ -71,9 +71,9 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
   };
 
   return (
-    <div className="space-y-5 animate-slide-up">
+    <div className="min-w-0 w-full max-w-full space-y-5 animate-slide-up">
       <ReportHeader report={report} mode={mode} onModeChange={changeMode} />
-      <nav aria-label="Report sections" className="no-print overflow-x-auto rounded-xl border bg-card p-1.5">
+      <nav aria-label="Report sections" className="no-print min-w-0 w-full max-w-full overflow-x-auto rounded-xl border bg-card p-1.5">
         <div className="flex min-w-max gap-1">
           {NAV_ITEMS.filter(item => UNIFIED_INTELLIGENCE_UI_ENABLED || item.id !== 'intelligence').map((item) => {
             const Icon = item.icon;
@@ -93,7 +93,7 @@ export function Phase4ReportWorkspace({ report, history }: { report: AnalysisRes
         </div>
       </nav>
 
-      <main>
+      <main className="min-w-0 w-full max-w-full">
         {section === 'overview' && <OverviewView report={report} history={history} mode={mode} onNavigate={setSection} />}
         {UNIFIED_INTELLIGENCE_UI_ENABLED && section === 'intelligence' && <UnifiedIntelligencePanel key={report.id} report={report} />}
         {section === 'technology' && <TechnologyView report={report} mode={mode} />}
@@ -113,7 +113,7 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
   const exportSecurityReport = () => downloadFile(`${report.summary.name}-uce-results.sarif`, exportSarif(report), 'application/sarif+json');
   const exportShareableSummary = () => downloadFile(`${report.summary.name}-uce-shareable-summary.json`, JSON.stringify(createPortableReportSummary(report), null, 2), 'application/json');
   return (
-    <header className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
+    <header className="flex min-w-0 w-full max-w-full flex-col justify-between gap-4 lg:flex-row lg:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="truncate text-2xl font-semibold tracking-tight">{report.summary.name}</h1>
@@ -122,8 +122,8 @@ function ReportHeader({ report, mode, onModeChange }: { report: AnalysisResult; 
         </div>
         <p className="mt-1 text-xs text-muted-foreground">UCE Engine {report.analysisVersion} · {new Date(report.createdAt).toLocaleString()}</p>
       </div>
-      <div className="no-print flex flex-wrap items-center gap-2">
-        <div className="flex rounded-lg border bg-muted/30 p-1" aria-label="Report detail mode">
+      <div className="no-print flex min-w-0 flex-wrap items-center gap-2">
+        <div className="flex max-w-full flex-wrap rounded-lg border bg-muted/30 p-1" aria-label="Report detail mode">
           {(['simple', 'developer', 'expert'] as UserMode[]).map((item) => (
             <button key={item} type="button" onClick={() => onModeChange(item)} aria-pressed={mode === item} className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${mode === item ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{item}</button>
           ))}
@@ -225,15 +225,16 @@ function ScanComparisonPanel({ report, history, mode }: { report: AnalysisResult
       <CardContent className="space-y-5">
         {compatible.length > 0 ? (
           <>
-            <label className="block space-y-1 text-xs text-muted-foreground"><span>Compare with</span><select value={baselineId} onChange={(event) => setBaselineId(event.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-xs text-foreground sm:max-w-md">{compatible.map((item) => <option key={item.id} value={item.id}>{new Date(item.createdAt).toLocaleString()} · {item.score.overall}%</option>)}</select></label>
-            {comparison && <div className="grid gap-3 sm:grid-cols-4"><MetricCard label="Score change" value={`${comparison.scoreDelta > 0 ? '+' : ''}${comparison.scoreDelta}`} /><MetricCard label="New" value={comparison.newFindings.length} /><MetricCard label="Resolved" value={comparison.resolvedFindings.length} /><MetricCard label="Persisting" value={comparison.persistingFindings.length} /></div>}
-            {mode !== 'simple' && comparison && <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{comparison.categoryDeltas.map((item) => <div key={item.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{item.label}</p><p className="mt-1 text-sm font-semibold">{item.current}% <span className={item.delta >= 0 ? 'text-success' : 'text-destructive'}>({item.delta > 0 ? '+' : ''}{item.delta})</span></p></div>)}</div>}
+            <label className="block space-y-1 text-xs text-muted-foreground"><span>Compare with</span><select value={baselineId} onChange={(event) => setBaselineId(event.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-xs text-foreground sm:max-w-md">{compatible.map((item) => <option key={item.id} value={item.id}>{new Date(item.createdAt).toLocaleString()} · {describeReportReadiness(item).partial ? 'Partial (not comparable)' : `${item.score.overall}%`}</option>)}</select></label>
+            {comparison && !comparison.scoreComparable && <p className="text-sm text-warning" role="status">At least one scan is incomplete. Score changes and resolved findings are not established; observed new and persisting findings remain reviewable.</p>}
+            {comparison && <div className="grid gap-3 sm:grid-cols-4"><MetricCard label="Score change" value={comparison.scoreDelta === null ? 'Not comparable' : `${comparison.scoreDelta > 0 ? '+' : ''}${comparison.scoreDelta}`} /><MetricCard label="New (observed)" value={comparison.newFindings.length} /><MetricCard label="Resolved" value={comparison.resolutionComparable ? comparison.resolvedFindings.length : 'Not established'} /><MetricCard label="Persisting" value={comparison.persistingFindings.length} /></div>}
+            {mode !== 'simple' && comparison && <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">{comparison.categoryDeltas.map((item) => <div key={item.id} className="rounded-md border p-3"><p className="text-xs text-muted-foreground">{item.label}</p>{item.delta === null ? <p className="mt-1 text-sm font-semibold">Not comparable</p> : <p className="mt-1 text-sm font-semibold">{item.current}% <span className={item.delta >= 0 ? 'text-success' : 'text-destructive'}>({item.delta > 0 ? '+' : ''}{item.delta})</span></p>}</div>)}</div>}
           </>
         ) : <p className="text-sm text-muted-foreground">No earlier scan with the same project name is available yet. Save this report as the future baseline.</p>}
         <div>
           <div className="mb-3 flex items-center gap-2 text-sm font-medium"><History className="h-4 w-4" />Project health history</div>
           <div className="flex h-28 items-end gap-2 rounded-lg border bg-muted/20 p-3" role="img" aria-label="Project health score history">
-            {health.map((item) => <div key={item.id} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1" title={`${new Date(item.createdAt).toLocaleString()}: ${item.score.overall}%`}><span className="text-center text-[9px] tabular-nums text-muted-foreground">{item.score.overall}</span><div className="min-h-1 rounded-t bg-primary" style={{ height: `${Math.max(4, item.score.overall)}%` }} /></div>)}
+            {health.map((item) => { const assessed = !describeReportReadiness(item).partial; return <div key={item.id} className="flex h-full min-w-0 flex-1 flex-col justify-end gap-1" title={`${new Date(item.createdAt).toLocaleString()}: ${assessed ? `${item.score.overall}%` : 'partial scan, not comparable'}`}><span className="text-center text-[9px] tabular-nums text-muted-foreground">{assessed ? item.score.overall : '—'}</span>{assessed ? <div className="min-h-1 rounded-t bg-primary" style={{ height: `${Math.max(4, item.score.overall)}%` }} /> : <div className="h-2 rounded-t border border-dashed border-warning" />}</div>; })}
           </div>
         </div>
       </CardContent>

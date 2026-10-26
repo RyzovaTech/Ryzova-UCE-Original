@@ -3,14 +3,14 @@ import { analyzeProject } from './analyzer';
 import { classifyProject } from './classifier';
 import { detectStack } from './detectors';
 import { parseFiles } from './parser';
-import { markExecution } from './execution';
+import { canCacheAnalysisInput, markExecution } from './execution';
 import { prepareAnalysisInput } from './execution';
 import { readZip } from './zip';
 import { analyzeArchiveBatches } from './archive-batch-runner';
 import type { AnalysisInput, AnalysisStage } from './types';
 
 type Request = { type: 'analyze'; requestId: number; input: AnalysisInput }
-  | { type: 'analyze-archive'; requestId: number; file: File; source: 'upload' | 'github'; displayName?: string }
+  | { type: 'analyze-archive'; requestId: number; file: File; source: 'upload' | 'github' | 'gitlab' | 'codeberg'; displayName?: string }
   | { type: 'continue-archive'; requestId: number };
 const workerScope = self as DedicatedWorkerGlobalScope;
 const progress = (requestId: number, stage: AnalysisStage, value: number, message: string) => workerScope.postMessage({ type: 'progress', requestId, stage, progress: value, message });
@@ -69,7 +69,7 @@ workerScope.onmessage = (event: MessageEvent<Request>) => {
     const prepared = prepareAnalysisInput({ files, fileName: name, source, scanStats });
     preparedArchives.set(requestId, { prepared, file });
     progress(requestId, 'reading', 39, `Indexed ${scanStats.filesFound.toLocaleString()} files; selected ${prepared.input.scanStats.filesAnalyzed.toLocaleString()}, with text content from ${prepared.input.scanStats.filesWithContent?.toLocaleString() ?? '0'}.`);
-    workerScope.postMessage({ type: 'prepared', requestId, cacheKey: prepared.cacheKey, cacheable: !prepared.input.scanStats.sampled && !prepared.input.scanStats.truncated });
+    workerScope.postMessage({ type: 'prepared', requestId, cacheKey: prepared.cacheKey, cacheable: canCacheAnalysisInput(prepared.input) });
   }).catch((error: unknown) => {
     workerScope.postMessage({ type: 'error', requestId, message: error instanceof Error ? error.message : 'Could not read ZIP archive.' });
   });

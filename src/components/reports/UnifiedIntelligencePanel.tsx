@@ -14,7 +14,7 @@ import type { AnalysisResult } from '@/lib/analyzer/types';
 function FindingDetail({ item, onSelectSource }: {
   item: UnifiedBrowserFinding; onSelectSource: (path: string) => void;
 }) {
-  return <div className="space-y-2 rounded-lg border p-3" data-origin={item.origin}>
+  return <div className="min-w-0 max-w-full space-y-2 rounded-lg border p-3" data-origin={item.origin}>
     <div className="flex flex-wrap items-center gap-2">
       <Badge variant={item.severity === 'critical' ? 'destructive' : 'outline'}>{item.severity}</Badge>
       <Badge variant="outline">Origin: {item.origin}</Badge>
@@ -29,7 +29,7 @@ function FindingDetail({ item, onSelectSource }: {
     {item.recommendation && <p className="text-sm"><span className="font-medium">Next action: </span>{item.recommendation}</p>}
     <div className="flex flex-wrap gap-2">
       {item.sourceRefs.length ? item.sourceRefs.map(ref => <button key={ref} type="button"
-        className="rounded border px-2 py-1 text-xs text-primary hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+        className="max-w-full break-all rounded border px-2 py-1 text-left text-xs text-primary hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
         onClick={() => onSelectSource(ref)} title={'Inspect source references at ' + ref}>{ref}</button>) :
         <span className="text-xs text-muted-foreground">Exact source path not available in this saved report.</span>}
     </div>
@@ -144,12 +144,12 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
   const matched = selectedSource ? model.findings.filter(f =>
     f.sourceRefs.includes(selectedSource) || f.file === selectedSource.split('#')[0]) : [];
 
-  return <section className="space-y-4" aria-label="Experimental Unified Intelligence">
+  return <section className="min-w-0 w-full max-w-full space-y-4" aria-label="Experimental Unified Intelligence">
     <div>
       <h2 className="text-xl font-semibold">Unified Project Intelligence</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Phase 5 experimental browser view · Root Cause First · Native UCE score and original issues unchanged</p>
+      <p className="mt-1 text-sm text-foreground">Phase 5 experimental browser view · Root Cause First · Native UCE score and original issues unchanged</p>
     </div>
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-3">
       <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Original UCE issues</p>
         <p className="text-2xl font-semibold tabular-nums">{model.originalIssueCount}</p></CardContent></Card>
       <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Investigation clusters</p>
@@ -159,11 +159,11 @@ export function UnifiedIntelligencePanel({ report }: { report: AnalysisResult })
     </div>
     <Card><CardHeader><CardTitle className="text-base">Root Cause First — investigation clusters</CardTitle>
       <CardDescription>These group potentially related findings for review. They do not establish causality or a formal solver proof.</CardDescription></CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="min-w-0 space-y-3">
         {model.rootGroups.length === 0 && <p className="text-sm text-muted-foreground">No multiple-finding cluster is supported by the available report data. Individual findings remain visible below.</p>}
-        {model.rootGroups.map(g => <div key={g.id} className="space-y-2 rounded-lg border p-3">
+        {model.rootGroups.map(g => <div key={g.id} className="min-w-0 space-y-2 rounded-lg border p-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="space-y-1"><h3 className="text-sm font-semibold">{g.title}</h3>
+            <div className="min-w-0 flex-1 space-y-1"><h3 className="break-words text-sm font-semibold">{g.title}</h3>
               <p className="text-xs text-muted-foreground">{g.findingIds.length} linked review findings · {g.disclaimer}</p></div>
             <Button variant="outline" size="sm" aria-expanded={opened === g.id}
               onClick={() => setOpened(opened === g.id ? null : g.id)}>

@@ -44,7 +44,11 @@
     "audit:accuracy:release": "node testing/release/run.mjs",
     "audit:accuracy:manifest-validation": "node testing/release/manifest.mjs --check",
     "test:benchmark": "node --test testing/benchmark/*.test.mjs",
-    "audit:benchmark": "node testing/benchmark/run.mjs --check"
+    "audit:benchmark": "node testing/benchmark/run.mjs --check",
+    "test:repository-import": "node --test testing/repository/providers.test.mjs",
+    "test:mcp": "node --test testing/mcp/*.test.mjs",
+    "mcp:local": "node tools/mcp/server.mjs",
+    "mcp:private-http": "node tools/mcp/http-server.mjs"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.16",

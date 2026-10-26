@@ -149,12 +149,63 @@ async function main() {
   assert.deepEqual(outbounds, [], 'Proposal preparation must perform no remote requests.');
   assert.deepEqual(pageErrors, [], 'No uncaught browser exceptions are acceptable.');
 
-  // Responsive layout and keyboard-accessible quality controls remain mounted.
-  await page.setViewportSize({ width: 390, height: 844 });
-  await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
-  assert.equal(await quality.getByRole('button', { name: 'Hide review queue' }).getAttribute('aria-expanded'), 'true');
-  console.log(JSON.stringify({ suite: 'phase5.5-browser-e2e', browser: browserName,
-    routes: 'demo-report', assertions: 'navigation, Root Cause First, keyboard/focus, axe WCAG A/AA, quality, review, evidence, proposal, stale-state, privacy, responsive' }));
+  // Phase 2: automated full-panel WCAG A/AA, not merely the nested quality card.
+  // Axe is a diagnostic, not a substitute for screen-reader or real-device review.
+  const panelViolations = await page.evaluate(async () => {
+    const region = document.querySelector('[aria-label="Experimental Unified Intelligence"]');
+    if (!region || !window.axe) throw new Error('Full Unified Intelligence region or axe not available.');
+    const results = await window.axe.run(region, {
+      runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'] },
+      rules: { region: { enabled: false } },
+    });
+    return results.violations.map(v => ({
+      id: v.id, impact: v.impact, nodes: v.nodes.slice(0, 5).map(n => n.target),
+    }));
+  });
+  assert.deepEqual(panelViolations, [], 'Full Unified Intelligence WCAG A/AA audit');
+
+  // Do not hide page-wide overflow; verify actual document geometry in all three
+  // real engines. The report section nav may scroll *within its own container*.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const width of [390, 320]) {
+    await page.setViewportSize({ width, height: 844 });
+    await shown(quality.getByText('Intelligence quality & symbolic reasoning'));
+    const geometry = await page.evaluate(() => {
+      const nav = document.querySelector('[aria-label="Report sections"]');
+      return {
+        viewport: window.innerWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth,
+        navWidth: nav?.clientWidth ?? null,
+        sources: [...document.querySelectorAll('body *')]
+          .map(el => ({ el, rect: el.getBoundingClientRect() }))
+          .filter(x => x.rect.right > window.innerWidth + 3 && x.rect.width >= 30 &&
+            !x.el.closest('[aria-label="Report sections"]') &&
+            getComputedStyle(x.el).overflowX !== 'auto')
+          .sort((a, b) => b.rect.right - a.rect.right).slice(0, 8)
+          .map(x => ({
+            tag: x.el.tagName,
+            className: typeof x.el.className === 'string' ? x.el.className.slice(0, 100) : '',
+            right: Math.round(x.rect.right),
+          })),
+      };
+    });
+    assert.ok(geometry.document <= geometry.viewport + 2 &&
+      geometry.body <= geometry.viewport + 2,
+      'Mobile page-wide horizontal overflow: ' + JSON.stringify(geometry));
+    assert.ok(geometry.navWidth > 0 && geometry.navWidth <= geometry.viewport,
+      'Report navigation must stay inside mobile viewport: ' + JSON.stringify(geometry));
+    const queue = quality.getByRole('button', { name: 'Hide review queue' });
+    assert.equal(await queue.getAttribute('aria-expanded'), 'true');
+    await queue.focus();
+    assert.equal(await queue.evaluate(el => document.activeElement === el), true,
+      'Keyboard focus must be retained at narrow widths');
+  }
+  // Navigation remains keyboard-reachable after resizing, and root cause view remains mounted.
+  await shown(panel.getByRole('heading', { name: 'Unified Project Intelligence' }));
+  assert.deepEqual(pageErrors, [], 'No uncaught errors after viewport resize');
+  console.log(JSON.stringify({ suite: 'uce-phase2-cross-browser-e2e', browser: browserName,
+    routes: 'demo-report', assertions: 'WCAG A/AA full panel, keyboard/focus, 320px/390px reflow, no global overflow, reduced motion, privacy, score parity, unchanged findings' }));
 }
 try { await main(); }
 finally {

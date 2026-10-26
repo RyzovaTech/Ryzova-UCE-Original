@@ -40,6 +40,8 @@ const failures = [];
 if (report.score.overall < minScore) failures.push(`Overall score ${report.score.overall} is below ${minScore}.`);
 if (critical > maxCritical) failures.push(`Critical findings ${critical} exceed ${maxCritical}.`);
 if (warning > maxWarning) failures.push(`Warning findings ${warning} exceed ${maxWarning}.`);
+const ruleFailures = report.summary?.scanStats?.ruleFailures ?? [];
+if (ruleFailures.length) failures.push(`${ruleFailures.length} compatibility rule execution failure(s); incomplete analysis cannot pass the CI gate.`);
 
 const sarifPath = option('sarif', '');
 if (sarifPath) fs.writeFileSync(path.resolve(sarifPath), JSON.stringify(toSarif(report, findings), null, 2));
@@ -57,6 +59,12 @@ function validateReport(value) {
   if (!value.score || !Number.isFinite(value.score.overall) || value.score.overall < 0 || value.score.overall > 100) errors.push('score.overall must be between 0 and 100.');
   if (!Array.isArray(value.issues)) errors.push('issues must be an array.');
   if (!Array.isArray(value.categories)) errors.push('categories must be an array.');
+  const ruleFailures = value.summary?.scanStats?.ruleFailures;
+  if (ruleFailures !== undefined && (!Array.isArray(ruleFailures) || ruleFailures.some((item) =>
+    !item || typeof item.ruleId !== 'string' || !item.ruleId ||
+    !['runtime', 'dependencies', 'configuration', 'structure', 'environment', 'security', 'deployment', 'performance'].includes(item.category) || item.kind !== 'exception'))) {
+    errors.push('summary.scanStats.ruleFailures must contain valid rule execution failures.');
+  }
   return errors;
 }
 

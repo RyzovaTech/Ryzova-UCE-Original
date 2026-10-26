@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useReportEngine } from '@/hooks/useReportEngine';
 import { toShareableList } from '@/lib/storage';
 import { reportStatus } from '@/components/reports/ScoreRing';
+import { describeReportReadiness } from '@/lib/report/readiness';
 import { SeverityBadge } from '@/components/reports/SeverityBadge';
 
 export function DashboardPage() {
@@ -17,13 +18,14 @@ export function DashboardPage() {
 
   const stats = useMemo(() => {
     const total = history.length;
-    const avg = total ? Math.round(history.reduce((s, h) => s + h.result.score.overall, 0) / total) : 0;
+    const scored = history.filter(h => h.result.classification?.isSoftware && !describeReportReadiness(h.result).partial);
+    const avg = scored.length ? Math.round(scored.reduce((s, h) => s + h.result.score.overall, 0) / scored.length) : 0;
     const issues = history.reduce((s, h) => s + h.result.issues.length, 0);
     const critical = history.reduce(
       (s, h) => s + h.result.issues.filter((i) => i.severity === 'critical').length,
       0
     );
-    return { total, avg, issues, critical };
+    return { total, avg, scored: scored.length, issues, critical };
   }, [history]);
 
   const recent = useMemo(() => toShareableList(history).slice(0, 5), [history]);
@@ -43,7 +45,7 @@ export function DashboardPage() {
 
   const cards = useMemo(() => [
     { label: 'Projects Analyzed', value: stats.total, icon: FileSearch, accent: 'text-primary', bg: 'bg-primary/10' },
-    { label: 'Average Score', value: stats.total ? `${stats.avg}/100` : '—', icon: Gauge, accent: 'text-success', bg: 'bg-success/10' },
+    { label: 'Average Score', value: stats.scored ? `${stats.avg}/100` : '—', icon: Gauge, accent: 'text-success', bg: 'bg-success/10' },
     { label: 'Issues Detected', value: stats.issues, icon: Bug, accent: 'text-warning', bg: 'bg-warning/10' },
     { label: 'Critical Issues', value: stats.critical, icon: Activity, accent: 'text-destructive', bg: 'bg-destructive/10' },
   ], [stats]);
@@ -136,7 +138,7 @@ export function DashboardPage() {
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md bg-muted ${status.text}`}>
-                            <span className="text-xs font-bold tabular-nums">{r.overallScore}</span>
+                            <span className="text-xs font-bold tabular-nums">{r.scoreScope === 'partial' ? '—' : r.overallScore}</span>
                           </div>
                           <div className="min-w-0">
                             <p className="truncate text-sm font-medium">{r.projectName}</p>

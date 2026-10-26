@@ -18,7 +18,7 @@ export function Topbar() {
   const navigate = useNavigate();
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b bg-background px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 min-w-0 w-full max-w-full items-center gap-2 border-b bg-background px-3 sm:gap-3 sm:px-4 md:px-6">
       <div className="md:hidden">
         <Sheet>
           <SheetTrigger asChild>
@@ -64,11 +64,11 @@ export function Topbar() {
         </Sheet>
       </div>
 
-      <Link to="/" className="md:hidden">
-        <UceLogo size="sm" />
+      <Link to="/" className="shrink-0 md:hidden" aria-label="UCE home">
+        <UceLogo size="sm" showText={false} />
       </Link>
 
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex shrink-0 items-center gap-2">
         <Button
           variant="ghost"
           size="icon"
