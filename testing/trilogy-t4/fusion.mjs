@@ -43,6 +43,12 @@ function parseBindings(bindings, issueMap, factMap, inventoryComplete){
    throw Error('T4 review binding resource budget exceeded');
  const reviewed=[], seen=new Set(), flags=new Set();
  const issueBindings=new Map(),factBindings=new Map();
+ const issueByHashedId=new Map();
+ for(const issue of issueMap.values()){
+  const key=sha256(issue.id);
+  if(issueByHashedId.has(key))throw Error('T4 ambiguous hashed issue identity');
+  issueByHashedId.set(key,issue);
+ }
  for(const candidate of bindings){
   if(!isPlain(candidate)||typeof candidate.issueId!=='string'||
       typeof candidate.factId!=='string'||!HEX.test(candidate.factId)||
@@ -74,7 +80,7 @@ function parseBindings(bindings, issueMap, factMap, inventoryComplete){
  }
  // Ambiguous many-to-one links cannot be called uniquely related.
  for(const item of reviewed)if(item.status==='review-only'){
-  const issue=issueMap.get([...issueMap.keys()].find(k=>sha256(k)===item.issueSha256));
+  const issue=issueByHashedId.get(item.issueSha256);
   // Compare hashes only in the artifact; never expose raw issue IDs.
   if(!issue || issueBindings.get(issue.id)>1 || factBindings.get(item.factId)>1){
    item.status='ambiguous';
@@ -127,8 +133,10 @@ export function fuseAccuracyEvidence(report,sourceFiles,options={}) {
    graph.coverage.filesReadable!==graph.coverage.filesListed ||
    graph.coverage.truncatedByBudget || graph.coverage.parseFailures>0 ||
    graph.counts.unmodeledDynamicImports>0 ||
+   graph.counts.unmodeledPackageImports>0 ||
    graph.counts.manifestReadFailures>0 ||
    graph.counts.unknown>0 ||
+   graph.counts.reviewRequired>0 ||
    graph.inputScope!=='caller-asserted-inventory';
  const inventoryUsable=!incomplete &&
    options.inventoryComplete===true &&

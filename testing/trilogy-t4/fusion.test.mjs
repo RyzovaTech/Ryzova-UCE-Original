@@ -227,3 +227,28 @@ test('T4 never supports automatic patches, score changes or certified root cause
  assert.ok(x.originalUCEIssues.every(i=>i.origin==='UCE' && i.autoFixed===false));
  assert.ok(x.trilogyObservations.every(i=>i.origin==='Trilogy'&&i.autoApplied===false));
 });
+
+test('unmodeled external imports prevent positive overlap even with an exact source binding',()=>{
+ const r=report(),f=makeFiles(),binding=withBinding(r,f);
+ f[2]=file('src/app.ts',source+"import 'unresolved-external';\n");
+ const newGraph=buildWholeProjectGraph(r,f,{inventoryComplete:true});
+ const match=newGraph.edges.find(x=>x.type==='relative-source-import' &&
+  x.fromSha256===digest('src/app.ts'));
+ const x=fuseAccuracyEvidence(r,f,{inventoryComplete:true,
+  expectedInventorySha256:newGraph.suppliedInventorySha256,
+  reviewBindings:[{...binding,factId:match.id}]});
+ assert.equal(x.overlapCounts.reviewOnly,0);
+ assert.equal(x.overlapCounts.unknown,1);
+ assert.equal(x.graphCoverage.partial,true);
+});
+test('missing relative target elsewhere invalidates global claim completeness',()=>{
+ const r=report(),f=makeFiles(),binding=withBinding(r,f);
+ f.push(file('src/other.ts',"import './generated-missing';"));
+ const graph=buildWholeProjectGraph(r,f,{inventoryComplete:true});
+ const sourceEdge=graph.edges.find(e=>e.fromSha256===digest('src/app.ts'));
+ const x=fuseAccuracyEvidence(r,f,{inventoryComplete:true,
+  expectedInventorySha256:graph.suppliedInventorySha256,
+  reviewBindings:[{...binding,factId:sourceEdge.id}]});
+ assert.equal(x.overlapCounts.unknown,1);
+ assert.equal(x.overlapCounts.reviewOnly,0);
+});

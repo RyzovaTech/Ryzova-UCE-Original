@@ -27,3 +27,5 @@ Output hides raw project source, file paths and issue descriptions. Hashed paths
 T4 acceptance requires exact-head dedicated and full UCE CI, CodeQL, untouched UCE score/issues and passing positive/negative provenance tests. This is **not measured accuracy improvement**. Independent blinded real-project precision/recall, false positive/negative rates, recommendation correctness, authenticated source revisions and real native host tests are still outstanding (#80, #77, #81).
 
 **Next: T5 causal *hypothesis* groupings (not verified root causes).** No production merge/deployment without owner approval and independent release gates.
+
+Additional fail-closed rule: unresolved relative imports or unmodeled external package imports anywhere in the supplied project graph invalidate globally complete review-overlap eligibility. An indexed hashed issue map preserves linear matching instead of costly repeated scanning of every original issue.
