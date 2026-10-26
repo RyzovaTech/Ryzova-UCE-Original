@@ -63,8 +63,14 @@ async function runCase(provider,url,expectArchive,meta){
     assert.equal(await preferred.getAttribute('aria-pressed'),'true');
     const input=page.getByRole('textbox',{name:'Public repository URL'});
     assert.equal(await input.isVisible(),true);
-    assert.equal((await input.getAttribute('placeholder')).toLowerCase()
-      .includes(provider==='GitLab'?'gitlab.com':provider==='Codeberg'?'codeberg.org':'github.com'),true);
+    // Test the exact provider-specific placeholder. A URL-host substring check
+    // could accept attacker.example/github.com and is not safe URL validation.
+    const expectedPlaceholders={
+      GitHub:'https://github.com/owner/repository',
+      GitLab:'https://gitlab.com/group/subgroup/repository',
+      Codeberg:'https://codeberg.org/owner/repository',
+    };
+    assert.equal(await input.getAttribute('placeholder'),expectedPlaceholders[provider]);
     // Never attempt a network request for invalid URL/credentials.
     await input.fill('https://evil.example/owner/repo');
     assert.equal(await page.getByRole('button',{name:'Analyze repository'}).isDisabled(),true);
