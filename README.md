@@ -57,6 +57,9 @@ New to UCE? Start with the [Getting Started guide](https://github.com/RyzovaTech
 - **[Developer feedback](https://github.com/RyzovaTech/Ryzova-UCE-Original/discussions/96):** Share reproducible compatibility findings, false-positive concerns, and usability suggestions.
 - **[Independent review volunteers](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/94):** Express interest in helping evaluate blinded, source-pinned compatibility claims.
 - **[Welcome and project announcements](https://github.com/RyzovaTech/Ryzova-UCE-Original/discussions/95):** Read the community introduction and updates.
+- **[Read Ryzova's UCE introduction on DEV](https://dev.to/ryzovatech/were-building-ryzova-uce-an-open-source-compatibility-analyzer-wed-love-developer-feedback-1l70):** Learn why we are inviting developers to test the analyzer and share constructive feedback.
+
+**Try a small feedback test:** Analyze your public project URL or a local project ZIP using [UCE](https://uce.ryzova.com/). Review one diagnostic signal and tell us in [Developer feedback](https://github.com/RyzovaTech/Ryzova-UCE-Original/discussions/96) whether it was useful, misleading, or missing important context. Include the relevant runtime/tool version and reproducible evidence when possible; a high score or reported warning is not proof of correct analysis.
 
 Please remove credentials, personal information, and confidential source code before posting. Report suspected vulnerabilities privately using [SECURITY.md](SECURITY.md). Community feedback and preliminary case studies are not independently certified accuracy measurements.
 
