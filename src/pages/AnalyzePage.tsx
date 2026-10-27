@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, GitBranch, Gitlab, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle } from 'lucide-react';
+import { CircleAlert as AlertCircle, CircleCheck as CheckCircle2, FileArchive, GitBranch, Github, Loader as Loader2, CirclePlay as PlayCircle, ShieldCheck, CloudUpload as UploadCloud, Circle as XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,9 +46,6 @@ const REPOSITORY_PROVIDERS: {
   { id: 'github', label: 'GitHub',
     placeholder: 'https://github.com/owner/repository',
     hint: 'Public GitHub repository · owner/repository' },
-  { id: 'gitlab', label: 'GitLab',
-    placeholder: 'https://gitlab.com/group/subgroup/repository',
-    hint: 'Public GitLab repository · nested groups supported' },
   { id: 'codeberg', label: 'Codeberg',
     placeholder: 'https://codeberg.org/owner/repository',
     hint: 'Public Codeberg repository · owner/repository' },
@@ -63,8 +60,15 @@ export function AnalyzePage() {
   const [preferredProvider, setPreferredProvider] = useState<RepositoryProvider>('github');
   const repositoryValidation = useMemo(() => {
     if (!repositoryUrl.trim()) return { repository: null, error: null };
-    try { return { repository: parseRepositoryUrl(repositoryUrl), error: null }; }
-    catch (e) { return { repository: null,
+    try {
+      const repository = parseRepositoryUrl(repositoryUrl);
+      if (repository.provider === 'gitlab') {
+        // GitLab public archive imports currently return HTTP 406 on the live host.
+        // Keep the parser for later repair, but do not allow broken browser imports.
+        return { repository: null, error: 'GitLab URL analysis is temporarily unavailable. Download the repository ZIP from GitLab and use ZIP Upload instead.' };
+      }
+      return { repository, error: null };
+    } catch (e) { return { repository: null,
       error: e instanceof Error ? e.message : 'Enter a supported public repository URL.' }; }
   }, [repositoryUrl]);
   const activeProvider = repositoryValidation.repository?.provider ?? preferredProvider;
@@ -143,7 +147,7 @@ export function AnalyzePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Analyze Project</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Analyze a ZIP archive or a public GitHub, GitLab, or Codeberg repository using deterministic browser-based checks.
+          Analyze a ZIP archive or a public GitHub or Codeberg repository using deterministic browser-based checks.
         </p>
       </div>
 
@@ -267,13 +271,13 @@ export function AnalyzePage() {
                 </span>
               </CardTitle>
               <CardDescription>
-                Paste a public GitHub, GitLab, or Codeberg repository root URL (or supported Git remote). UCE downloads its default branch and analyzes structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
+                Paste a public GitHub or Codeberg repository root URL (or supported Git remote). UCE downloads its default branch and analyzes structure, manifests, dependencies, lockfiles, configuration, runtimes, and compatibility risks in your browser.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div role="group" aria-label="Repository provider" className="space-y-2">
                 <p className="text-sm font-medium">Choose a Git provider</p>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {REPOSITORY_PROVIDERS.map(({ id, label }) => (
                     <Button key={id} type="button" size="sm"
                       variant={activeProvider === id ? 'default' : 'outline'}
@@ -281,8 +285,7 @@ export function AnalyzePage() {
                       onClick={() => selectProvider(id)}
                       className="min-w-0 gap-2 px-2 sm:px-3">
                       {id === 'github' ? <Github aria-hidden="true" className="h-4 w-4 shrink-0" /> :
-                        id === 'gitlab' ? <Gitlab aria-hidden="true" className="h-4 w-4 shrink-0" /> :
-                          <GitBranch aria-hidden="true" className="h-4 w-4 shrink-0" />}
+                        <GitBranch aria-hidden="true" className="h-4 w-4 shrink-0" />}
                       {label}
                     </Button>
                   ))}
@@ -323,7 +326,7 @@ export function AnalyzePage() {
                   Choose download location and analyze
                 </Button> : null}
               <div id="repository-provider-help" className="space-y-1 text-xs text-muted-foreground">
-                <p><strong>Public repositories only.</strong> Paste a repository root URL, not a branch, issue, or file link. The default branch is analyzed.</p>
+                <p><strong>Public GitHub and Codeberg repositories only.</strong> Paste a repository root URL, not a branch, issue, or file link. The default branch is analyzed.</p>
                 <p>UCE downloads public archives through a fixed-provider relay. Compatibility rules run locally in your browser; source code is not retained by the relay.</p>
                 <p>Large archives can use device storage where supported. ZIP indexing uses 32 KB slices; existing browser safety and sampling budgets still apply.</p>
               </div>
