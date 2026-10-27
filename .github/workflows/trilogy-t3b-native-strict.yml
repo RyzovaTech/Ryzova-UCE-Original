@@ -1,0 +1,36 @@
+name: Trilogy T3-B Kernel-Isolated Native Acceptance
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-kernel-acceptance:
+    # Never run untrusted pull-request source on privileged self-hosted runner.
+    runs-on: [self-hosted, linux, t3-native]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix experiments/datalog-z3 --no-audit --no-fund
+      - name: Require Linux delegated kernel cgroup and pinned native executables
+        shell: bash
+        env:
+          TRILOGY_T3B_CGROUP_ROOT: ${{ vars.TRILOGY_T3B_CGROUP_ROOT }}
+          TRILOGY_T3B_SOUFFLE: ${{ vars.TRILOGY_T3B_SOUFFLE }}
+          TRILOGY_T3B_Z3: ${{ vars.TRILOGY_T3B_Z3 }}
+          TRILOGY_T3B_CVC5: ${{ vars.TRILOGY_T3B_CVC5 }}
+        run: |
+          set -euo pipefail
+          for name in TRILOGY_T3B_CGROUP_ROOT TRILOGY_T3B_SOUFFLE TRILOGY_T3B_Z3 TRILOGY_T3B_CVC5; do
+            test -n "${!name}" || { echo "Missing trusted runner configuration: $name"; exit 1; }
+          done
+          for binary in "$TRILOGY_T3B_SOUFFLE" "$TRILOGY_T3B_Z3" "$TRILOGY_T3B_CVC5"; do
+            test -x "$binary" || { echo "A native solver executable is absent"; exit 1; }
+          done
+          test -d "$TRILOGY_T3B_CGROUP_ROOT" || { echo "Kernel-delegated cgroup missing"; exit 1; }
+          node --test testing/trilogy-t3/native.test.mjs

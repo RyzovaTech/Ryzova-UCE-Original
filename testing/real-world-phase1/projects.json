@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "purpose": "UNREVIEWED_PUBLIC_SOURCE_DIAGNOSTIC_NOT_ACCURACY_STUDY",
+  "frozenAt": "2026-10-27",
+  "cases": [
+    {
+      "id": "express-js",
+      "repository": "expressjs/express",
+      "commitSha": "1c6f1b0fe4000977b9a7b4f34097e4d527dd9824",
+      "ecosystem": "javascript",
+      "repoDirectory": "express"
+    },
+    {
+      "id": "flask-py",
+      "repository": "pallets/flask",
+      "commitSha": "d086db856be187255b8ec61ef409357393020f32",
+      "ecosystem": "python",
+      "repoDirectory": "flask"
+    },
+    {
+      "id": "ky-ts",
+      "repository": "sindresorhus/ky",
+      "commitSha": "3541888878c4d303a8bc2ad61815f4e048f55a5d",
+      "ecosystem": "typescript",
+      "repoDirectory": "ky"
+    },
+    {
+      "id": "mini-redis-rs",
+      "repository": "tokio-rs/mini-redis",
+      "commitSha": "3d93b42bc363220f85af4fc9e1bebd35b588a4a3",
+      "ecosystem": "rust",
+      "repoDirectory": "mini-redis"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+name: Trilogy Phase 1 Real-World Source Diagnostic (Unreviewed)
+
+on:
+  pull_request:
+    paths:
+      - 'testing/real-world-phase1/**'
+      - '.github/workflows/trilogy-real-world-phase1.yml'
+      - 'testing/trilogy-t[124]/**'
+      - 'src/lib/analyzer/**'
+      - 'scripts/uce-scan.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pinned-public-source-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout UCE experimental branch
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Node for UCE-only and review-only Trilogy probes
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Install UCE dependencies only, never target project dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Negative-control and preservation contracts
+        run: node --test testing/real-world-phase1/*.test.mjs
+      - name: Checkout pinned public Express source (not executed)
+        uses: actions/checkout@v4
+        with:
+          repository: expressjs/express
+          ref: 1c6f1b0fe4000977b9a7b4f34097e4d527dd9824
+          path: target/express
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Checkout pinned public Flask source (not executed)
+        uses: actions/checkout@v4
+        with:
+          repository: pallets/flask
+          ref: d086db856be187255b8ec61ef409357393020f32
+          path: target/flask
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Checkout pinned public Ky source (not executed)
+        uses: actions/checkout@v4
+        with:
+          repository: sindresorhus/ky
+          ref: 3541888878c4d303a8bc2ad61815f4e048f55a5d
+          path: target/ky
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: Checkout pinned public Mini-Redis source (not executed)
+        uses: actions/checkout@v4
+        with:
+          repository: tokio-rs/mini-redis
+          ref: 3d93b42bc363220f85af4fc9e1bebd35b588a4a3
+          path: target/mini-redis
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - name: UCE-only baseline and Trilogy source-only diagnostic on pinned repos
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p phase1-results
+          for case_id in express-js flask-py ky-ts mini-redis-rs; do
+            case "$case_id" in
+              express-js) folder=express ;;
+              flask-py) folder=flask ;;
+              ky-ts) folder=ky ;;
+              mini-redis-rs) folder=mini-redis ;;
+              *) exit 2 ;;
+            esac
+            node scripts/uce-scan.mjs "target/$folder" "--output=phase1-results/$case_id-uce.json"
+            node testing/real-world-phase1/run.mjs \
+              --registry=testing/real-world-phase1/projects.json \
+              "--case=$case_id" "--checkout=target/$folder" \
+              "--uce-report=phase1-results/$case_id-uce.json" \
+              "--output=phase1-results/$case_id-paired-diagnostic.json"
+          done
+      - name: Express original finding source-file metadata review (not truth labels)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node testing/real-world-phase1/express-evidence.mjs \
+            --report=phase1-results/express-js-uce.json \
+            --checkout=target/express \
+            --sha=1c6f1b0fe4000977b9a7b4f34097e4d527dd9824 \
+            --output=phase1-results/express-js-unreviewed-source-metadata.json
+      - name: Upload Express source-linked metadata only, NO source bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: express-unverified-uce-finding-source-links
+          path: phase1-results/express-js-unreviewed-source-metadata.json
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Publish derived evidence ONLY (no code contents or raw UCE issue texts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trilogy-phase1-unreviewed-pinned-public-snapshot-diagnostics
+          path: phase1-results/*-paired-diagnostic.json
+          retention-days: 7
+          if-no-files-found: ignore

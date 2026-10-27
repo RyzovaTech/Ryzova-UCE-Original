@@ -1,0 +1,39 @@
+name: Trilogy Phase 3 Blinded Volunteer Review Contracts
+
+on:
+  pull_request:
+    paths:
+      - 'testing/community-review/**'
+      - 'docs/TRILOGY_PHASE3_COMMUNITY_REVIEW.md'
+      - '.github/workflows/trilogy-community-review.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-blinding-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run synthetic-only neutral packet and blinded intake negative tests
+        run: node --test testing/community-review/*.test.mjs
+      - name: Explicit human-evidence release HOLD
+        run: |
+          node --input-type=module -e "
+          import {auditVolunteerReviewIntake} from './testing/community-review/intake.mjs';
+          import {prepareBlindedCasePacket} from './testing/community-review/packet.mjs';
+          const c={id:'synthetic-case',repositoryAlias:'synthetic-repo',commitSha:'1'.repeat(40),sourceEvidenceSha256:'2'.repeat(64),domain:'runtime',severity:'info',ecosystem:'js-ts'};
+          const manifest={schemaVersion:1,studyId:'synthetic-phase3-ci',protocolSha256:'3'.repeat(64),samplingFrameSha256:'4'.repeat(64),cases:[c]};
+          const claims={schemaVersion:1,studyId:manifest.studyId,claims:[{caseId:c.id,repositoryAlias:c.repositoryAlias,repository:'example/fictional',sourcePath:'src/index.js',claimText:'Does this pinned source support the specified runtime behavior for the declared environment?'}]};
+          const packet=prepareBlindedCasePacket(manifest,claims);
+          const report=auditVolunteerReviewIntake(packet,{schemaVersion:1,studyId:manifest.studyId,reviews:[],adjudications:[]});
+          if(report.independentlyAuthenticatedHumanCases!==0||report.measuredIndependentRealWorldAccuracy!==null||report.overallReleaseReady!==false) process.exit(1);
+          console.log(JSON.stringify({syntheticOnly:true,caseUniverseCount:report.frozenCaseUniverseCount,authenticatedHumans:0,releaseReady:false}));
+          "

@@ -1,0 +1,99 @@
+name: Trilogy T0–T7 Accuracy & Safety
+
+on:
+  pull_request:
+    paths:
+      - 'testing/trilogy-t0/**'
+      - 'testing/trilogy-t1/**'
+      - 'testing/trilogy-t2/**'
+      - 'testing/trilogy-t3/**'
+      - 'testing/trilogy-t4/**'
+      - 'testing/trilogy-t5/**'
+      - 'testing/trilogy-t6/**'
+      - 'testing/trilogy-t7/**'
+      - 'experiments/datalog-z3/**'
+      - 'experiments/solver-linux-cgroup.mjs'
+      - 'experiments/solver-process-env.mjs'
+      - 'experiments/solver-process-lifecycle.mjs'
+      - 'docs/TRILOGY_T1_EVIDENCE_RELIABILITY.md'
+      - 'docs/TRILOGY_T2_WHOLE_PROJECT_INTELLIGENCE.md'
+      - 'docs/TRILOGY_T3_INDEPENDENT_VERIFICATION.md'
+      - 'docs/TRILOGY_T3B_NATIVE_ISOLATION.md'
+      - 'docs/TRILOGY_T4_ACCURACY_AWARE_FUSION.md'
+      - 'docs/TRILOGY_T5_ROOT_CAUSE_INTELLIGENCE.md'
+      - 'docs/TRILOGY_T6_SAFE_FIX_PROPOSALS.md'
+      - 'docs/TRILOGY_T7_INDEPENDENT_ACCURACY_PROTOCOL.md'
+      - 'docs/TRILOGY_T0_ACCURACY_SAFETY.md'
+      - '.github/workflows/trilogy-t0.yml'
+      - 'src/lib/analyzer/**'
+      - 'src/lib/report/readiness.ts'
+      - 'testing/accuracy/corpus.json'
+      - 'testing/accuracy/baseline.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  safety-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Install pinned native graph-model parser dependency for safe offline contracts
+        run: npm ci --prefix experiments/datalog-z3 --no-audit --no-fund
+      - name: T0 safety regression contracts
+        run: node --test testing/trilogy-t0/*.test.mjs
+      - name: T0 reproducible UCE report comparison
+        run: node testing/trilogy-t0/run.mjs --output=trilogy-t0-report.json
+      - name: T1 source evidence reliability contracts
+        run: node --test testing/trilogy-t1/*.test.mjs
+      - name: T1 reproducible source evidence audit
+        run: node testing/trilogy-t1/run.mjs --output=trilogy-t1-report.json
+      - name: T2 cross-file graph and false-confidence contracts
+        run: node --test testing/trilogy-t2/*.test.mjs
+      - name: T2 reproducible whole-project graph audit
+        run: node testing/trilogy-t2/run.mjs --output=trilogy-t2-report.json
+      - name: T3 independent model and native isolation gate contracts
+        run: node --test testing/trilogy-t3/*.test.mjs
+      - name: T3-B native security and fail-closed tests
+        run: node --test testing/trilogy-t3/native.test.mjs
+      - name: T3 reproducible verification artifact
+        run: node testing/trilogy-t3/run.mjs --output=trilogy-t3-report.json
+      - name: T4 accuracy-aware fusion and false-merge regression contracts
+        run: node --test testing/trilogy-t4/*.test.mjs
+      - name: T4 reproducible source-evidence fusion artifact
+        run: node testing/trilogy-t4/run.mjs --output=trilogy-t4-report.json
+      - name: T5 root-cause hypothesis safety contracts
+        run: node --test testing/trilogy-t5/*.test.mjs
+      - name: T5 reproducible investigation evidence
+        run: node testing/trilogy-t5/run.mjs --output=trilogy-t5-report.json
+      - name: T6 developer-safe review-only patch preview contracts
+        run: node --test testing/trilogy-t6/*.test.mjs
+      - name: T6 reproducible source-hashed patch preview artifact
+        run: node testing/trilogy-t6/run.mjs --output=trilogy-t6-report.json
+      - name: T7 blind paired study and abstention contracts
+        run: node --test testing/trilogy-t7/*.test.mjs
+      - name: T7 accuracy study readiness audit - no fabricated independent labels
+        run: node testing/trilogy-t7/run.mjs --output=trilogy-t7-report.json
+      - name: Independent label claim guard
+        run: npm run audit:accuracy:baseline
+      - name: Upload T0 evidence (no source contents)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trilogy-t0-safety-baseline
+          path: |
+            trilogy-t0-report.json
+            trilogy-t1-report.json
+            trilogy-t2-report.json
+            trilogy-t3-report.json
+            trilogy-t4-report.json
+            trilogy-t5-report.json
+            trilogy-t6-report.json
+            trilogy-t7-report.json
+          if-no-files-found: ignore
