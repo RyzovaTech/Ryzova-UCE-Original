@@ -4,7 +4,7 @@ import { loadCachedAnalysis, saveCachedAnalysis } from '@/lib/analyzer/cache';
 import { canCacheAnalysisInput, canCacheAnalysisResult, markExecution, prepareAnalysisInput } from '@/lib/analyzer/execution';
 import { persistLargeReport } from '@/lib/storage/large-reports';
 import { getDemoProjectFiles, DEMO_PROJECT_NAME } from '@/lib/analyzer/demoProject';
-import { getRepositoryArchiveUrl, parseRepositoryUrl } from '@/lib/analyzer/repository';
+import { getRepositoryArchiveUrl, getGitLabWebArchiveUrl, shouldUseGitLabWebArchiveFallback, parseRepositoryUrl } from '@/lib/analyzer/repository';
 import {
   archiveProcessingTimeoutMs,
   GITHUB_ARCHIVE_TIMEOUT_MS,
@@ -280,8 +280,16 @@ export function useAnalyzer() {
         remoteStep = 'archive';
         safeSetState((s) => ({ ...s, message: 'Connecting to repository archive…', download: { receivedBytes: 0, totalBytes: null, bytesPerSecond: 0, elapsedSeconds: 0, complete: false } }));
         remoteAbortRef.current = new AbortController();
-        const res = await fetchWithTimeout(getRepositoryArchiveUrl(repository, defaultBranch, (details as { id?: number }).id), GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
+        let res = await fetchWithTimeout(getRepositoryArchiveUrl(repository, defaultBranch, (details as { id?: number }).id), GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
         ensureCurrentRequest(requestId);
+        if (shouldUseGitLabWebArchiveFallback(repository.provider, res.status)) {
+          // Never retry permission failures, missing archives or rate limits.
+          await res.body?.cancel().catch(() => undefined);
+          safeSetState((s) => ({ ...s, message: 'GitLab API returned 406; trying public GitLab ZIP archive…' }));
+          res = await fetchWithTimeout(getGitLabWebArchiveUrl(repository, defaultBranch),
+            GITHUB_ARCHIVE_TIMEOUT_MS, { signal: remoteAbortRef.current.signal });
+          ensureCurrentRequest(requestId);
+        }
         if (!res.ok) {
           const message = res.status === 404
             ? providerName + ' could not provide the default-branch archive. It may be empty, unavailable, or recently renamed.'

@@ -34,7 +34,7 @@ zip.file('project-main/.nvmrc','20.0.0\n');
 zip.file('project-main/README.md','# Provider test\n');
 const zipBytes=await zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
 
-async function runCase(provider,url,expectArchive,meta){
+async function runCase(provider,url,expectArchive,meta,api406Fallback=false){
   const page=await browser.newPage({viewport:{width:390,height:844}});
   const errors=[],archives=[],metadata=[];
   page.on('pageerror',error=>errors.push(error.message));
@@ -49,6 +49,14 @@ async function runCase(provider,url,expectArchive,meta){
       headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify(meta)});
   });
   await page.route(/\/api\/(github|gitlab|codeberg)\/archive\//,async route=>{
+    archives.push(route.request().url());
+    if(provider==='GitLab'&&api406Fallback){
+      await route.fulfill({status:406,contentType:'application/json',body:'{"error":"Not Acceptable"}'});
+      return;
+    }
+    await route.fulfill({status:200,contentType:'application/zip',body:zipBytes});
+  });
+  await page.route(/\/api\/gitlab\/web-archive\//,async route=>{
     archives.push(route.request().url());
     await route.fulfill({status:200,contentType:'application/zip',body:zipBytes});
   });
@@ -96,7 +104,10 @@ async function runCase(provider,url,expectArchive,meta){
         '; original error: '+String(error));
     }
     assert.equal(metadata.length,1,'Metadata lookup must hit the intended fixed public provider');
-    assert.equal(archives.length,1,'Only one archive request should run');
+    assert.equal(archives.length,api406Fallback?2:1,
+      'Only initial archive and conditional 406 fallback should run');
+    if(api406Fallback)assert.ok(archives[1].includes(
+      '/api/gitlab/web-archive/gitlab-examples/python-getting-started/-/archive/main/python-getting-started-main.zip'));
     assert.equal(archives[0].includes(expectArchive),true,
       'Wrong provider archive relay: '+archives[0]);
     assert.deepEqual(errors,[],'No browser page errors');
@@ -115,6 +126,8 @@ try{
    '/api/github/archive/example/project/main',{default_branch:'main'});
  await runCase('GitLab','https://gitlab.com/example/team/project',
    '/api/gitlab/archive/187?sha=main',{default_branch:'main',id:187});
+ await runCase('GitLab','https://gitlab.com/gitlab-examples/python-getting-started',
+   '/api/gitlab/archive/187?sha=main',{default_branch:'main',id:187},true);
  await runCase('Codeberg','https://codeberg.org/example/project',
    '/api/codeberg/archive/example/project/main.zip',{default_branch:'main'});
 } finally{

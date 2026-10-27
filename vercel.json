@@ -9,6 +9,10 @@
       "destination": "https://gitlab.com/api/v4/projects/:id/repository/archive.zip"
     },
     {
+      "source": "/api/gitlab/web-archive/:path*/-/archive/:branch/:filename",
+      "destination": "https://gitlab.com/:path*/-/archive/:branch/:filename"
+    },
+    {
       "source": "/api/codeberg/archive/:owner/:repository/:branch*",
       "destination": "https://codeberg.org/:owner/:repository/archive/:branch*"
     }
@@ -69,6 +73,19 @@
     },
     {
       "source": "/api/codeberg/archive/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "0"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/gitlab/web-archive/:path*",
       "headers": [
         {
           "key": "x-vercel-enable-rewrite-caching",

@@ -5,7 +5,7 @@ import { load } from '../../scripts/trusted-module-loader.mjs';
 import handler, { getPublicMetadataTarget, normalizePublicMetadata } from '../../api/repository/metadata.js';
 
 const { parseRepositoryUrl, parseGitHubRepositoryUrl, getRepositoryArchiveUrl,
-  getGitHubArchiveUrl } = load('src/lib/analyzer/repository.ts');
+  getGitHubArchiveUrl, getGitLabWebArchiveUrl, shouldUseGitLabWebArchiveFallback } = load('src/lib/analyzer/repository.ts');
 const { buildTrustMetadata } = load('src/lib/analyzer/trust.ts');
 
 test('original GitHub import behavior remains unchanged', () => {
@@ -138,4 +138,28 @@ test('Vercel archive relays are explicit fixed upstreams',()=>{
     'https://codeberg.org/:owner/:repository/archive/:branch*');
   assert.equal(get('/api/github/archive/:owner/:repository/:branch*'),
     'https://codeload.github.com/:owner/:repository/zip/refs/heads/:branch*');
+});
+
+test('GitLab 406 web ZIP fallback has bounded, provider-specific semantics',()=>{
+  const gl=parseRepositoryUrl('https://gitlab.com/gitlab-examples/python-getting-started');
+  assert.equal(getGitLabWebArchiveUrl(gl,'main'),
+    '/api/gitlab/web-archive/gitlab-examples/python-getting-started/-/archive/main/python-getting-started-main.zip');
+  const nested=parseRepositoryUrl('https://gitlab.com/g/team/subgroup/repo');
+  assert.equal(getGitLabWebArchiveUrl(nested,'develop'),
+    '/api/gitlab/web-archive/g/team/subgroup/repo/-/archive/develop/repo-develop.zip');
+  assert.throws(()=>getGitLabWebArchiveUrl(parseRepositoryUrl('https://github.com/pallets/click'),'main'));
+  for(const branch of ['feature/a','../main','main?bad=1','main#x',''])
+    assert.throws(()=>getGitLabWebArchiveUrl(gl,branch));
+  assert.equal(shouldUseGitLabWebArchiveFallback('gitlab',406),true);
+  for(const status of [200,400,401,403,404,413,429,500,502])
+    assert.equal(shouldUseGitLabWebArchiveFallback('gitlab',status),false);
+  assert.equal(shouldUseGitLabWebArchiveFallback('github',406),false);
+  assert.equal(shouldUseGitLabWebArchiveFallback('codeberg',406),false);
+});
+test('GitLab fixed-origin web archive fallback rewrite and cache headers',()=>{
+  const v=JSON.parse(fs.readFileSync(new URL('../../vercel.json',import.meta.url),'utf8'));
+  const r=v.rewrites.find(x=>x.source==='/api/gitlab/web-archive/:path*/-/archive/:branch/:filename');
+  assert.equal(r?.destination,'https://gitlab.com/:path*/-/archive/:branch/:filename');
+  const headers=v.headers.find(x=>x.source==='/api/gitlab/web-archive/:path*')?.headers??[];
+  assert.ok(headers.some(h=>h.key==='Cache-Control'&&h.value==='private, no-store'));
 });

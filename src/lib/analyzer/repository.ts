@@ -71,6 +71,19 @@ function encodePath(branch: string): string {
   return branch.split('/').map(encodeURIComponent).join('/');
 }
 
+/** GitLab's public web archive is a 406-only fallback. Validated repo roots only. */
+export function getGitLabWebArchiveUrl(repository: PublicRepository, defaultBranch: string): string {
+  if (repository.provider !== 'gitlab') throw new Error('Only GitLab can use this fallback.');
+  if (defaultBranch.includes('/')) throw new Error('GitLab web ZIP fallback is unsupported for branch names with slashes. Download the ZIP manually and use ZIP Upload.');
+  const ref = encodePath(defaultBranch);
+  return '/api/gitlab/web-archive/' + repository.namespace.map(encodeURIComponent).join('/') +
+    '/-/archive/' + ref + '/' + encodeURIComponent(repository.repository) + '-' + ref + '.zip';
+}
+
+export function shouldUseGitLabWebArchiveFallback(provider: RepositoryProvider, status: number): boolean {
+  return provider === 'gitlab' && status === 406;
+}
+
 export function getRepositoryArchiveUrl(repository: PublicRepository, defaultBranch: string,
   gitlabProjectId?: number): string {
   const ref = encodePath(defaultBranch);
