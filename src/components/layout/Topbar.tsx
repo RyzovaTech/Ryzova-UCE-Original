@@ -1,9 +1,10 @@
 import { Link, useNavigate, NavLink } from 'react-router-dom';
-import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, Settings, BookOpen } from 'lucide-react';
+import { Moon, Sun, CloudUpload as UploadCloud, Menu, LayoutDashboard, ChartBar as FileBarChart, Settings, BookOpen, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { Sheet, SheetClose, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { UceLogo } from '@/components/UceLogo';
+import { COMMUNITY_LINKS } from '@/lib/community-links';
 
 const mobileItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -59,6 +60,29 @@ export function Topbar() {
                   );
                 })}
               </ul>
+              <div className="mt-4 border-t px-3 pt-3">
+                <SheetClose asChild>
+                  <a
+                    href={COMMUNITY_LINKS.discussions}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                    GitHub Community
+                  </a>
+                </SheetClose>
+                <SheetClose asChild>
+                  <a
+                    href={COMMUNITY_LINKS.feedback}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Share Feedback
+                  </a>
+                </SheetClose>
+              </div>
             </nav>
           </SheetContent>
         </Sheet>
