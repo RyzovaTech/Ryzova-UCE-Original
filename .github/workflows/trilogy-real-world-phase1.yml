@@ -87,6 +87,23 @@ jobs:
               "--uce-report=phase1-results/$case_id-uce.json" \
               "--output=phase1-results/$case_id-paired-diagnostic.json"
           done
+      - name: Express original finding source-file metadata review (not truth labels)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node testing/real-world-phase1/express-evidence.mjs \
+            --report=phase1-results/express-js-uce.json \
+            --checkout=target/express \
+            --sha=1c6f1b0fe4000977b9a7b4f34097e4d527dd9824 \
+            --output=phase1-results/express-js-unreviewed-source-metadata.json
+      - name: Upload Express source-linked metadata only, NO source bytes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: express-unverified-uce-finding-source-links
+          path: phase1-results/express-js-unreviewed-source-metadata.json
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Publish derived evidence ONLY (no code contents or raw UCE issue texts)
         if: always()
         uses: actions/upload-artifact@v4
