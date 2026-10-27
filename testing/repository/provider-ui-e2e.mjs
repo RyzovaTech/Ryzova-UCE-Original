@@ -56,8 +56,10 @@ async function runCase(provider,url,expectArchive,meta){
     await page.goto(HOST+'/analyze',{waitUntil:'domcontentloaded'});
     await page.getByRole('tab',{name:/Git Repository/}).click();
     const buttons=page.getByRole('group',{name:'Repository provider'});
-    for(const label of ['GitHub','GitLab','Codeberg'])
+    for(const label of ['GitHub','Codeberg'])
       assert.equal(await buttons.getByRole('button',{name:label,exact:true}).count(),1);
+    assert.equal(await buttons.getByRole('button',{name:'GitLab',exact:true}).count(),0,
+      'Broken GitLab URL import must not be offered in the selector');
     const preferred=buttons.getByRole('button',{name:provider,exact:true});
     await preferred.click();
     assert.equal(await preferred.getAttribute('aria-pressed'),'true');
@@ -67,7 +69,6 @@ async function runCase(provider,url,expectArchive,meta){
     // could accept attacker.example/github.com and is not safe URL validation.
     const expectedPlaceholders={
       GitHub:'https://github.com/owner/repository',
-      GitLab:'https://gitlab.com/group/subgroup/repository',
       Codeberg:'https://codeberg.org/owner/repository',
     };
     assert.equal(await input.getAttribute('placeholder'),expectedPlaceholders[provider]);
@@ -77,6 +78,12 @@ async function runCase(provider,url,expectArchive,meta){
     assert.equal(await page.locator('#repository-url-validation').innerText()
       .then(v=>v.toLowerCase().includes('only public https')),true);
     assert.equal(metadata.length,0);
+    // Do not allow a pasted GitLab URL to bypass the missing selector.
+    await input.fill('https://gitlab.com/gitlab-tests/sample-project');
+    assert.equal(await page.getByRole('button',{name:'Analyze repository'}).isDisabled(),true);
+    assert.match(await page.locator('#repository-url-validation').innerText(),
+      /GitLab URL analysis is temporarily unavailable/);
+    assert.equal(metadata.length,0,'No GitLab metadata request may be made');
     await input.fill(url);
     assert.equal(await page.getByRole('button',{name:'Analyze repository'}).isEnabled(),true);
     assert.match(await page.locator('#repository-url-validation').innerText(),
@@ -113,8 +120,6 @@ try{
    ...(browserName==='chromium'?{args:['--no-sandbox']}: {})});
  await runCase('GitHub','https://github.com/example/project',
    '/api/github/archive/example/project/main',{default_branch:'main'});
- await runCase('GitLab','https://gitlab.com/example/team/project',
-   '/api/gitlab/archive/187?sha=main',{default_branch:'main',id:187});
  await runCase('Codeberg','https://codeberg.org/example/project',
    '/api/codeberg/archive/example/project/main.zip',{default_branch:'main'});
 } finally{

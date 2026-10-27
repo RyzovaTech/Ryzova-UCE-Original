@@ -2,6 +2,18 @@
 
 This is the original UCE Analyze Project browser application, not MCP.
 
+> **Current browser UI (2026-10-27):** Only GitHub and Codeberg public
+> repository URL import is shown. GitLab URL import is temporarily hidden
+> because real GitLab public ZIP archive requests returned HTTP 406.
+> The GitLab parser, metadata and archive relay code remains in place for
+> future repair, but the browser UI rejects pasted GitLab URLs without a
+> network request. Use GitLab's manual ZIP download plus **ZIP Upload**.
+> See [live failure #103](https://github.com/RyzovaTech/Ryzova-UCE-Original/issues/103).
+>
+> The three-provider architecture below describes existing implementation,
+> **not** current three-provider live support or accuracy certification.
+
+
 Supported public repository roots: https://github.com/owner/repo,
 https://gitlab.com/group/repo,
 https://gitlab.com/group/subgroup/repo and

@@ -26,9 +26,11 @@ tested, or deployed reliably. Its deterministic analysis covers:
 
 ## How it works
 
-Use the browser-based analyzer with either a ZIP project archive or a public GitHub repository.
+Use the browser-based analyzer with either a ZIP project archive or a public GitHub or Codeberg repository.
 ZIP archives are analyzed locally in the browser. A public repository is downloaded only when its
-URL is explicitly provided, and its project files are then analyzed in-browser. UCE does not use
+URL is explicitly provided, and its project files are then analyzed in-browser. GitLab URL
+import is temporarily unavailable because its public archive relay failed live HTTP checks; for
+GitLab projects, download a ZIP on GitLab and use ZIP Upload. UCE does not use
 AI-generated guesses for compatibility findings.
 
 Large projects are analyzed with explicit file and memory budgets. If source is sampled or content
