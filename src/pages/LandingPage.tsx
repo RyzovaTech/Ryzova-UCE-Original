@@ -6,6 +6,9 @@ import {
   Clock,
   GitBranch,
   Github,
+  BookOpen,
+  MessageCircle,
+  Users,
   Layers,
   Package,
   CirclePlay as PlayCircle,
@@ -18,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { UceLogo } from "@/components/UceLogo";
 import { UCE_VERSION } from "@/lib/app-version";
+import { COMMUNITY_LINKS } from "@/lib/community-links";
 
 const problems = [
   {
@@ -137,6 +141,17 @@ export function LandingPage() {
           <UceLogo size="md" />
           <span className="font-mono text-xs text-muted-foreground">UCE · v{UCE_VERSION}</span>
           <div className="ml-auto flex items-center gap-2">
+            <Button variant="ghost" size="sm" asChild className="gap-2 px-2 sm:px-3">
+              <a
+                href={COMMUNITY_LINKS.discussions}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="UCE developer community on GitHub (opens in a new tab)"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                <span className="hidden sm:inline">Community</span>
+              </a>
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
               Dashboard
             </Button>
@@ -433,6 +448,82 @@ export function LandingPage() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      {/* Community and developer feedback */}
+      <section aria-labelledby="community-heading" className="border-y bg-muted/50">
+        <div className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-20">
+          <Badge variant="outline" className="mb-3 border-primary/30 text-primary">
+            Developer Community
+          </Badge>
+          <h2 id="community-heading" className="text-2xl font-semibold tracking-tight md:text-3xl">
+            Learn, share feedback, and help improve UCE
+          </h2>
+          <p className="mt-3 max-w-3xl text-muted-foreground">
+            Meet developers, ask questions, and help us improve compatibility reporting with
+            reproducible feedback. Early case studies and community feedback are not independently
+            certified accuracy measurements.
+          </p>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <a
+              href={COMMUNITY_LINKS.gettingStarted}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-lg border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <BookOpen className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h3 className="mt-3 font-semibold group-hover:text-primary">Getting Started</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Step-by-step help for analyzing your first project and reading the report.
+              </p>
+              <span className="mt-4 inline-block text-sm font-medium text-primary">
+                Read the guide ↗
+              </span>
+            </a>
+            <a
+              href={COMMUNITY_LINKS.feedback}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-lg border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <MessageCircle className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h3 className="mt-3 font-semibold group-hover:text-primary">Share Feedback</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Report useful findings, suspected false positives, and unclear recommendations.
+              </p>
+              <span className="mt-4 inline-block text-sm font-medium text-primary">
+                Join the discussion ↗
+              </span>
+            </a>
+            <a
+              href={COMMUNITY_LINKS.volunteers}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group rounded-lg border bg-card p-5 transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Users className="h-5 w-5 text-primary" aria-hidden="true" />
+              <h3 className="mt-3 font-semibold group-hover:text-primary">Volunteer Reviewers</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Interested in independent, blinded source-based compatibility reviews?
+              </p>
+              <span className="mt-4 inline-block text-sm font-medium text-primary">
+                Learn how to help ↗
+              </span>
+            </a>
+          </div>
+          <p className="mt-6 text-sm text-muted-foreground">
+            Browse all{" "}
+            <a
+              href={COMMUNITY_LINKS.discussions}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-primary underline-offset-4 hover:underline focus-visible:underline"
+            >
+              GitHub community discussions
+            </a>
+            . Please do not post private project code, credentials, or secrets.
+          </p>
         </div>
       </section>
 

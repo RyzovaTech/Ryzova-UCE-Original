@@ -4,6 +4,7 @@ import { Loader as Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LandingPage } from "@/pages/LandingPage";
 import { SeoHead } from "@/components/SeoHead";
+import { COMMUNITY_LINKS } from "@/lib/community-links";
 
 const DashboardPage = lazy(() =>
   import("@/pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
@@ -108,6 +109,22 @@ function PublicLinksFooter() {
         <Link to="/analyze" className="font-medium text-foreground hover:text-primary">
           Analyze a Project
         </Link>
+        <a
+          href={COMMUNITY_LINKS.discussions}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-foreground hover:text-primary focus-visible:underline"
+        >
+          GitHub Community
+        </a>
+        <a
+          href={COMMUNITY_LINKS.feedback}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-medium text-foreground hover:text-primary focus-visible:underline"
+        >
+          Give Feedback
+        </a>
         <span className="text-muted-foreground">
           Open-source, local-first compatibility analysis
         </span>

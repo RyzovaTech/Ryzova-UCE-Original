@@ -1,8 +1,9 @@
 import { NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, CloudUpload as UploadCloud, ChartBar as FileBarChart, Settings, BookOpen } from 'lucide-react';
+import { LayoutDashboard, CloudUpload as UploadCloud, ChartBar as FileBarChart, Settings, BookOpen, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UceLogo } from '@/components/UceLogo';
 import { UCE_VERSION } from '@/lib/app-version';
+import { COMMUNITY_LINKS } from '@/lib/community-links';
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -46,6 +47,25 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
+      <div className="border-t px-3 py-3">
+        <a
+          href={COMMUNITY_LINKS.discussions}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+          GitHub Community
+        </a>
+        <a
+          href={COMMUNITY_LINKS.feedback}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Share Feedback
+        </a>
+      </div>
       <div className="border-t p-4">
         <div className="rounded-md border bg-gradient-to-br from-primary/10 to-secondary/10 p-3">
           <p className="text-xs font-medium">UCE v{UCE_VERSION}</p>
