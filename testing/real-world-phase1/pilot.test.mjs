@@ -78,3 +78,13 @@ test('unestablished source inventory can never turn into negative proof',()=>{
  const g=fixture();g.graph.sourceSnapshotAuthenticated=true;
  assert.throws(()=>summarizePilot(caseSpec,commit,g.report,g.graph,g.fusion,g.inventory),/guarantee/);
 });
+
+test('missing source report coverage cannot be converted to a truncation claim',()=>{
+ const f=fixture();delete f.report.scanStats;
+ const result=summarizePilot(caseSpec,commit,f.report,f.graph,f.fusion,f.inventory);
+ assert.equal(result.uce.scanTruncated,null);
+ f.report.trust={execution:{truncated:false}};
+ assert.equal(summarizePilot(caseSpec,commit,f.report,f.graph,f.fusion,f.inventory).uce.scanTruncated,false);
+ f.report.trust.execution.truncated=true;
+ assert.equal(summarizePilot(caseSpec,commit,f.report,f.graph,f.fusion,f.inventory).uce.scanTruncated,true);
+});

@@ -51,7 +51,8 @@ export function summarizePilot(caseSpec,observedHead,report,graph,fusion,invento
    rawCriticalFindings:critical,rawWarningFindings:warning,
    filesFound:report.scanStats?.filesFound??null,
    filesAnalyzed:report.scanStats?.filesAnalyzed??null,
-   scanTruncated:report.scanStats?.truncated!==false,
+   // Output schema does not guarantee scanStats; absence is Unknown, never truncated=true.
+   scanTruncated:typeof report.trust?.execution?.truncated==='boolean'?report.trust.execution.truncated:null,
    canonicalEvidenceSha256:graph.canonicalEvidenceSha256},
   trilogy:{stage:'T4-review-only-source-fusion',
    candidateObservations:fusion.originCounts.Trilogy,
