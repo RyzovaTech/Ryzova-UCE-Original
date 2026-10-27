@@ -27,7 +27,8 @@ function sourcePath(value){
 }
 function git(repo,args){
  // Isolation from caller-level Git redirection, replaces, global configuration.
- const env={...process.env,GIT_NO_REPLACE_OBJECTS:'1',GIT_CONFIG_NOSYSTEM:'1',
+ const env={...process.env,GIT_NO_REPLACE_OBJECTS:'1',GIT_NO_LAZY_FETCH:'1',
+  GIT_ALLOW_PROTOCOL:'',GIT_CONFIG_NOSYSTEM:'1',
   GIT_CONFIG_GLOBAL:os.devNull,GIT_TERMINAL_PROMPT:'0',GIT_OPTIONAL_LOCKS:'0'};
  for(const k of ['GIT_DIR','GIT_WORK_TREE','GIT_INDEX_FILE','GIT_COMMON_DIR',
   'GIT_OBJECT_DIRECTORY','GIT_ALTERNATE_OBJECT_DIRECTORIES','GIT_CONFIG_COUNT',
