@@ -44,3 +44,25 @@ Even with a fully populated, apparently perfect self-submitted study, the evalua
 ## Local Git object-chain source preflight (new experimental control)
 
 Before asking independent reviewers to adjudicate cases, run the optional read-only, offline [T7 source provenance checker](TRILOGY_T7_SOURCE_PROVENANCE.md) against a frozen manifest and a separate private full-file Git source registry. It checks commit → tree → regular blob SHA-1 chain plus the manifest's SHA-256 digest, rejects missing or switched case identities and non-regular-file entries, and produces hash-only diagnostic evidence. Git checkout origin, real-world repository identity, representative sampling and blinded reviewer identities are **not** authenticated by this local checker. Do not use its successful result as proof of independent truth, real-world accuracy, production safety, or release readiness.
+
+## Paired evaluation with same-process source integrity preflight
+
+To bind local source object validation to the *same* frozen manifest used for paired UCE/Trilogy diagnostics, add `--registry` to the T7 CLI:
+
+```sh
+node testing/trilogy-t7/run.mjs \
+  --manifest=/secure/t7/frozen.json \
+  --reviews=/secure/t7/blinded-reviews.json \
+  --baseline=/secure/t7/uce-only.json \
+  --augmented=/secure/t7/uce-plus-trilogy.json \
+  --registry=/secure/t7/local-source-registry.json \
+  --output=/secure/t7/final-diagnostic.json
+```
+
+When registry is supplied, the CLI reads immutable Git commit/tree/blob objects again and checks full-file SHA-256; `study-integrity.mjs` then asserts identical study ID, case universe, commit and source-hash pins and report fingerprint. Mismatches **fail closed**. It does not accept an arbitrary user-submitted JSON audit as attestation. Without registry, `localSourceProvenance.status=not-performed` is explicit. The optional output file is created once with restrictive permissions and is never overwritten. Public CI uses only disposable synthetic Git fixture repositories.
+
+The resulting `localSourceProvenance` remains **diagnostic-only**, with `independentlyAuthenticatedSourceRevisions=0` and `canCertifyRealWorldAccuracy=false`: local Git history can be counterfeited without independently verified repository origins. Declared reviewer labels and blinded flags are not independently authenticated. No local preflight can change `measuredIndependentRealWorldAccuracy:null`, `demonstratedTrilogyImprovement:false`, `overallReleaseReady:false`, or original UCE rules.
+
+### Unresolved external evidence
+
+The engineering harness can now enforce full paired case membership and locally pinned source bytes, but it cannot manufacture the missing independent real-project sample, two genuine blinded human adjudicators (and third-party disagreements), signed origin/reviewer provenance, sufficient domain-specific power, clustered uncertainty evaluation, native solver security acceptance or developer-validated remediation. These are explicit **release HOLD** conditions; do not call this a completed independent accuracy study without the real independent records and an owner decision.
