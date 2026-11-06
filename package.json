@@ -7,6 +7,9 @@
     "node": ">=20 <25"
   },
   "scripts": {
+    "test:mcp": "node --test testing/mcp/*.test.mjs",
+    "mcp:local": "node tools/mcp/server.mjs",
+    "mcp:private-http": "node tools/mcp/http-server.mjs",
     "test:report-regressions": "node --test testing/report/*.test.mjs",
     "test": "node scripts/test-knowledge.mjs",
     "test:v3-fixtures": "node testing/v3/v3-rule-fixtures.mjs",
