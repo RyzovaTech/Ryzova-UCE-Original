@@ -26,7 +26,7 @@ const seoGenerator = fs.readFileSync('scripts/prerender-seo.mjs', 'utf8');
 for (const marker of ['UCE_CATALOG_ITEMS', "'ItemList'", "'DefinedTerm'", 'dist/catalog/${slug}/index.html']) if (!seoGenerator.includes(marker)) failures.push(`Catalog index generation is missing: ${marker}.`);
 
 const workflow = fs.readFileSync('.github/workflows/ci.yml', 'utf8');
-for (const gate of ['npm run check', 'npm run build', 'npm test', 'npm run benchmark', 'npm audit --omit=dev', 'upload-sarif']) if (!workflow.includes(gate)) failures.push(`CI is missing release gate: ${gate}.`);
+for (const gate of ['npm run check', 'npm run build', 'npm test', 'npm run benchmark', 'npm audit --audit-level=high', 'upload-sarif']) if (!workflow.includes(gate)) failures.push(`CI is missing release gate: ${gate}.`);
 
 const vercelConfig = JSON.parse(fs.readFileSync('vercel.json', 'utf8'));
 const githubRelay = vercelConfig.rewrites?.find((rewrite) => rewrite.source === '/api/github/archive/:owner/:repository/:branch*');
