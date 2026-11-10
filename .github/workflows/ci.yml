@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      - name: Verify patched security dependency lock
+        run: npm run test:security-deps
+
       - name: Typecheck and lint
         run: npm run check
 
@@ -91,7 +94,7 @@ jobs:
         run: npm run benchmark:zip-batches
 
       - name: Dependency security audit
-        run: npm audit --omit=dev
+        run: npm audit --audit-level=high
 
       - name: UCE repository self-scan
         run: npm run security:self-scan
